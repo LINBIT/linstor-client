@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+
+WITH_BASHCOMPL=$(shell dh --list 2>/dev/null | sed -ne 's/^bash-completion$$/--with bash-completion/p')
+
+%:
+	dh $@ --with python2 --buildsystem=python_distutils $(WITH_BASHCOMPL)
+
+override_dh_auto_build:
+	dh_auto_build
+	python setup.py build_man
+
+override_dh_install:
+	dh_install --fail-missing
+ifneq ($(WITH_BASHCOMPL),)
+	# installed by setup.py to /etc/bash_completion.d/
+	# let dh_bash-completion handle it
+	rm -rf $(CURDIR)/debian/python-linstor/etc/bash_completion.d
+endif

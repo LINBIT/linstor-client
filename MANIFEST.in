@@ -1,0 +1,7 @@
+recursive-include man-pages *.gz
+recursive-include man-pages *.xml
+recursive-include scripts *
+include MANIFEST.in
+include COPYING
+include Makefile
+include setup.cfg.sles11

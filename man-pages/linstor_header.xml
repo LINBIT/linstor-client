@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<refentry>
+  <refentryinfo>
+    <date>1 November 2017</date>
+    <productname>linstor</productname>
+    <productnumber>1.0</productnumber>
+  </refentryinfo>
+  <refmeta>
+    <refentrytitle>linstor</refentrytitle>
+    <manvolnum>8</manvolnum>
+    <refmiscinfo class="manual">System Administration</refmiscinfo>
+  </refmeta>
+  <refnamediv>
+    <refname>linstor</refname>
+    <refpurpose>Distributed configuration management for DRBD<indexterm significance="normal">
+      <primary>linstor</primary>
+    </indexterm>
+    </refpurpose>
+  </refnamediv>
+
+  <refsect1>
+    <title>Description</title>
+    <para><option>linstor</option> is a utility for the simplified
+    and automated administration of resources on a multiple-node DRBD 9
+    cluster. It accomplishes this task by running a local server process on
+    each member node of a linstor domain. As these local servers communicate
+    with servers on other nodes, administrators can use any member node to
+    control resources on all nodes of a linstor domain.<sbr/>
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>Quick overview of linstor basics</title>
+    <para>
+     The objects that linstor works with are <option>nodes</option>,
+     <option>resources</option>, <option>volumes</option>
+     and <option>assignments</option>. linstor keeps records describing these
+     objects in its data tables.
+     A <option>node</option> record defines a member node of a linstor domain.
+     A <option>resource</option> record defines a DRBD resource for use with
+     linstor, and <option>volume</option> records define the DRBD volumes
+     of a <option>resource</option>. <option>Resources</option> can then be
+     deployed on a number of <option>nodes</option>, thereby implicitly creating
+     a number of associated <option>assignment</option> records.<sbr/>
+    </para>
+  </refsect1>
+
+  <refsect1>
+    <title>Configuration</title>
+	 <para>The configuration of <option>linstor</option> is stored in the
+	 <option>control volume</option> of linstor. This has the advantage that
+	 the configuration is distributed among all nodes in the cluster without
+	 touching every node's configuration file manually. Please see
+	 <option>modify-config</option> for further details.<sbr/>
+	 In rare situations it might be nessessary to provide an initial
+	 configuration (e.g., if the linstor control volume itself is stored on a
+	 non-standard LVM volume group). For these situations it is possible to
+	 provide a local configuration file, namely <option>/etc/linstord.cfg</option>.
+	 This file has to provide a <option>[LOCAL]</option> section. Values allowed
+	 in this section are: <option>drbdctrl-vg</option> and
+	 <option>extend-path</option>. It is important to note that providing a
+	 local configuration file is the exception and should only be used in very
+	 rare situations.<sbr/>
+	 </para>
+ </refsect1>
+
+  <refsect1>
+      <title>Commands</title>
+      <variablelist>

@@ -1,0 +1,28 @@
+Source: linstor
+Maintainer: LINBIT HA Solutions GmbH <drbd-user@lists.linbit.com>
+Uploaders: Roland Kammerer <roland.kammerer@linbit.com>
+Section: python
+Priority: optional
+# Currently, we do not include dh-python (as suggested by jessie),
+# because it is not available on unbuntu 12.04
+# Build-Depends: python-all (>= 2.6.6-3), debhelper (>= 9), dh-python, ...
+Build-Depends: bash-completion,
+               debhelper (>= 9),
+               docbook-xsl,
+               help2man,
+               protobuf-compiler,
+               python-all (>= 2.6.6-3),
+               xsltproc
+Standards-Version: 3.9.6
+
+Package: python-linstor
+Architecture: all
+# keep python-natsort on its own line!
+Depends: ${misc:Depends},
+         python-natsort,
+         python-protobuf,
+         ${python:Depends}
+Description: DRBD distributed resource management utility
+ This is the client that communicates to linstor control nodes.
+ .
+ TODO: provide more information.
