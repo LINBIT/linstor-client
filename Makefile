@@ -51,6 +51,7 @@ debrelease:
 
 .PHONY: gensrc
 gensrc:
+	make -C linstor-common cleanpython
 	make -C linstor-common python
 
 deb: up2date doc gensrc
