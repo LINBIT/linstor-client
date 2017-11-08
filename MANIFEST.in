@@ -7,5 +7,6 @@ include linstor-common/*.py
 include linstor-common/Makefile
 include MANIFEST.in
 include COPYING
+include README.md
 include Makefile
 include setup.cfg.sles11
