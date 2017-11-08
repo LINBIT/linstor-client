@@ -12,6 +12,7 @@ Build-Depends: bash-completion,
                help2man,
                protobuf-compiler,
                python-all (>= 2.6.6-3),
+					python-protobuf,
                xsltproc
 Standards-Version: 3.9.6
 
