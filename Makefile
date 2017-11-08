@@ -37,7 +37,7 @@ linstor/setupoptions.py:
 
 xml: linstor/setupoptions.py
 
-release: up2date clean xml gensrc
+release: up2date clean doc xml
 	$(PYTHON) setup.py sdist
 	git checkout linstor/setupoptions.py
 	@echo && echo "Did you run distclean?"
@@ -54,12 +54,12 @@ gensrc:
 	make -C linstor-common cleanpython
 	make -C linstor-common python
 
-deb: up2date doc gensrc
+deb: up2date gensrc
 	[ -d ./debian ] || (echo "Your checkout/tarball does not contain a debian directory" && false)
 	debuild -i -us -uc -b
 
 # it is up to you (or the buildenv) to provide a distri specific setup.cfg
-rpm: up2date doc gensrc
+rpm: up2date gensrc
 	$(PYTHON) setup.py bdist_rpm
 
 .PHONY: linstor/consts_githash.py
