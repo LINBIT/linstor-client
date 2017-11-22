@@ -54,6 +54,18 @@ class CheckUpToDate(Command):
                 if version not in firstline:
                     # returning false is not promoted
                     sys.exit(1)
+            with open("Dockerfile") as f:
+                found = False
+                content = [l.strip() for l in f.readlines()]
+                for l in content:
+                    fields = [f.strip() for f in l.split()]
+                    if len(fields) == 3 and fields[0] == 'ENV' and \
+                       fields[1] == 'LINSTOR_CLI_VERSION' and fields[2] == version:
+                        found = True
+                        break
+                if not found:
+                    # returning false is not promoted
+                    sys.exit(1)
         except IOError:
             # probably a release tarball without the debian directory but with Makefile
             return True
