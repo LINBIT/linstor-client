@@ -1394,7 +1394,8 @@ class LinStorCLI(object):
 
         pbmsgs = self.cc.sendrec(h)
 
-        h = MsgHeader().ParseFromString(pbmsgs[0])
+        h = MsgHeader()
+        h.ParseFromString(pbmsgs[0])
         sys.stdout.write('%s\n' % (h.api_call))
         if h.api_call != API_PONG:
             sys.stderr.write('Did not reveive %s\n' % (API_PONG))
