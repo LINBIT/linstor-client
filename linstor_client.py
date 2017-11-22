@@ -68,6 +68,24 @@ from linstor.utils import (
     COLOR_YELLOW,
 )
 
+from linstor.sharedconsts import (
+    API_CRT_NODE,
+    DM_DFLT_SERVER_PORT_PLAIN,
+    DM_DFLT_SERVER_PORT_SSL,
+    KEY_IP_ADDR,
+    KEY_NETCOM_TYPE,
+    KEY_NETIF_TYPE,
+    KEY_PORT_NR,
+    NAMESPC_NETIF,
+    VAL_NETCOM_TYPE_PLAIN,
+    VAL_NETCOM_TYPE_SSL,
+    VAL_NETIF_TYPE_IP,
+    VAL_NODE_TYPE_AUX,
+    VAL_NODE_TYPE_CMBD,
+    VAL_NODE_TYPE_CTRL,
+    VAL_NODE_TYPE_STLT,
+)
+
 
 class LinStorCLI(object):
     """
@@ -142,7 +160,6 @@ class LinStorCLI(object):
         self.cc = CommController()
 
     def setup_parser(self):
-        from linstor.sharedconsts import (DM_DFLT_SERVER_PORT_PLAIN)
         parser = argparse.ArgumentParser(prog='linstor')
         parser.add_argument('--version', '-v', action='version',
                             version='%(prog)s ' + VERSION + '; ' + GITHASH)
@@ -223,24 +240,27 @@ class LinStorCLI(object):
         p_new_node = subp.add_parser('add-node',
                                      aliases=['nn', 'new-node', 'an'],
                                      description='Creates a node entry for a node that participates in the '
-                                     'drbdmanage cluster. Nodename must match the name that is used as the '
-                                     'node name of the drbdmanage server on the new participating node. '
-                                     'Commonly, nodename is set to match the output of "uname -n" '
-                                     'on the new participating node. Unless specified otherwise, address is '
-                                     'expected to be an IPv4 ip address, and the address family field of the '
-                                     'node entry is implicitly set to ipv4.')
-        p_new_node.add_argument('-a', '--address-family', metavar="FAMILY",
-                                default='ipv4', choices=['ipv4', 'ipv6'],
-                                help='FAMILY: "ipv4" (default) or "ipv6"')
-        p_new_node.add_argument('-q', '--quiet', action="store_true")
-        p_new_node.add_argument('-l', '--satellite',
-                                action="store_true",
-                                help='This node does not have a copy of the control volume'
-                                ' in persistent storage. It is always used as a satellite node')
-        p_new_node.add_argument('-e', '--external', action="store_true",
-                                help='External node that is neither a control node nor a satellite')
-        p_new_node.add_argument('-s', '--no-storage', action="store_true")
-        p_new_node.add_argument('-j', '--no-autojoin', action="store_true")
+                                     'linstor cluster.')
+        p_new_node.add_argument('-p', '--port', type=rangecheck(1, 65535),
+                                help='default: %s for %s; %s for %s' % (DM_DFLT_SERVER_PORT_PLAIN,
+                                                                        VAL_NETCOM_TYPE_PLAIN,
+                                                                        DM_DFLT_SERVER_PORT_SSL,
+                                                                        VAL_NETCOM_TYPE_SSL))
+
+        ntype_def = VAL_NODE_TYPE_STLT
+        p_new_node.add_argument('--node-type', choices=(VAL_NODE_TYPE_CTRL, VAL_NODE_TYPE_AUX,
+                                                        VAL_NODE_TYPE_CMBD, VAL_NODE_TYPE_STLT),
+                                default=VAL_NODE_TYPE_STLT, help='Node type (default: %s)' % (ntype_def))
+        ctype_def = VAL_NETCOM_TYPE_PLAIN
+        p_new_node.add_argument('--communication-type', choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
+                                default=ctype_def,
+                                help='Communication type (default: %s)' % (ctype_def))
+        itype_def = VAL_NETIF_TYPE_IP
+        p_new_node.add_argument('--interface-type', choices=(VAL_NETIF_TYPE_IP,), default=itype_def,
+                                help='Interface type (default: %s)' % (itype_def))
+        iname_def = 'default'
+        p_new_node.add_argument('--interface-name', default=iname_def,
+                                help='Interface name (default: %s)' % (iname_def))
         p_new_node.add_argument('name', help='Name of the new node', type=check_node_name)
         p_new_node.add_argument('ip',
                                 help='IP address of the new node').completer = ip_completer("name")
@@ -1357,24 +1377,38 @@ class LinStorCLI(object):
         self.parse(sys.argv[1:])
 
     def cmd_enoimp(self, args):
-        sys.stderr.write('This command is deprecated or not implemented\n')
-        sys.stderr.write('%s\n' % str(args))
-        sys.exit(1)
+        self.err('This command is deprecated or not implemented')
 
     @need_communication
     def cmd_new_node(self, args):
-        # TODO(rck): use the actual args
-        from linstor.sharedconsts import (API_CRT_NODE, VAL_NODE_TYPE_CTRL)
         h = MsgHeader()
+        p = MsgCrtNode()
+
+        def gen_nif(k, v):
+            prop = LinStorMapEntry()
+            prop.key = "%s/%s/%s" % (NAMESPC_NETIF, args.interface_name, k)
+            prop.value = v
+            p.node_props.extend([prop])
+
         h.api_call = API_CRT_NODE
         h.msg_id = 1
-        p = MsgCrtNode()
         p.node_name = args.name
-        p.node_type = VAL_NODE_TYPE_CTRL
-        # prop = LinStorMapEntry()
-        # prop.key = "foo"
-        # prop.value = "bar"
-        # p.node_props.extend([prop])
+        p.node_type = args.node_type
+
+        # interface
+        gen_nif(KEY_NETIF_TYPE, args.interface_type)
+        gen_nif(KEY_NETCOM_TYPE, args.communication_type)
+        gen_nif(KEY_IP_ADDR, args.ip)
+
+        port = args.port
+        if not port:
+            if args.communication_type == VAL_NETCOM_TYPE_PLAIN:
+                port = DM_DFLT_SERVER_PORT_PLAIN
+            elif args.communication_type == VAL_NETCOM_TYPE_SSL:
+                port = DM_DFLT_SERVER_PORT_SSL
+            else:
+                self.err("Communication type %s has no default port" % (args.communication_type))
+        gen_nif(KEY_PORT_NR, str(port))
 
         pbmsgs = self.cc.sendrec(h, p)
 
@@ -1407,10 +1441,17 @@ class LinStorCLI(object):
         return '%s%s%s' % (self.color(color, args), string, self.color(COLOR_NONE, args))
 
     def color(self, col, args=None):
-        if args and not args[0].no_color:
-            return col
-        else:
+        if args and args[0].no_color:
             return ''
+        else:
+            return col
+
+    def bail_out(self, msg, color, ret):
+        sys.stderr.write(self.color_str(msg, color)+'\n')
+        sys.exit(ret)
+
+    def err(self, msg):
+        self.bail_out(msg, COLOR_RED, 1)
 
     def _get_volume_size_arg(self, args):
         m = re.match('(\d+)(\D*)', args.size)
