@@ -54,6 +54,7 @@ gensrc:
 	make -C linstor-common cleanpython
 	make -C linstor-common python
 
+# no gensrc here, that is in debian/rules
 deb: up2date
 	[ -d ./debian ] || (echo "Your checkout/tarball does not contain a debian directory" && false)
 	debuild -i -us -uc -b
