@@ -70,8 +70,8 @@ from linstor.utils import (
 
 from linstor.sharedconsts import (
     API_CRT_NODE,
-    DM_DFLT_SERVER_PORT_PLAIN,
-    DM_DFLT_SERVER_PORT_SSL,
+    DFLT_CTRL_PORT_PLAIN,
+    DFLT_CTRL_PORT_SSL,
     KEY_IP_ADDR,
     KEY_NETCOM_TYPE,
     KEY_NETIF_TYPE,
@@ -169,7 +169,7 @@ class LinStorCLI(object):
                             help='Do not use utf-8 characters in output (i.e., tables).')
         parser.add_argument('--warn-as-error', action="store_true",
                             help='Treat WARN return code as error (i.e., return code > 0).')
-        parser.add_argument('--controllers', default='localhost:%s' % str(DM_DFLT_SERVER_PORT_PLAIN),
+        parser.add_argument('--controllers', default='localhost:%s' % str(DFLT_CTRL_PORT_PLAIN),
                             help='Comma separated list of controllers (e.g.: "host1:port,host2:port"). '
                             'If the environment variable %s is set, '
                             'the ones set via this argument get appended.' % (KEY_LS_CONTROLLERS))
@@ -242,9 +242,9 @@ class LinStorCLI(object):
                                      description='Creates a node entry for a node that participates in the '
                                      'linstor cluster.')
         p_new_node.add_argument('-p', '--port', type=rangecheck(1, 65535),
-                                help='default: %s for %s; %s for %s' % (DM_DFLT_SERVER_PORT_PLAIN,
+                                help='default: %s for %s; %s for %s' % (DFLT_CTRL_PORT_PLAIN,
                                                                         VAL_NETCOM_TYPE_PLAIN,
-                                                                        DM_DFLT_SERVER_PORT_SSL,
+                                                                        DFLT_CTRL_PORT_SSL,
                                                                         VAL_NETCOM_TYPE_SSL))
 
         ntype_def = VAL_NODE_TYPE_STLT
@@ -1403,9 +1403,9 @@ class LinStorCLI(object):
         port = args.port
         if not port:
             if args.communication_type == VAL_NETCOM_TYPE_PLAIN:
-                port = DM_DFLT_SERVER_PORT_PLAIN
+                port = DFLT_CTRL_PORT_PLAIN
             elif args.communication_type == VAL_NETCOM_TYPE_SSL:
-                port = DM_DFLT_SERVER_PORT_SSL
+                port = DFLT_CTRL_PORT_SSL
             else:
                 self.err("Communication type %s has no default port" % (args.communication_type))
         gen_nif(KEY_PORT_NR, str(port))
