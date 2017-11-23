@@ -20,6 +20,6 @@ RUN cd ${HOME} && \
 
 FROM ubuntu:xenial
 COPY --from=builder /home/makepkg/*.deb /tmp
-RUN apt-get update -y && apt-get install -y python-natsort python-protobuf && dpkg -i /tmp/*.deb && rm /tmp/*.deb
+RUN apt-get update -y && apt-get install -y python-natsort python-protobuf && dpkg -i /tmp/*.deb && rm /tmp/*.deb && apt-get clean -y
 
 ENTRYPOINT ["linstor"]
