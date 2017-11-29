@@ -124,9 +124,7 @@ class LinStorCLI(object):
         def wrapper(self, *args, **kwargs):
             cliargs = args[0]
 
-            cenv = os.environ.get(KEY_LS_CONTROLLERS, "")
-            if cenv:
-                cenv += ','+cliargs.controllers
+            cenv = os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + cliargs.controllers
 
             servers = []
             for hp in cenv.split(','):
