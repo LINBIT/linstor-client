@@ -70,6 +70,7 @@ from linstor.utils import (
 
 from linstor.sharedconsts import (
     API_CRT_NODE,
+    DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
     DFLT_CTRL_PORT_SSL,
     KEY_IP_ADDR,
@@ -128,6 +129,8 @@ class LinStorCLI(object):
 
             servers = []
             for hp in cenv.split(','):
+                if ':' not in hp:
+                    hp += ':' + str(DFLT_CTRL_PORT_PLAIN)
                 try:
                     h, p = hp.split(':')
                     servers.append((h, int(p)))
@@ -240,7 +243,10 @@ class LinStorCLI(object):
                                      description='Creates a node entry for a node that participates in the '
                                      'linstor cluster.')
         p_new_node.add_argument('-p', '--port', type=rangecheck(1, 65535),
-                                help='default: %s for %s; %s for %s' % (DFLT_CTRL_PORT_PLAIN,
+                                help='default: Satellite %s for %s; Controller %s for %s; %s for %s' % (
+                                                                        DFLT_STLT_PORT_PLAIN,
+                                                                        VAL_NETCOM_TYPE_PLAIN,
+                                                                        DFLT_CTRL_PORT_PLAIN,
                                                                         VAL_NETCOM_TYPE_PLAIN,
                                                                         DFLT_CTRL_PORT_SSL,
                                                                         VAL_NETCOM_TYPE_SSL))
@@ -1401,7 +1407,7 @@ class LinStorCLI(object):
         port = args.port
         if not port:
             if args.communication_type == VAL_NETCOM_TYPE_PLAIN:
-                port = DFLT_CTRL_PORT_PLAIN
+                port = DFLT_STLT_PORT_PLAIN if p.node_type == VAL_NODE_TYPE_STLT else DFLT_CTRL_PORT_PLAIN
             elif args.communication_type == VAL_NETCOM_TYPE_SSL:
                 port = DFLT_CTRL_PORT_SSL
             else:
