@@ -31,6 +31,7 @@ from linstor.commcontroller import CommController
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.MsgCrtNode_pb2 import MsgCrtNode
+from proto.MsgDelNode_pb2 import MsgDelNode
 from proto.MsgHeader_pb2 import MsgHeader
 
 from linstor.consts import (
@@ -71,6 +72,7 @@ from linstor.utils import (
 from linstor.sharedconsts import (
     API_CRT_NODE,
     DFLT_STLT_PORT_PLAIN,
+    API_DEL_NODE,
     DFLT_CTRL_PORT_PLAIN,
     DFLT_CTRL_PORT_SSL,
     KEY_IP_ADDR,
@@ -98,21 +100,41 @@ class LinStorCLI(object):
 
         rc = answer.ret_code
         ret = 0
-        msg = ''
+        category = ''
+        message = answer.message_format
+        cause = answer.cause_format
+        correction = answer.correction_format
+        details = answer.details_format
         if rc & MASK_ERROR:
             ret = 1
-            msg = self.color_str('ERR: ', COLOR_RED, args)
+            category = self.color_str('ERROR:\n', COLOR_RED, args)
         elif rc & MASK_WARN:
             if args[0].warn_as_error:  # otherwise keep at 0
                 ret = 1
-            msg = self.color_str('WARN: ', COLOR_YELLOW, args)
+            category = self.color_str('WARNING:\n', COLOR_YELLOW, args)
         elif rc & MASK_INFO:
-            msg = 'INFO: '
+            category = 'INFO: '
         else:  # do not use MASK_SUCCESS
-            msg = self.color_str('OK: ', COLOR_GREEN, args)
+            category = self.color_str('SUCCESS:\n', COLOR_GREEN, args)
 
-        msg += answer.message_format
-        sys.stderr.write(msg + '\n')
+        sys.stderr.write(category)
+        have_message = message is not None and len(message) > 0
+        have_cause = cause is not None and len(cause) > 0
+        have_correction = correction is not None and len(correction) > 0
+        have_details = details is not None and len(details) > 0
+        if (have_cause or have_correction or have_details) and have_message:
+            sys.stderr.write("Description:\n")
+        if have_message:
+            self.print_with_indent(sys.stderr, 4, message)
+        if have_cause:
+            sys.stderr.write("Cause:\n")
+            self.print_with_indent(sys.stderr, 4, cause)
+        if have_correction:
+            sys.stderr.write("Correction:\n")
+            self.print_with_indent(sys.stderr, 4, correction)
+        if have_details:
+            sys.stderr.write("Details:\n")
+            self.print_with_indent(sys.stderr, 4, details)
         sys.exit(ret)
 
     # This wrapper tries to eliminate most of the boiler-plate code required for communication
@@ -299,13 +321,9 @@ class LinStorCLI(object):
         p_rm_node.add_argument('-q', '--quiet', action="store_true",
                                help='Unless this option is used, drbdmanage will issue a safety question '
                                'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_node.add_argument('-f', '--force', action="store_true",
-                               help='The node entry and all associated assignment entries are removed from '
-                               "drbdmanage's data tables immediately, without taking any action on the "
-                               'cluster node that the node entry refers to.')
-        p_rm_node.add_argument('name', nargs="+",
+        p_rm_node.add_argument('name',
                                help='Name of the node to remove').completer = node_completer
-        p_rm_node.set_defaults(func=self.cmd_enoimp)
+        p_rm_node.set_defaults(func=self.cmd_del_node)
 
         # Quorum control, completion of the action parameter
         quorum_completer_possible = ('ignore', 'unignore')
@@ -1424,6 +1442,24 @@ class LinStorCLI(object):
         return p
 
     @need_communication
+    def cmd_del_node(self, args):
+        h = MsgHeader()
+        p = MsgDelNode()
+
+        h.api_call = API_DEL_NODE
+        h.msg_id = 1
+        p.node_name = args.name
+
+        pbmsgs = self.cc.sendrec(h, p)
+
+        h = MsgHeader()
+        h.ParseFromString(pbmsgs[0])
+        p = MsgApiCallResponse()
+        p.ParseFromString(pbmsgs[1])
+
+        return p
+
+    @need_communication
     def cmd_ping(self, args):
         from linstor.sharedconsts import (API_PING, API_PONG)
         h = MsgHeader()
@@ -1440,6 +1476,22 @@ class LinStorCLI(object):
             sys.exit(1)
 
         # no return is fine, implicitly returns None, which need_communication handles
+
+    def print_with_indent(self, stream, indent, text):
+        spacer = indent * ' '
+        offset = 0
+        index = 0
+        while index < len(text):
+            if text[index] == '\n':
+                stream.write(spacer)
+                stream.write(text[offset:index])
+                stream.write('\n')
+                offset = index + 1
+            index += 1
+        if offset < len(text):
+            stream.write(spacer)
+            stream.write(text[offset:])
+            stream.write('\n')
 
     def color_str(self, string, color, args=None):
         return '%s%s%s' % (self.color(color, args), string, self.color(COLOR_NONE, args))
