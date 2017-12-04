@@ -142,10 +142,20 @@ class CommController(object):
                 return []
             succ = self.sendall(header, payload)
 
+        pb_msgs = []
         if succ:
-            return self.recv()
+            try:
+                while True:
+                    pb_msgs = self.recv()
+                    msg_hdr = MsgHeader()
+                    msg_hdr.parseFromString(pbmsgs[0])
+                    if msg_hdr.msg_id == 1:
+                        break
+            except:
+                # FIXME: Protocol error
+                pass
 
-        return []
+        return pb_msgs
 
     def close(self):
         if self.current_sock:
