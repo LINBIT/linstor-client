@@ -1,0 +1,8 @@
+# ignore "compiled" python
+*.pyc
+
+# ignore generated protobuf messages and shared consts
+# these can be generated in the linstor-common with:
+# make python
+proto/*.py
+linstor/sharedconsts.py
