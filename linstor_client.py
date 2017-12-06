@@ -32,6 +32,10 @@ from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.MsgCrtNode_pb2 import MsgCrtNode
 from proto.MsgDelNode_pb2 import MsgDelNode
+from proto.MsgLstNode_pb2 import MsgLstNode
+from proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
+from proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
+from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from proto.MsgHeader_pb2 import MsgHeader
 
 from linstor.consts import (
@@ -71,8 +75,12 @@ from linstor.utils import (
 
 from linstor.sharedconsts import (
     API_CRT_NODE,
-    DFLT_STLT_PORT_PLAIN,
     API_DEL_NODE,
+    API_LST_NODE,
+    API_CRT_RSC_DFN,
+    API_DEL_RSC_DFN,
+    API_LST_RSC_DFN,
+    DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
     DFLT_CTRL_PORT_SSL,
     KEY_IP_ADDR,
@@ -346,6 +354,51 @@ class LinStorCLI(object):
             "name", nargs="+", type=check_node_name, help="Name of the affected node or nodes"
         ).completer = node_completer
         p_quorum.set_defaults(func=self.cmd_enoimp)
+
+        # new-resource definition
+        p_new_res_dfn = subp.add_parser('add-resource-definition',
+                                    aliases=['nrd', 'new-resource-definition', 'ard'],
+                                    description='Defines a Linstor resource definition for use with linstor.')
+        p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
+        p_new_res_dfn.add_argument('-s', '--secret', type=str)
+        p_new_res_dfn.add_argument('name', type=check_res_name, help='Name of the new resource definition')
+        p_new_res_dfn.set_defaults(func=self.cmd_new_rsc_dfn)
+
+        # modify-resource
+        def res_dfn_completer(prefix, **kwargs):
+            server_rc, res_dfn_list = self.__list_resource_definitions(False)
+            possible = set()
+            for r in res_dfn_list:
+                name, _ = r
+                possible.add(name)
+
+            if not prefix or prefix == '':
+                return possible
+            else:
+                return [res for res in possible if res.startswith(prefix)]
+
+            return possible
+
+        # remove-resource definition
+        # TODO description
+        p_rm_res_dfn = subp.add_parser('remove-resource-definition',
+                                   aliases=['rrd', 'delete-resource-definition', 'drd'],
+                                   description=' Removes a resource definition '
+                                   'from the drbdmanage cluster. The resource is undeployed from all nodes '
+                                   "and the resource entry is marked for removal from drbdmanage's data "
+                                   'tables. After all nodes have undeployed the resource, the resource '
+                                   "entry is removed from drbdmanage's data tables.")
+        p_rm_res_dfn.add_argument('-q', '--quiet', action="store_true",
+                              help='Unless this option is used, drbdmanage will issue a safety question '
+                              'that must be answered with yes, otherwise the operation is canceled.')
+        p_rm_res_dfn.add_argument('-f', '--force', action="store_true",
+                              help='If present, then the resource entry and all associated assignment '
+                              "entries are removed from drbdmanage's data tables immediately, without "
+                              'taking any action on the cluster nodes that have the resource deployed.')
+        p_rm_res_dfn.add_argument('name',
+                              nargs="+",
+                              help='Name of the resource to delete').completer = res_dfn_completer
+        p_rm_res_dfn.set_defaults(func=self.cmd_del_rsc_dfn)
 
         # new-resource
         p_new_res = subp.add_parser('add-resource',
@@ -832,7 +885,7 @@ class LinStorCLI(object):
         p_lnodes.add_argument('-N', '--nodes', nargs='+', type=check_node_name,
                               help='Filter by list of nodes').completer = node_completer
         p_lnodes.add_argument('--separators', action="store_true")
-        p_lnodes.set_defaults(func=self.cmd_enoimp)
+        p_lnodes.set_defaults(func=self.cmd_lst_node)
 
         # resources
         resverbose = ('Port',)
@@ -853,6 +906,26 @@ class LinStorCLI(object):
                               help='Filter by list of resources').completer = res_completer
         p_lreses.add_argument('--separators', action="store_true")
         p_lreses.set_defaults(func=self.cmd_enoimp)
+
+        # resource definitions
+        resverbose = ('Port',)
+        resgroupby = ('Name', 'Port', 'State')
+        res_verbose_completer = show_group_completer(resverbose, "show")
+        res_group_completer = show_group_completer(resgroupby, "groupby")
+
+        p_lrscdfs = subp.add_parser('list-resource-definitions', aliases=['rd', 'resource-defs'],
+                                   description='Prints a list of all resource definitions known to '
+                                   'drbdmanage. By default, the list is printed as a human readable table.')
+        p_lrscdfs.add_argument('-m', '--machine-readable', action="store_true")
+        p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_lrscdfs.add_argument('-s', '--show', nargs='+',
+                              choices=resverbose).completer = res_verbose_completer
+        p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
+                              choices=resgroupby).completer = res_group_completer
+        p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=check_res_name,
+                              help='Filter by list of resources').completer = res_completer
+        p_lrscdfs.add_argument('--separators', action="store_true")
+        p_lrscdfs.set_defaults(func=self.cmd_list_rsc_dfn)
 
         # volumes
         volgroupby = resgroupby + ('Vol_ID', 'Size', 'Minor')
@@ -1460,6 +1533,104 @@ class LinStorCLI(object):
         return p
 
     @need_communication
+    def cmd_lst_node(self, args):
+        h = MsgHeader()
+
+        h.api_call = API_LST_NODE
+        h.msg_id = 1
+
+        pbmsgs = self.cc.sendrec(h)
+
+        h = MsgHeader()
+        h.ParseFromString(pbmsgs[0])
+        if h.api_call != API_LST_NODE:
+            p = MsgApiCallResponse()
+            p.ParseFromString(pbmsgs[1])
+            return p
+        else:
+            p = MsgLstNode()
+            p.ParseFromString(pbmsgs[1])
+
+        prntfrm = "{node:<20s} {type:<10s} {uuid:<40s}"
+        print(prntfrm.format(node="Node", type="NodeType", uuid="UUID"))
+        for n in p.nodes:
+            print(prntfrm.format(node=n.name, type=n.type, uuid=n.uuid))
+
+            # for prop in n.node_props:
+            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+
+        return None
+
+    @need_communication
+    def cmd_new_rsc_dfn(self, args):
+        h = MsgHeader()
+        h.api_call = API_CRT_RSC_DFN
+        h.msg_id = 1
+
+        p = MsgCrtRscDfn()
+        p.rsc_name = args.name
+        if args.port:
+            p.rsc_port = args.port
+        if args.secret:
+            p.secret = args.secret
+
+        pbmsgs = self.cc.sendrec(h, p)
+
+        h = MsgHeader()
+        h.ParseFromString(pbmsgs[0])
+        p = MsgApiCallResponse()
+        p.ParseFromString(pbmsgs[1])
+
+        return p
+
+    @need_communication
+    def cmd_del_rsc_dfn(self, args):
+        h = MsgHeader()
+        h.api_call = API_DEL_RSC_DFN
+        h.msg_id = 1
+
+        p = MsgDelRscDfn()
+        p.rsc_name = args.name[0]
+
+        pbmsgs = self.cc.sendrec(h, p)
+
+        h = MsgHeader()
+        h.ParseFromString(pbmsgs[0])
+        p = MsgApiCallResponse()
+        p.ParseFromString(pbmsgs[1])
+
+        return p
+
+    @need_communication
+    def cmd_list_rsc_dfn(self, args):
+        h = MsgHeader()
+
+        h.api_call = API_LST_RSC_DFN
+        h.msg_id = 1
+
+        pbmsgs = self.cc.sendrec(h)
+
+        h = MsgHeader()
+        h.ParseFromString(pbmsgs[0])
+        if h.api_call != API_LST_RSC_DFN:
+            p = MsgApiCallResponse()
+            p.ParseFromString(pbmsgs[1])
+            return p
+        else:
+            p = MsgLstRscDfn()
+            p.ParseFromString(pbmsgs[1])
+
+        prntfrm = "{node:<20s} {type:<10s} {uuid:<40s}"
+        print(prntfrm.format(node="Resource-name", type="Port", uuid="UUID"))
+        for rsc_dfn in p.rsc_dfns:
+            print(prntfrm.format(node=rsc_dfn.rsc_name, type=str(rsc_dfn.rsc_port), uuid=rsc_dfn.uuid))
+
+            # for prop in n.node_props:
+            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+
+        return None
+
+    @need_communication
     def cmd_ping(self, args):
         from linstor.sharedconsts import (API_PING, API_PONG)
         h = MsgHeader()
@@ -1541,6 +1712,9 @@ class LinStorCLI(object):
 
     def _get_nodes(self, sort=False, node_filter=[]):
         # TODO(rck): for now just a hack to keep the code completer "happy"
+        return (0, [])
+
+    def __list_resource_definitions(self, list_res_dfns, resource_def_filter=[]):
         return (0, [])
 
     def __list_resources(self, list_volumes, resource_filter=[]):
