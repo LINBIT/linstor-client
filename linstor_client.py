@@ -356,8 +356,8 @@ class LinStorCLI(object):
         p_quorum.set_defaults(func=self.cmd_enoimp)
 
         # new-resource definition
-        p_new_res_dfn = subp.add_parser('add-resource-definition',
-                                    aliases=['nrd', 'new-resource-definition', 'ard'],
+        p_new_res_dfn = subp.add_parser('create-resource-definition',
+                                    aliases=['crtrscdfn', 'add-resource-definition', 'new-resource-definition', 'crd', 'ard', 'nrd'],
                                     description='Defines a Linstor resource definition for use with linstor.')
         p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_new_res_dfn.add_argument('-s', '--secret', type=str)
@@ -381,8 +381,8 @@ class LinStorCLI(object):
 
         # remove-resource definition
         # TODO description
-        p_rm_res_dfn = subp.add_parser('remove-resource-definition',
-                                   aliases=['rrd', 'delete-resource-definition', 'drd'],
+        p_rm_res_dfn = subp.add_parser('delete-resource-definition',
+                                   aliases=['delrscdfn', 'remove-resource-definition', 'drd', 'rrd'],
                                    description=' Removes a resource definition '
                                    'from the drbdmanage cluster. The resource is undeployed from all nodes '
                                    "and the resource entry is marked for removal from drbdmanage's data "
@@ -401,8 +401,8 @@ class LinStorCLI(object):
         p_rm_res_dfn.set_defaults(func=self.cmd_del_rsc_dfn)
 
         # new-resource
-        p_new_res = subp.add_parser('add-resource',
-                                    aliases=['nr', 'new-resource', 'ar'],
+        p_new_res = subp.add_parser('create-resource',
+                                    aliases=['crtrsc', 'add-resource', 'new-resource', 'cr', 'ar', 'nr'],
                                     description='Defines a DRBD resource for use with drbdmanage. '
                                     'Unless a specific IP port-number is supplied, the port-number is '
                                     'automatically selected by the drbdmanage server on the current node. ')
@@ -438,8 +438,8 @@ class LinStorCLI(object):
         p_mod_res.set_defaults(command=p_mod_res_command)
 
         # remove-resource
-        p_rm_res = subp.add_parser('remove-resource',
-                                   aliases=['rr', 'delete-resource', 'dr'],
+        p_rm_res = subp.add_parser('delete-resource',
+                                   aliases=['delrsc', 'remove-resource', 'dr', 'rr'],
                                    description=' Removes a resource and its associated resource definition '
                                    'from the drbdmanage cluster. The resource is undeployed from all nodes '
                                    "and the resource entry is marked for removal from drbdmanage's data "
@@ -474,9 +474,9 @@ class LinStorCLI(object):
 
             return [digits + u for u in p_units]
 
-        p_new_vol_command = 'add-volume'
+        p_new_vol_command = 'create-volume-definition'
         p_new_vol = subp.add_parser(p_new_vol_command,
-                                    aliases=['nv', 'new-volume', 'av'],
+                                    aliases=['crtvlmdfn', 'add-volume-definition', 'new-volume-definition', 'cvd', 'avd', 'nvd'],
                                     description='Defines a volume with a capacity of size for use with '
                                     'drbdmanage. If the resource resname exists already, a new volume is '
                                     'added to that resource, otherwise the resource is created automatically '
@@ -565,8 +565,8 @@ class LinStorCLI(object):
         p_mod_assg.set_defaults(command=p_mod_assg_command)
 
         # remove-volume
-        p_rm_vol = subp.add_parser('remove-volume',
-                                   aliases=['rv', 'delete-volume', 'dv'],
+        p_rm_vol = subp.add_parser('delete-volume-definition',
+                                   aliases=['delvlmdfn', 'remove-volume-definition', 'dvd', 'rvd'],
                                    description='Removes a volume from the drbdmanage cluster, and removes '
                                    'the volume definition from the resource definition. The volume is '
                                    'undeployed from all nodes and the volume entry is marked for removal '
@@ -873,7 +873,7 @@ class LinStorCLI(object):
 
         nodes_verbose_completer = show_group_completer(nodesverbose, "show")
         nodes_group_completer = show_group_completer(nodesgroupby, "groupby")
-        p_lnodes = subp.add_parser('list-nodes', aliases=['n', 'nodes'],
+        p_lnodes = subp.add_parser('list-nodes', aliases=['dspnodes', 'display-nodes', 'nodes', 'n'],
                                    description='Prints a list of all cluster nodes known to drbdmanage. '
                                    'By default, the list is printed as a human readable table.')
         p_lnodes.add_argument('-m', '--machine-readable', action="store_true")
@@ -893,7 +893,7 @@ class LinStorCLI(object):
         res_verbose_completer = show_group_completer(resverbose, "show")
         res_group_completer = show_group_completer(resgroupby, "groupby")
 
-        p_lreses = subp.add_parser('list-resources', aliases=['r', 'resources'],
+        p_lreses = subp.add_parser('list-resources', aliases=['dsprsc', 'display-resources', 'resources', 'r'],
                                    description='Prints a list of all resource definitions known to '
                                    'drbdmanage. By default, the list is printed as a human readable table.')
         p_lreses.add_argument('-m', '--machine-readable', action="store_true")
@@ -913,7 +913,7 @@ class LinStorCLI(object):
         res_verbose_completer = show_group_completer(resverbose, "show")
         res_group_completer = show_group_completer(resgroupby, "groupby")
 
-        p_lrscdfs = subp.add_parser('list-resource-definitions', aliases=['rd', 'resource-defs'],
+        p_lrscdfs = subp.add_parser('list-resource-definitions', aliases=['dsprscdfn', 'display-resource-definitions', 'resource-definitions'],
                                    description='Prints a list of all resource definitions known to '
                                    'drbdmanage. By default, the list is printed as a human readable table.')
         p_lrscdfs.add_argument('-m', '--machine-readable', action="store_true")
@@ -931,7 +931,7 @@ class LinStorCLI(object):
         volgroupby = resgroupby + ('Vol_ID', 'Size', 'Minor')
         vol_group_completer = show_group_completer(volgroupby, 'groupby')
 
-        p_lvols = subp.add_parser('list-volumes', aliases=['v', 'volumes'],
+        p_lvols = subp.add_parser('list-volume-definitions', aliases=['dspvlmdfn', 'display-volume-definitions', 'volume-definitions'],
                                   description=' Prints a list of all volume definitions known to drbdmanage. '
                                   'By default, the list is printed as a human readable table.')
         p_lvols.add_argument('-m', '--machine-readable', action="store_true")
