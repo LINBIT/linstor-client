@@ -268,8 +268,8 @@ class LinStorCLI(object):
         check_res_name = namecheck(RES_NAME)
         check_snaps_name = namecheck(SNAPS_NAME)
 
-        p_new_node = subp.add_parser('add-node',
-                                     aliases=['nn', 'new-node', 'an'],
+        p_new_node = subp.add_parser('create-node',
+                                     aliases=['crtnode', 'new-node', 'add-node', 'cn', 'nn', 'an'],
                                      description='Creates a node entry for a node that participates in the '
                                      'linstor cluster.')
         p_new_node.add_argument('-p', '--port', type=rangecheck(1, 65535),
@@ -317,8 +317,8 @@ class LinStorCLI(object):
         p_mod_node.set_defaults(command=p_mod_node_command)
 
         # remove-node
-        p_rm_node = subp.add_parser('remove-node',
-                                    aliases=['rn', 'delete-node', 'dn'],
+        p_rm_node = subp.add_parser('delete-node',
+                                    aliases=['delnode', 'remove-node', 'dn', 'rn'],
                                     description='Removes a node from the drbdmanage cluster. '
                                     'All drbdmanage resources that are still deployed on the specified '
                                     'node are marked for undeployment, and the node entry is marked for '
