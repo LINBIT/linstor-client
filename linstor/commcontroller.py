@@ -2,6 +2,7 @@
 
 import socket
 import struct
+import sys
 from google.protobuf.internal import encoder
 from google.protobuf.internal import decoder
 
@@ -11,7 +12,7 @@ class CommController(object):
     def __init__(self, servers=[]):
         self.servers_good = servers
         self.servers_bad = []
-        self.current_sock = None
+        self.current_sock = None  # type: socket.Socket
         self.first_connect = True
 
     def _connect_single(self, server):
@@ -19,6 +20,15 @@ class CommController(object):
             self.current_sock = socket.create_connection(server)
         except:
             self.current_sock = None
+
+    def __enter__(self):
+        if not self.connect():
+            sys.stderr.write('Could not connect to any controller %s\n' % (self.servers_bad))
+            sys.exit(1)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     # Can be called multiple times and tries to find a good one
     def connect(self):
@@ -144,19 +154,11 @@ class CommController(object):
 
         pb_msgs = []
         if succ:
-            try:
-                while True:
-                    pb_msgs = self.recv()
-                    msg_hdr = MsgHeader()
-                    msg_hdr.parseFromString(pbmsgs[0])
-                    if msg_hdr.msg_id == 1:
-                        break
-            except:
-                # FIXME: Protocol error
-                pass
+            pb_msgs = self.recv()
 
         return pb_msgs
 
     def close(self):
         if self.current_sock:
             self.current_sock.close()
+            self.current_sock = None
