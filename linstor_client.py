@@ -1369,7 +1369,7 @@ class LinStorCLI(object):
                 cmds.insert(0, cmds.pop(idx))
 
         # sort subcommands themselves
-        cmds_sorted.sort(lambda a, b: cmp(a[0], b[0]))
+        cmds_sorted.sort(key = lambda a: a[0])
         return cmds_sorted
 
     def parser_cmds_description(self, all_commands):

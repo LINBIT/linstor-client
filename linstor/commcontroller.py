@@ -70,7 +70,7 @@ class CommController(object):
         h_type = struct.pack("!I", 0)  # currently always 0, 32 bit
         h_reserved = struct.pack("!Q", 0)  # reserved, 64 bit
 
-        msg_serialized = ""
+        msg_serialized = bytes()
 
         header_serialized = header.SerializeToString()
         delim = encoder._VarintBytes(len(header_serialized))
