@@ -143,7 +143,7 @@ class LinStorCLI(object):
         if have_details:
             sys.stderr.write("Details:\n")
             self.print_with_indent(sys.stderr, 4, details)
-        sys.exit(ret)
+        return ret
 
     @staticmethod
     def _controller_list(cmdl_args_controllers):
@@ -179,7 +179,7 @@ class LinStorCLI(object):
             # be nice
             self.cc.close()
             if p:  # could be None if no payload or if cmd_xyz does implicit return
-                self._handle_ret(args, p)
+                sys.exit(self._handle_ret(args, p))
             sys.exit(0)
 
         return wrapper
