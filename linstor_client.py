@@ -145,6 +145,21 @@ class LinStorCLI(object):
             self.print_with_indent(sys.stderr, 4, details)
         sys.exit(ret)
 
+    @staticmethod
+    def _controller_list(cmdl_args_controllers):
+        cenv = os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + cmdl_args_controllers
+
+        servers = []
+        for hp in cenv.split(','):
+            if ':' not in hp:
+                hp += ':' + str(DFLT_CTRL_PORT_PLAIN)
+            try:
+                h, p = hp.split(':')
+                servers.append((h, int(p)))
+            except:
+                pass
+        return servers
+
     # This wrapper tries to eliminate most of the boiler-plate code required for communication
     # In the common/simple case users setup header/payload, call sendrec, and return the payload they got back
     # The wrapper does the connection to the controller and handles the return message processing (i.e., error
@@ -154,18 +169,7 @@ class LinStorCLI(object):
         @wraps(f)
         def wrapper(self, *args, **kwargs):
             cliargs = args[0]
-
-            cenv = os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + cliargs.controllers
-
-            servers = []
-            for hp in cenv.split(','):
-                if ':' not in hp:
-                    hp += ':' + str(DFLT_CTRL_PORT_PLAIN)
-                try:
-                    h, p = hp.split(':')
-                    servers.append((h, int(p)))
-                except:
-                    pass
+            servers = LinStorCLI._controller_list(cliargs.controllers)
 
             self.cc.add_controllers(servers)
             if not self.cc.connect():
