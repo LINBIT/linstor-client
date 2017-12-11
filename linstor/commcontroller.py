@@ -113,7 +113,9 @@ class CommController(object):
             return []
 
         try:
-            hdr = self.current_sock.recv(16)
+            hdr = ""
+            while len(hdr) < 16:
+                hdr += self.current_sock.recv(16)
         except:
             return []
 
@@ -125,7 +127,9 @@ class CommController(object):
 
         # slurp the whole payload
         try:
-            payload = self.current_sock.recv(h_payload_length)
+            payload = ""
+            while len(payload) < h_payload_length:
+                payload += self.current_sock.recv(h_payload_length)
         except:
             return []
 
