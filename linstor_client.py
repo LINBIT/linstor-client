@@ -479,7 +479,7 @@ class LinStorCLI(object):
         p_new_storpool_dfn.set_defaults(func=self.cmd_new_storpool_dfn)
 
         # modify-storpool
-        def res_storpool_completer(prefix, **kwargs):
+        def storpool_dfn_completer(prefix, **kwargs):
             server_rc, storpool_dfn_list = self.__list_storpool_definitions(False)
             possible = set()
             for r in storpool_dfn_list:
@@ -507,7 +507,7 @@ class LinStorCLI(object):
                               'taking any action on the cluster nodes that have the storpool deployed.')
         p_rm_storpool_dfn.add_argument('name',
                               nargs="+",
-                              help='Name of the storpool to delete').completer = res_storpool_completer
+                              help='Name of the storpool to delete').completer = storpool_dfn_completer
         p_rm_storpool_dfn.set_defaults(func=self.cmd_del_storpool_dfn)
 
 
@@ -989,7 +989,7 @@ class LinStorCLI(object):
                                     'list-storpool-definitions',
                                     aliases=['dspstorpooldfn', 'display-storpool-definitions', 'storpool-definitions'],
                                     description='Prints a list of all storpool definitions known to '
-                                    'drbdmanage. By default, the list is printed as a human readable table.')
+                                    'linstor. By default, the list is printed as a human readable table.')
         p_lstorpooldfs.add_argument('-m', '--machine-readable', action="store_true")
         p_lstorpooldfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpooldfs.add_argument('-g', '--groupby', nargs='+',
@@ -1768,7 +1768,7 @@ class LinStorCLI(object):
 
         h = MsgHeader()
         h.ParseFromString(pbmsgs[0])
-        if h.api_call != API_LST_RSC_DFN:
+        if h.api_call != API_LST_STOR_POOL_DFN:
             p = MsgApiCallResponse()
             p.ParseFromString(pbmsgs[1])
             return p
