@@ -36,6 +36,9 @@ from proto.MsgLstNode_pb2 import MsgLstNode
 from proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
 from proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
 from proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
+from proto.MsgLstStorPool_pb2 import MsgLstStorPool
+from proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
+from proto.MsgDelStorPool_pb2 import MsgDelStorPool
 from proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
 from proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
@@ -88,6 +91,9 @@ from linstor.sharedconsts import (
     API_CRT_STOR_POOL_DFN,
     API_DEL_STOR_POOL_DFN,
     API_LST_STOR_POOL_DFN,
+    API_CRT_STOR_POOL,
+    API_DEL_STOR_POOL,
+    API_LST_STOR_POOL,
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
     DFLT_CTRL_PORT_SSL,
@@ -510,6 +516,64 @@ class LinStorCLI(object):
                               help='Name of the storpool to delete').completer = storpool_dfn_completer
         p_rm_storpool_dfn.set_defaults(func=self.cmd_del_storpool_dfn)
 
+        # TODO
+        def driver_completer(prefix, **kwargs):
+            possible = ["lvm", "lvmthin", "zfs"]
+
+            if prefix:
+               return [e for e in possible if e.startswith(prefix)]
+
+            return possible
+
+        # new-storpol
+        p_new_storpool = subp.add_parser('create-storpool',
+                                    aliases=['crtstorpool', 'add-storpool', 'new-storpool', 'csp', 'asp', 'nsp'],
+                                    description='Defines a Linstor storpool for use with Linstor.')
+        p_new_storpool.add_argument('name', type=check_storpool_name, help='Name of the new storpool')
+        p_new_storpool.add_argument(
+            'node_name',
+            type=check_node_name,
+            help='Name of the node for the new storpool').completer = node_completer
+        # TODO
+        p_new_storpool.add_argument(
+            'driver',
+            choices=driver_completer(""),
+            help='Name of the driver used for the new storpool').completer = driver_completer
+        p_new_storpool.set_defaults(func=self.cmd_new_storpool)
+
+        # modify-storpool
+        def storpool_completer(prefix, **kwargs):
+            server_rc, storpool_list = self.__list_storpool(False)
+            possible = set()
+            for r in storpool_list:
+                name, _ = r
+                possible.add(name)
+
+            if not prefix or prefix == '':
+                return possible
+            else:
+                return [res for res in possible if res.startswith(prefix)]
+
+            return possible
+
+        # remove-storpool
+        # TODO description
+        p_rm_storpool = subp.add_parser('delete-storpool',
+                                   aliases=['delstorpool', 'remove-storpool', 'dsp', 'rsp'],
+                                   description=' Removes a storpool ')
+        p_rm_storpool.add_argument('-q', '--quiet', action="store_true",
+                              help='Unless this option is used, drbdmanage will issue a safety question '
+                              'that must be answered with yes, otherwise the operation is canceled.')
+        p_rm_storpool.add_argument('-f', '--force', action="store_true",
+                              help='If present, then the storpool entry and all associated assignment '
+                              "entries are removed from drbdmanage's data tables immediately, without "
+                              'taking any action on the cluster nodes that have the storpool deployed.')
+        p_rm_storpool.add_argument('name',
+                              help='Name of the storpool to delete').completer = storpool_completer
+        p_rm_storpool.add_argument('node_name',
+                              nargs="+",
+                              help='Name of the Node where the storpool exists.').completer = node_completer
+        p_rm_storpool.set_defaults(func=self.cmd_del_storpool)
 
         # new-volume
         def size_completer(prefix, **kwargs):
@@ -998,6 +1062,24 @@ class LinStorCLI(object):
                               help='Filter by list of storpool').completer = res_completer
         p_lstorpooldfs.add_argument('--separators', action="store_true")
         p_lstorpooldfs.set_defaults(func=self.cmd_list_storpool_dfn)
+
+        # storpool
+        storpoolgroupby = ('Name')
+        storpool_group_completer = show_group_completer(storpoolgroupby, "groupby")
+
+        p_lstorpool = subp.add_parser(
+                                    'list-storpool',
+                                    aliases=['dspstorpool', 'display-storpool', 'storpool'],
+                                    description='Prints a list of all storpool known to '
+                                    'linstor. By default, the list is printed as a human readable table.')
+        p_lstorpool.add_argument('-m', '--machine-readable', action="store_true")
+        p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_lstorpool.add_argument('-g', '--groupby', nargs='+',
+                              choices=storpoolgroupby).completer = storpool_group_completer
+        p_lstorpool.add_argument('-R', '--storpool', nargs='+', type=check_res_name,
+                              help='Filter by list of storpool').completer = storpool_completer
+        p_lstorpool.add_argument('--separators', action="store_true")
+        p_lstorpool.set_defaults(func=self.cmd_list_storpool)
 
         # volumes
         volgroupby = resgroupby + ('Vol_ID', 'Size', 'Minor')
@@ -1780,6 +1862,95 @@ class LinStorCLI(object):
         print(prntfrm.format(storpool="StorpoolDfn-name", uuid="UUID"))
         for storpool_dfn in p.stor_pool_dfns:
             print(prntfrm.format(storpool=storpool_dfn.stor_pool_name, uuid=storpool_dfn.uuid.decode("utf8")))
+
+            # for prop in n.node_props:
+            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+
+        return None
+
+    @need_communication
+    def cmd_new_storpool(self, args):
+        h = MsgHeader()
+        h.api_call = API_CRT_STOR_POOL
+        h.msg_id = 1
+
+        p = MsgCrtStorPool()
+        p.stor_pool_name = args.name
+        p.node_name = args.node_name
+
+        # construct correct driver name
+        if args.driver == 'lvmthin':
+            driver = 'LvmThin'
+        else:
+            driver = args.driver.title()
+
+        fulldriver_name = 'com.linbit.linstor.storage.{driver}Driver'.format(driver=driver)
+        p.driver = fulldriver_name
+
+        pbmsgs = self.cc.sendrec(h, p)
+
+        h = MsgHeader()
+        h.ParseFromString(pbmsgs[0])
+        p = MsgApiCallResponse()
+        p.ParseFromString(pbmsgs[1])
+
+        return p
+
+    def cmd_del_storpool(self, args):
+        h = MsgHeader()
+        h.api_call = API_DEL_STOR_POOL
+        h.msg_id = 1
+
+        servers = LinStorCLI._controller_list(args.controllers)
+        with CommController(servers) as cc:
+            for node_name in args.node_name:
+                p = MsgDelStorPool()
+                p.stor_pool_name = args.name
+                p.node_name = node_name
+
+                pbmsgs = cc.sendrec(h, p)
+
+                ret_hdr = MsgHeader()
+                ret_hdr.ParseFromString(pbmsgs[0])
+                assert(ret_hdr.msg_id == h.msg_id)
+                p = MsgApiCallResponse()
+                p.ParseFromString(pbmsgs[1])
+
+
+                retcode = self._handle_ret([args], p)
+                # exit if delete wasn't successful?
+
+                h.msg_id += 1
+
+        return True
+
+    @need_communication
+    def cmd_list_storpool(self, args):
+        h = MsgHeader()
+
+        h.api_call = API_LST_STOR_POOL
+        h.msg_id = 1
+
+        pbmsgs = self.cc.sendrec(h)
+
+        h = MsgHeader()
+        h.ParseFromString(pbmsgs[0])
+        if h.api_call != API_LST_STOR_POOL:
+            p = MsgApiCallResponse()
+            p.ParseFromString(pbmsgs[1])
+            return p
+        else:
+            p = MsgLstStorPool()
+            p.ParseFromString(pbmsgs[1])
+
+        prntfrm = "{storpool:<20s} {uuid:<40s} {node:<30s} {driver:<20s}"
+        print(prntfrm.format(storpool="Storpool-name", uuid="UUID", node="Node", driver="Driver"))
+        for storpool in p.stor_pools:
+            print(prntfrm.format(
+                storpool=storpool.stor_pool_name,
+                uuid=storpool.stor_pool_uuid.decode("utf8"),
+                node=storpool.node_name,
+                driver=storpool.driver))
 
             # for prop in n.node_props:
             #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
