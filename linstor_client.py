@@ -1705,8 +1705,6 @@ class LinStorCLI(object):
             p = MsgLstNode()
             p.ParseFromString(pbmsgs[1])
 
-        prntfrm = "{node:<20s} {type:<10s} {uuid:<40s}"
-
         if False: # disabled for now
             tbl = Table()
             tbl.add_column("Node")
@@ -1716,9 +1714,20 @@ class LinStorCLI(object):
                 tbl.add_row([n.name, n.type, n.uuid])
             tbl.show()
 
+        prntfrm = "{node:<20s} {type:<10s} {uuid:<40s}"
         print(prntfrm.format(node="Node", type="NodeType", uuid="UUID"))
+
+        netiffrm = " +   {name:<20s} {address:>20s}:{port:<6d} {type:<10s}"
         for n in p.nodes:
             print(prntfrm.format(node=n.name, type=n.type, uuid=n.uuid))
+
+            for interface in n.net_interfaces:
+                print(netiffrm.format(
+                    name=interface.name,
+                    address=interface.address,
+                    port=interface.port,
+                    type=interface.type))
+
 
             # for prop in n.node_props:
             #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
