@@ -42,6 +42,9 @@ from proto.MsgDelStorPool_pb2 import MsgDelStorPool
 from proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
 from proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
+from proto.MsgCrtRsc_pb2 import MsgCrtRsc
+from proto.MsgDelRsc_pb2 import MsgDelRsc
+from proto.MsgLstRsc_pb2 import MsgLstRsc
 from proto.MsgHeader_pb2 import MsgHeader
 
 from linstor.consts import (
@@ -88,6 +91,9 @@ from linstor.sharedconsts import (
     API_CRT_RSC_DFN,
     API_DEL_RSC_DFN,
     API_LST_RSC_DFN,
+    API_CRT_RSC,
+    API_DEL_RSC,
+    API_LST_RSC,
     API_CRT_STOR_POOL_DFN,
     API_DEL_STOR_POOL_DFN,
     API_LST_STOR_POOL_DFN,
@@ -427,7 +433,8 @@ class LinStorCLI(object):
                                     'automatically selected by the drbdmanage server on the current node. ')
         p_new_res.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_new_res.add_argument('name', type=check_res_name, help='Name of the new resource')
-        p_new_res.set_defaults(func=self.cmd_enoimp)
+        p_new_res.add_argument('node_name', type=check_node_name, help='Name of the new resource').completer = node_completer
+        p_new_res.set_defaults(func=self.cmd_new_rsc)
 
         # modify-resource
         def res_completer(prefix, **kwargs):
@@ -472,9 +479,11 @@ class LinStorCLI(object):
                               "entries are removed from drbdmanage's data tables immediately, without "
                               'taking any action on the cluster nodes that have the resource deployed.')
         p_rm_res.add_argument('name',
-                              nargs="+",
                               help='Name of the resource to delete').completer = res_completer
-        p_rm_res.set_defaults(func=self.cmd_enoimp)
+        p_rm_res.add_argument('node_name',
+                              nargs="+",
+                              help='Name of the node').completer = node_completer
+        p_rm_res.set_defaults(func=self.cmd_del_rsc)
 
 
         # new-storpol definition
@@ -1023,7 +1032,7 @@ class LinStorCLI(object):
         p_lreses.add_argument('-R', '--resources', nargs='+', type=check_res_name,
                               help='Filter by list of resources').completer = res_completer
         p_lreses.add_argument('--separators', action="store_true")
-        p_lreses.set_defaults(func=self.cmd_enoimp)
+        p_lreses.set_defaults(func=self.cmd_list_rsc)
 
         # resource definitions
         resverbose = ('Port',)
@@ -1797,6 +1806,85 @@ class LinStorCLI(object):
         print(prntfrm.format(rsc="Resource-name", port="Port", uuid="UUID"))
         for rsc_dfn in p.rsc_dfns:
             print(prntfrm.format(rsc=rsc_dfn.rsc_name, port=str(rsc_dfn.rsc_port), uuid=rsc_dfn.uuid))
+
+            # for prop in n.node_props:
+            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+
+        return None
+
+    @need_communication
+    def cmd_new_rsc(self, args):
+        h = MsgHeader()
+        h.api_call = API_CRT_RSC
+        h.msg_id = 1
+
+        p = MsgCrtRsc()
+        p.rsc_name = args.name
+        p.node_name = args.node_name
+
+        pbmsgs = self.cc.sendrec(h, p)
+
+        h = MsgHeader()
+        h.ParseFromString(pbmsgs[0])
+        p = MsgApiCallResponse()
+        p.ParseFromString(pbmsgs[1])
+
+        return p
+
+    def cmd_del_rsc(self, args):
+        h = MsgHeader()
+        h.api_call = API_DEL_RSC
+        h.msg_id = 1
+
+        servers = LinStorCLI._controller_list(args.controllers)
+        with CommController(servers) as cc:
+            for node_name in args.node_name:
+                p = MsgDelRsc()
+                p.rsc_name = args.name
+                p.node_name = node_name
+
+                pbmsgs = cc.sendrec(h, p)
+
+                ret_hdr = MsgHeader()
+                ret_hdr.ParseFromString(pbmsgs[0])
+                assert(ret_hdr.msg_id == h.msg_id)
+                p = MsgApiCallResponse()
+                p.ParseFromString(pbmsgs[1])
+
+
+                retcode = self._handle_ret([args], p)
+                # exit if delete wasn't successful?
+
+                h.msg_id += 1
+
+        return True
+
+    @need_communication
+    def cmd_list_rsc(self, args):
+        h = MsgHeader()
+
+        h.api_call = API_LST_RSC
+        h.msg_id = 1
+
+        pbmsgs = self.cc.sendrec(h)
+
+        h = MsgHeader()
+        h.ParseFromString(pbmsgs[0])
+        if h.api_call != API_LST_RSC:
+            p = MsgApiCallResponse()
+            p.ParseFromString(pbmsgs[1])
+            return p
+        else:
+            p = MsgLstRsc()
+            p.ParseFromString(pbmsgs[1])
+
+        prntfrm = "{rsc:<20s} {uuid:<40s} {node:<30s}"
+        print(prntfrm.format(rsc="Resource-name", uuid="UUID", node="Node"))
+        for rsc in p.resources:
+            print(prntfrm.format(
+                rsc=rsc.name,
+                uuid=rsc.uuid.decode("utf8"),
+                node=rsc.node_name))
 
             # for prop in n.node_props:
             #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
