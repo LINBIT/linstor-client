@@ -1981,7 +1981,7 @@ class LinStorCLI(object):
         else:
             driver = args.driver.title()
 
-        fulldriver_name = 'com.linbit.linstor.storage.{driver}Driver'.format(driver=driver)
+        fulldriver_name = '{driver}Driver'.format(driver=driver)
         p.driver = fulldriver_name
 
         pbmsgs = self.cc.sendrec(h, p)
