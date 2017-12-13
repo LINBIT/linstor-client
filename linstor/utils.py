@@ -103,6 +103,79 @@ def get_terminal_size():
     return term_width, term_height
 
 
+class Output(object):
+    @staticmethod
+    def handle_ret(args, answer):
+        from linstor.sharedconsts import (MASK_ERROR, MASK_WARN, MASK_INFO)
+
+        rc = answer.ret_code
+        ret = 0
+        category = ''
+        message = answer.message_format
+        cause = answer.cause_format
+        correction = answer.correction_format
+        details = answer.details_format
+        if rc & MASK_ERROR:
+            ret = 1
+            category = Output.color_str('ERROR:\n', COLOR_RED, args)
+        elif rc & MASK_WARN:
+            if args[0].warn_as_error:  # otherwise keep at 0
+                ret = 1
+            category = Output.color_str('WARNING:\n', COLOR_YELLOW, args)
+        elif rc & MASK_INFO:
+            category = 'INFO: '
+        else:  # do not use MASK_SUCCESS
+            category = Output.color_str('SUCCESS:\n', COLOR_GREEN, args)
+
+        sys.stderr.write(category)
+        have_message = message is not None and len(message) > 0
+        have_cause = cause is not None and len(cause) > 0
+        have_correction = correction is not None and len(correction) > 0
+        have_details = details is not None and len(details) > 0
+        if (have_cause or have_correction or have_details) and have_message:
+            sys.stderr.write("Description:\n")
+        if have_message:
+            Output.print_with_indent(sys.stderr, 4, message)
+        if have_cause:
+            sys.stderr.write("Cause:\n")
+            Output.print_with_indent(sys.stderr, 4, cause)
+        if have_correction:
+            sys.stderr.write("Correction:\n")
+            Output.print_with_indent(sys.stderr, 4, correction)
+        if have_details:
+            sys.stderr.write("Details:\n")
+            Output.print_with_indent(sys.stderr, 4, details)
+        return ret
+
+    @staticmethod
+    def print_with_indent(stream, indent, text):
+        spacer = indent * ' '
+        offset = 0
+        index = 0
+        while index < len(text):
+            if text[index] == '\n':
+                stream.write(spacer)
+                stream.write(text[offset:index])
+                stream.write('\n')
+                offset = index + 1
+            index += 1
+        if offset < len(text):
+            stream.write(spacer)
+            stream.write(text[offset:])
+            stream.write('\n')
+
+    @staticmethod
+    def color_str(string, color, args=None):
+        return '%s%s%s' % (Output.color(color, args), string, Output.color(COLOR_NONE, args))
+
+    @staticmethod
+    def color(col, args=None):
+        if args and args[0].no_color:
+            return ''
+        else:
+            return col
+
+
 class Table():
     def __init__(self, colors=True, utf8=False, pastable=False):
         self.r_just = False

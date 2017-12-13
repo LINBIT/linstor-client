@@ -3,8 +3,36 @@
 import socket
 import struct
 import sys
+import os
 from google.protobuf.internal import encoder
 from google.protobuf.internal import decoder
+from functools import wraps
+from linstor.consts import KEY_LS_CONTROLLERS
+from linstor.sharedconsts import DFLT_CTRL_PORT_PLAIN
+from linstor.utils import Output
+
+
+def need_communication(f):
+    """
+    This wrapper tries to eliminate most of the boiler-plate code required for communication
+    In the common/simple case users setup header/payload, call sendrec, and return the payload they got back
+    The wrapper does the connection to the controller and handles the return message processing (i.e., error
+    codes/info messages).
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        cliargs = args[0]
+        servers = CommController.controller_list(cliargs.controllers)
+
+        p = None
+        with CommController(servers) as cc:
+            p = f(cc, *args, **kwargs)
+
+        if p:  # could be None if no payload or if cmd_xyz does implicit return
+            sys.exit(Output.handle_ret(args, p))
+        sys.exit(0)
+
+    return wrapper
 
 
 class CommController(object):
@@ -29,6 +57,21 @@ class CommController(object):
 
     def __exit__(self, type, value, traceback):
         self.close()
+
+    @staticmethod
+    def controller_list(cmdl_args_controllers):
+        cenv = os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + cmdl_args_controllers
+
+        servers = []
+        for hp in cenv.split(','):
+            if ':' not in hp:
+                hp += ':' + str(DFLT_CTRL_PORT_PLAIN)
+            try:
+                h, p = hp.split(':')
+                servers.append((h, int(p)))
+            except:
+                pass
+        return servers
 
     # Can be called multiple times and tries to find a good one
     def connect(self):

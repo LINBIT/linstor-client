@@ -25,26 +25,17 @@ import re
 from functools import wraps
 import linstor.argparse.argparse as argparse
 import linstor.argcomplete as argcomplete
+from linstor.commands import (
+    VolumeDefinitionCommands,
+    StoragePoolDefinitionCommands,
+    StoragePoolCommands,
+    ResourceDefinitionCommands,
+    ResourceCommands,
+    NodeCommands
+)
 
-from linstor.commcontroller import CommController
+from linstor.commcontroller import need_communication, CommController
 
-from proto.LinStorMapEntry_pb2 import LinStorMapEntry
-from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
-from proto.MsgCrtNode_pb2 import MsgCrtNode
-from proto.MsgDelNode_pb2 import MsgDelNode
-from proto.MsgLstNode_pb2 import MsgLstNode
-from proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
-from proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
-from proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
-from proto.MsgLstStorPool_pb2 import MsgLstStorPool
-from proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
-from proto.MsgDelStorPool_pb2 import MsgDelStorPool
-from proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
-from proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
-from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from proto.MsgCrtRsc_pb2 import MsgCrtRsc
-from proto.MsgDelRsc_pb2 import MsgDelRsc
-from proto.MsgLstRsc_pb2 import MsgLstRsc
 from proto.MsgHeader_pb2 import MsgHeader
 
 from linstor.consts import (
@@ -64,6 +55,7 @@ from linstor.utils import (
     DrbdSetupOpts,
     SizeCalc,
     Table,
+    Output
 )
 
 from linstor.utils import (
@@ -85,29 +77,9 @@ from linstor.utils import (
 )
 
 from linstor.sharedconsts import (
-    API_CRT_NODE,
-    API_DEL_NODE,
-    API_LST_NODE,
-    API_CRT_RSC_DFN,
-    API_DEL_RSC_DFN,
-    API_LST_RSC_DFN,
-    API_CRT_RSC,
-    API_DEL_RSC,
-    API_LST_RSC,
-    API_CRT_STOR_POOL_DFN,
-    API_DEL_STOR_POOL_DFN,
-    API_LST_STOR_POOL_DFN,
-    API_CRT_STOR_POOL,
-    API_DEL_STOR_POOL,
-    API_LST_STOR_POOL,
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
     DFLT_CTRL_PORT_SSL,
-    KEY_IP_ADDR,
-    KEY_NETCOM_TYPE,
-    KEY_NETIF_TYPE,
-    KEY_PORT_NR,
-    NAMESPC_NETIF,
     VAL_NETCOM_TYPE_PLAIN,
     VAL_NETCOM_TYPE_SSL,
     VAL_NETIF_TYPE_IP,
@@ -123,48 +95,6 @@ class LinStorCLI(object):
     linstor command line client
     """
 
-    def _handle_ret(self, args, answer):
-        from linstor.sharedconsts import (MASK_ERROR, MASK_WARN, MASK_INFO)
-
-        rc = answer.ret_code
-        ret = 0
-        category = ''
-        message = answer.message_format
-        cause = answer.cause_format
-        correction = answer.correction_format
-        details = answer.details_format
-        if rc & MASK_ERROR:
-            ret = 1
-            category = self.color_str('ERROR:\n', COLOR_RED, args)
-        elif rc & MASK_WARN:
-            if args[0].warn_as_error:  # otherwise keep at 0
-                ret = 1
-            category = self.color_str('WARNING:\n', COLOR_YELLOW, args)
-        elif rc & MASK_INFO:
-            category = 'INFO: '
-        else:  # do not use MASK_SUCCESS
-            category = self.color_str('SUCCESS:\n', COLOR_GREEN, args)
-
-        sys.stderr.write(category)
-        have_message = message is not None and len(message) > 0
-        have_cause = cause is not None and len(cause) > 0
-        have_correction = correction is not None and len(correction) > 0
-        have_details = details is not None and len(details) > 0
-        if (have_cause or have_correction or have_details) and have_message:
-            sys.stderr.write("Description:\n")
-        if have_message:
-            self.print_with_indent(sys.stderr, 4, message)
-        if have_cause:
-            sys.stderr.write("Cause:\n")
-            self.print_with_indent(sys.stderr, 4, cause)
-        if have_correction:
-            sys.stderr.write("Correction:\n")
-            self.print_with_indent(sys.stderr, 4, correction)
-        if have_details:
-            sys.stderr.write("Details:\n")
-            self.print_with_indent(sys.stderr, 4, details)
-        return ret
-
     @staticmethod
     def _controller_list(cmdl_args_controllers):
         cenv = os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + cmdl_args_controllers
@@ -179,30 +109,6 @@ class LinStorCLI(object):
             except:
                 pass
         return servers
-
-    # This wrapper tries to eliminate most of the boiler-plate code required for communication
-    # In the common/simple case users setup header/payload, call sendrec, and return the payload they got back
-    # The wrapper does the connection to the controller and handles the return message processing (i.e., error
-    # codes/info messages).
-    # For a typical user of it, see cmd_new_node and for msgs that don't get back a payload, see cmd_ping
-    def need_communication(f):
-        @wraps(f)
-        def wrapper(self, *args, **kwargs):
-            cliargs = args[0]
-            servers = LinStorCLI._controller_list(cliargs.controllers)
-
-            self.cc.add_controllers(servers)
-            if not self.cc.connect():
-                sys.stderr.write('Could not connect to any controller %s\n' % (self.cc.servers_bad))
-                sys.exit(1)
-            p = f(self, *args, **kwargs)
-            # be nice
-            self.cc.close()
-            if p:  # could be None if no payload or if cmd_xyz does implicit return
-                sys.exit(self._handle_ret(args, p))
-            sys.exit(0)
-
-        return wrapper
 
     def __init__(self):
         self._all_commands = None
@@ -323,7 +229,7 @@ class LinStorCLI(object):
         p_new_node.add_argument('name', help='Name of the new node', type=check_node_name)
         p_new_node.add_argument('ip',
                                 help='IP address of the new node').completer = ip_completer("name")
-        p_new_node.set_defaults(func=self.cmd_new_node)
+        p_new_node.set_defaults(func=NodeCommands.create)
 
         # modify-node
         p_mod_node_command = 'modify-node'
@@ -356,7 +262,7 @@ class LinStorCLI(object):
                                'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_node.add_argument('name',
                                help='Name of the node to remove').completer = node_completer
-        p_rm_node.set_defaults(func=self.cmd_del_node)
+        p_rm_node.set_defaults(func=NodeCommands.delete)
 
         # Quorum control, completion of the action parameter
         quorum_completer_possible = ('ignore', 'unignore')
@@ -387,7 +293,7 @@ class LinStorCLI(object):
         p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_new_res_dfn.add_argument('-s', '--secret', type=str)
         p_new_res_dfn.add_argument('name', type=check_res_name, help='Name of the new resource definition')
-        p_new_res_dfn.set_defaults(func=self.cmd_new_rsc_dfn)
+        p_new_res_dfn.set_defaults(func=ResourceDefinitionCommands.create)
 
         # modify-resource
         def res_dfn_completer(prefix, **kwargs):
@@ -423,7 +329,7 @@ class LinStorCLI(object):
         p_rm_res_dfn.add_argument('name',
                               nargs="+",
                               help='Name of the resource to delete').completer = res_dfn_completer
-        p_rm_res_dfn.set_defaults(func=self.cmd_del_rsc_dfn)
+        p_rm_res_dfn.set_defaults(func=ResourceDefinitionCommands.delete)
 
         # new-resource
         p_new_res = subp.add_parser('create-resource',
@@ -434,7 +340,7 @@ class LinStorCLI(object):
         p_new_res.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_new_res.add_argument('name', type=check_res_name, help='Name of the new resource')
         p_new_res.add_argument('node_name', type=check_node_name, help='Name of the new resource').completer = node_completer
-        p_new_res.set_defaults(func=self.cmd_new_rsc)
+        p_new_res.set_defaults(func=ResourceCommands.create)
 
         # modify-resource
         def res_completer(prefix, **kwargs):
@@ -483,7 +389,7 @@ class LinStorCLI(object):
         p_rm_res.add_argument('node_name',
                               nargs="+",
                               help='Name of the node').completer = node_completer
-        p_rm_res.set_defaults(func=self.cmd_del_rsc)
+        p_rm_res.set_defaults(func=ResourceCommands.delete)
 
 
         # new-storpol definition
@@ -491,7 +397,7 @@ class LinStorCLI(object):
                                     aliases=['crtstoragepooldfn'],
                                     description='Defines a Linstor storpool definition for use with linstor.')
         p_new_storpool_dfn.add_argument('name', type=check_storpool_name, help='Name of the new storpool definition')
-        p_new_storpool_dfn.set_defaults(func=self.cmd_new_storpool_dfn)
+        p_new_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.create)
 
         # modify-storpool
         def storpool_dfn_completer(prefix, **kwargs):
@@ -523,7 +429,7 @@ class LinStorCLI(object):
         p_rm_storpool_dfn.add_argument('name',
                               nargs="+",
                               help='Name of the storage pool to delete').completer = storpool_dfn_completer
-        p_rm_storpool_dfn.set_defaults(func=self.cmd_del_storpool_dfn)
+        p_rm_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.delete)
 
         # TODO
         def driver_completer(prefix, **kwargs):
@@ -548,7 +454,7 @@ class LinStorCLI(object):
             'driver',
             choices=driver_completer(""),
             help='Name of the driver used for the new storage pool').completer = driver_completer
-        p_new_storpool.set_defaults(func=self.cmd_new_storpool)
+        p_new_storpool.set_defaults(func=StoragePoolCommands.create)
 
         # modify-storpool
         def storpool_completer(prefix, **kwargs):
@@ -582,7 +488,7 @@ class LinStorCLI(object):
         p_rm_storpool.add_argument('node_name',
                               nargs="+",
                               help='Name of the Node where the storage pool exists.').completer = node_completer
-        p_rm_storpool.set_defaults(func=self.cmd_del_storpool)
+        p_rm_storpool.set_defaults(func=StoragePoolCommands.delete)
 
         # new-volume
         def size_completer(prefix, **kwargs):
@@ -621,13 +527,13 @@ class LinStorCLI(object):
             help='Size of the volume in resource. '
             'The default unit for size is GiB (size * (2 ^ 30) bytes). '
             'Another unit can be specified by using an according postfix. '
-            "Drbdmanage's internal granularity for the capacity of volumes is one "
+            "Linstor's internal granularity for the capacity of volumes is one "
             'Kibibyte (2 ^ 10 bytes). All other unit specifications are implicitly '
-            'converted to Kibibyte, so that the actual size value used by drbdmanage '
+            'converted to Kibibyte, so that the actual size value used by linstor '
             'is the smallest natural number of Kibibytes that is large enough to '
             'accommodate a volume of the requested size in the specified size unit.'
         ).completer = size_completer
-        p_new_vol.set_defaults(func=self.cmd_enoimp)
+        p_new_vol.set_defaults(func=VolumeDefinitionCommands.create)
         p_new_vol.set_defaults(command=p_new_vol_command)
 
         def vol_completer(prefix, parsed_args, **kwargs):
@@ -711,7 +617,7 @@ class LinStorCLI(object):
         p_rm_vol.add_argument('name',
                               help='Name of the resource').completer = res_completer
         p_rm_vol.add_argument('vol_id', help='Volume ID', type=int).completer = vol_completer
-        p_rm_vol.set_defaults(func=self.cmd_enoimp)
+        p_rm_vol.set_defaults(func=VolumeDefinitionCommands.delete)
 
         # connect
         p_conn = subp.add_parser('connect-resource', description='Connect resource on node',
@@ -1012,7 +918,7 @@ class LinStorCLI(object):
         p_lnodes.add_argument('-N', '--nodes', nargs='+', type=check_node_name,
                               help='Filter by list of nodes').completer = node_completer
         p_lnodes.add_argument('--separators', action="store_true")
-        p_lnodes.set_defaults(func=self.cmd_lst_node)
+        p_lnodes.set_defaults(func=NodeCommands.list)
 
         # resources
         resverbose = ('Port',)
@@ -1033,7 +939,7 @@ class LinStorCLI(object):
         p_lreses.add_argument('-R', '--resources', nargs='+', type=check_res_name,
                               help='Filter by list of resources').completer = res_completer
         p_lreses.add_argument('--separators', action="store_true")
-        p_lreses.set_defaults(func=self.cmd_list_rsc)
+        p_lreses.set_defaults(func=ResourceCommands.list)
 
         # resource definitions
         resverbose = ('Port',)
@@ -1055,7 +961,7 @@ class LinStorCLI(object):
         p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=check_res_name,
                               help='Filter by list of resources').completer = res_completer
         p_lrscdfs.add_argument('--separators', action="store_true")
-        p_lrscdfs.set_defaults(func=self.cmd_list_rsc_dfn)
+        p_lrscdfs.set_defaults(func=ResourceDefinitionCommands.list)
 
         # storpool definitions
         storpooldfngroupby = ('Name')
@@ -1073,7 +979,7 @@ class LinStorCLI(object):
         p_lstorpooldfs.add_argument('-R', '--storpool', nargs='+', type=check_res_name,
                               help='Filter by list of storage pool').completer = res_completer
         p_lstorpooldfs.add_argument('--separators', action="store_true")
-        p_lstorpooldfs.set_defaults(func=self.cmd_list_storpool_dfn)
+        p_lstorpooldfs.set_defaults(func=StoragePoolDefinitionCommands.list)
 
         # storpool
         storpoolgroupby = ('Name')
@@ -1091,7 +997,7 @@ class LinStorCLI(object):
         p_lstorpool.add_argument('-R', '--storpool', nargs='+', type=check_res_name,
                               help='Filter by list of storage pool').completer = storpool_completer
         p_lstorpool.add_argument('--separators', action="store_true")
-        p_lstorpool.set_defaults(func=self.cmd_list_storpool)
+        p_lstorpool.set_defaults(func=StoragePoolCommands.list)
 
         # volumes
         volgroupby = resgroupby + ('Vol_ID', 'Size', 'Minor')
@@ -1109,7 +1015,7 @@ class LinStorCLI(object):
         p_lvols.add_argument('--separators', action="store_true")
         p_lvols.add_argument('-R', '--resources', nargs='+', type=check_res_name,
                              help='Filter by list of resources').completer = res_completer
-        p_lvols.set_defaults(func=self.cmd_enoimp)
+        p_lvols.set_defaults(func=VolumeDefinitionCommands.list)
 
         # snapshots
         snapgroupby = ("Resource", "Name", "State")
@@ -1641,422 +1547,6 @@ class LinStorCLI(object):
         self.err('This command is deprecated or not implemented')
 
     @need_communication
-    def cmd_new_node(self, args):
-        h = MsgHeader()
-        p = MsgCrtNode()
-
-        def gen_nif(k, v):
-            prop = LinStorMapEntry()
-            prop.key = "%s/%s/%s" % (NAMESPC_NETIF, args.interface_name, k)
-            prop.value = v
-            p.node_props.extend([prop])
-
-        h.api_call = API_CRT_NODE
-        h.msg_id = 1
-        p.node_name = args.name
-        p.node_type = args.node_type
-
-        # interface
-        gen_nif(KEY_NETIF_TYPE, args.interface_type)
-        gen_nif(KEY_NETCOM_TYPE, args.communication_type)
-        gen_nif(KEY_IP_ADDR, args.ip)
-
-        port = args.port
-        if not port:
-            if args.communication_type == VAL_NETCOM_TYPE_PLAIN:
-                port = DFLT_STLT_PORT_PLAIN if p.node_type == VAL_NODE_TYPE_STLT else DFLT_CTRL_PORT_PLAIN
-            elif args.communication_type == VAL_NETCOM_TYPE_SSL:
-                port = DFLT_CTRL_PORT_SSL
-            else:
-                self.err("Communication type %s has no default port" % (args.communication_type))
-        gen_nif(KEY_PORT_NR, str(port))
-
-        pbmsgs = self.cc.sendrec(h, p)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        p = MsgApiCallResponse()
-        p.ParseFromString(pbmsgs[1])
-
-        return p
-
-    @need_communication
-    def cmd_del_node(self, args):
-        h = MsgHeader()
-        p = MsgDelNode()
-
-        h.api_call = API_DEL_NODE
-        h.msg_id = 1
-        p.node_name = args.name
-
-        pbmsgs = self.cc.sendrec(h, p)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        p = MsgApiCallResponse()
-        p.ParseFromString(pbmsgs[1])
-
-        return p
-
-    @need_communication
-    def cmd_lst_node(self, args):
-        h = MsgHeader()
-
-        h.api_call = API_LST_NODE
-        h.msg_id = 1
-
-        pbmsgs = self.cc.sendrec(h)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        if h.api_call != API_LST_NODE:
-            p = MsgApiCallResponse()
-            p.ParseFromString(pbmsgs[1])
-            return p
-        else:
-            p = MsgLstNode()
-            p.ParseFromString(pbmsgs[1])
-
-        if False: # disabled for now
-            tbl = Table()
-            tbl.add_column("Node")
-            tbl.add_column("NodeType")
-            tbl.add_column("UUID")
-            for n in p.nodes:
-                tbl.add_row([n.name, n.type, n.uuid])
-            tbl.show()
-
-        prntfrm = "{node:<20s} {type:<10s} {uuid:<40s}"
-        print(prntfrm.format(node="Node", type="NodeType", uuid="UUID"))
-
-        netiffrm = " +   {name:<20s} {address:>20s}:{port:<6d} {type:<10s}"
-        for n in p.nodes:
-            print(prntfrm.format(node=n.name, type=n.type, uuid=n.uuid))
-
-            for interface in n.net_interfaces:
-                print(netiffrm.format(
-                    name=interface.name,
-                    address=interface.address,
-                    port=interface.port,
-                    type=interface.type))
-
-
-            # for prop in n.node_props:
-            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
-
-        return None
-
-    @need_communication
-    def cmd_new_rsc_dfn(self, args):
-        h = MsgHeader()
-        h.api_call = API_CRT_RSC_DFN
-        h.msg_id = 1
-
-        p = MsgCrtRscDfn()
-        p.rsc_name = args.name
-        if args.port:
-            p.rsc_port = args.port
-        if args.secret:
-            p.secret = args.secret
-
-        pbmsgs = self.cc.sendrec(h, p)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        p = MsgApiCallResponse()
-        p.ParseFromString(pbmsgs[1])
-
-        return p
-
-    @need_communication
-    def cmd_del_rsc_dfn(self, args):
-        h = MsgHeader()
-        h.api_call = API_DEL_RSC_DFN
-        h.msg_id = 1
-
-        p = MsgDelRscDfn()
-        p.rsc_name = args.name[0]
-
-        pbmsgs = self.cc.sendrec(h, p)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        p = MsgApiCallResponse()
-        p.ParseFromString(pbmsgs[1])
-
-        return p
-
-    @need_communication
-    def cmd_list_rsc_dfn(self, args):
-        h = MsgHeader()
-
-        h.api_call = API_LST_RSC_DFN
-        h.msg_id = 1
-
-        pbmsgs = self.cc.sendrec(h)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        if h.api_call != API_LST_RSC_DFN:
-            p = MsgApiCallResponse()
-            p.ParseFromString(pbmsgs[1])
-            return p
-        else:
-            p = MsgLstRscDfn()
-            p.ParseFromString(pbmsgs[1])
-
-        prntfrm = "{rsc:<20s} {port:<10s} {uuid:<40s}"
-        print(prntfrm.format(rsc="Resource-name", port="Port", uuid="UUID"))
-        for rsc_dfn in p.rsc_dfns:
-            print(prntfrm.format(rsc=rsc_dfn.rsc_name, port=str(rsc_dfn.rsc_port), uuid=rsc_dfn.uuid))
-
-            # for prop in n.node_props:
-            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
-
-        return None
-
-    @need_communication
-    def cmd_new_rsc(self, args):
-        h = MsgHeader()
-        h.api_call = API_CRT_RSC
-        h.msg_id = 1
-
-        p = MsgCrtRsc()
-        p.rsc_name = args.name
-        p.node_name = args.node_name
-
-        pbmsgs = self.cc.sendrec(h, p)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        p = MsgApiCallResponse()
-        p.ParseFromString(pbmsgs[1])
-
-        return p
-
-    def cmd_del_rsc(self, args):
-        h = MsgHeader()
-        h.api_call = API_DEL_RSC
-        h.msg_id = 1
-
-        servers = LinStorCLI._controller_list(args.controllers)
-        with CommController(servers) as cc:
-            for node_name in args.node_name:
-                p = MsgDelRsc()
-                p.rsc_name = args.name
-                p.node_name = node_name
-
-                pbmsgs = cc.sendrec(h, p)
-
-                ret_hdr = MsgHeader()
-                ret_hdr.ParseFromString(pbmsgs[0])
-                assert(ret_hdr.msg_id == h.msg_id)
-                p = MsgApiCallResponse()
-                p.ParseFromString(pbmsgs[1])
-
-
-                retcode = self._handle_ret([args], p)
-                # exit if delete wasn't successful?
-
-                h.msg_id += 1
-
-        return True
-
-    @need_communication
-    def cmd_list_rsc(self, args):
-        h = MsgHeader()
-
-        h.api_call = API_LST_RSC
-        h.msg_id = 1
-
-        pbmsgs = self.cc.sendrec(h)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        if h.api_call != API_LST_RSC:
-            p = MsgApiCallResponse()
-            p.ParseFromString(pbmsgs[1])
-            return p
-        else:
-            p = MsgLstRsc()
-            p.ParseFromString(pbmsgs[1])
-
-        prntfrm = "{rsc:<20s} {uuid:<40s} {node:<30s}"
-        print(prntfrm.format(rsc="Resource-name", uuid="UUID", node="Node"))
-        for rsc in p.resources:
-            print(prntfrm.format(
-                rsc=rsc.name,
-                uuid=rsc.uuid.decode("utf8"),
-                node=rsc.node_name))
-
-            # for prop in n.node_props:
-            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
-
-        return None
-
-    @need_communication
-    def cmd_new_storpool_dfn(self, args):
-        h = MsgHeader()
-        h.api_call = API_CRT_STOR_POOL_DFN
-        h.msg_id = 1
-
-        p = MsgCrtStorPoolDfn()
-        p.stor_pool_name = args.name
-
-        pbmsgs = self.cc.sendrec(h, p)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        p = MsgApiCallResponse()
-        p.ParseFromString(pbmsgs[1])
-
-        return p
-
-    def cmd_del_storpool_dfn(self, args):
-        h = MsgHeader()
-        h.api_call = API_DEL_STOR_POOL_DFN
-        h.msg_id = 1
-
-        servers = LinStorCLI._controller_list(args.controllers)
-        with CommController(servers) as cc:
-            for storpool_name in args.name:
-                p = MsgDelStorPoolDfn()
-                p.stor_pool_name = storpool_name
-
-                pbmsgs = cc.sendrec(h, p)
-
-                ret_hdr = MsgHeader()
-                ret_hdr.ParseFromString(pbmsgs[0])
-                assert(ret_hdr.msg_id == h.msg_id)
-                p = MsgApiCallResponse()
-                p.ParseFromString(pbmsgs[1])
-
-
-                retcode = self._handle_ret([args], p)
-                # exit if delete wasn't successful?
-
-                h.msg_id += 1
-
-        return True
-
-    @need_communication
-    def cmd_list_storpool_dfn(self, args):
-        h = MsgHeader()
-
-        h.api_call = API_LST_STOR_POOL_DFN
-        h.msg_id = 1
-
-        pbmsgs = self.cc.sendrec(h)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        if h.api_call != API_LST_STOR_POOL_DFN:
-            p = MsgApiCallResponse()
-            p.ParseFromString(pbmsgs[1])
-            return p
-        else:
-            p = MsgLstStorPoolDfn()
-            p.ParseFromString(pbmsgs[1])
-
-        prntfrm = "{storpool:<20s} {uuid:<40s}"
-        print(prntfrm.format(storpool="StorpoolDfn-name", uuid="UUID"))
-        for storpool_dfn in p.stor_pool_dfns:
-            print(prntfrm.format(storpool=storpool_dfn.stor_pool_name, uuid=storpool_dfn.uuid.decode("utf8")))
-
-            # for prop in n.node_props:
-            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
-
-        return None
-
-    @need_communication
-    def cmd_new_storpool(self, args):
-        h = MsgHeader()
-        h.api_call = API_CRT_STOR_POOL
-        h.msg_id = 1
-
-        p = MsgCrtStorPool()
-        p.stor_pool_name = args.name
-        p.node_name = args.node_name
-
-        # construct correct driver name
-        if args.driver == 'lvmthin':
-            driver = 'LvmThin'
-        else:
-            driver = args.driver.title()
-
-        p.driver = '{driver}Driver'.format(driver=driver)
-
-        pbmsgs = self.cc.sendrec(h, p)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        p = MsgApiCallResponse()
-        p.ParseFromString(pbmsgs[1])
-
-        return p
-
-    def cmd_del_storpool(self, args):
-        h = MsgHeader()
-        h.api_call = API_DEL_STOR_POOL
-        h.msg_id = 1
-
-        servers = LinStorCLI._controller_list(args.controllers)
-        with CommController(servers) as cc:
-            for node_name in args.node_name:
-                p = MsgDelStorPool()
-                p.stor_pool_name = args.name
-                p.node_name = node_name
-
-                pbmsgs = cc.sendrec(h, p)
-
-                ret_hdr = MsgHeader()
-                ret_hdr.ParseFromString(pbmsgs[0])
-                assert(ret_hdr.msg_id == h.msg_id)
-                p = MsgApiCallResponse()
-                p.ParseFromString(pbmsgs[1])
-
-
-                retcode = self._handle_ret([args], p)
-                # exit if delete wasn't successful?
-
-                h.msg_id += 1
-
-        return True
-
-    @need_communication
-    def cmd_list_storpool(self, args):
-        h = MsgHeader()
-
-        h.api_call = API_LST_STOR_POOL
-        h.msg_id = 1
-
-        pbmsgs = self.cc.sendrec(h)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        if h.api_call != API_LST_STOR_POOL:
-            p = MsgApiCallResponse()
-            p.ParseFromString(pbmsgs[1])
-            return p
-        else:
-            p = MsgLstStorPool()
-            p.ParseFromString(pbmsgs[1])
-
-        prntfrm = "{storpool:<20s} {uuid:<40s} {node:<30s} {driver:<20s}"
-        print(prntfrm.format(storpool="Storpool-name", uuid="UUID", node="Node", driver="Driver"))
-        for storpool in p.stor_pools:
-            print(prntfrm.format(
-                storpool=storpool.stor_pool_name,
-                uuid=storpool.stor_pool_uuid.decode("utf8"),
-                node=storpool.node_name,
-                driver=storpool.driver))
-
-            # for prop in n.node_props:
-            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
-
-        return None
-
-    @need_communication
     def cmd_ping(self, args):
         from linstor.sharedconsts import (API_PING, API_PONG)
         h = MsgHeader()
@@ -2074,25 +1564,6 @@ class LinStorCLI(object):
 
         # no return is fine, implicitly returns None, which need_communication handles
 
-    def print_with_indent(self, stream, indent, text):
-        spacer = indent * ' '
-        offset = 0
-        index = 0
-        while index < len(text):
-            if text[index] == '\n':
-                stream.write(spacer)
-                stream.write(text[offset:index])
-                stream.write('\n')
-                offset = index + 1
-            index += 1
-        if offset < len(text):
-            stream.write(spacer)
-            stream.write(text[offset:])
-            stream.write('\n')
-
-    def color_str(self, string, color, args=None):
-        return '%s%s%s' % (self.color(color, args), string, self.color(COLOR_NONE, args))
-
     def color(self, col, args=None):
         if args and args[0].no_color:
             return ''
@@ -2100,7 +1571,7 @@ class LinStorCLI(object):
             return col
 
     def bail_out(self, msg, color, ret):
-        sys.stderr.write(self.color_str(msg, color)+'\n')
+        sys.stderr.write(Output.color_str(msg, color)+'\n')
         sys.exit(ret)
 
     def err(self, msg):
@@ -2157,7 +1628,7 @@ class LinStorCLI(object):
         """
         # TODO(rck): just a hack
         level_color = COLOR_RED
-        return self.color(level_color)
+        return Output.color(level_color)
 
     def check_mutex_opts(self, args, names):
         target = ""
@@ -2248,10 +1719,10 @@ class LinStorCLI(object):
         net_options = filter_prohibited(net_options, ('shared-secret', 'cram-hmac-alg'))
 
         colors = {
-            'net-options': self.color(COLOR_TEAL, args),
-            'disk-options': self.color(COLOR_BROWN, args),
-            'peer-device-options': self.color(COLOR_GREEN, args),
-            'resource-options': self.color(COLOR_DARKPINK, args),
+            'net-options': Output.color(COLOR_TEAL, args),
+            'disk-options': Output.color(COLOR_BROWN, args),
+            'peer-device-options': Output.color(COLOR_GREEN, args),
+            'resource-options': Output.color(COLOR_DARKPINK, args),
         }
 
         # TODO(rck):
@@ -2274,7 +1745,7 @@ class LinStorCLI(object):
                 return True
             for o in option_type:
                 if line.find(o) != -1:
-                    sys.stdout.write(self.color_str(line.rstrip(), color, args)+'\n')
+                    sys.stdout.write(Output.color_str(line.rstrip(), color, args)+'\n')
                     return True
             return False
 
