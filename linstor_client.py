@@ -22,7 +22,6 @@ import sys
 import os
 import re
 # import locale
-from functools import wraps
 import linstor.argparse.argparse as argparse
 import linstor.argcomplete as argcomplete
 from linstor.commands import (
@@ -54,26 +53,16 @@ from linstor.consts import (
 from linstor.utils import (
     DrbdSetupOpts,
     SizeCalc,
-    Table,
-    Output
-)
-
-from linstor.utils import (
+    Output,
     filter_prohibited,
-    get_uname,
     namecheck,
     rangecheck,
-    Table
-)
-
-from linstor.utils import (
     COLOR_BROWN,
     COLOR_DARKPINK,
     COLOR_GREEN,
     COLOR_NONE,
     COLOR_RED,
-    COLOR_TEAL,
-    COLOR_YELLOW,
+    COLOR_TEAL
 )
 
 from linstor.sharedconsts import (
@@ -205,12 +194,12 @@ class LinStorCLI(object):
                                      'linstor cluster.')
         p_new_node.add_argument('-p', '--port', type=rangecheck(1, 65535),
                                 help='default: Satellite %s for %s; Controller %s for %s; %s for %s' % (
-                                                                        DFLT_STLT_PORT_PLAIN,
-                                                                        VAL_NETCOM_TYPE_PLAIN,
-                                                                        DFLT_CTRL_PORT_PLAIN,
-                                                                        VAL_NETCOM_TYPE_PLAIN,
-                                                                        DFLT_CTRL_PORT_SSL,
-                                                                        VAL_NETCOM_TYPE_SSL))
+                                    DFLT_STLT_PORT_PLAIN,
+                                    VAL_NETCOM_TYPE_PLAIN,
+                                    DFLT_CTRL_PORT_PLAIN,
+                                    VAL_NETCOM_TYPE_PLAIN,
+                                    DFLT_CTRL_PORT_SSL,
+                                    VAL_NETCOM_TYPE_SSL))
 
         ntype_def = VAL_NODE_TYPE_STLT
         p_new_node.add_argument('--node-type', choices=(VAL_NODE_TYPE_CTRL, VAL_NODE_TYPE_AUX,
@@ -288,8 +277,8 @@ class LinStorCLI(object):
 
         # new-resource definition
         p_new_res_dfn = subp.add_parser('create-resource-definition',
-                                    aliases=['crtrscdfn'],
-                                    description='Defines a Linstor resource definition for use with linstor.')
+                                        aliases=['crtrscdfn'],
+                                        description='Defines a Linstor resource definition for use with linstor.')
         p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_new_res_dfn.add_argument('-s', '--secret', type=str)
         p_new_res_dfn.add_argument('name', type=check_res_name, help='Name of the new resource definition')
@@ -313,22 +302,22 @@ class LinStorCLI(object):
         # remove-resource definition
         # TODO description
         p_rm_res_dfn = subp.add_parser('delete-resource-definition',
-                                   aliases=['delrscdfn'],
-                                   description=' Removes a resource definition '
-                                   'from the drbdmanage cluster. The resource is undeployed from all nodes '
-                                   "and the resource entry is marked for removal from drbdmanage's data "
-                                   'tables. After all nodes have undeployed the resource, the resource '
-                                   "entry is removed from drbdmanage's data tables.")
+                                       aliases=['delrscdfn'],
+                                       description=' Removes a resource definition '
+                                       'from the drbdmanage cluster. The resource is undeployed from all nodes '
+                                       "and the resource entry is marked for removal from drbdmanage's data "
+                                       'tables. After all nodes have undeployed the resource, the resource '
+                                       "entry is removed from drbdmanage's data tables.")
         p_rm_res_dfn.add_argument('-q', '--quiet', action="store_true",
-                              help='Unless this option is used, drbdmanage will issue a safety question '
-                              'that must be answered with yes, otherwise the operation is canceled.')
+                                  help='Unless this option is used, drbdmanage will issue a safety question '
+                                  'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_res_dfn.add_argument('-f', '--force', action="store_true",
-                              help='If present, then the resource entry and all associated assignment '
-                              "entries are removed from drbdmanage's data tables immediately, without "
-                              'taking any action on the cluster nodes that have the resource deployed.')
+                                  help='If present, then the resource entry and all associated assignment '
+                                  "entries are removed from drbdmanage's data tables immediately, without "
+                                  'taking any action on the cluster nodes that have the resource deployed.')
         p_rm_res_dfn.add_argument('name',
-                              nargs="+",
-                              help='Name of the resource to delete').completer = res_dfn_completer
+                                  nargs="+",
+                                  help='Name of the resource to delete').completer = res_dfn_completer
         p_rm_res_dfn.set_defaults(func=ResourceDefinitionCommands.delete)
 
         # new-resource
@@ -339,7 +328,9 @@ class LinStorCLI(object):
                                     'automatically selected by the drbdmanage server on the current node. ')
         p_new_res.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_new_res.add_argument('name', type=check_res_name, help='Name of the new resource')
-        p_new_res.add_argument('node_name', type=check_node_name, help='Name of the new resource').completer = node_completer
+        p_new_res.add_argument('node_name',
+                               type=check_node_name,
+                               help='Name of the new resource').completer = node_completer
         p_new_res.set_defaults(func=ResourceCommands.create)
 
         # modify-resource
@@ -391,11 +382,10 @@ class LinStorCLI(object):
                               help='Name of the node').completer = node_completer
         p_rm_res.set_defaults(func=ResourceCommands.delete)
 
-
         # new-storpol definition
         p_new_storpool_dfn = subp.add_parser('create-storage-pool-definition',
-                                    aliases=['crtstoragepooldfn'],
-                                    description='Defines a Linstor storpool definition for use with linstor.')
+                                             aliases=['crtstoragepooldfn'],
+                                             description='Defines a Linstor storpool definition for use with linstor.')
         p_new_storpool_dfn.add_argument('name', type=check_storpool_name, help='Name of the new storpool definition')
         p_new_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.create)
 
@@ -417,18 +407,19 @@ class LinStorCLI(object):
         # remove-storpool definition
         # TODO description
         p_rm_storpool_dfn = subp.add_parser('delete-storage-pool-definition',
-                                   aliases=['delstoragepooldfn'],
-                                   description=' Removes a storage pool definition ')
+                                            aliases=['delstoragepooldfn'],
+                                            description=' Removes a storage pool definition ')
         p_rm_storpool_dfn.add_argument('-q', '--quiet', action="store_true",
-                              help='Unless this option is used, drbdmanage will issue a safety question '
-                              'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_storpool_dfn.add_argument('-f', '--force', action="store_true",
-                              help='If present, then the storage pool entry and all associated assignment '
-                              "entries are removed from drbdmanage's data tables immediately, without "
-                              'taking any action on the cluster nodes that have the storage pool deployed.')
+                                       help='Unless this option is used, drbdmanage will issue a safety question '
+                                       'that must be answered with yes, otherwise the operation is canceled.')
+        p_rm_storpool_dfn.add_argument(
+            '-f', '--force', action="store_true",
+            help='If present, then the storage pool entry and all associated assignment '
+            "entries are removed from drbdmanage's data tables immediately, without "
+            'taking any action on the cluster nodes that have the storage pool deployed.')
         p_rm_storpool_dfn.add_argument('name',
-                              nargs="+",
-                              help='Name of the storage pool to delete').completer = storpool_dfn_completer
+                                       nargs="+",
+                                       help='Name of the storage pool to delete').completer = storpool_dfn_completer
         p_rm_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.delete)
 
         # TODO
@@ -436,14 +427,14 @@ class LinStorCLI(object):
             possible = ["lvm", "lvmthin", "zfs"]
 
             if prefix:
-               return [e for e in possible if e.startswith(prefix)]
+                return [e for e in possible if e.startswith(prefix)]
 
             return possible
 
         # new-storpol
         p_new_storpool = subp.add_parser('create-storage-pool',
-                                    aliases=['crtstoragepool',],
-                                    description='Defines a Linstor storage pool for use with Linstor.')
+                                         aliases=['crtstoragepool'],
+                                         description='Defines a Linstor storage pool for use with Linstor.')
         p_new_storpool.add_argument('name', type=check_storpool_name, help='Name of the new storage pool')
         p_new_storpool.add_argument(
             'node_name',
@@ -474,20 +465,23 @@ class LinStorCLI(object):
         # remove-storpool
         # TODO description
         p_rm_storpool = subp.add_parser('delete-storage-pool',
-                                   aliases=['delstoragepool'],
-                                   description=' Removes a storage pool ')
-        p_rm_storpool.add_argument('-q', '--quiet', action="store_true",
-                              help='Unless this option is used, drbdmanage will issue a safety question '
-                              'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_storpool.add_argument('-f', '--force', action="store_true",
-                              help='If present, then the storage pool entry and all associated assignment '
-                              "entries are removed from drbdmanage's data tables immediately, without "
-                              'taking any action on the cluster nodes that have the storage pool deployed.')
+                                        aliases=['delstoragepool'],
+                                        description=' Removes a storage pool ')
+        p_rm_storpool.add_argument(
+            '-q', '--quiet',
+            action="store_true",
+            help='Unless this option is used, drbdmanage will issue a safety question '
+            'that must be answered with yes, otherwise the operation is canceled.')
+        p_rm_storpool.add_argument('-f', '--force',
+                                   action="store_true",
+                                   help='If present, then the storage pool entry and all associated assignment '
+                                   "entries are removed from drbdmanage's data tables immediately, without "
+                                   'taking any action on the cluster nodes that have the storage pool deployed.')
         p_rm_storpool.add_argument('name',
-                              help='Name of the storage pool to delete').completer = storpool_completer
+                                   help='Name of the storage pool to delete').completer = storpool_completer
         p_rm_storpool.add_argument('node_name',
-                              nargs="+",
-                              help='Name of the Node where the storage pool exists.').completer = node_completer
+                                   nargs="+",
+                                   help='Name of the Node where the storage pool exists.').completer = node_completer
         p_rm_storpool.set_defaults(func=StoragePoolCommands.delete)
 
         # new-volume
@@ -948,18 +942,18 @@ class LinStorCLI(object):
         res_group_completer = show_group_completer(resgroupby, "groupby")
 
         p_lrscdfs = subp.add_parser(
-                                    'list-resource-definitions',
-                                    aliases=['dsprscdfn', 'display-resource-definitions', 'resource-definitions'],
-                                    description='Prints a list of all resource definitions known to '
-                                    'drbdmanage. By default, the list is printed as a human readable table.')
+            'list-resource-definitions',
+            aliases=['dsprscdfn', 'display-resource-definitions', 'resource-definitions'],
+            description='Prints a list of all resource definitions known to '
+            'drbdmanage. By default, the list is printed as a human readable table.')
         p_lrscdfs.add_argument('-m', '--machine-readable', action="store_true")
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscdfs.add_argument('-s', '--show', nargs='+',
-                              choices=resverbose).completer = res_verbose_completer
+                               choices=resverbose).completer = res_verbose_completer
         p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
-                              choices=resgroupby).completer = res_group_completer
+                               choices=resgroupby).completer = res_group_completer
         p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                              help='Filter by list of resources').completer = res_completer
+                               help='Filter by list of resources').completer = res_completer
         p_lrscdfs.add_argument('--separators', action="store_true")
         p_lrscdfs.set_defaults(func=ResourceDefinitionCommands.list)
 
@@ -968,16 +962,16 @@ class LinStorCLI(object):
         storpooldfn_group_completer = show_group_completer(storpooldfngroupby, "groupby")
 
         p_lstorpooldfs = subp.add_parser(
-                                    'list-storage-pool-definitions',
-                                    aliases=['ls-storage-pool-dfn', 'display-storage-pool-definition'],
-                                    description='Prints a list of all storage pool definitions known to '
-                                    'linstor. By default, the list is printed as a human readable table.')
+            'list-storage-pool-definitions',
+            aliases=['ls-storage-pool-dfn', 'display-storage-pool-definition'],
+            description='Prints a list of all storage pool definitions known to '
+            'linstor. By default, the list is printed as a human readable table.')
         p_lstorpooldfs.add_argument('-m', '--machine-readable', action="store_true")
         p_lstorpooldfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpooldfs.add_argument('-g', '--groupby', nargs='+',
-                              choices=storpooldfngroupby).completer = storpooldfn_group_completer
+                                    choices=storpooldfngroupby).completer = storpooldfn_group_completer
         p_lstorpooldfs.add_argument('-R', '--storpool', nargs='+', type=check_res_name,
-                              help='Filter by list of storage pool').completer = res_completer
+                                    help='Filter by list of storage pool').completer = res_completer
         p_lstorpooldfs.add_argument('--separators', action="store_true")
         p_lstorpooldfs.set_defaults(func=StoragePoolDefinitionCommands.list)
 
@@ -986,16 +980,16 @@ class LinStorCLI(object):
         storpool_group_completer = show_group_completer(storpoolgroupby, "groupby")
 
         p_lstorpool = subp.add_parser(
-                                    'list-storage-pools',
-                                    aliases=['ls-storage-pool', 'display-storage-pools'],
-                                    description='Prints a list of all storage pool known to '
-                                    'linstor. By default, the list is printed as a human readable table.')
+            'list-storage-pools',
+            aliases=['ls-storage-pool', 'display-storage-pools'],
+            description='Prints a list of all storage pool known to '
+            'linstor. By default, the list is printed as a human readable table.')
         p_lstorpool.add_argument('-m', '--machine-readable', action="store_true")
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
-                              choices=storpoolgroupby).completer = storpool_group_completer
+                                 choices=storpoolgroupby).completer = storpool_group_completer
         p_lstorpool.add_argument('-R', '--storpool', nargs='+', type=check_res_name,
-                              help='Filter by list of storage pool').completer = storpool_completer
+                                 help='Filter by list of storage pool').completer = storpool_completer
         p_lstorpool.add_argument('--separators', action="store_true")
         p_lstorpool.set_defaults(func=StoragePoolCommands.list)
 
@@ -1003,7 +997,8 @@ class LinStorCLI(object):
         volgroupby = resgroupby + ('Vol_ID', 'Size', 'Minor')
         vol_group_completer = show_group_completer(volgroupby, 'groupby')
 
-        p_lvols = subp.add_parser('list-volume-definitions', aliases=['dspvlmdfn', 'display-volume-definitions', 'volume-definitions'],
+        p_lvols = subp.add_parser('list-volume-definitions',
+                                  aliases=['dspvlmdfn', 'display-volume-definitions', 'volume-definitions'],
                                   description=' Prints a list of all volume definitions known to drbdmanage. '
                                   'By default, the list is printed as a human readable table.')
         p_lvols.add_argument('-m', '--machine-readable', action="store_true")
@@ -1320,7 +1315,7 @@ class LinStorCLI(object):
         # number and handler names are very static, so use a list for now and add this feature to
         # drbd-utils later
         handlers = (
-            'after-resync-target',  'before-resync-target', 'fence-peer', 'initial-split-brain',
+            'after-resync-target', 'before-resync-target', 'fence-peer', 'initial-split-brain',
             'local-io-error', 'pri-lost', 'pri-lost-after-sb', 'pri-on-incon-degr', 'split-brain',
         )
         p_handlers = subp.add_parser('handlers',
@@ -1441,7 +1436,7 @@ class LinStorCLI(object):
                 cmds.insert(0, cmds.pop(idx))
 
         # sort subcommands themselves
-        cmds_sorted.sort(key = lambda a: a[0])
+        cmds_sorted.sort(key=lambda a: a[0])
         return cmds_sorted
 
     def parser_cmds_description(self, all_commands):
@@ -1571,7 +1566,7 @@ class LinStorCLI(object):
             return col
 
     def bail_out(self, msg, color, ret):
-        sys.stderr.write(Output.color_str(msg, color)+'\n')
+        sys.stderr.write(Output.color_str(msg, color) + '\n')
         sys.exit(ret)
 
     def err(self, msg):
@@ -1745,7 +1740,7 @@ class LinStorCLI(object):
                 return True
             for o in option_type:
                 if line.find(o) != -1:
-                    sys.stdout.write(Output.color_str(line.rstrip(), color, args)+'\n')
+                    sys.stdout.write(Output.color_str(line.rstrip(), color, args) + '\n')
                     return True
             return False
 
