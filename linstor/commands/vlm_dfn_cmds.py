@@ -2,9 +2,14 @@ from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.MsgCrtVlmDfn_pb2 import MsgCrtVlmDfn
 # from proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from linstor.sharedconsts import API_CRT_VLM_DFN, API_DEL_VLM_DFN, API_LST_RSC_DFN
+from google.protobuf import json_format
+from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN  # API_DEL_VLM_DFN
 from linstor.commcontroller import need_communication
 from linstor.commands import Commands
+from linstor.utils import SizeCalc, approximate_size_string
+import re
+import sys
+import json
 
 
 class VolumeDefinitionCommands(Commands):
@@ -16,12 +21,12 @@ class VolumeDefinitionCommands(Commands):
         p.rsc_name = args.name
 
         vlmdf = p.vlm_dfns.add()
-        vlmdf.vlm_size = int(args.size)
+        vlmdf.vlm_size = VolumeDefinitionCommands._get_volume_size(args.size)
 
         return Commands._create(cc, API_CRT_VLM_DFN, p)
 
     def delete(self):
-        pass
+        raise NotImplementedError("delete has not been implemented yet.")
 
     @staticmethod
     @need_communication
@@ -30,14 +35,54 @@ class VolumeDefinitionCommands(Commands):
         if isinstance(lstmsg, MsgApiCallResponse):
             return lstmsg
 
-        prntfrm = "{uuid:<40s} {vlmnr:<5s} {vlmminor:<10s} {vlmsize:<20s}"
-        print(prntfrm.format(uuid="UUID", vlmnr="VlmNr", vlmminor="VlmMinor", vlmsize="Size"))
-        prntfrm = "{uuid:<40s} {vlmnr:<5d} {vlmminor:<10d} {vlmsize:<20d}"
+        if args.machine_readable:
+            s = json_format.MessageToJson(lstmsg)
+            j = json.loads(s)
+            print(j)
+            return None
+
+        prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5s} {vlmminor:<10s} {vlmsize:<10s}"
+        print(prntfrm.format(res="Resource", uuid="UUID", vlmnr="VlmNr", vlmminor="VlmMinor", vlmsize="Size"))
+        prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5d} {vlmminor:<10d} {vlmsize:<20s}"
         for rscdfn in lstmsg.rsc_dfns:
             for vlmdfn in rscdfn.vlm_dfns:
-                print(prntfrm.format(uuid=vlmdfn.vlm_dfn_uuid.decode("utf8"), vlmnr=vlmdfn.vlm_nr, vlmminor=vlmdfn.vlm_minor, vlmsize=vlmdfn.vlm_size))
+                print(prntfrm.format(
+                    res=rscdfn.rsc_name,
+                    uuid=vlmdfn.vlm_dfn_uuid,
+                    vlmnr=vlmdfn.vlm_nr,
+                    vlmminor=vlmdfn.vlm_minor,
+                    vlmsize=approximate_size_string(vlmdfn.vlm_size)))
 
             # for prop in n.node_props:
             #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
 
         return None
+
+    @classmethod
+    def _get_volume_size(cls, size_str):
+        m = re.match('(\d+)(\D*)', size_str)
+
+        size = 0
+        try:
+            size = int(m.group(1))
+        except AttributeError:
+            sys.stderr.write('Size is not a valid number\n')
+            return None
+
+        unit_str = m.group(2)
+        if unit_str == "":
+            unit_str = "GiB"
+        try:
+            unit = SizeCalc.UNITS_MAP[unit_str.lower()]
+        except KeyError:
+            sys.stderr.write('"%s" is not a valid unit!\n' % (unit_str))
+            sys.stderr.write('Valid units: %s\n' % (','.join(SizeCalc.UNITS_MAP.keys())))
+            return None
+
+        unit = SizeCalc.UNITS_MAP[unit_str.lower()]
+
+        if unit != SizeCalc.UNIT_kiB:
+            size = SizeCalc.convert_round_up(size, unit,
+                                             SizeCalc.UNIT_kiB)
+
+        return size

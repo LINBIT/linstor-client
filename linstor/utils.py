@@ -843,6 +843,28 @@ class SizeCalc(object):
     UNIT_ZB = 21 | _base_10
     UNIT_YB = 24 | _base_10
 
+    """
+    Unit names are lower-case; functions using the lookup table should
+    convert the unit name to lower-case to look it up in this table
+    """
+    UNITS_MAP = {
+        "k": UNIT_kiB,
+        "m": UNIT_MiB,
+        "g": UNIT_GiB,
+        "t": UNIT_TiB,
+        "p": UNIT_PiB,
+        "kb": UNIT_kB,
+        "mb": UNIT_MB,
+        "gb": UNIT_GB,
+        "tb": UNIT_TB,
+        "pb": UNIT_PB,
+        "kib": UNIT_kiB,
+        "mib": UNIT_MiB,
+        "gib": UNIT_GiB,
+        "tib": UNIT_TiB,
+        "pib": UNIT_PiB,
+    }
+
     @classmethod
     def convert(cls, size, unit_in, unit_out):
         """

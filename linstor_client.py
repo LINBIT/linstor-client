@@ -52,7 +52,6 @@ from linstor.consts import (
 
 from linstor.utils import (
     DrbdSetupOpts,
-    SizeCalc,
     Output,
     filter_prohibited,
     namecheck,
@@ -1565,34 +1564,6 @@ class LinStorCLI(object):
         else:
             return col
 
-    def _get_volume_size_arg(self, args):
-        m = re.match('(\d+)(\D*)', args.size)
-
-        size = 0
-        try:
-            size = int(m.group(1))
-        except AttributeError:
-            sys.stderr.write('Size is not a valid number\n')
-            return None
-
-        unit_str = m.group(2)
-        if unit_str == "":
-            unit_str = "GiB"
-        try:
-            unit = self.UNITS_MAP[unit_str.lower()]
-        except KeyError:
-            sys.stderr.write('"%s" is not a valid unit!\n' % (unit_str))
-            sys.stderr.write('Valid units: %s\n' % (','.join(self.UNITS_MAP.keys())))
-            return None
-
-        unit = self.UNITS_MAP[unit_str.lower()]
-
-        if unit != SizeCalc.UNIT_kiB:
-            size = SizeCalc.convert_round_up(size, unit,
-                                             SizeCalc.UNIT_kiB)
-
-        return size
-
     # Code that we most likely want to use anyways/hacks to keep the current state happy
 
     def _get_nodes(self, sort=False, node_filter=[]):
@@ -1788,28 +1759,6 @@ class LinStorCLI(object):
                 sys.stdout.write("\n")
                 break
         return fn_rc
-
-    """
-    Unit names are lower-case; functions using the lookup table should
-    convert the unit name to lower-case to look it up in this table
-    """
-    UNITS_MAP = {
-        "k": SizeCalc.UNIT_kiB,
-        "m": SizeCalc.UNIT_MiB,
-        "g": SizeCalc.UNIT_GiB,
-        "t": SizeCalc.UNIT_TiB,
-        "p": SizeCalc.UNIT_PiB,
-        "kb": SizeCalc.UNIT_kB,
-        "mb": SizeCalc.UNIT_MB,
-        "gb": SizeCalc.UNIT_GB,
-        "tb": SizeCalc.UNIT_TB,
-        "pb": SizeCalc.UNIT_PB,
-        "kib": SizeCalc.UNIT_kiB,
-        "mib": SizeCalc.UNIT_MiB,
-        "gib": SizeCalc.UNIT_GiB,
-        "tib": SizeCalc.UNIT_TiB,
-        "pib": SizeCalc.UNIT_PiB,
-    }
 
 
 def main():
