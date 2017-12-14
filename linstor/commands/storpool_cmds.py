@@ -57,7 +57,7 @@ class StoragePoolCommands(Commands):
         for storpool in lstmsg.stor_pools:
             print(prntfrm.format(
                 storpool=storpool.stor_pool_name,
-                uuid=storpool.stor_pool_uuid.decode("utf8"),
+                uuid=storpool.stor_pool_uuid,
                 node=storpool.node_name,
                 driver=storpool.driver))
 

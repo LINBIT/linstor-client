@@ -45,7 +45,7 @@ class StoragePoolDefinitionCommands(Commands):
         prntfrm = "{storpool:<20s} {uuid:<40s}"
         print(prntfrm.format(storpool="StorpoolDfn-name", uuid="UUID"))
         for storpool_dfn in lstmsg.stor_pool_dfns:
-            print(prntfrm.format(storpool=storpool_dfn.stor_pool_name, uuid=storpool_dfn.uuid.decode("utf8")))
+            print(prntfrm.format(storpool=storpool_dfn.stor_pool_name, uuid=storpool_dfn.uuid))
 
             # for prop in n.node_props:
             #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))

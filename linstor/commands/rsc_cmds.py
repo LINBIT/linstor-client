@@ -49,7 +49,7 @@ class ResourceCommands(Commands):
         for rsc in lstmsg.resources:
             print(prntfrm.format(
                 rsc=rsc.name,
-                uuid=rsc.uuid.decode("utf8"),
+                uuid=rsc.uuid,
                 node=rsc.node_name))
 
         return None
