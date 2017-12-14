@@ -504,11 +504,11 @@ class LinStorCLI(object):
         p_new_vol = subp.add_parser(p_new_vol_command,
                                     aliases=['crtvlmdfn'],
                                     description='Defines a volume with a capacity of size for use with '
-                                    'drbdmanage. If the resource resname exists already, a new volume is '
+                                    'linstore. If the resource resname exists already, a new volume is '
                                     'added to that resource, otherwise the resource is created automatically '
                                     'with default settings. Unless minornr is specified, a minor number for '
                                     "the volume's DRBD block device is assigned automatically by the "
-                                    'drbdmanage server.')
+                                    'linstor server.')
         p_new_vol.add_argument('-m', '--minor', type=int)
         p_new_vol.add_argument('-d', '--deploy', type=int)
         p_new_vol.add_argument('-s', '--site', default='',
