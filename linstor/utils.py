@@ -175,6 +175,15 @@ class Output(object):
         else:
             return col
 
+    @staticmethod
+    def err(msg):
+        Output.bail_out(msg, COLOR_RED, 1)
+
+    @staticmethod
+    def bail_out(msg, color, ret):
+        sys.stderr.write(Output.color_str(msg, color) + '\n')
+        sys.exit(ret)
+
 
 class Table():
     def __init__(self, colors=True, utf8=False, pastable=False):

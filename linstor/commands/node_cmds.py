@@ -1,12 +1,11 @@
-from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgCrtNode_pb2 import MsgCrtNode
 from proto.MsgDelNode_pb2 import MsgDelNode
 from proto.MsgLstNode_pb2 import MsgLstNode
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
-from linstor.commcontroller import need_communication, CommController
+from linstor.commcontroller import need_communication
 from linstor.commands import Commands
-from linstor.utils import Output
+from linstor.utils import Output, Table
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
@@ -18,10 +17,6 @@ from linstor.sharedconsts import (
     NAMESPC_NETIF,
     VAL_NETCOM_TYPE_PLAIN,
     VAL_NETCOM_TYPE_SSL,
-    VAL_NETIF_TYPE_IP,
-    VAL_NODE_TYPE_AUX,
-    VAL_NODE_TYPE_CMBD,
-    VAL_NODE_TYPE_CTRL,
     VAL_NODE_TYPE_STLT,
     API_CRT_NODE,
     API_DEL_NODE,
@@ -35,6 +30,7 @@ class NodeCommands(Commands):
     @need_communication
     def create(cc, args):
         p = MsgCrtNode()
+
         def gen_nif(k, v):
             prop = LinStorMapEntry()
             prop.key = "%s/%s/%s" % (NAMESPC_NETIF, args.interface_name, k)
@@ -56,7 +52,7 @@ class NodeCommands(Commands):
             elif args.communication_type == VAL_NETCOM_TYPE_SSL:
                 port = DFLT_CTRL_PORT_SSL
             else:
-                self.err("Communication type %s has no default port" % (args.communication_type))
+                Output.err("Communication type %s has no default port" % (args.communication_type))
         gen_nif(KEY_PORT_NR, str(port))
 
         return Commands._create(cc, API_CRT_NODE, p)
@@ -81,12 +77,12 @@ class NodeCommands(Commands):
         if isinstance(lstmsg, MsgApiCallResponse):
             return lstmsg
 
-        if False: # disabled for now
+        if False:  # disabled for now
             tbl = Table()
             tbl.add_column("Node")
             tbl.add_column("NodeType")
             tbl.add_column("UUID")
-            for n in p.nodes:
+            for n in lstmsg.nodes:
                 tbl.add_row([n.name, n.type, n.uuid])
             tbl.show()
 

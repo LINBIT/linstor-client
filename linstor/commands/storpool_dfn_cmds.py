@@ -1,11 +1,9 @@
-from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
 from proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
 from proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
-from linstor.commcontroller import need_communication, CommController
+from linstor.commcontroller import need_communication
 from linstor.commands import Commands
-from linstor.utils import Output
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL_DFN,
     API_DEL_STOR_POOL_DFN,

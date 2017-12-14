@@ -1539,7 +1539,7 @@ class LinStorCLI(object):
         self.parse(sys.argv[1:])
 
     def cmd_enoimp(self, args):
-        self.err('This command is deprecated or not implemented')
+        Output.err('This command is deprecated or not implemented')
 
     @need_communication
     def cmd_ping(self, args):
@@ -1564,13 +1564,6 @@ class LinStorCLI(object):
             return ''
         else:
             return col
-
-    def bail_out(self, msg, color, ret):
-        sys.stderr.write(Output.color_str(msg, color) + '\n')
-        sys.exit(ret)
-
-    def err(self, msg):
-        self.bail_out(msg, COLOR_RED, 1)
 
     def _get_volume_size_arg(self, args):
         m = re.match('(\d+)(\D*)', args.size)

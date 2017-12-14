@@ -1,11 +1,9 @@
-from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgCrtRsc_pb2 import MsgCrtRsc
 from proto.MsgDelRsc_pb2 import MsgDelRsc
 from proto.MsgLstRsc_pb2 import MsgLstRsc
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
-from linstor.commcontroller import need_communication, CommController
+from linstor.commcontroller import need_communication
 from linstor.commands import Commands
-from linstor.utils import Output
 from linstor.sharedconsts import (
     API_CRT_RSC,
     API_DEL_RSC,

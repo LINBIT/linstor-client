@@ -1,11 +1,9 @@
-from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.MsgCrtVlmDfn_pb2 import MsgCrtVlmDfn
-from proto.VlmDfn_pb2 import VlmDfn
-#from proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
+# from proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from linstor.sharedconsts import API_CRT_VLM_DFN, API_DEL_VLM_DFN, API_LST_RSC_DFN
-from linstor.commcontroller import need_communication, CommController
+from linstor.commcontroller import need_communication
 from linstor.commands import Commands
 
 
