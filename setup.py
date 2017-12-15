@@ -203,5 +203,6 @@ setup(
     cmdclass={
         "build_man": BuildManCommand,
         "versionup2date": CheckUpToDate
-        }
-    )
+    },
+    test_suite="tests"
+)
