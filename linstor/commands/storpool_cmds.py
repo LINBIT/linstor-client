@@ -1,7 +1,6 @@
 from proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
 from proto.MsgDelStorPool_pb2 import MsgDelStorPool
-from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from linstor.commcontroller import need_communication
 from linstor.commands import Commands
 from linstor.sharedconsts import (
@@ -48,17 +47,16 @@ class StoragePoolCommands(Commands):
     @staticmethod
     @need_communication
     def list(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_STOR_POOL, MsgLstStorPool())
-        if isinstance(lstmsg, MsgApiCallResponse):
-            return lstmsg
+        lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL, MsgLstStorPool(), args)
 
-        prntfrm = "{storpool:<20s} {uuid:<40s} {node:<30s} {driver:<20s}"
-        print(prntfrm.format(storpool="Storpool-name", uuid="UUID", node="Node", driver="Driver"))
-        for storpool in lstmsg.stor_pools:
-            print(prntfrm.format(
-                storpool=storpool.stor_pool_name,
-                uuid=storpool.stor_pool_uuid,
-                node=storpool.node_name,
-                driver=storpool.driver))
+        if lstmsg:
+            prntfrm = "{storpool:<20s} {uuid:<40s} {node:<30s} {driver:<20s}"
+            print(prntfrm.format(storpool="Storpool-name", uuid="UUID", node="Node", driver="Driver"))
+            for storpool in lstmsg.stor_pools:
+                print(prntfrm.format(
+                    storpool=storpool.stor_pool_name,
+                    uuid=storpool.stor_pool_uuid,
+                    node=storpool.node_name,
+                    driver=storpool.driver))
 
         return None

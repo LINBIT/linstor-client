@@ -1,7 +1,6 @@
 from proto.MsgCrtNode_pb2 import MsgCrtNode
 from proto.MsgDelNode_pb2 import MsgDelNode
 from proto.MsgLstNode_pb2 import MsgLstNode
-from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication
 from linstor.commands import Commands
@@ -10,7 +9,6 @@ from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
     DFLT_CTRL_PORT_SSL,
-    KEY_IP_ADDR,
     KEY_NETCOM_TYPE,
     KEY_NETIF_TYPE,
     KEY_PORT_NR,
@@ -35,25 +33,33 @@ class NodeCommands(Commands):
             prop = LinStorMapEntry()
             prop.key = "%s/%s/%s" % (NAMESPC_NETIF, args.interface_name, k)
             prop.value = v
-            p.node_props.extend([prop])
-
-        p.node_name = args.name
-        p.node_type = args.node_type
+            p.node.props.extend([prop])
 
         # interface
         gen_nif(KEY_NETIF_TYPE, args.interface_type)
         gen_nif(KEY_NETCOM_TYPE, args.communication_type)
-        gen_nif(KEY_IP_ADDR, args.ip)
+
+        p.node.name = args.name
+        p.node.type = args.node_type
+
+        netif = p.node.net_interfaces.add()
+        netif.name = args.interface_name
+        netif.address = args.ip
 
         port = args.port
         if not port:
             if args.communication_type == VAL_NETCOM_TYPE_PLAIN:
-                port = DFLT_STLT_PORT_PLAIN if p.node_type == VAL_NODE_TYPE_STLT else DFLT_CTRL_PORT_PLAIN
+                port = DFLT_STLT_PORT_PLAIN if p.node.type == VAL_NODE_TYPE_STLT else DFLT_CTRL_PORT_PLAIN
             elif args.communication_type == VAL_NETCOM_TYPE_SSL:
                 port = DFLT_CTRL_PORT_SSL
             else:
                 Output.err("Communication type %s has no default port" % (args.communication_type))
         gen_nif(KEY_PORT_NR, str(port))
+
+        satcon = p.satellite_connections.add()
+        satcon.net_interface_name = args.interface_name
+        satcon.port = port
+        satcon.encryption_type = args.communication_type
 
         return Commands._create(cc, API_CRT_NODE, p)
 
@@ -73,34 +79,31 @@ class NodeCommands(Commands):
     @staticmethod
     @need_communication
     def list(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_NODE, MsgLstNode())
-        if isinstance(lstmsg, MsgApiCallResponse):
-            return lstmsg
+        lstmsg = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode(), args)
 
-        if False:  # disabled for now
-            tbl = Table()
-            tbl.add_column("Node")
-            tbl.add_column("NodeType")
-            tbl.add_column("UUID")
+        if lstmsg:
+            if False:  # disabled for now
+                tbl = Table()
+                tbl.add_column("Node")
+                tbl.add_column("NodeType")
+                tbl.add_column("UUID")
+                for n in lstmsg.nodes:
+                    tbl.add_row([n.name, n.type, n.uuid])
+                tbl.show()
+
+            prntfrm = "{node:<20s} {type:<10s} {uuid:<40s}"
+            print(prntfrm.format(node="Node", type="NodeType", uuid="UUID"))
+
+            netiffrm = " +   {name:<20s} {address:>20s}"
             for n in lstmsg.nodes:
-                tbl.add_row([n.name, n.type, n.uuid])
-            tbl.show()
+                print(prntfrm.format(node=n.name, type=n.type, uuid=n.uuid))
 
-        prntfrm = "{node:<20s} {type:<10s} {uuid:<40s}"
-        print(prntfrm.format(node="Node", type="NodeType", uuid="UUID"))
+                for interface in n.net_interfaces:
+                    print(netiffrm.format(
+                        name=interface.name,
+                        address=interface.address))
 
-        netiffrm = " +   {name:<20s} {address:>20s}:{port:<6d} {type:<10s}"
-        for n in lstmsg.nodes:
-            print(prntfrm.format(node=n.name, type=n.type, uuid=n.uuid))
-
-            for interface in n.net_interfaces:
-                print(netiffrm.format(
-                    name=interface.name,
-                    address=interface.address,
-                    port=interface.port,
-                    type=interface.type))
-
-            # for prop in n.node_props:
-            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+                # for prop in n.node_props:
+                #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
 
         return None

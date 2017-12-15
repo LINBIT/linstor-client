@@ -44,16 +44,15 @@ class ResourceDefinitionCommands(Commands):
     @staticmethod
     @need_communication
     def list(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_RSC_DFN, MsgLstRscDfn())
-        if isinstance(lstmsg, MsgApiCallResponse):
-            return lstmsg
+        lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args)
 
-        prntfrm = "{rsc:<20s} {port:<10s} {uuid:<40s}"
-        print(prntfrm.format(rsc="Resource-name", port="Port", uuid="UUID"))
-        for rsc_dfn in lstmsg.rsc_dfns:
-            print(prntfrm.format(rsc=rsc_dfn.rsc_name, port=str(rsc_dfn.rsc_port), uuid=rsc_dfn.uuid))
+        if lstmsg:
+            prntfrm = "{rsc:<20s} {port:<10s} {uuid:<40s}"
+            print(prntfrm.format(rsc="Resource-name", port="Port", uuid="UUID"))
+            for rsc_dfn in lstmsg.rsc_dfns:
+                print(prntfrm.format(rsc=rsc_dfn.rsc_name, port=str(rsc_dfn.rsc_port), uuid=rsc_dfn.uuid))
 
-            # for prop in n.node_props:
-            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+                # for prop in n.node_props:
+                #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
 
         return None

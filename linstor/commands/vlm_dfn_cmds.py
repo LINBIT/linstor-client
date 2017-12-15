@@ -1,15 +1,12 @@
-from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.MsgCrtVlmDfn_pb2 import MsgCrtVlmDfn
 # from proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from google.protobuf import json_format
 from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN  # API_DEL_VLM_DFN
 from linstor.commcontroller import need_communication
 from linstor.commands import Commands
 from linstor.utils import SizeCalc, approximate_size_string
 import re
 import sys
-import json
 
 
 class VolumeDefinitionCommands(Commands):
@@ -31,30 +28,23 @@ class VolumeDefinitionCommands(Commands):
     @staticmethod
     @need_communication
     def list(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_RSC_DFN, MsgLstRscDfn())
-        if isinstance(lstmsg, MsgApiCallResponse):
-            return lstmsg
+        lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args)
 
-        if args.machine_readable:
-            s = json_format.MessageToJson(lstmsg)
-            j = json.loads(s)
-            print(j)
-            return None
+        if lstmsg:
+            prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5s} {vlmminor:<10s} {vlmsize:<10s}"
+            print(prntfrm.format(res="Resource", uuid="UUID", vlmnr="VlmNr", vlmminor="VlmMinor", vlmsize="Size"))
+            prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5d} {vlmminor:<10d} {vlmsize:<20s}"
+            for rscdfn in lstmsg.rsc_dfns:
+                for vlmdfn in rscdfn.vlm_dfns:
+                    print(prntfrm.format(
+                        res=rscdfn.rsc_name,
+                        uuid=vlmdfn.vlm_dfn_uuid,
+                        vlmnr=vlmdfn.vlm_nr,
+                        vlmminor=vlmdfn.vlm_minor,
+                        vlmsize=approximate_size_string(vlmdfn.vlm_size)))
 
-        prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5s} {vlmminor:<10s} {vlmsize:<10s}"
-        print(prntfrm.format(res="Resource", uuid="UUID", vlmnr="VlmNr", vlmminor="VlmMinor", vlmsize="Size"))
-        prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5d} {vlmminor:<10d} {vlmsize:<20s}"
-        for rscdfn in lstmsg.rsc_dfns:
-            for vlmdfn in rscdfn.vlm_dfns:
-                print(prntfrm.format(
-                    res=rscdfn.rsc_name,
-                    uuid=vlmdfn.vlm_dfn_uuid,
-                    vlmnr=vlmdfn.vlm_nr,
-                    vlmminor=vlmdfn.vlm_minor,
-                    vlmsize=approximate_size_string(vlmdfn.vlm_size)))
-
-            # for prop in n.node_props:
-            #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+                # for prop in n.node_props:
+                #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
 
         return None
 

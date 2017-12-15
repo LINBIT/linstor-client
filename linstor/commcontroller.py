@@ -6,6 +6,7 @@ import sys
 import os
 from google.protobuf.internal import encoder
 from google.protobuf.internal import decoder
+from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from functools import wraps
 from linstor.consts import KEY_LS_CONTROLLERS
 from linstor.sharedconsts import DFLT_CTRL_PORT_PLAIN
@@ -26,7 +27,10 @@ def need_communication(f):
 
         p = None
         with CommController(servers) as cc:
-            p = f(cc, *args, **kwargs)
+            try:
+                p = f(cc, *args, **kwargs)
+            except MsgApiCallResponse as callresponse:
+                sys.exit(Output.handle_ret(args, callresponse))
 
         if p:  # could be None if no payload or if cmd_xyz does implicit return
             sys.exit(Output.handle_ret(args, p))
