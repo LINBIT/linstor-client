@@ -1,12 +1,14 @@
 from proto.MsgCrtRsc_pb2 import MsgCrtRsc
 from proto.MsgDelRsc_pb2 import MsgDelRsc
 from proto.MsgLstRsc_pb2 import MsgLstRsc
-from linstor.commcontroller import need_communication
+from proto.LinStorMapEntry_pb2 import LinStorMapEntry
+from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
 from linstor.sharedconsts import (
     API_CRT_RSC,
     API_DEL_RSC,
-    API_LST_RSC
+    API_LST_RSC,
+    KEY_STOR_POOL_NAME
 )
 
 
@@ -18,6 +20,12 @@ class ResourceCommands(Commands):
         p = MsgCrtRsc()
         p.rsc_name = args.name
         p.node_name = args.node_name
+
+        if args.storage_pool:
+            prop = LinStorMapEntry()
+            prop.key = KEY_STOR_POOL_NAME
+            prop.value = args.storage_pool
+            p.rsc_props.extend([prop])
 
         return Commands._create(cc, API_CRT_RSC, p)
 
@@ -51,3 +59,18 @@ class ResourceCommands(Commands):
                     node=rsc.node_name))
 
         return None
+
+    @staticmethod
+    @completer_communication
+    def completer(cc, prefix, **kwargs):
+        possible = set()
+        lstmsg = Commands._get_list_message(cc, API_LST_RSC, MsgLstRsc())
+
+        if lstmsg:
+            for rsc in lstmsg.resources:
+                possible.add(rsc.name)
+
+            if prefix:
+                return [res for res in possible if res.startswith(prefix)]
+
+        return possible

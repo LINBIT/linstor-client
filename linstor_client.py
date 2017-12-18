@@ -172,15 +172,6 @@ class LinStorCLI(object):
                 return ip
             return completer
 
-        def node_completer(prefix, **kwargs):
-            server_rc, node_list = self._get_nodes()
-            possible = set()
-            for n in node_list:
-                name, _ = n
-                possible.add(name)
-
-            return possible
-
         # type checkers (generate them only once)
         check_node_name = namecheck(NODE_NAME)
         check_res_name = namecheck(RES_NAME)
@@ -229,7 +220,7 @@ class LinStorCLI(object):
                                 help='FAMILY: "ipv4" (default) or "ipv6"')
         p_mod_node.add_argument('-s', '--storage')
         p_mod_node.add_argument('name', type=check_node_name,
-                                help='Name of the node').completer = node_completer
+                                help='Name of the node').completer = NodeCommands.completer
         p_mod_node.add_argument('--address',
                                 help='Network address of the node').completer = ip_completer("name")
         p_mod_node.set_defaults(func=self.cmd_enoimp)
@@ -249,7 +240,7 @@ class LinStorCLI(object):
                                help='Unless this option is used, drbdmanage will issue a safety question '
                                'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_node.add_argument('name',
-                               help='Name of the node to remove').completer = node_completer
+                               help='Name of the node to remove').completer = NodeCommands.completer
         p_rm_node.set_defaults(func=NodeCommands.delete)
 
         # Quorum control, completion of the action parameter
@@ -271,7 +262,7 @@ class LinStorCLI(object):
         ).completer = quorum_action_completer
         p_quorum.add_argument(
             "name", nargs="+", type=check_node_name, help="Name of the affected node or nodes"
-        ).completer = node_completer
+        ).completer = NodeCommands.completer
         p_quorum.set_defaults(func=self.cmd_enoimp)
 
         # new-resource definition
@@ -282,21 +273,6 @@ class LinStorCLI(object):
         p_new_res_dfn.add_argument('-s', '--secret', type=str)
         p_new_res_dfn.add_argument('name', type=check_res_name, help='Name of the new resource definition')
         p_new_res_dfn.set_defaults(func=ResourceDefinitionCommands.create)
-
-        # modify-resource
-        def res_dfn_completer(prefix, **kwargs):
-            server_rc, res_dfn_list = self.__list_resource_definitions(False)
-            possible = set()
-            for r in res_dfn_list:
-                name, _ = r
-                possible.add(name)
-
-            if not prefix or prefix == '':
-                return possible
-            else:
-                return [res for res in possible if res.startswith(prefix)]
-
-            return possible
 
         # remove-resource definition
         # TODO description
@@ -314,9 +290,10 @@ class LinStorCLI(object):
                                   help='If present, then the resource entry and all associated assignment '
                                   "entries are removed from drbdmanage's data tables immediately, without "
                                   'taking any action on the cluster nodes that have the resource deployed.')
-        p_rm_res_dfn.add_argument('name',
-                                  nargs="+",
-                                  help='Name of the resource to delete').completer = res_dfn_completer
+        p_rm_res_dfn.add_argument(
+            'name',
+            nargs="+",
+            help='Name of the resource to delete').completer = ResourceDefinitionCommands.completer
         p_rm_res_dfn.set_defaults(func=ResourceDefinitionCommands.delete)
 
         # new-resource
@@ -326,26 +303,15 @@ class LinStorCLI(object):
                                     'Unless a specific IP port-number is supplied, the port-number is '
                                     'automatically selected by the drbdmanage server on the current node. ')
         p_new_res.add_argument('-p', '--port', type=rangecheck(1, 65535))
+        p_new_res.add_argument(
+            '-s', '--storage-pool',
+            type=check_storpool_name,
+            help="Storage pool name to use.").completer = StoragePoolDefinitionCommands.completer
         p_new_res.add_argument('name', type=check_res_name, help='Name of the new resource')
         p_new_res.add_argument('node_name',
                                type=check_node_name,
-                               help='Name of the new resource').completer = node_completer
+                               help='Name of the new resource').completer = NodeCommands.completer
         p_new_res.set_defaults(func=ResourceCommands.create)
-
-        # modify-resource
-        def res_completer(prefix, **kwargs):
-            server_rc, res_list = self.__list_resources(False)
-            possible = set()
-            for r in res_list:
-                name, _ = r
-                possible.add(name)
-
-            if not prefix or prefix == '':
-                return possible
-            else:
-                return [res for res in possible if res.startswith(prefix)]
-
-            return possible
 
         # modify-resource
         p_mod_res_command = 'modify-resource'
@@ -355,7 +321,7 @@ class LinStorCLI(object):
         p_mod_res.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_mod_res.add_argument('-m', '--managed', choices=(BOOL_TRUE, BOOL_FALSE))
         p_mod_res.add_argument('name', type=check_res_name,
-                               help='Name of the resource').completer = res_completer
+                               help='Name of the resource').completer = ResourceCommands.completer
         p_mod_res.set_defaults(func=self.cmd_enoimp)
         p_mod_res.set_defaults(command=p_mod_res_command)
 
@@ -375,10 +341,10 @@ class LinStorCLI(object):
                               "entries are removed from drbdmanage's data tables immediately, without "
                               'taking any action on the cluster nodes that have the resource deployed.')
         p_rm_res.add_argument('name',
-                              help='Name of the resource to delete').completer = res_completer
+                              help='Name of the resource to delete').completer = ResourceCommands.completer
         p_rm_res.add_argument('node_name',
                               nargs="+",
-                              help='Name of the node').completer = node_completer
+                              help='Name of the node').completer = NodeCommands.completer
         p_rm_res.set_defaults(func=ResourceCommands.delete)
 
         # new-storpol definition
@@ -389,19 +355,6 @@ class LinStorCLI(object):
         p_new_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.create)
 
         # modify-storpool
-        def storpool_dfn_completer(prefix, **kwargs):
-            server_rc, storpool_dfn_list = self.__list_storpool_definitions(False)
-            possible = set()
-            for r in storpool_dfn_list:
-                name, _ = r
-                possible.add(name)
-
-            if not prefix or prefix == '':
-                return possible
-            else:
-                return [res for res in possible if res.startswith(prefix)]
-
-            return possible
 
         # remove-storpool definition
         # TODO description
@@ -416,9 +369,10 @@ class LinStorCLI(object):
             help='If present, then the storage pool entry and all associated assignment '
             "entries are removed from drbdmanage's data tables immediately, without "
             'taking any action on the cluster nodes that have the storage pool deployed.')
-        p_rm_storpool_dfn.add_argument('name',
-                                       nargs="+",
-                                       help='Name of the storage pool to delete').completer = storpool_dfn_completer
+        p_rm_storpool_dfn.add_argument(
+            'name',
+            nargs="+",
+            help='Name of the storage pool to delete').completer = StoragePoolDefinitionCommands.completer
         p_rm_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.delete)
 
         # TODO
@@ -438,7 +392,7 @@ class LinStorCLI(object):
         p_new_storpool.add_argument(
             'node_name',
             type=check_node_name,
-            help='Name of the node for the new storage pool').completer = node_completer
+            help='Name of the node for the new storage pool').completer = NodeCommands.completer
         # TODO
         p_new_storpool.add_argument(
             'driver',
@@ -447,19 +401,7 @@ class LinStorCLI(object):
         p_new_storpool.set_defaults(func=StoragePoolCommands.create)
 
         # modify-storpool
-        def storpool_completer(prefix, **kwargs):
-            server_rc, storpool_list = self.__list_storpool(False)
-            possible = set()
-            for r in storpool_list:
-                name, _ = r
-                possible.add(name)
-
-            if not prefix or prefix == '':
-                return possible
-            else:
-                return [res for res in possible if res.startswith(prefix)]
-
-            return possible
+        # TODO
 
         # remove-storpool
         # TODO description
@@ -477,10 +419,11 @@ class LinStorCLI(object):
                                    "entries are removed from drbdmanage's data tables immediately, without "
                                    'taking any action on the cluster nodes that have the storage pool deployed.')
         p_rm_storpool.add_argument('name',
-                                   help='Name of the storage pool to delete').completer = storpool_completer
-        p_rm_storpool.add_argument('node_name',
-                                   nargs="+",
-                                   help='Name of the Node where the storage pool exists.').completer = node_completer
+                                   help='Name of the storage pool to delete').completer = StoragePoolCommands.completer
+        p_rm_storpool.add_argument(
+            'node_name',
+            nargs="+",
+            help='Name of the Node where the storage pool exists.').completer = NodeCommands.completer
         p_rm_storpool.set_defaults(func=StoragePoolCommands.delete)
 
         # new-volume
@@ -514,7 +457,7 @@ class LinStorCLI(object):
         p_new_vol.add_argument('-s', '--site', default='',
                                help="only consider nodes from this site")
         p_new_vol.add_argument('name', type=check_res_name,
-                               help='Name of a new/existing resource').completer = res_completer
+                               help='Name of a new/existing resource').completer = ResourceCommands.completer
         p_new_vol.add_argument(
             'size',
             help='Size of the volume in resource. '
@@ -549,7 +492,7 @@ class LinStorCLI(object):
                                        description='Resizes a volume to the specified size, which must be '
                                        'greater than the current size of the volume.')
         p_resize_vol.add_argument('name', type=check_res_name,
-                                  help='Name of the resource').completer = res_completer
+                                  help='Name of the resource').completer = ResourceCommands.completer
         p_resize_vol.add_argument('id', help='Volume ID', type=int).completer = vol_completer
         p_resize_vol.add_argument(
             'size',
@@ -571,7 +514,7 @@ class LinStorCLI(object):
                                     aliases=['mv'],
                                     description='Modifies a DRBD volume.')
         p_mod_vol.add_argument('name', type=check_res_name,
-                               help='Name of the resource').completer = res_completer
+                               help='Name of the resource').completer = ResourceCommands.completer
         p_mod_vol.add_argument('id', help='Volume id', type=int).completer = vol_completer
         p_mod_vol.add_argument('-m', '--minor', type=rangecheck(0, 1048575))
         p_mod_vol.set_defaults(func=self.cmd_enoimp)
@@ -583,8 +526,8 @@ class LinStorCLI(object):
                                      aliases=['ma'],
                                      description='Modifies a drbdmanage assignment.')
         p_mod_assg.add_argument('resource', type=check_res_name,
-                                help='Name of the resource').completer = res_completer
-        p_mod_assg.add_argument('node', help='Name of the node').completer = node_completer
+                                help='Name of the resource').completer = ResourceCommands.completer
+        p_mod_assg.add_argument('node', help='Name of the node').completer = NodeCommands.completer
         p_mod_assg.add_argument('-o', '--overwrite')
         p_mod_assg.add_argument('-d', '--discard')
         p_mod_assg.set_defaults(func=self.cmd_enoimp)
@@ -608,38 +551,38 @@ class LinStorCLI(object):
                               'that have the volume deployed.')
 
         p_rm_vol.add_argument('name',
-                              help='Name of the resource').completer = res_completer
+                              help='Name of the resource').completer = ResourceCommands.completer
         p_rm_vol.add_argument('vol_id', help='Volume ID', type=int).completer = vol_completer
         p_rm_vol.set_defaults(func=VolumeDefinitionCommands.delete)
 
         # connect
         p_conn = subp.add_parser('connect-resource', description='Connect resource on node',
                                  aliases=['connect'])
-        p_conn.add_argument('resource', type=check_res_name).completer = res_completer
-        p_conn.add_argument('node', type=check_node_name).completer = node_completer
+        p_conn.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
+        p_conn.add_argument('node', type=check_node_name).completer = NodeCommands.completer
         p_conn.set_defaults(func=self.cmd_enoimp)
 
         # reconnect
         p_reconn = subp.add_parser('reconnect-resource', description='Reconnect resource on node',
                                    aliases=['reconnect'])
-        p_reconn.add_argument('resource', type=check_res_name).completer = res_completer
-        p_reconn.add_argument('node', type=check_node_name).completer = node_completer
+        p_reconn.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
+        p_reconn.add_argument('node', type=check_node_name).completer = NodeCommands.completer
         p_reconn.set_defaults(func=self.cmd_enoimp)
 
         # disconnect
         p_disconn = subp.add_parser('disconnect-resource', description='Disconnect resource on node',
                                     aliases=['disconnect'])
-        p_disconn.add_argument('resource', type=check_res_name).completer = res_completer
-        p_disconn.add_argument('node', type=check_node_name).completer = node_completer
+        p_disconn.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
+        p_disconn.add_argument('node', type=check_node_name).completer = NodeCommands.completer
         p_disconn.set_defaults(func=self.cmd_enoimp)
 
         # flags
         p_flags = subp.add_parser('set-flags', description='Set flags of resource on node',
                                   aliases=['flags'])
         p_flags.add_argument('resource', type=check_res_name,
-                             help='Name of the resource').completer = res_completer
+                             help='Name of the resource').completer = ResourceCommands.completer
         p_flags.add_argument('node', type=check_node_name,
-                             help='Name of the node').completer = node_completer
+                             help='Name of the node').completer = NodeCommands.completer
         p_flags.add_argument('--reconnect', choices=(0, 1), type=int)
         p_flags.add_argument('--updcon', choices=(0, 1), type=int)
         p_flags.add_argument('--overwrite', choices=(0, 1), type=int)
@@ -649,16 +592,16 @@ class LinStorCLI(object):
         # attach
         p_attach = subp.add_parser('attach-volume', description='Attach volume from node',
                                    aliases=['attach'])
-        p_attach.add_argument('resource', type=check_res_name).completer = res_completer
+        p_attach.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
         p_attach.add_argument('id', help='Volume ID', type=int).completer = vol_completer
-        p_attach.add_argument('node', type=check_node_name).completer = node_completer
+        p_attach.add_argument('node', type=check_node_name).completer = NodeCommands.completer
         p_attach.set_defaults(func=self.cmd_enoimp, fname='attach')
         # detach
         p_detach = subp.add_parser('detach-volume', description='Detach volume from node',
                                    aliases=['detach'])
-        p_detach.add_argument('resource', type=check_res_name).completer = res_completer
+        p_detach.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
         p_detach.add_argument('id', help='Volume ID', type=int).completer = vol_completer
-        p_detach.add_argument('node', type=check_node_name).completer = node_completer
+        p_detach.add_argument('node', type=check_node_name).completer = NodeCommands.completer
         p_detach.set_defaults(func=self.cmd_enoimp, fname='detach')
 
         # assign
@@ -673,8 +616,8 @@ class LinStorCLI(object):
         p_assign.add_argument('--discard', action="store_true",
                               help='If specified, drbdmanage will issue a "drbdadm -- --discard-my-data" '
                               'connect after the resource has been started.')
-        p_assign.add_argument('resource', type=check_res_name).completer = res_completer
-        p_assign.add_argument('node', type=check_node_name, nargs="+").completer = node_completer
+        p_assign.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
+        p_assign.add_argument('node', type=check_node_name, nargs="+").completer = NodeCommands.completer
         p_assign.set_defaults(func=self.cmd_enoimp)
 
         # free space
@@ -702,7 +645,7 @@ class LinStorCLI(object):
                                    "of the drbdmanage cluster. Using the information in drbdmanage's data "
                                    'tables, the drbdmanage server tries to find n nodes that have enough '
                                    'free storage capacity to deploy the resource resname.')
-        p_deploy.add_argument('resource', type=check_res_name).completer = res_completer
+        p_deploy.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
         p_deploy.add_argument('-i', '--increase', action="store_true",
                               help='Increase the redundancy count relative to'
                               ' the currently set value by a number of'
@@ -728,7 +671,7 @@ class LinStorCLI(object):
                                      "definition is still kept in drbdmanage's data tables.")
         p_undeploy.add_argument('-q', '--quiet', action="store_true")
         p_undeploy.add_argument('-f', '--force', action="store_true")
-        p_undeploy.add_argument('resource', type=check_res_name).completer = res_completer
+        p_undeploy.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
         p_undeploy.set_defaults(func=self.cmd_enoimp)
 
         # update-pool
@@ -773,8 +716,8 @@ class LinStorCLI(object):
                                 help="If present, the assignment entry will be removed from drbdmanage's "
                                 'data tables immediately, without taking any action on the node where '
                                 'the resource is been deployed.')
-        p_unassign.add_argument('resource', type=check_res_name).completer = res_completer
-        p_unassign.add_argument('node', type=check_node_name, nargs="+").completer = node_completer
+        p_unassign.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
+        p_unassign.add_argument('node', type=check_node_name, nargs="+").completer = NodeCommands.completer
         p_unassign.set_defaults(func=self.cmd_enoimp)
 
         # new-snapshot
@@ -784,9 +727,9 @@ class LinStorCLI(object):
                                   description='Create a LVM snapshot')
         p_nsnap.add_argument('snapshot', type=check_snaps_name, help='Name of the snapshot')
         p_nsnap.add_argument('resource', type=check_res_name,
-                             help='Name of the resource').completer = res_completer
+                             help='Name of the resource').completer = ResourceCommands.completer
         p_nsnap.add_argument('nodes', type=check_node_name,
-                             help='List of nodes', nargs='+').completer = node_completer
+                             help='List of nodes', nargs='+').completer = NodeCommands.completer
         p_nsnap.set_defaults(func=self.cmd_enoimp)
 
         # Snapshot commands:
@@ -813,7 +756,7 @@ class LinStorCLI(object):
                                    description='Remove LVM snapshot of a resource')
         p_rmsnap.add_argument('-f', '--force', action="store_true")
         p_rmsnap.add_argument('resource', type=check_res_name,
-                              help='Name of the resource').completer = res_completer
+                              help='Name of the resource').completer = ResourceCommands.completer
         p_rmsnap.add_argument('snapshot', type=check_snaps_name, nargs="+",
                               help='Name of the snapshot').completer = snaps_completer
         p_rmsnap.set_defaults(func=self.cmd_enoimp)
@@ -826,11 +769,11 @@ class LinStorCLI(object):
                                      description='Remove snapshot assignment')
         p_rmsnapas.add_argument('-f', '--force', action="store_true")
         p_rmsnapas.add_argument('resource', type=check_res_name,
-                                help='Name of the resource').completer = res_completer
+                                help='Name of the resource').completer = ResourceCommands.completer
         p_rmsnapas.add_argument('snapshot', type=check_snaps_name,
                                 help='Name of the snapshot').completer = snaps_completer
         p_rmsnapas.add_argument('node', type=check_node_name,
-                                help='Name of the node').completer = node_completer
+                                help='Name of the node').completer = NodeCommands.completer
         p_rmsnapas.set_defaults(func=self.cmd_enoimp)
 
         # restore-snapshot
@@ -840,7 +783,7 @@ class LinStorCLI(object):
         p_restsnap.add_argument('resource', type=check_res_name,
                                 help='Name of the new resource that gets created from existing snapshot')
         p_restsnap.add_argument('snapshot_resource', type=check_res_name,
-                                help='Name of the resource that was snapshoted').completer = res_completer
+                                help='Name of the resource that was snapshoted').completer = ResourceCommands.completer
         p_restsnap.add_argument('snapshot', type=check_snaps_name,
                                 help='Name of the snapshot').completer = snaps_completer
         p_restsnap.set_defaults(func=self.cmd_enoimp)
@@ -909,7 +852,7 @@ class LinStorCLI(object):
         p_lnodes.add_argument('-g', '--groupby', nargs='+',
                               choices=nodesgroupby).completer = nodes_group_completer
         p_lnodes.add_argument('-N', '--nodes', nargs='+', type=check_node_name,
-                              help='Filter by list of nodes').completer = node_completer
+                              help='Filter by list of nodes').completer = NodeCommands.completer
         p_lnodes.add_argument('--separators', action="store_true")
         p_lnodes.set_defaults(func=NodeCommands.list)
 
@@ -930,7 +873,7 @@ class LinStorCLI(object):
         p_lreses.add_argument('-g', '--groupby', nargs='+',
                               choices=resgroupby).completer = res_group_completer
         p_lreses.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                              help='Filter by list of resources').completer = res_completer
+                              help='Filter by list of resources').completer = ResourceCommands.completer
         p_lreses.add_argument('--separators', action="store_true")
         p_lreses.set_defaults(func=ResourceCommands.list)
 
@@ -952,7 +895,7 @@ class LinStorCLI(object):
         p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
                                choices=resgroupby).completer = res_group_completer
         p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                               help='Filter by list of resources').completer = res_completer
+                               help='Filter by list of resources').completer = ResourceCommands.completer
         p_lrscdfs.add_argument('--separators', action="store_true")
         p_lrscdfs.set_defaults(func=ResourceDefinitionCommands.list)
 
@@ -970,7 +913,7 @@ class LinStorCLI(object):
         p_lstorpooldfs.add_argument('-g', '--groupby', nargs='+',
                                     choices=storpooldfngroupby).completer = storpooldfn_group_completer
         p_lstorpooldfs.add_argument('-R', '--storpool', nargs='+', type=check_res_name,
-                                    help='Filter by list of storage pool').completer = res_completer
+                                    help='Filter by list of storage pool').completer = ResourceCommands.completer
         p_lstorpooldfs.add_argument('--separators', action="store_true")
         p_lstorpooldfs.set_defaults(func=StoragePoolDefinitionCommands.list)
 
@@ -988,7 +931,7 @@ class LinStorCLI(object):
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
                                  choices=storpoolgroupby).completer = storpool_group_completer
         p_lstorpool.add_argument('-R', '--storpool', nargs='+', type=check_res_name,
-                                 help='Filter by list of storage pool').completer = storpool_completer
+                                 help='Filter by list of storage pool').completer = StoragePoolCommands.completer
         p_lstorpool.add_argument('--separators', action="store_true")
         p_lstorpool.set_defaults(func=StoragePoolCommands.list)
 
@@ -1008,7 +951,7 @@ class LinStorCLI(object):
                              choices=volgroupby).completer = vol_group_completer
         p_lvols.add_argument('--separators', action="store_true")
         p_lvols.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                             help='Filter by list of resources').completer = res_completer
+                             help='Filter by list of resources').completer = ResourceCommands.completer
         p_lvols.set_defaults(func=VolumeDefinitionCommands.list)
 
         # snapshots
@@ -1023,7 +966,7 @@ class LinStorCLI(object):
                               choices=snapgroupby).completer = snap_group_completer
         p_lsnaps.add_argument('--separators', action="store_true")
         p_lsnaps.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                              help='Filter by list of resources').completer = res_completer
+                              help='Filter by list of resources').completer = ResourceCommands.completer
         p_lsnaps.set_defaults(func=self.cmd_enoimp)
 
         # snapshot-assignments
@@ -1039,9 +982,9 @@ class LinStorCLI(object):
                                choices=snapasgroupby).completer = snapas_group_completer
         p_lsnapas.add_argument('--separators', action="store_true")
         p_lsnapas.add_argument('-N', '--nodes', nargs='+', type=check_node_name,
-                               help='Filter by list of nodes').completer = node_completer
+                               help='Filter by list of nodes').completer = NodeCommands.completer
         p_lsnapas.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                               help='Filter by list of resources').completer = res_completer
+                               help='Filter by list of resources').completer = ResourceCommands.completer
         p_lsnapas.set_defaults(func=self.cmd_enoimp)
 
         # assignments
@@ -1065,9 +1008,9 @@ class LinStorCLI(object):
                                    choices=assigngroupby).completer = ass_group_completer
         p_assignments.add_argument('--separators', action="store_true")
         p_assignments.add_argument('-N', '--nodes', nargs='+', type=check_node_name,
-                                   help='Filter by list of nodes').completer = node_completer
+                                   help='Filter by list of nodes').completer = NodeCommands.completer
         p_assignments.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                                   help='Filter by list of resources').completer = res_completer
+                                   help='Filter by list of resources').completer = ResourceCommands.completer
         p_assignments.set_defaults(func=self.cmd_enoimp)
 
         # export
@@ -1084,7 +1027,7 @@ class LinStorCLI(object):
                                    'be created (or updated) in the drbdmanage directory for temporary '
                                    'configuration files, typically /var/lib/drbd.d.')
         p_export.add_argument('resource', nargs="+", type=exportnamecheck,
-                              help='Name of the resource').completer = res_completer
+                              help='Name of the resource').completer = ResourceCommands.completer
         p_export.set_defaults(func=self.cmd_enoimp)
 
         # howto-join
@@ -1093,7 +1036,7 @@ class LinStorCLI(object):
                                       ' execute on the given node in order to'
                                       ' join the cluster')
         p_howtojoin.add_argument('node', type=check_node_name,
-                                 help='Name of the node to join').completer = node_completer
+                                 help='Name of the node to join').completer = NodeCommands.completer
         p_howtojoin.add_argument('-q', '--quiet', action="store_true",
                                  help="If the --quiet option is used, the join command is printed "
                                       "with a --quiet option")
@@ -1177,9 +1120,9 @@ class LinStorCLI(object):
                                       ' configuration file for a given'
                                       ' resource on a given node')
         p_queryconf.add_argument('node', type=check_node_name,
-                                 help='Name of the node').completer = node_completer
+                                 help='Name of the node').completer = NodeCommands.completer
         p_queryconf.add_argument('resource', type=check_res_name,
-                                 help='Name of the resource').completer = res_completer
+                                 help='Name of the resource').completer = ResourceCommands.completer
         p_queryconf.set_defaults(func=self.cmd_enoimp)
 
         # ping
@@ -1263,7 +1206,7 @@ class LinStorCLI(object):
             p_do = do.gen_argparse_subcommand(subp)
             p_do.add_argument('--common', action="store_true")
             p_do.add_argument('--resource', type=check_res_name,
-                              help='Name of the resource to modify').completer = res_completer
+                              help='Name of the resource to modify').completer = ResourceCommands.completer
             p_do.add_argument('--volume',
                               help='Name of the volume to modify').completer = res_vol_completer
             p_do.set_defaults(optsobj=do)
@@ -1276,7 +1219,7 @@ class LinStorCLI(object):
             p_pdo = pdo.gen_argparse_subcommand(subp)
             p_pdo.add_argument('--common', action="store_true")
             p_pdo.add_argument('--resource', type=check_res_name,
-                               help='Name of the resource to modify').completer = res_completer
+                               help='Name of the resource to modify').completer = ResourceCommands.completer
             p_pdo.add_argument('--volume',
                                help='Name of the volume to modify').completer = res_vol_completer
             p_pdo.set_defaults(optsobj=pdo)
@@ -1289,7 +1232,7 @@ class LinStorCLI(object):
             p_ro = ro.gen_argparse_subcommand(subp)
             p_ro.add_argument('--common', action="store_true")
             p_ro.add_argument('--resource', type=check_res_name,
-                              help='Name of the resource to modify').completer = res_completer
+                              help='Name of the resource to modify').completer = ResourceCommands.completer
             p_ro.set_defaults(optsobj=ro)
             p_ro.set_defaults(type="reso")
             p_ro.set_defaults(func=self.cmd_enoimp)
@@ -1303,7 +1246,7 @@ class LinStorCLI(object):
             p_no = no.gen_argparse_subcommand(subp)
             p_no.add_argument('--common', action="store_true")
             p_no.add_argument('--resource', type=check_res_name,
-                              help='Name of the resource to modify').completer = res_completer
+                              help='Name of the resource to modify').completer = ResourceCommands.completer
             p_no.add_argument('--sites',
                               help='Set net options between sites (SiteA:SiteB)')
             p_no.set_defaults(optsobj=no)
@@ -1321,7 +1264,7 @@ class LinStorCLI(object):
                                      description='Set or unset event handlers.')
         p_handlers.add_argument('--common', action="store_true")
         p_handlers.add_argument('--resource', type=check_res_name,
-                                help='Name of the resource to modify').completer = res_completer
+                                help='Name of the resource to modify').completer = ResourceCommands.completer
         for handler in handlers:
             p_handlers.add_argument('--' + handler, help='Please refer to drbd.conf(5)', metavar='cmd')
             p_handlers.add_argument('--unset-' + handler, action='store_true')
@@ -1332,7 +1275,7 @@ class LinStorCLI(object):
                                      description='List drbd options set',
                                      aliases=['show-options'])
         p_listopts.add_argument('resource', type=check_res_name,
-                                help='Name of the resource to show').completer = res_completer
+                                help='Name of the resource to show').completer = ResourceCommands.completer
         p_listopts.set_defaults(func=self.cmd_enoimp)
         p_listopts.set_defaults(doobj=do)
         p_listopts.set_defaults(noobj=no)
@@ -1345,7 +1288,7 @@ class LinStorCLI(object):
                                      aliases=['edit-config'])
         p_editconf.add_argument('--node', '-n', type=check_node_name,
                                 help='Name of the node. This enables node specific options '
-                                '(e.g. plugin settings)').completer = node_completer
+                                '(e.g. plugin settings)').completer = NodeCommands.completer
         p_editconf.set_defaults(func=self.cmd_enoimp)
         p_editconf.set_defaults(type="edit")
 
@@ -1354,7 +1297,7 @@ class LinStorCLI(object):
                                        description='Export drbdmanage configuration',
                                        aliases=['cat-config'])
         p_exportconf.add_argument('--node', '-n', type=check_node_name,
-                                  help='Name of the node.').completer = node_completer
+                                  help='Name of the node.').completer = NodeCommands.completer
         p_exportconf.add_argument('--file', '-f',
                                   help='File to save configuration')
         p_exportconf.set_defaults(func=self.cmd_enoimp)
@@ -1565,17 +1508,6 @@ class LinStorCLI(object):
             return col
 
     # Code that we most likely want to use anyways/hacks to keep the current state happy
-
-    def _get_nodes(self, sort=False, node_filter=[]):
-        # TODO(rck): for now just a hack to keep the code completer "happy"
-        return (0, [])
-
-    def __list_resource_definitions(self, list_res_dfns, resource_def_filter=[]):
-        return (0, [])
-
-    def __list_resources(self, list_volumes, resource_filter=[]):
-        # TODO(rck): hack to make res_compliter "happy"
-        return (0, [])
 
     def _list_snapshots(self, resource_filter=[]):
         # TODO(rck): hack to make the snaps_completer happy

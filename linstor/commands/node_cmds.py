@@ -2,7 +2,7 @@ from proto.MsgCrtNode_pb2 import MsgCrtNode
 from proto.MsgDelNode_pb2 import MsgDelNode
 from proto.MsgLstNode_pb2 import MsgLstNode
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
-from linstor.commcontroller import need_communication
+from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
 from linstor.utils import Output, Table
 from linstor.sharedconsts import (
@@ -107,3 +107,18 @@ class NodeCommands(Commands):
                 #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
 
         return None
+
+    @staticmethod
+    @completer_communication
+    def completer(cc, prefix, **kwargs):
+        possible = set()
+        lstmsg = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode())
+
+        if lstmsg:
+            for node in lstmsg.nodes:
+                possible.add(node.name)
+
+            if prefix:
+                return [node for node in possible if node.startswith(prefix)]
+
+        return possible

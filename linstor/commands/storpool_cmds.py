@@ -1,7 +1,7 @@
 from proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
 from proto.MsgDelStorPool_pb2 import MsgDelStorPool
-from linstor.commcontroller import need_communication
+from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL,
@@ -60,3 +60,18 @@ class StoragePoolCommands(Commands):
                     driver=storpool.driver))
 
         return None
+
+    @staticmethod
+    @completer_communication
+    def completer(cc, prefix, **kwargs):
+        possible = set()
+        lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL, MsgLstStorPool())
+
+        if lstmsg:
+            for storpool in lstmsg.resources:
+                possible.add(storpool.stor_pool_name)
+
+            if prefix:
+                return [res for res in possible if res.startswith(prefix)]
+
+        return possible

@@ -1,11 +1,8 @@
-from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
 from proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
-from linstor.commcontroller import need_communication, CommController
+from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import Output
 from linstor.sharedconsts import (
     API_CRT_RSC_DFN,
     API_DEL_RSC_DFN,
@@ -56,3 +53,18 @@ class ResourceDefinitionCommands(Commands):
                 #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
 
         return None
+
+    @staticmethod
+    @completer_communication
+    def completer(cc, prefix, **kwargs):
+        possible = set()
+        lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn())
+
+        if lstmsg:
+            for rsc_dfn in lstmsg.resources:
+                possible.add(rsc_dfn.rsc_name)
+
+            if prefix:
+                return [res for res in possible if res.startswith(prefix)]
+
+        return possible

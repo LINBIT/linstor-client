@@ -39,6 +39,19 @@ def need_communication(f):
     return wrapper
 
 
+def completer_communication(f):
+    """
+    Wrappes the communication code for completer functions
+    """
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        cliargs = kwargs['parsed_args']
+        servers = CommController.controller_list(cliargs.controllers)
+        with CommController(servers) as cc:
+            return f(cc, *args, **kwargs)
+    return wrapper
+
+
 class CommController(object):
     # servers is a list of tuples containing host, port pairs
     def __init__(self, servers=[]):

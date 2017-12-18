@@ -1,7 +1,7 @@
 from proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
 from proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
 from proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
-from linstor.commcontroller import need_communication
+from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL_DFN,
@@ -49,3 +49,18 @@ class StoragePoolDefinitionCommands(Commands):
                 #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
 
         return None
+
+    @staticmethod
+    @completer_communication
+    def completer(cc, prefix, **kwargs):
+        possible = set()
+        lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL_DFN, MsgLstStorPoolDfn())
+
+        if lstmsg:
+            for storpool_dfn in lstmsg.resources:
+                possible.add(storpool_dfn.stor_pool_name)
+
+            if prefix:
+                return [res for res in possible if res.startswith(prefix)]
+
+        return possible
