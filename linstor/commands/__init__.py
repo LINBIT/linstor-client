@@ -67,7 +67,7 @@ class Commands(object):
         return lstMsg
 
     @classmethod
-    def _get_list_message(cls, cc, api_call, request_msg, args):
+    def _get_list_message(cls, cc, api_call, request_msg, args=None):
         """
         Sends the given api_call request to the controller connect cc.
         Checks the result is the expected request_msg and returns it.
@@ -79,7 +79,7 @@ class Commands(object):
         if isinstance(lstmsg, MsgApiCallResponse):
             raise lstmsg
 
-        if Commands._print_machine_readable(args, lstmsg):
+        if args and Commands._print_machine_readable(args, lstmsg):
             return None
 
         return lstmsg
