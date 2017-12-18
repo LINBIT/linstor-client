@@ -1516,7 +1516,7 @@ class LinStorCLI(object):
         while True:
             try:
                 sys.stdout.write("\n")
-                cmds = raw_input('> ').strip()
+                cmds = input('> ').strip()
 
                 cmds = [cmd.strip() for cmd in cmds.split()]
                 if not cmds:
