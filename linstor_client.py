@@ -1340,7 +1340,10 @@ class LinStorCLI(object):
         return parser
 
     def parse(self, pargs):
-        args = self._parser.parse_args(pargs)
+        return self._parser.parse_args(pargs)
+
+    def parse_and_execute(self, pargs):
+        args = self.parse(pargs)
         args.func(args)
 
     def parser_cmds(self):
@@ -1418,7 +1421,7 @@ class LinStorCLI(object):
         # helper function
         def parsecatch(cmds, stoprec=False):
             try:
-                self.parse(cmds)
+                self.parse_and_execute(cmds)
             except SystemExit:  # raised by argparse
                 if stoprec:
                     return
@@ -1471,14 +1474,14 @@ class LinStorCLI(object):
                 return
 
     def cmd_help(self, args):
-        self.parse([args.command, "-h"])
+        self.parse_and_execute([args.command, "-h"])
 
     def cmd_exit(self, _):
         exit(0)
 
     def run(self):
         # TODO(rck): try/except
-        self.parse(sys.argv[1:])
+        self.parse_and_execute(sys.argv[1:])
 
     def cmd_enoimp(self, args):
         Output.err('This command is deprecated or not implemented')
