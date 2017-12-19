@@ -106,6 +106,7 @@ def get_terminal_size():
 class Output(object):
     @staticmethod
     def handle_ret(args, answer):
+        outstream = sys.stderr
         from linstor.sharedconsts import (MASK_ERROR, MASK_WARN, MASK_INFO)
 
         rc = answer.ret_code
@@ -127,24 +128,24 @@ class Output(object):
         else:  # do not use MASK_SUCCESS
             category = Output.color_str('SUCCESS:\n', COLOR_GREEN, args)
 
-        sys.stderr.write(category)
+        outstream.write(category)
         have_message = message is not None and len(message) > 0
         have_cause = cause is not None and len(cause) > 0
         have_correction = correction is not None and len(correction) > 0
         have_details = details is not None and len(details) > 0
         if (have_cause or have_correction or have_details) and have_message:
-            sys.stderr.write("Description:\n")
+            outstream.write("Description:\n")
         if have_message:
-            Output.print_with_indent(sys.stderr, 4, message)
+            Output.print_with_indent(outstream, 4, message)
         if have_cause:
-            sys.stderr.write("Cause:\n")
-            Output.print_with_indent(sys.stderr, 4, cause)
+            outstream.write("Cause:\n")
+            Output.print_with_indent(outstream, 4, cause)
         if have_correction:
-            sys.stderr.write("Correction:\n")
-            Output.print_with_indent(sys.stderr, 4, correction)
+            outstream.write("Correction:\n")
+            Output.print_with_indent(outstream, 4, correction)
         if have_details:
-            sys.stderr.write("Details:\n")
-            Output.print_with_indent(sys.stderr, 4, details)
+            outstream.write("Details:\n")
+            Output.print_with_indent(outstream, 4, details)
         return ret
 
     @staticmethod
