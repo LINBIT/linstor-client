@@ -378,15 +378,6 @@ class LinStorCLI(object):
             help='Name of the storage pool to delete').completer = StoragePoolDefinitionCommands.completer
         p_rm_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.delete)
 
-        # TODO
-        def driver_completer(prefix, **kwargs):
-            possible = ["lvm", "lvmthin", "zfs"]
-
-            if prefix:
-                return [e for e in possible if e.startswith(prefix)]
-
-            return possible
-
         # new-storpol
         p_new_storpool = subp.add_parser('create-storage-pool',
                                          aliases=['crtstoragepool'],
@@ -399,8 +390,8 @@ class LinStorCLI(object):
         # TODO
         p_new_storpool.add_argument(
             'driver',
-            choices=driver_completer(""),
-            help='Name of the driver used for the new storage pool').completer = driver_completer
+            choices=StoragePoolCommands.driver_completer(""),
+            help='Name of the driver used for the new storage pool').completer = StoragePoolCommands.driver_completer
         p_new_storpool.set_defaults(func=StoragePoolCommands.create)
 
         # modify-storpool

@@ -75,3 +75,12 @@ class StoragePoolCommands(Commands):
                 return [res for res in possible if res.startswith(prefix)]
 
         return possible
+
+    @staticmethod
+    def driver_completer(prefix, **kwargs):
+        possible = ["lvm", "lvmthin", "zfs"]
+
+        if prefix:
+            return [e for e in possible if e.startswith(prefix)]
+
+        return possible
