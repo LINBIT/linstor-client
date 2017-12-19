@@ -11,10 +11,9 @@ class LinstorTestCase(unittest.TestCase):
         linstor_cli = linstor_client.LinStorCLI()
 
         try:
-            linstor_cli.parse_and_execute(cmd_args)
+            return linstor_cli.parse_and_execute(cmd_args)
         except SystemExit as e:
             return e.code
-        return 500
 
     def parse_args(self, cmd_args):
         linstor_cli = linstor_client.LinStorCLI()
@@ -31,11 +30,12 @@ class LinstorTestCase(unittest.TestCase):
         jout = None
         try:
             sys.stdout = StringIO()
-            linstor_cli.parse_and_execute(cmd_args + ["-m"])
+            retcode = linstor_cli.parse_and_execute(cmd_args + ["-m"])
         except SystemExit as e:
-            self.assertEqual(e.code, 0)
-            jout = json.loads(sys.stdout.getvalue())
+            retcode = e.code
         finally:
+            self.assertEqual(retcode, 0)
+            jout = json.loads(sys.stdout.getvalue())
             sys.stdout.close()
             sys.stdout = backupstd
         return jout

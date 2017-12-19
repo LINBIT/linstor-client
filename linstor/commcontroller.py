@@ -30,11 +30,11 @@ def need_communication(f):
             try:
                 p = f(cc, *args, **kwargs)
             except MsgApiCallResponse as callresponse:
-                sys.exit(Output.handle_ret(args, callresponse))
+                return Output.handle_ret(args, callresponse)
 
         if p:  # could be None if no payload or if cmd_xyz does implicit return
-            sys.exit(Output.handle_ret(args, p))
-        sys.exit(0)
+            return Output.handle_ret(args, p)
+        return 0
 
     return wrapper
 

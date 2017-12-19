@@ -77,6 +77,9 @@ from linstor.sharedconsts import (
     VAL_NODE_TYPE_STLT,
 )
 
+if hasattr(__builtins__, 'raw_input'):
+    input = raw_input
+
 
 class LinStorCLI(object):
     """
@@ -1344,7 +1347,7 @@ class LinStorCLI(object):
 
     def parse_and_execute(self, pargs):
         args = self.parse(pargs)
-        args.func(args)
+        return args.func(args)
 
     def parser_cmds(self):
         # AFAIK there is no other way to get the subcommands out of argparse.
@@ -1451,11 +1454,12 @@ class LinStorCLI(object):
         # if loaded, raw_input makes use of it
         try:
             import readline
+            sys.stderr = sys.stdout  # seems after importing readline it is not possible to output to sys.stderr
             completer = argcomplete.CompletionFinder(self._parser)
             readline.set_completer_delims("")
             readline.set_completer(completer.rl_complete)
             readline.parse_and_bind("tab: complete")
-        except:
+        except ImportError:
             pass
 
         self.cmd_list(args)
@@ -1474,14 +1478,14 @@ class LinStorCLI(object):
                 return
 
     def cmd_help(self, args):
-        self.parse_and_execute([args.command, "-h"])
+        sys.exit(self.parse_and_execute([args.command, "-h"]))
 
     def cmd_exit(self, _):
         exit(0)
 
     def run(self):
         # TODO(rck): try/except
-        self.parse_and_execute(sys.argv[1:])
+        sys.exit(self.parse_and_execute(sys.argv[1:]))
 
     def cmd_enoimp(self, args):
         Output.err('This command is deprecated or not implemented')
