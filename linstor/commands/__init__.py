@@ -1,7 +1,6 @@
 import sys
 from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
-from google.protobuf import json_format
 from linstor.utils import Output
 
 
@@ -91,6 +90,7 @@ class Commands(object):
         and serializes the given lstmsg.
         """
         if args.machine_readable:
+            from google.protobuf import json_format
             s = json_format.MessageToJson(lstmsg)
             print(s)
             return True
