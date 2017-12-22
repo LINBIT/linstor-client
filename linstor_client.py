@@ -25,12 +25,13 @@ import re
 import linstor.argparse.argparse as argparse
 import linstor.argcomplete as argcomplete
 from linstor.commands import (
+    Commands,
     VolumeDefinitionCommands,
     StoragePoolDefinitionCommands,
     StoragePoolCommands,
     ResourceDefinitionCommands,
     ResourceCommands,
-    NodeCommands
+    NodeCommands,
 )
 
 from linstor.commcontroller import need_communication, CommController
@@ -44,10 +45,7 @@ from linstor.consts import (
     VERSION,
     NODE_NAME,
     RES_NAME,
-    STORPOOL_NAME,
-    SNAPS_NAME,
-    BOOL_TRUE,
-    BOOL_FALSE,
+    SNAPS_NAME
 )
 
 from linstor.utils import (
@@ -56,6 +54,7 @@ from linstor.utils import (
     filter_prohibited,
     namecheck,
     rangecheck,
+    ip_completer,
     COLOR_BROWN,
     COLOR_DARKPINK,
     COLOR_GREEN,
@@ -65,16 +64,7 @@ from linstor.utils import (
 )
 
 from linstor.sharedconsts import (
-    DFLT_STLT_PORT_PLAIN,
-    DFLT_CTRL_PORT_PLAIN,
-    DFLT_CTRL_PORT_SSL,
-    VAL_NETCOM_TYPE_PLAIN,
-    VAL_NETCOM_TYPE_SSL,
-    VAL_NETIF_TYPE_IP,
-    VAL_NODE_TYPE_AUX,
-    VAL_NODE_TYPE_CMBD,
-    VAL_NODE_TYPE_CTRL,
-    VAL_NODE_TYPE_STLT,
+    DFLT_CTRL_PORT_PLAIN
 )
 
 if hasattr(__builtins__, 'raw_input'):
@@ -158,93 +148,10 @@ class LinStorCLI(object):
         p_poke.add_argument('-q', '--quiet', action="store_true")
         p_poke.set_defaults(func=self.cmd_enoimp)
 
-        # new-node
-        def ip_completer(where):
-            def completer(prefix, parsed_args, **kwargs):
-                import socket
-                opt = where
-                if opt == "name":
-                    name = parsed_args.name
-                elif opt == "peer_ip":
-                    name = parsed_args.peer_ip
-                else:
-                    return ""
-
-                ip = socket.gethostbyname(name)
-                ip = [ip]
-                return ip
-            return completer
-
         # type checkers (generate them only once)
         check_node_name = namecheck(NODE_NAME)
         check_res_name = namecheck(RES_NAME)
         check_snaps_name = namecheck(SNAPS_NAME)
-        check_storpool_name = namecheck(STORPOOL_NAME)
-
-        p_new_node = subp.add_parser('create-node',
-                                     aliases=['crtnode'],
-                                     description='Creates a node entry for a node that participates in the '
-                                     'linstor cluster.')
-        p_new_node.add_argument('-p', '--port', type=rangecheck(1, 65535),
-                                help='default: Satellite %s for %s; Controller %s for %s; %s for %s' % (
-                                    DFLT_STLT_PORT_PLAIN,
-                                    VAL_NETCOM_TYPE_PLAIN,
-                                    DFLT_CTRL_PORT_PLAIN,
-                                    VAL_NETCOM_TYPE_PLAIN,
-                                    DFLT_CTRL_PORT_SSL,
-                                    VAL_NETCOM_TYPE_SSL))
-
-        ntype_def = VAL_NODE_TYPE_STLT
-        p_new_node.add_argument('--node-type', choices=(VAL_NODE_TYPE_CTRL, VAL_NODE_TYPE_AUX,
-                                                        VAL_NODE_TYPE_CMBD, VAL_NODE_TYPE_STLT),
-                                default=VAL_NODE_TYPE_STLT, help='Node type (default: %s)' % (ntype_def))
-        ctype_def = VAL_NETCOM_TYPE_PLAIN
-        p_new_node.add_argument('--communication-type', choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
-                                default=ctype_def,
-                                help='Communication type (default: %s)' % (ctype_def))
-        itype_def = VAL_NETIF_TYPE_IP
-        p_new_node.add_argument('--interface-type', choices=(VAL_NETIF_TYPE_IP,), default=itype_def,
-                                help='Interface type (default: %s)' % (itype_def))
-        iname_def = 'default'
-        p_new_node.add_argument('--interface-name', default=iname_def,
-                                help='Interface name (default: %s)' % (iname_def))
-        p_new_node.add_argument('name', help='Name of the new node', type=check_node_name)
-        p_new_node.add_argument('ip',
-                                help='IP address of the new node').completer = ip_completer("name")
-        p_new_node.set_defaults(func=NodeCommands.create)
-
-        # modify-node
-        p_mod_node_command = 'modify-node'
-        p_mod_node = subp.add_parser(p_mod_node_command,
-                                     aliases=['mn'],
-                                     description='Modifies a drbdmanage node.')
-        p_mod_node.add_argument('-a', '--address-family', metavar="FAMILY",
-                                choices=['ipv4', 'ipv6'],
-                                help='FAMILY: "ipv4" (default) or "ipv6"')
-        p_mod_node.add_argument('-s', '--storage')
-        p_mod_node.add_argument('name', type=check_node_name,
-                                help='Name of the node').completer = NodeCommands.completer
-        p_mod_node.add_argument('--address',
-                                help='Network address of the node').completer = ip_completer("name")
-        p_mod_node.set_defaults(func=self.cmd_enoimp)
-        p_mod_node.set_defaults(command=p_mod_node_command)
-
-        # remove-node
-        p_rm_node = subp.add_parser('delete-node',
-                                    aliases=['delnode'],
-                                    description='Removes a node from the drbdmanage cluster. '
-                                    'All drbdmanage resources that are still deployed on the specified '
-                                    'node are marked for undeployment, and the node entry is marked for '
-                                    "removal from drbdmanage's data tables. The specified node is "
-                                    'expected to undeploy all resources. As soon as all resources have been '
-                                    'undeployed from the node, the node entry is removed from '
-                                    "drbdmanage's data tables.")
-        p_rm_node.add_argument('-q', '--quiet', action="store_true",
-                               help='Unless this option is used, drbdmanage will issue a safety question '
-                               'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_node.add_argument('name',
-                               help='Name of the node to remove').completer = NodeCommands.completer
-        p_rm_node.set_defaults(func=NodeCommands.delete)
 
         # Quorum control, completion of the action parameter
         quorum_completer_possible = ('ignore', 'unignore')
@@ -268,157 +175,23 @@ class LinStorCLI(object):
         ).completer = NodeCommands.completer
         p_quorum.set_defaults(func=self.cmd_enoimp)
 
+        # add all node commands
+        NodeCommands.setup_commands(subp)
+
         # new-resource definition
-        p_new_res_dfn = subp.add_parser('create-resource-definition',
-                                        aliases=['crtrscdfn'],
-                                        description='Defines a Linstor resource definition for use with linstor.')
-        p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
-        p_new_res_dfn.add_argument('-s', '--secret', type=str)
-        p_new_res_dfn.add_argument('name', type=check_res_name, help='Name of the new resource definition')
-        p_new_res_dfn.set_defaults(func=ResourceDefinitionCommands.create)
+        ResourceDefinitionCommands.setup_commands(subp)
 
-        # remove-resource definition
-        # TODO description
-        p_rm_res_dfn = subp.add_parser('delete-resource-definition',
-                                       aliases=['delrscdfn'],
-                                       description=' Removes a resource definition '
-                                       'from the drbdmanage cluster. The resource is undeployed from all nodes '
-                                       "and the resource entry is marked for removal from drbdmanage's data "
-                                       'tables. After all nodes have undeployed the resource, the resource '
-                                       "entry is removed from drbdmanage's data tables.")
-        p_rm_res_dfn.add_argument('-q', '--quiet', action="store_true",
-                                  help='Unless this option is used, drbdmanage will issue a safety question '
-                                  'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_res_dfn.add_argument('-f', '--force', action="store_true",
-                                  help='If present, then the resource entry and all associated assignment '
-                                  "entries are removed from drbdmanage's data tables immediately, without "
-                                  'taking any action on the cluster nodes that have the resource deployed.')
-        p_rm_res_dfn.add_argument(
-            'name',
-            nargs="+",
-            help='Name of the resource to delete').completer = ResourceDefinitionCommands.completer
-        p_rm_res_dfn.set_defaults(func=ResourceDefinitionCommands.delete)
+        # add all resource commands
+        ResourceCommands.setup_commands(subp)
 
-        # new-resource
-        p_new_res = subp.add_parser('create-resource',
-                                    aliases=['crtrsc'],
-                                    description='Defines a DRBD resource for use with drbdmanage. '
-                                    'Unless a specific IP port-number is supplied, the port-number is '
-                                    'automatically selected by the drbdmanage server on the current node. ')
-        p_new_res.add_argument('-p', '--port', type=rangecheck(1, 65535))
-        p_new_res.add_argument(
-            '-s', '--storage-pool',
-            type=check_storpool_name,
-            help="Storage pool name to use.").completer = StoragePoolDefinitionCommands.completer
-        p_new_res.add_argument('name', type=check_res_name, help='Name of the new resource')
-        p_new_res.add_argument('node_name',
-                               type=check_node_name,
-                               help='Name of the new resource').completer = NodeCommands.completer
-        p_new_res.set_defaults(func=ResourceCommands.create)
+        # add all storage pool definition commands
+        StoragePoolDefinitionCommands.setup_commands(subp)
 
-        # modify-resource
-        p_mod_res_command = 'modify-resource'
-        p_mod_res = subp.add_parser(p_mod_res_command,
-                                    aliases=['mr'],
-                                    description='Modifies a DRBD resource.')
-        p_mod_res.add_argument('-p', '--port', type=rangecheck(1, 65535))
-        p_mod_res.add_argument('-m', '--managed', choices=(BOOL_TRUE, BOOL_FALSE))
-        p_mod_res.add_argument('name', type=check_res_name,
-                               help='Name of the resource').completer = ResourceCommands.completer
-        p_mod_res.set_defaults(func=self.cmd_enoimp)
-        p_mod_res.set_defaults(command=p_mod_res_command)
+        # add all storage pools commands
+        StoragePoolCommands.setup_commands(subp)
 
-        # remove-resource
-        p_rm_res = subp.add_parser('delete-resource',
-                                   aliases=['delrsc'],
-                                   description=' Removes a resource and its associated resource definition '
-                                   'from the drbdmanage cluster. The resource is undeployed from all nodes '
-                                   "and the resource entry is marked for removal from drbdmanage's data "
-                                   'tables. After all nodes have undeployed the resource, the resource '
-                                   "entry is removed from drbdmanage's data tables.")
-        p_rm_res.add_argument('-q', '--quiet', action="store_true",
-                              help='Unless this option is used, drbdmanage will issue a safety question '
-                              'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_res.add_argument('-f', '--force', action="store_true",
-                              help='If present, then the resource entry and all associated assignment '
-                              "entries are removed from drbdmanage's data tables immediately, without "
-                              'taking any action on the cluster nodes that have the resource deployed.')
-        p_rm_res.add_argument('name',
-                              help='Name of the resource to delete').completer = ResourceCommands.completer
-        p_rm_res.add_argument('node_name',
-                              nargs="+",
-                              help='Name of the node').completer = NodeCommands.completer
-        p_rm_res.set_defaults(func=ResourceCommands.delete)
-
-        # new-storpol definition
-        p_new_storpool_dfn = subp.add_parser('create-storage-pool-definition',
-                                             aliases=['crtstoragepooldfn'],
-                                             description='Defines a Linstor storpool definition for use with linstor.')
-        p_new_storpool_dfn.add_argument('name', type=check_storpool_name, help='Name of the new storpool definition')
-        p_new_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.create)
-
-        # modify-storpool
-
-        # remove-storpool definition
-        # TODO description
-        p_rm_storpool_dfn = subp.add_parser('delete-storage-pool-definition',
-                                            aliases=['delstoragepooldfn'],
-                                            description=' Removes a storage pool definition ')
-        p_rm_storpool_dfn.add_argument('-q', '--quiet', action="store_true",
-                                       help='Unless this option is used, drbdmanage will issue a safety question '
-                                       'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_storpool_dfn.add_argument(
-            '-f', '--force', action="store_true",
-            help='If present, then the storage pool entry and all associated assignment '
-            "entries are removed from drbdmanage's data tables immediately, without "
-            'taking any action on the cluster nodes that have the storage pool deployed.')
-        p_rm_storpool_dfn.add_argument(
-            'name',
-            nargs="+",
-            help='Name of the storage pool to delete').completer = StoragePoolDefinitionCommands.completer
-        p_rm_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.delete)
-
-        # new-storpol
-        p_new_storpool = subp.add_parser('create-storage-pool',
-                                         aliases=['crtstoragepool'],
-                                         description='Defines a Linstor storage pool for use with Linstor.')
-        p_new_storpool.add_argument('name', type=check_storpool_name, help='Name of the new storage pool')
-        p_new_storpool.add_argument(
-            'node_name',
-            type=check_node_name,
-            help='Name of the node for the new storage pool').completer = NodeCommands.completer
-        # TODO
-        p_new_storpool.add_argument(
-            'driver',
-            choices=StoragePoolCommands.driver_completer(""),
-            help='Name of the driver used for the new storage pool').completer = StoragePoolCommands.driver_completer
-        p_new_storpool.set_defaults(func=StoragePoolCommands.create)
-
-        # modify-storpool
-        # TODO
-
-        # remove-storpool
-        # TODO description
-        p_rm_storpool = subp.add_parser('delete-storage-pool',
-                                        aliases=['delstoragepool'],
-                                        description=' Removes a storage pool ')
-        p_rm_storpool.add_argument(
-            '-q', '--quiet',
-            action="store_true",
-            help='Unless this option is used, drbdmanage will issue a safety question '
-            'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_storpool.add_argument('-f', '--force',
-                                   action="store_true",
-                                   help='If present, then the storage pool entry and all associated assignment '
-                                   "entries are removed from drbdmanage's data tables immediately, without "
-                                   'taking any action on the cluster nodes that have the storage pool deployed.')
-        p_rm_storpool.add_argument('name',
-                                   help='Name of the storage pool to delete').completer = StoragePoolCommands.completer
-        p_rm_storpool.add_argument(
-            'node_name',
-            nargs="+",
-            help='Name of the Node where the storage pool exists.').completer = NodeCommands.completer
-        p_rm_storpool.set_defaults(func=StoragePoolCommands.delete)
+        # add all volume definition commands
+        VolumeDefinitionCommands.setup_commands(subp)
 
         # new-volume
         def size_completer(prefix, **kwargs):
@@ -436,35 +209,6 @@ class LinStorCLI(object):
                 p_units = choices
 
             return [digits + u for u in p_units]
-
-        p_new_vol_command = 'create-volume-definition'
-        p_new_vol = subp.add_parser(p_new_vol_command,
-                                    aliases=['crtvlmdfn'],
-                                    description='Defines a volume with a capacity of size for use with '
-                                    'linstore. If the resource resname exists already, a new volume is '
-                                    'added to that resource, otherwise the resource is created automatically '
-                                    'with default settings. Unless minornr is specified, a minor number for '
-                                    "the volume's DRBD block device is assigned automatically by the "
-                                    'linstor server.')
-        p_new_vol.add_argument('-m', '--minor', type=int)
-        p_new_vol.add_argument('-d', '--deploy', type=int)
-        p_new_vol.add_argument('-s', '--site', default='',
-                               help="only consider nodes from this site")
-        p_new_vol.add_argument('name', type=check_res_name,
-                               help='Name of a new/existing resource').completer = ResourceCommands.completer
-        p_new_vol.add_argument(
-            'size',
-            help='Size of the volume in resource. '
-            'The default unit for size is GiB (size * (2 ^ 30) bytes). '
-            'Another unit can be specified by using an according postfix. '
-            "Linstor's internal granularity for the capacity of volumes is one "
-            'Kibibyte (2 ^ 10 bytes). All other unit specifications are implicitly '
-            'converted to Kibibyte, so that the actual size value used by linstor '
-            'is the smallest natural number of Kibibytes that is large enough to '
-            'accommodate a volume of the requested size in the specified size unit.'
-        ).completer = size_completer
-        p_new_vol.set_defaults(func=VolumeDefinitionCommands.create)
-        p_new_vol.set_defaults(command=p_new_vol_command)
 
         def vol_completer(prefix, parsed_args, **kwargs):
             server_rc, res_list = self.__list_resources(True)
@@ -526,28 +270,6 @@ class LinStorCLI(object):
         p_mod_assg.add_argument('-d', '--discard')
         p_mod_assg.set_defaults(func=self.cmd_enoimp)
         p_mod_assg.set_defaults(command=p_mod_assg_command)
-
-        # remove-volume
-        p_rm_vol = subp.add_parser('delete-volume-definition',
-                                   aliases=['delvlmdfn'],
-                                   description='Removes a volume from the drbdmanage cluster, and removes '
-                                   'the volume definition from the resource definition. The volume is '
-                                   'undeployed from all nodes and the volume entry is marked for removal '
-                                   "from the resource definition in drbdmanage's data tables. After all "
-                                   'nodes have undeployed the volume, the volume entry is removed from '
-                                   'the resource definition.')
-        p_rm_vol.add_argument('-q', '--quiet', action="store_true",
-                              help='Unless this option is used, drbdmanage will issue a safety question '
-                              'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_vol.add_argument('-f', '--force', action="store_true",
-                              help='If present, then the volume entry is removed from the resource '
-                              'definition immediately, without taking any action on the cluster nodes '
-                              'that have the volume deployed.')
-
-        p_rm_vol.add_argument('name',
-                              help='Name of the resource').completer = ResourceCommands.completer
-        p_rm_vol.add_argument('vol_id', help='Volume ID', type=int).completer = vol_completer
-        p_rm_vol.set_defaults(func=VolumeDefinitionCommands.delete)
 
         # connect
         p_conn = subp.add_parser('connect-resource', description='Connect resource on node',
@@ -813,144 +535,9 @@ class LinStorCLI(object):
         shutdown_restart('restart', description='Restarts the local drbdmanage server process.',
                          func=self.cmd_enoimp)
 
-        # nodes
-        nodesverbose = ('Family', 'IP', 'Site')
-        nodesgroupby = ('Name', 'Pool_Size', 'Pool_Free', 'Family', 'IP', 'State')
-
-        def show_group_completer(lst, where):
-            def completer(prefix, parsed_args, **kwargs):
-                possible = lst
-                opt = where
-                if opt == "groupby":
-                    opt = parsed_args.groupby
-                elif opt == "show":
-                    opt = parsed_args.show
-                else:
-                    return possible
-
-                if opt:
-                    possible = [i for i in lst if i not in opt]
-
-                return possible
-            return completer
-
-        nodes_verbose_completer = show_group_completer(nodesverbose, "show")
-        nodes_group_completer = show_group_completer(nodesgroupby, "groupby")
-        p_lnodes = subp.add_parser('list-nodes', aliases=['ls-nodes', 'display-nodes'],
-                                   description='Prints a list of all cluster nodes known to drbdmanage. '
-                                   'By default, the list is printed as a human readable table.')
-        p_lnodes.add_argument('-m', '--machine-readable', action="store_true")
-        p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lnodes.add_argument('-s', '--show', nargs='+',
-                              choices=nodesverbose).completer = nodes_verbose_completer
-        p_lnodes.add_argument('-g', '--groupby', nargs='+',
-                              choices=nodesgroupby).completer = nodes_group_completer
-        p_lnodes.add_argument('-N', '--nodes', nargs='+', type=check_node_name,
-                              help='Filter by list of nodes').completer = NodeCommands.completer
-        p_lnodes.add_argument('--separators', action="store_true")
-        p_lnodes.set_defaults(func=NodeCommands.list)
-
-        # resources
-        resverbose = ('Port',)
-        resgroupby = ('Name', 'Port', 'State')
-        res_verbose_completer = show_group_completer(resverbose, "show")
-        res_group_completer = show_group_completer(resgroupby, "groupby")
-
-        p_lreses = subp.add_parser('list-resources',
-                                   aliases=['ls-rsc', 'display-resources'],
-                                   description='Prints a list of all resource definitions known to '
-                                   'drbdmanage. By default, the list is printed as a human readable table.')
-        p_lreses.add_argument('-m', '--machine-readable', action="store_true")
-        p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lreses.add_argument('-s', '--show', nargs='+',
-                              choices=resverbose).completer = res_verbose_completer
-        p_lreses.add_argument('-g', '--groupby', nargs='+',
-                              choices=resgroupby).completer = res_group_completer
-        p_lreses.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                              help='Filter by list of resources').completer = ResourceCommands.completer
-        p_lreses.add_argument('--separators', action="store_true")
-        p_lreses.set_defaults(func=ResourceCommands.list)
-
-        # resource definitions
-        resverbose = ('Port',)
-        resgroupby = ('Name', 'Port', 'State')
-        res_verbose_completer = show_group_completer(resverbose, "show")
-        res_group_completer = show_group_completer(resgroupby, "groupby")
-
-        p_lrscdfs = subp.add_parser(
-            'list-resource-definitions',
-            aliases=['dsprscdfn', 'display-resource-definitions', 'resource-definitions'],
-            description='Prints a list of all resource definitions known to '
-            'drbdmanage. By default, the list is printed as a human readable table.')
-        p_lrscdfs.add_argument('-m', '--machine-readable', action="store_true")
-        p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lrscdfs.add_argument('-s', '--show', nargs='+',
-                               choices=resverbose).completer = res_verbose_completer
-        p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
-                               choices=resgroupby).completer = res_group_completer
-        p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                               help='Filter by list of resources').completer = ResourceCommands.completer
-        p_lrscdfs.add_argument('--separators', action="store_true")
-        p_lrscdfs.set_defaults(func=ResourceDefinitionCommands.list)
-
-        # storpool definitions
-        storpooldfngroupby = ('Name')
-        storpooldfn_group_completer = show_group_completer(storpooldfngroupby, "groupby")
-
-        p_lstorpooldfs = subp.add_parser(
-            'list-storage-pool-definitions',
-            aliases=['ls-storage-pool-dfn', 'display-storage-pool-definition'],
-            description='Prints a list of all storage pool definitions known to '
-            'linstor. By default, the list is printed as a human readable table.')
-        p_lstorpooldfs.add_argument('-m', '--machine-readable', action="store_true")
-        p_lstorpooldfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lstorpooldfs.add_argument('-g', '--groupby', nargs='+',
-                                    choices=storpooldfngroupby).completer = storpooldfn_group_completer
-        p_lstorpooldfs.add_argument('-R', '--storpool', nargs='+', type=check_res_name,
-                                    help='Filter by list of storage pool').completer = ResourceCommands.completer
-        p_lstorpooldfs.add_argument('--separators', action="store_true")
-        p_lstorpooldfs.set_defaults(func=StoragePoolDefinitionCommands.list)
-
-        # storpool
-        storpoolgroupby = ('Name')
-        storpool_group_completer = show_group_completer(storpoolgroupby, "groupby")
-
-        p_lstorpool = subp.add_parser(
-            'list-storage-pools',
-            aliases=['ls-storage-pool', 'display-storage-pools'],
-            description='Prints a list of all storage pool known to '
-            'linstor. By default, the list is printed as a human readable table.')
-        p_lstorpool.add_argument('-m', '--machine-readable', action="store_true")
-        p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lstorpool.add_argument('-g', '--groupby', nargs='+',
-                                 choices=storpoolgroupby).completer = storpool_group_completer
-        p_lstorpool.add_argument('-R', '--storpool', nargs='+', type=check_res_name,
-                                 help='Filter by list of storage pool').completer = StoragePoolCommands.completer
-        p_lstorpool.add_argument('--separators', action="store_true")
-        p_lstorpool.set_defaults(func=StoragePoolCommands.list)
-
-        # volumes
-        volgroupby = resgroupby + ('Vol_ID', 'Size', 'Minor')
-        vol_group_completer = show_group_completer(volgroupby, 'groupby')
-
-        p_lvols = subp.add_parser('list-volume-definitions',
-                                  aliases=['dspvlmdfn', 'display-volume-definitions', 'volume-definitions'],
-                                  description=' Prints a list of all volume definitions known to drbdmanage. '
-                                  'By default, the list is printed as a human readable table.')
-        p_lvols.add_argument('-m', '--machine-readable', action="store_true")
-        p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lvols.add_argument('-s', '--show', nargs='+',
-                             choices=resverbose).completer = res_verbose_completer
-        p_lvols.add_argument('-g', '--groupby', nargs='+',
-                             choices=volgroupby).completer = vol_group_completer
-        p_lvols.add_argument('--separators', action="store_true")
-        p_lvols.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                             help='Filter by list of resources').completer = ResourceCommands.completer
-        p_lvols.set_defaults(func=VolumeDefinitionCommands.list)
-
         # snapshots
         snapgroupby = ("Resource", "Name", "State")
-        snap_group_completer = show_group_completer(snapgroupby, "groupby")
+        snap_group_completer = Commands.show_group_completer(snapgroupby, "groupby")
 
         p_lsnaps = subp.add_parser('list-snapshots', aliases=['s', 'snapshots'],
                                    description='List available snapshots')
@@ -966,7 +553,7 @@ class LinStorCLI(object):
         # snapshot-assignments
         snapasgroupby = ("Resource", "Name", "Node", "State")
 
-        snapas_group_completer = show_group_completer(snapasgroupby, "groupby")
+        snapas_group_completer = Commands.show_group_completer(snapasgroupby, "groupby")
 
         p_lsnapas = subp.add_parser('list-snapshot-assignments', aliases=['sa', 'snapshot-assignments'],
                                     description='List snapshot assignments')
@@ -986,8 +573,8 @@ class LinStorCLI(object):
         assigngroupby = ('Node', 'Resource', 'Vol_ID', 'Blockdevice',
                          'Node_ID', 'State')
 
-        ass_verbose_completer = show_group_completer(assignverbose, "show")
-        ass_group_completer = show_group_completer(assigngroupby, "groupby")
+        ass_verbose_completer = Commands.show_group_completer(assignverbose, "show")
+        ass_group_completer = Commands.show_group_completer(assigngroupby, "groupby")
 
         p_assignments = subp.add_parser('list-assignments', aliases=['a', 'assignments'],
                                         description="Prints a list of each node's assigned resources."
@@ -1182,18 +769,6 @@ class LinStorCLI(object):
         p_debug.add_argument('cmd')
         p_debug.set_defaults(func=self.cmd_enoimp)
 
-        def res_vol_completer(prefix, parsed_args, **kwargs):
-            server_rc, res_list = self.__list_resources(True)
-            possible = set()
-            for r in res_list:
-                name, _, vol_list = r
-                vol_list.sort(key=lambda vol_entry: vol_entry[0])
-                for v in vol_list:
-                    vol_id, _ = v
-                    possible.add("%s/%d" % (name, vol_id))
-
-            return possible
-
         # disk-options
         do = DrbdSetupOpts('disk-options')
         if do.ok:
@@ -1202,7 +777,7 @@ class LinStorCLI(object):
             p_do.add_argument('--resource', type=check_res_name,
                               help='Name of the resource to modify').completer = ResourceCommands.completer
             p_do.add_argument('--volume',
-                              help='Name of the volume to modify').completer = res_vol_completer
+                              help='Name of the volume to modify')
             p_do.set_defaults(optsobj=do)
             p_do.set_defaults(type="disko")
             p_do.set_defaults(func=self.cmd_enoimp)
@@ -1215,7 +790,7 @@ class LinStorCLI(object):
             p_pdo.add_argument('--resource', type=check_res_name,
                                help='Name of the resource to modify').completer = ResourceCommands.completer
             p_pdo.add_argument('--volume',
-                               help='Name of the volume to modify').completer = res_vol_completer
+                               help='Name of the volume to modify')
             p_pdo.set_defaults(optsobj=pdo)
             p_pdo.set_defaults(type="peerdisko")
             p_pdo.set_defaults(func=self.cmd_enoimp)
@@ -1445,7 +1020,7 @@ class LinStorCLI(object):
         # if loaded, raw_input makes use of it
         try:
             import readline
-            sys.stderr = sys.stdout  # seems after importing readline it is not possible to output to sys.stderr
+            # seems after importing readline it is not possible to output to sys.stderr
             completer = argcomplete.CompletionFinder(self._parser)
             readline.set_completer_delims("")
             readline.set_completer(completer.rl_complete)

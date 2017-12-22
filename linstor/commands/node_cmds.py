@@ -4,7 +4,8 @@ from proto.MsgLstNode_pb2 import MsgLstNode
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import Output, Table
+from linstor.utils import Output, Table, rangecheck, namecheck, ip_completer
+from linstor.consts import NODE_NAME
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
@@ -16,6 +17,10 @@ from linstor.sharedconsts import (
     VAL_NETCOM_TYPE_PLAIN,
     VAL_NETCOM_TYPE_SSL,
     VAL_NODE_TYPE_STLT,
+    VAL_NODE_TYPE_CTRL,
+    VAL_NODE_TYPE_AUX,
+    VAL_NODE_TYPE_CMBD,
+    VAL_NETIF_TYPE_IP,
     API_CRT_NODE,
     API_DEL_NODE,
     API_LST_NODE
@@ -23,6 +28,112 @@ from linstor.sharedconsts import (
 
 
 class NodeCommands(Commands):
+
+    @staticmethod
+    def setup_commands(parser):
+        # create node
+        p_new_node = parser.add_parser(
+            'create-node',
+            aliases=['crtnode'],
+            description='Creates a node entry for a node that participates in the '
+            'linstor cluster.')
+        p_new_node.add_argument('-p', '--port', type=rangecheck(1, 65535),
+                                help='default: Satellite %s for %s; Controller %s for %s; %s for %s' % (
+                                    DFLT_STLT_PORT_PLAIN,
+                                    VAL_NETCOM_TYPE_PLAIN,
+                                    DFLT_CTRL_PORT_PLAIN,
+                                    VAL_NETCOM_TYPE_PLAIN,
+                                    DFLT_CTRL_PORT_SSL,
+                                    VAL_NETCOM_TYPE_SSL))
+
+        ntype_def = VAL_NODE_TYPE_STLT
+        p_new_node.add_argument('--node-type', choices=(VAL_NODE_TYPE_CTRL, VAL_NODE_TYPE_AUX,
+                                                        VAL_NODE_TYPE_CMBD, VAL_NODE_TYPE_STLT),
+                                default=VAL_NODE_TYPE_STLT, help='Node type (default: %s)' % (ntype_def))
+        ctype_def = VAL_NETCOM_TYPE_PLAIN
+        p_new_node.add_argument('--communication-type', choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
+                                default=ctype_def,
+                                help='Communication type (default: %s)' % (ctype_def))
+        itype_def = VAL_NETIF_TYPE_IP
+        p_new_node.add_argument('--interface-type', choices=(VAL_NETIF_TYPE_IP,), default=itype_def,
+                                help='Interface type (default: %s)' % (itype_def))
+        iname_def = 'default'
+        p_new_node.add_argument('--interface-name', default=iname_def,
+                                help='Interface name (default: %s)' % (iname_def))
+        p_new_node.add_argument(
+            'name',
+            help='Name of the new node, must match the nodes hostname',
+            type=namecheck(NODE_NAME))
+        p_new_node.add_argument('ip',
+                                help='IP address of the new node').completer = ip_completer("name")
+        p_new_node.set_defaults(func=NodeCommands.create)
+
+        # modify-node
+        p_mod_node_command = 'modify-node'
+        p_mod_node = parser.add_parser(
+            p_mod_node_command,
+            aliases=['modnode', 'mn'],
+            description='Modifies a linstor node.')
+        p_mod_node.add_argument('-a', '--address-family', metavar="FAMILY",
+                                choices=['ipv4', 'ipv6'],
+                                help='FAMILY: "ipv4" (default) or "ipv6"')
+        p_mod_node.add_argument('-s', '--storage')
+        p_mod_node.add_argument('name', type=namecheck(NODE_NAME),
+                                help='Name of the node').completer = NodeCommands.completer
+        p_mod_node.add_argument('--address',
+                                help='Network address of the node').completer = ip_completer("name")
+        p_mod_node.set_defaults(func=Commands.cmd_enoimp)
+        p_mod_node.set_defaults(command=NodeCommands.modify)
+
+        # remove-node
+        p_rm_node = parser.add_parser(
+            'delete-node',
+            aliases=['delnode'],
+            description='Removes a node from the drbdmanage cluster. '
+            'All drbdmanage resources that are still deployed on the specified '
+            'node are marked for undeployment, and the node entry is marked for '
+            "removal from drbdmanage's data tables. The specified node is "
+            'expected to undeploy all resources. As soon as all resources have been '
+            'undeployed from the node, the node entry is removed from '
+            "drbdmanage's data tables.")
+        p_rm_node.add_argument('-q', '--quiet', action="store_true",
+                               help='Unless this option is used, drbdmanage will issue a safety question '
+                               'that must be answered with yes, otherwise the operation is canceled.')
+        p_rm_node.add_argument('name',
+                               help='Name of the node to remove').completer = NodeCommands.completer
+        p_rm_node.set_defaults(func=NodeCommands.delete)
+
+        # list nodes
+        nodesverbose = ('Family', 'IP', 'Site')
+        nodesgroupby = ('Name', 'Pool_Size', 'Pool_Free', 'Family', 'IP', 'State')
+
+        nodes_verbose_completer = Commands.show_group_completer(nodesverbose, "show")
+        nodes_group_completer = Commands.show_group_completer(nodesgroupby, "groupby")
+        p_lnodes = parser.add_parser(
+            'list-nodes',
+            aliases=['ls-nodes', 'display-nodes'],
+            description='Prints a list of all cluster nodes known to drbdmanage. '
+            'By default, the list is printed as a human readable table.')
+        p_lnodes.add_argument('-m', '--machine-readable', action="store_true")
+        p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_lnodes.add_argument('-s', '--show', nargs='+',
+                              choices=nodesverbose).completer = nodes_verbose_completer
+        p_lnodes.add_argument('-g', '--groupby', nargs='+',
+                              choices=nodesgroupby).completer = nodes_group_completer
+        p_lnodes.add_argument('-N', '--nodes', nargs='+', type=namecheck(NODE_NAME),
+                              help='Filter by list of nodes').completer = NodeCommands.completer
+        p_lnodes.add_argument('--separators', action="store_true")
+        p_lnodes.set_defaults(func=NodeCommands.list)
+
+        # show properties
+        p_sp = parser.add_parser(
+            'get-node-properties',
+            aliases=['get-node-props'],
+            description="Prints all properties of the given node.")
+        p_sp.add_argument(
+            'node_name',
+            help="Node for which to print the properties").completer = NodeCommands.completer
+        p_sp.set_defaults(func=NodeCommands.print_props)
 
     @staticmethod
     @need_communication
@@ -62,6 +173,11 @@ class NodeCommands(Commands):
         satcon.encryption_type = args.communication_type
 
         return Commands._create(cc, API_CRT_NODE, p)
+
+    @staticmethod
+    @need_communication
+    def modify(cc, args):
+        pass
 
     @staticmethod
     @need_communication
@@ -105,6 +221,19 @@ class NodeCommands(Commands):
 
                 # for prop in n.node_props:
                 #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+
+        return None
+
+    @staticmethod
+    @need_communication
+    def print_props(cc, args):
+        lstmsg = Commands._request_list(cc, API_LST_NODE, MsgLstNode())
+
+        if lstmsg:
+            for n in lstmsg.nodes:
+                if n.name == args.node_name:
+                    Commands._print_props(n.props)
+                    break
 
         return None
 

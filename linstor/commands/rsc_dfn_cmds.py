@@ -3,14 +3,82 @@ from proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
+from linstor.utils import rangecheck, namecheck
 from linstor.sharedconsts import (
     API_CRT_RSC_DFN,
     API_DEL_RSC_DFN,
     API_LST_RSC_DFN
 )
+from linstor.consts import RES_NAME
 
 
 class ResourceDefinitionCommands(Commands):
+
+    @staticmethod
+    def setup_commands(parser):
+        p_new_res_dfn = parser.add_parser(
+            'create-resource-definition',
+            aliases=['crtrscdfn'],
+            description='Defines a Linstor resource definition for use with linstor.')
+        p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
+        p_new_res_dfn.add_argument('-s', '--secret', type=str)
+        p_new_res_dfn.add_argument('name', type=namecheck(RES_NAME), help='Name of the new resource definition')
+        p_new_res_dfn.set_defaults(func=ResourceDefinitionCommands.create)
+
+        # remove-resource definition
+        # TODO description
+        p_rm_res_dfn = parser.add_parser(
+            'delete-resource-definition',
+            aliases=['delrscdfn'],
+            description=" Removes a resource definition "
+            "from the drbdmanage cluster. The resource is undeployed from all nodes "
+            "and the resource entry is marked for removal from drbdmanage's data "
+            "tables. After all nodes have undeployed the resource, the resource "
+            "entry is removed from drbdmanage's data tables.")
+        p_rm_res_dfn.add_argument('-q', '--quiet', action="store_true",
+                                  help='Unless this option is used, drbdmanage will issue a safety question '
+                                  'that must be answered with yes, otherwise the operation is canceled.')
+        p_rm_res_dfn.add_argument('-f', '--force', action="store_true",
+                                  help='If present, then the resource entry and all associated assignment '
+                                  "entries are removed from drbdmanage's data tables immediately, without "
+                                  'taking any action on the cluster nodes that have the resource deployed.')
+        p_rm_res_dfn.add_argument(
+            'name',
+            nargs="+",
+            help='Name of the resource to delete').completer = ResourceDefinitionCommands.completer
+        p_rm_res_dfn.set_defaults(func=ResourceDefinitionCommands.delete)
+
+        resverbose = ('Port',)
+        resgroupby = ('Name', 'Port', 'State')
+        res_verbose_completer = Commands.show_group_completer(resverbose, "show")
+        res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
+
+        p_lrscdfs = parser.add_parser(
+            'list-resource-definitions',
+            aliases=['dsprscdfn', 'display-resource-definitions', 'resource-definitions'],
+            description='Prints a list of all resource definitions known to '
+            'drbdmanage. By default, the list is printed as a human readable table.')
+        p_lrscdfs.add_argument('-m', '--machine-readable', action="store_true")
+        p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_lrscdfs.add_argument('-s', '--show', nargs='+',
+                               choices=resverbose).completer = res_verbose_completer
+        p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
+                               choices=resgroupby).completer = res_group_completer
+        p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
+                               help='Filter by list of resources').completer = ResourceDefinitionCommands.completer
+        p_lrscdfs.add_argument('--separators', action="store_true")
+        p_lrscdfs.set_defaults(func=ResourceDefinitionCommands.list)
+
+        # show properties
+        p_sp = parser.add_parser(
+            'get-resource-definition-properties',
+            aliases=['get-resource-definition-props'],
+            description="Prints all properties of the given resource definitions.")
+        p_sp.add_argument(
+            'resource_name',
+            help="Resource definition for which to print the properties"
+        ).completer = ResourceDefinitionCommands.completer
+        p_sp.set_defaults(func=ResourceDefinitionCommands.print_props)
 
     @staticmethod
     @need_communication
@@ -51,6 +119,19 @@ class ResourceDefinitionCommands(Commands):
 
                 # for prop in n.node_props:
                 #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+
+        return None
+
+    @staticmethod
+    @need_communication
+    def print_props(cc, args):
+        lstmsg = Commands._request_list(cc, API_LST_RSC_DFN, MsgLstRscDfn())
+
+        if lstmsg:
+            for rsc_dfn in lstmsg.rsc_dfns:
+                if rsc_dfn.rsc_name == args.resource_name:
+                    Commands._print_props(rsc_dfn.rsc_dfn_props)
+                    break
 
         return None
 

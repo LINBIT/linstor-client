@@ -628,6 +628,23 @@ def get_uname():
     return checked_node_name
 
 
+def ip_completer(where):
+    def completer(prefix, parsed_args, **kwargs):
+        import socket
+        opt = where
+        if opt == "name":
+            name = parsed_args.name
+        elif opt == "peer_ip":
+            name = parsed_args.peer_ip
+        else:
+            return ""
+
+        ip = socket.gethostbyname(name)
+        ip = [ip]
+        return ip
+    return completer
+
+
 # mainly used for DrbdSetupOpts()
 # but also usefull for 'handlers' subcommand
 def filter_new_args(unsetprefix, args):

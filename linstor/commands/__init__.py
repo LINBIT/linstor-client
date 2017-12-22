@@ -1,7 +1,7 @@
 import sys
 from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
-from linstor.utils import Output
+from linstor.utils import Output, Table
 
 
 class Commands(object):
@@ -96,10 +96,41 @@ class Commands(object):
             return True
         return False
 
+    @classmethod
+    def _print_props(cls, prop_map):
+        tbl = Table()
+        tbl.add_column("Key")
+        tbl.add_column("Value")
+        for p in prop_map:
+            tbl.add_row([p.key, p.value])
+        tbl.show()
 
-from rsc_cmds import ResourceCommands
-from rsc_dfn_cmds import ResourceDefinitionCommands
-from storpool_cmds import StoragePoolCommands
-from storpool_dfn_cmds import StoragePoolDefinitionCommands
+    @staticmethod
+    def show_group_completer(lst, where):
+        def completer(prefix, parsed_args, **kwargs):
+            possible = lst
+            opt = where
+            if opt == "groupby":
+                opt = parsed_args.groupby
+            elif opt == "show":
+                opt = parsed_args.show
+            else:
+                return possible
+
+            if opt:
+                possible = [i for i in lst if i not in opt]
+
+            return possible
+        return completer
+
+    @staticmethod
+    def cmd_enoimp(args):
+        Output.err('This command is deprecated or not implemented')
+
+
 from node_cmds import NodeCommands
+from rsc_dfn_cmds import ResourceDefinitionCommands
+from storpool_dfn_cmds import StoragePoolDefinitionCommands
+from storpool_cmds import StoragePoolCommands
+from rsc_cmds import ResourceCommands
 from vlm_dfn_cmds import VolumeDefinitionCommands
