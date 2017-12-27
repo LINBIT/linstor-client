@@ -111,7 +111,7 @@ class NodeCommands(Commands):
         nodes_group_completer = Commands.show_group_completer(nodesgroupby, "groupby")
         p_lnodes = parser.add_parser(
             'list-nodes',
-            aliases=['ls-nodes', 'display-nodes'],
+            aliases=['list-node', 'ls-nodes', 'display-nodes'],
             description='Prints a list of all cluster nodes known to drbdmanage. '
             'By default, the list is printed as a human readable table.')
         p_lnodes.add_argument('-m', '--machine-readable', action="store_true")

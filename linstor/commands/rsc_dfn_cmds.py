@@ -55,7 +55,7 @@ class ResourceDefinitionCommands(Commands):
 
         p_lrscdfs = parser.add_parser(
             'list-resource-definitions',
-            aliases=['dsprscdfn', 'display-resource-definitions', 'resource-definitions'],
+            aliases=['list-resource-definition', 'dsprscdfn', 'display-resource-definitions', 'resource-definitions'],
             description='Prints a list of all resource definitions known to '
             'drbdmanage. By default, the list is printed as a human readable table.')
         p_lrscdfs.add_argument('-m', '--machine-readable', action="store_true")

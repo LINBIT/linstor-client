@@ -55,7 +55,7 @@ class StoragePoolDefinitionCommands(Commands):
 
         p_lstorpooldfs = parser.add_parser(
             'list-storage-pool-definitions',
-            aliases=['ls-storage-pool-dfn', 'display-storage-pool-definition'],
+            aliases=['list-storage-pool-definition', 'ls-storage-pool-dfn', 'display-storage-pool-definition'],
             description='Prints a list of all storage pool definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpooldfs.add_argument('-m', '--machine-readable', action="store_true")

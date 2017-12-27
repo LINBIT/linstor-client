@@ -73,7 +73,7 @@ class VolumeDefinitionCommands(Commands):
 
         p_lvols = parser.add_parser(
             'list-volume-definitions',
-            aliases=['dspvlmdfn', 'display-volume-definitions', 'volume-definitions'],
+            aliases=['list-volume-definition', 'dspvlmdfn', 'display-volume-definitions', 'volume-definitions'],
             description=' Prints a list of all volume definitions known to drbdmanage. '
             'By default, the list is printed as a human readable table.')
         p_lvols.add_argument('-m', '--machine-readable', action="store_true")

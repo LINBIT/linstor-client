@@ -66,7 +66,7 @@ class StoragePoolCommands(Commands):
 
         p_lstorpool = parser.add_parser(
             'list-storage-pools',
-            aliases=['ls-storage-pool', 'display-storage-pools'],
+            aliases=['list-storage-pool', 'ls-storage-pool', 'display-storage-pools'],
             description='Prints a list of all storage pool known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpool.add_argument('-m', '--machine-readable', action="store_true")

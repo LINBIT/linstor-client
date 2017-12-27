@@ -80,7 +80,7 @@ class ResourceCommands(Commands):
 
         p_lreses = parser.add_parser(
             'list-resources',
-            aliases=['ls-rsc', 'display-resources'],
+            aliases=['list-resource', 'ls-rsc', 'display-resources'],
             description='Prints a list of all resource definitions known to '
             'drbdmanage. By default, the list is printed as a human readable table.')
         p_lreses.add_argument('-m', '--machine-readable', action="store_true")
