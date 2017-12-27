@@ -134,3 +134,4 @@ from storpool_dfn_cmds import StoragePoolDefinitionCommands
 from storpool_cmds import StoragePoolCommands
 from rsc_cmds import ResourceCommands
 from vlm_dfn_cmds import VolumeDefinitionCommands
+from drbd_setup_cmds import DrbdOptions

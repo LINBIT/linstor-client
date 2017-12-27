@@ -27,15 +27,11 @@ up2date: linstor/consts_githash.py
 	$(info "Version strings/Changelogs up to date")
 endif
 
-.PHONY: linstor/setupoptions.py
-linstor/setupoptions.py:
-	echo "diskoptions=\"\"\"$$(drbdsetup xml-help disk-options)\"\"\"" > $@
-	# DM has them as net-options, but we actually parse new-peer
-	echo "netoptions=\"\"\"$$(drbdsetup xml-help new-peer)\"\"\"" >> $@
-	echo "peerdeviceoptions=\"\"\"$$(drbdsetup xml-help peer-device-options)\"\"\"" >> $@
-	echo "resourceoptions=\"\"\"$$(drbdsetup xml-help resource-options)\"\"\"" >> $@
+.PHONY: linstor/drbdsetup_options.py
+linstor/drbdsetup_options.py:
+	linstor-common/gendrbdoptions.py python $@
 
-xml: linstor/setupoptions.py
+xml: linstor/drbdsetup_options.py
 
 release: up2date clean doc xml
 	$(PYTHON) setup.py sdist

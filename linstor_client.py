@@ -32,6 +32,7 @@ from linstor.commands import (
     ResourceDefinitionCommands,
     ResourceCommands,
     NodeCommands,
+    DrbdOptions
 )
 
 from linstor.commcontroller import need_communication, CommController
@@ -49,7 +50,6 @@ from linstor.consts import (
 )
 
 from linstor.utils import (
-    DrbdSetupOpts,
     Output,
     filter_prohibited,
     namecheck,
@@ -769,57 +769,9 @@ class LinStorCLI(object):
         p_debug.add_argument('cmd')
         p_debug.set_defaults(func=self.cmd_enoimp)
 
-        # disk-options
-        do = DrbdSetupOpts('disk-options')
-        if do.ok:
-            p_do = do.gen_argparse_subcommand(subp)
-            p_do.add_argument('--common', action="store_true")
-            p_do.add_argument('--resource', type=check_res_name,
-                              help='Name of the resource to modify').completer = ResourceCommands.completer
-            p_do.add_argument('--volume',
-                              help='Name of the volume to modify')
-            p_do.set_defaults(optsobj=do)
-            p_do.set_defaults(type="disko")
-            p_do.set_defaults(func=self.cmd_enoimp)
-
-        # peer-device-options (shares func with disk-options)
-        pdo = DrbdSetupOpts('peer-device-options')
-        if pdo.ok:
-            p_pdo = pdo.gen_argparse_subcommand(subp)
-            p_pdo.add_argument('--common', action="store_true")
-            p_pdo.add_argument('--resource', type=check_res_name,
-                               help='Name of the resource to modify').completer = ResourceCommands.completer
-            p_pdo.add_argument('--volume',
-                               help='Name of the volume to modify')
-            p_pdo.set_defaults(optsobj=pdo)
-            p_pdo.set_defaults(type="peerdisko")
-            p_pdo.set_defaults(func=self.cmd_enoimp)
-
-        # resource-options
-        ro = DrbdSetupOpts('resource-options')
-        if ro.ok:
-            p_ro = ro.gen_argparse_subcommand(subp)
-            p_ro.add_argument('--common', action="store_true")
-            p_ro.add_argument('--resource', type=check_res_name,
-                              help='Name of the resource to modify').completer = ResourceCommands.completer
-            p_ro.set_defaults(optsobj=ro)
-            p_ro.set_defaults(type="reso")
-            p_ro.set_defaults(func=self.cmd_enoimp)
-
-        # net-options
-        # TODO: not allowed to set per connection, drbdmanage currently has no notion of a
-        # connection in its object model.
-        #
-        no = DrbdSetupOpts('new-peer', 'net-options')
-        if no.ok:
-            p_no = no.gen_argparse_subcommand(subp)
-            p_no.add_argument('--common', action="store_true")
-            p_no.add_argument('--resource', type=check_res_name,
-                              help='Name of the resource to modify').completer = ResourceCommands.completer
-            p_no.add_argument('--sites',
-                              help='Set net options between sites (SiteA:SiteB)')
-            p_no.set_defaults(optsobj=no)
-            p_no.set_defaults(func=self.cmd_enoimp)
+        # drbd options
+        drbd_options = DrbdOptions()
+        drbd_options.setup_commands(subp)
 
         # handlers
         # currently we do not parse the xml-output because drbd-utils are not ready for it
@@ -846,10 +798,10 @@ class LinStorCLI(object):
         p_listopts.add_argument('resource', type=check_res_name,
                                 help='Name of the resource to show').completer = ResourceCommands.completer
         p_listopts.set_defaults(func=self.cmd_enoimp)
-        p_listopts.set_defaults(doobj=do)
-        p_listopts.set_defaults(noobj=no)
-        p_listopts.set_defaults(roobj=ro)
-        p_listopts.set_defaults(pdoobj=pdo)
+        # p_listopts.set_defaults(doobj=do)
+        # p_listopts.set_defaults(noobj=no)
+        # p_listopts.set_defaults(roobj=ro)
+        # p_listopts.set_defaults(pdoobj=pdo)
 
         # edit config
         p_editconf = subp.add_parser('modify-config',
@@ -1108,56 +1060,6 @@ class LinStorCLI(object):
             sys.exit(1)
 
         return target
-
-    def _set_drbdsetup_props(self, opts):
-        pass
-
-    def cmd_res_options(self, args):
-        fn_rc = 1
-        target = self.check_mutex_opts(args,
-                                       ("common", "resource"))
-
-        newopts = args.optsobj.filterNew(args)
-        if not newopts:
-            sys.stderr.write('No new options found\n')
-            return fn_rc
-
-        newopts["target"] = target
-        newopts["type"] = args.type
-
-        return self._set_drbdsetup_props(newopts)
-
-    def cmd_disk_options(self, args):
-        fn_rc = 1
-        target = self.check_mutex_opts(args,
-                                       ("common", "resource", "volume"))
-
-        newopts = args.optsobj.filterNew(args)
-        if not newopts:
-            sys.stderr.write('No new options found\n')
-            return fn_rc
-        if target == "volume" and newopts["volume"].find('/') == -1:
-            sys.stderr.write('You have to specify the volume as: res/vol\n')
-            return fn_rc
-
-        newopts["target"] = target
-        newopts["type"] = args.type
-
-        return self._set_drbdsetup_props(newopts)
-
-    def cmd_net_options(self, args):
-        fn_rc = 1
-        target = self.check_mutex_opts(args, ("common", "resource", "sites"))
-
-        newopts = args.optsobj.filterNew(args)
-        if not newopts:
-            sys.stderr.write('No new options found\n')
-            return fn_rc
-
-        newopts["target"] = target
-        newopts["type"] = "neto"
-
-        return self._set_drbdsetup_props(newopts)
 
     def cmd_handlers(self, args):
         fn_rc = 1

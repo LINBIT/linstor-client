@@ -649,7 +649,10 @@ def ip_completer(where):
 # but also usefull for 'handlers' subcommand
 def filter_new_args(unsetprefix, args):
     new = dict()
-    reserved_keys = ["func", "optsobj", "common", "command"]
+    reserved_keys = [
+        "func", "optsobj", "common", "command",
+        "controllers", "warn_as_error", "no_utf8", "no_color"
+    ]
     for k, v in args.__dict__.iteritems():
         if v is not None and k not in reserved_keys:
             key = k.replace('_', '-')
@@ -672,115 +675,6 @@ def filter_new_args(unsetprefix, args):
                              ' an option at the same time!\n')
             return False
     return new
-
-
-class DrbdSetupOpts():
-    def __init__(self, setup_command, dm_command=None):
-        import xml.etree.ElementTree as ET
-        self.setup_command = setup_command
-        self.dm_command = dm_command if dm_command else setup_command
-        self.config = {}
-        self.unsetprefix = 'unset'
-        self.ok = False
-
-        xmlout = ""
-        from linstor.setupoptions import (diskoptions, netoptions, peerdeviceoptions, resourceoptions)
-
-        if self.dm_command == "disk-options":
-            xmlout = diskoptions
-        elif self.dm_command == "net-options":
-            xmlout = netoptions
-        elif self.dm_command == "peer-device-options":
-            xmlout = peerdeviceoptions
-        elif self.dm_command == "resource-options":
-            xmlout = resourceoptions
-
-        root = ET.fromstring(xmlout)
-
-        for child in root:
-            if child.tag == 'summary':
-                self.config['help'] = child.text
-            elif child.tag == 'argument':
-                # ignore them
-                pass
-            elif child.tag == 'option':
-                opt = child.attrib['name']
-                self.config[opt] = {'type': child.attrib['type']}
-                if child.attrib['name'] == 'set-defaults':
-                    continue
-                if child.attrib['type'] == 'boolean':
-                    self.config[opt]['default'] = child.find('default').text
-                if child.attrib['type'] == 'handler':
-                    self.config[opt]['handlers'] = [h.text for h in child.findall('handler')]
-                elif child.attrib['type'] == 'numeric':
-                    for v in ('min', 'max', 'default', 'unit_prefix', 'unit'):
-                        val = child.find(v)
-                        if val is not None:
-                            self.config[opt][v] = val.text
-        self.ok = True
-
-    def gen_argparse_subcommand(self, subp):
-        sp = subp.add_parser(self.dm_command, description=self.config['help'])
-
-        def mybool(x):
-            return x.lower() in ('y', 'yes', 't', 'true', 'on')
-
-        for opt in self.config:
-            if opt == 'help':
-                continue
-            if self.config[opt]['type'] == 'handler':
-                sp.add_argument('--' + opt, choices=self.config[opt]['handlers'])
-            if self.config[opt]['type'] == 'boolean':
-                sp.add_argument('--' + opt, type=mybool,
-                                help="yes/no (Default: %s)" % (self.config[opt]['default']))
-            if self.config[opt]['type'] == 'string':
-                sp.add_argument('--' + opt)
-            if self.config[opt]['type'] == 'numeric':
-                min_ = int(self.config[opt]['min'])
-                max_ = int(self.config[opt]['max'])
-                default = int(self.config[opt]['default'])
-                if "unit" in self.config[opt]:
-                    unit = "; Unit: " + self.config[opt]['unit']
-                else:
-                    unit = ""
-                # sp.add_argument('--' + opt, type=rangecheck(min_, max_),
-                #                 default=default, help="Range: [%d, %d]; Default: %d" %(min_, max_, default))
-                # setting a default sets the option to != None, which makes
-                # filterNew relatively complex
-                sp.add_argument('--' + opt, type=rangecheck(min_, max_),
-                                help="Range: [%d, %d]; Default: %d%s" % (min_, max_, default, unit))
-        for opt in self.config:
-            if opt == 'help':
-                continue
-            else:
-                sp.add_argument('--%s-%s' % (self.unsetprefix, opt),
-                                action='store_true')
-
-        return sp
-
-    # return a dict containing all non-None args
-    def filterNew(self, args):
-        return filter_new_args(self.unsetprefix, args)
-
-    # returns True if opt is a valid option and val has the correct type and
-    # satisfies the specified check (e.g., a range check)
-    def validateCommand(self, opt, val):
-        if opt not in self.config:
-            return False
-
-        if self.config[opt]['type'] == 'handler':
-            return val in self.config[opt]['handlers']
-        if self.config[opt]['type'] == 'boolean':
-            return isinstance(val, bool)
-        if self.config[opt]['type'] == 'string':
-            return isinstance(val, str)
-        if self.config[opt]['type'] == 'numeric':
-            min_ = int(self.config[opt]['min'])
-            max_ = int(self.config[opt]['max'])
-            return checkrange(val, min_, max_)
-
-    def get_options(self):
-        return self.config
 
 
 def filter_prohibited(to_filter, prohibited):
