@@ -27,11 +27,12 @@ class Commands(object):
         return p
 
     @classmethod
-    def _delete(cls, cc, args, api_call, del_msgs):
+    def _delete(cls, cc, api_call, del_msgs):
         h = MsgHeader()
         h.api_call = api_call
         h.msg_id = 1
 
+        api_responses = []
         for msg in del_msgs:
             pbmsgs = cc.sendrec(h, msg)
 
@@ -41,10 +42,18 @@ class Commands(object):
             p = MsgApiCallResponse()
             p.ParseFromString(pbmsgs[1])
 
-            retcode = Output.handle_ret([args], p)
             # exit if delete wasn't successful?
+            api_responses.append(p)
 
             h.msg_id += 1
+        return api_responses
+
+    @classmethod
+    def _delete_and_output(cls, cc, args, api_call, del_msgs):
+        api_responses = Commands._delete(cc, api_call, del_msgs)
+
+        for ar in api_responses:
+            Output.handle_ret([args], ar)
 
     @classmethod
     def _request_list(cls, cc, api_call, lstMsg):

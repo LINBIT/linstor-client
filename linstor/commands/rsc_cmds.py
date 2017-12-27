@@ -137,7 +137,7 @@ class ResourceCommands(Commands):
 
             del_msgs.append(p)
 
-        Commands._delete(cc, args, API_DEL_RSC, del_msgs)
+        Commands._delete_and_output(cc, args, API_DEL_RSC, del_msgs)
 
         return None
 

@@ -3,7 +3,7 @@ from proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
 from proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import namecheck
+from linstor.utils import namecheck, Output
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL_DFN,
     API_DEL_STOR_POOL_DFN,
@@ -25,7 +25,7 @@ class StoragePoolDefinitionCommands(Commands):
             'name',
             type=namecheck(STORPOOL_NAME),
             help='Name of the new storpool definition')
-        p_new_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.create)
+        p_new_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.argsparse_create)
 
         # modify-storpool
 
@@ -47,7 +47,7 @@ class StoragePoolDefinitionCommands(Commands):
             'name',
             nargs="+",
             help='Name of the storage pool to delete').completer = StoragePoolDefinitionCommands.completer
-        p_rm_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.delete)
+        p_rm_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.argparse_delete)
 
         # list storpool definitions
         storpooldfngroupby = ('Name')
@@ -82,25 +82,35 @@ class StoragePoolDefinitionCommands(Commands):
 
     @staticmethod
     @need_communication
-    def create(cc, args):
+    def argsparse_create(cc, args):
+        return StoragePoolDefinitionCommands.create(cc, args.name)
+
+    @staticmethod
+    def create(cc, storage_pool_name):
         p = MsgCrtStorPoolDfn()
-        p.stor_pool_name = args.name
+        p.stor_pool_name = storage_pool_name
 
         return Commands._create(cc, API_CRT_STOR_POOL_DFN, p)
 
     @staticmethod
     @need_communication
-    def delete(cc, args):
+    def argparse_delete(cc, args):
+        api_responses = StoragePoolDefinitionCommands.delete(cc, args, args.name)
+
+        for ar in api_responses:
+            Output.handle_ret([args], ar)
+        return None
+
+    @staticmethod
+    def delete(cc, args, storage_pool_names):
         del_msgs = []
-        for storpool_name in args.name:
+        for storpool_name in storage_pool_names:
             p = MsgDelStorPoolDfn()
             p.stor_pool_name = storpool_name
 
             del_msgs.append(p)
 
-        Commands._delete(cc, args, API_DEL_STOR_POOL_DFN, del_msgs)
-
-        return None
+        return Commands._delete(cc, API_DEL_STOR_POOL_DFN, del_msgs)
 
     @staticmethod
     @need_communication

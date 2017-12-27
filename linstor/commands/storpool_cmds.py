@@ -116,7 +116,7 @@ class StoragePoolCommands(Commands):
 
             del_msgs.append(p)
 
-        Commands._delete(cc, args, API_DEL_STOR_POOL, del_msgs)
+        Commands._delete_and_output(cc, args, API_DEL_STOR_POOL, del_msgs)
 
         return None
 
