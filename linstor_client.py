@@ -76,21 +76,6 @@ class LinStorCLI(object):
     linstor command line client
     """
 
-    @staticmethod
-    def _controller_list(cmdl_args_controllers):
-        cenv = os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + cmdl_args_controllers
-
-        servers = []
-        for hp in cenv.split(','):
-            if ':' not in hp:
-                hp += ':' + str(DFLT_CTRL_PORT_PLAIN)
-            try:
-                h, p = hp.split(':')
-                servers.append((h, int(p)))
-            except:
-                pass
-        return servers
-
     def __init__(self):
         self._all_commands = None
         self._colors = True
