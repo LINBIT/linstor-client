@@ -2,12 +2,15 @@ from proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
 from proto.MsgDelStorPool_pb2 import MsgDelStorPool
 from linstor.commcontroller import need_communication, completer_communication
-from linstor.commands import Commands, NodeCommands
-from linstor.utils import namecheck
+from linstor.commands import Commands, NodeCommands, StoragePoolDefinitionCommands
+from linstor.utils import namecheck, ApiCallResponse
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL,
     API_DEL_STOR_POOL,
-    API_LST_STOR_POOL
+    API_LST_STOR_POOL,
+    KEY_STOR_POOL_VOLUME_GROUP,
+    KEY_STOR_POOL_THIN_POOL,
+    KEY_STOR_POOL_ZPOOL
 )
 from linstor.consts import NODE_NAME, STORPOOL_NAME
 
@@ -26,11 +29,13 @@ class StoragePoolCommands(Commands):
             'node_name',
             type=namecheck(NODE_NAME),
             help='Name of the node for the new storage pool').completer = NodeCommands.completer
-        # TODO
         p_new_storpool.add_argument(
             'driver',
             choices=StoragePoolCommands.driver_completer(""),
             help='Name of the driver used for the new storage pool').completer = StoragePoolCommands.driver_completer
+        p_new_storpool.add_argument(
+            'driver_device',
+            help='Device to use with driver')
         p_new_storpool.set_defaults(func=StoragePoolCommands.create)
 
         # modify-storpool
@@ -91,6 +96,12 @@ class StoragePoolCommands(Commands):
     @staticmethod
     @need_communication
     def create(cc, args):
+
+        # create storage pool definition
+        api_resp = ApiCallResponse(StoragePoolDefinitionCommands.create(args.name))
+        if not api_resp.is_success():
+            return api_resp.proto_msg
+
         p = MsgCrtStorPool()
         p.stor_pool_name = args.name
         p.node_name = args.node_name
@@ -101,9 +112,25 @@ class StoragePoolCommands(Commands):
         else:
             driver = args.driver.title()
 
+        device_key_map = {
+            'Lvm': KEY_STOR_POOL_VOLUME_GROUP,
+            'LvmThin': KEY_STOR_POOL_THIN_POOL,
+            'Zfs': KEY_STOR_POOL_ZPOOL
+        }
+
         p.driver = '{driver}Driver'.format(driver=driver)
 
-        return Commands._create(cc, API_CRT_STOR_POOL, p)
+        # set driver device pool property
+        prop = p.stor_pool_props.add()
+        prop.key = device_key_map[driver]
+        prop.value = args.driver_device
+
+        api_resp = ApiCallResponse(Commands._create(cc, API_CRT_STOR_POOL, p))
+        if api_resp.is_error():
+            # delete created storage pool definition
+            StoragePoolDefinitionCommands.delete(cc, args, [args.name])
+
+        return api_resp.proto_msg
 
     @staticmethod
     @need_communication
