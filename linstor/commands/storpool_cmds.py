@@ -98,7 +98,7 @@ class StoragePoolCommands(Commands):
     def create(cc, args):
 
         # create storage pool definition
-        api_resp = ApiCallResponse(StoragePoolDefinitionCommands.create(args.name))
+        api_resp = ApiCallResponse(StoragePoolDefinitionCommands.create(cc, args.name))
         if not api_resp.is_success():
             return api_resp.proto_msg
 
