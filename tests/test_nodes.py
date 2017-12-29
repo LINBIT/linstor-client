@@ -3,7 +3,7 @@ from linstor_testcase import LinstorTestCase
 from linstor.commands import NodeCommands
 
 
-class TestListCommands(LinstorTestCase):
+class TestNodeCommands(LinstorTestCase):
 
     def test_create_node(self):
         retcode = self.execute(['create-node', 'node1', '192.168.100.1'])
