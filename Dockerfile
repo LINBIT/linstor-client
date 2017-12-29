@@ -2,6 +2,8 @@ FROM ubuntu:xenial as builder
 MAINTAINER Roland Kammerer <roland.kammerer@linbit.com>
 
 ENV LINSTOR_CLI_VERSION 0.1
+ENV LINSTOR_CLI_PKGNAME linstor-cli
+ENV LINSTOR_TAR_BALL ${LINSTOR_CLI_PKGNAME}-${LINSTOR_CLI_VERSION}.tar.gz
 
 RUN groupadd makepkg
 RUN useradd -m -g makepkg makepkg
@@ -9,13 +11,13 @@ RUN useradd -m -g makepkg makepkg
 RUN apt-get update -y
 
 RUN apt-get install -y bash-completion debhelper devscripts docbook-xsl help2man protobuf-compiler python-all python-protobuf xsltproc
-COPY /dist/linstor-${LINSTOR_CLI_VERSION}.tar.gz /tmp/
+COPY /dist/${LINSTOR_TAR_BALL} /tmp/
 
 USER makepkg
 RUN cd ${HOME} && \
-		 cp /tmp/linstor-${LINSTOR_CLI_VERSION}.tar.gz ${HOME} && \
-		 tar xvf linstor-${LINSTOR_CLI_VERSION}.tar.gz && \
-		 cd linstor-${LINSTOR_CLI_VERSION} && \
+		 cp /tmp/${LINSTOR_TAR_BALL} ${HOME} && \
+		 tar xvf ${LINSTOR_TAR_BALL} && \
+		 cd ${LINSTOR_CLI_PKGNAME}-${LINSTOR_CLI_VERSION} && \
 		 make deb
 
 FROM ubuntu:xenial

@@ -1,4 +1,4 @@
-Source: linstor
+Source: linstor-cli
 Maintainer: LINBIT HA Solutions GmbH <drbd-user@lists.linbit.com>
 Uploaders: Roland Kammerer <roland.kammerer@linbit.com>
 Section: python
@@ -16,7 +16,7 @@ Build-Depends: bash-completion,
                xsltproc
 Standards-Version: 3.9.6
 
-Package: python-linstor
+Package: linstor-cli
 Architecture: all
 # keep python-natsort on its own line!
 Depends: ${misc:Depends},

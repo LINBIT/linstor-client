@@ -180,7 +180,7 @@ def gen_data_files():
 
 
 setup(
-    name="linstor",
+    name="linstor-cli",
     version=get_setup_version(),
     description="DRBD distributed resource management utility",
     long_description="This client program communicates to controller node which manage the resources",

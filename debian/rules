@@ -14,5 +14,5 @@ override_dh_install:
 ifneq ($(WITH_BASHCOMPL),)
 	# installed by setup.py to /etc/bash_completion.d/
 	# let dh_bash-completion handle it
-	rm -rf $(CURDIR)/debian/python-linstor/etc/bash_completion.d
+	rm -rf $(CURDIR)/debian/linstor-cli/etc/bash_completion.d
 endif
