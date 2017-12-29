@@ -1,9 +1,9 @@
 from proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
 from proto.MsgDelStorPool_pb2 import MsgDelStorPool
-from linstor.commcontroller import need_communication, completer_communication
+from linstor.commcontroller import need_communication, completer_communication, ApiCallResponse
 from linstor.commands import Commands, NodeCommands, StoragePoolDefinitionCommands
-from linstor.utils import namecheck, ApiCallResponse
+from linstor.utils import namecheck
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL,
     API_DEL_STOR_POOL,

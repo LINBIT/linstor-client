@@ -34,13 +34,7 @@ class Commands(object):
 
         api_responses = []
         for msg in del_msgs:
-            pbmsgs = cc.sendrec(h, msg)
-
-            ret_hdr = MsgHeader()
-            ret_hdr.ParseFromString(pbmsgs[0])
-            assert(ret_hdr.msg_id == h.msg_id)
-            p = MsgApiCallResponse()
-            p.ParseFromString(pbmsgs[1])
+            p = cc.send_and_expect_reply(h, msg)
 
             # exit if delete wasn't successful?
             api_responses.append(p)
@@ -53,7 +47,7 @@ class Commands(object):
         api_responses = Commands._delete(cc, api_call, del_msgs)
 
         for ar in api_responses:
-            Output.handle_ret([args], ar)
+            Output.handle_ret([args], ar.proto_msg)
 
     @classmethod
     def _request_list(cls, cc, api_call, lstMsg):

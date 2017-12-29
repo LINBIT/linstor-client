@@ -4,12 +4,14 @@ import socket
 import struct
 import sys
 import os
+from cStringIO import StringIO
 from google.protobuf.internal import encoder
 from google.protobuf.internal import decoder
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
+from proto.MsgHeader_pb2 import MsgHeader
 from functools import wraps
 from linstor.consts import KEY_LS_CONTROLLERS
-from linstor.sharedconsts import DFLT_CTRL_PORT_PLAIN
+from linstor.sharedconsts import DFLT_CTRL_PORT_PLAIN, API_REPLY, MASK_ERROR, MASK_WARN, MASK_INFO
 from linstor.utils import Output
 
 
@@ -50,6 +52,32 @@ def completer_communication(f):
         with CommController(servers) as cc:
             return f(cc, *args, **kwargs)
     return wrapper
+
+
+class ApiCallResponse(object):
+    def __init__(self, proto_response):
+        self._proto_msg = proto_response
+
+    def is_error(self):
+        return True if self._proto_msg.ret_code & MASK_ERROR else False
+
+    def is_warning(self):
+        return True if self._proto_msg.ret_code & MASK_WARN else False
+
+    def is_info(self):
+        return True if self._proto_msg.ret_code & MASK_INFO else False
+
+    def is_success(self):
+        return not self.is_error() and not self.is_warning() and not self.is_info()
+
+    @property
+    def proto_msg(self):
+        return self._proto_msg
+
+    def __str__(self):
+        sio = StringIO()
+        Output.handle_ret({}, self._proto_msg, sio)
+        return sio.getvalue()
 
 
 class CommController(object):
@@ -200,7 +228,7 @@ class CommController(object):
             while n < len(payload):
                 msg_len, new_pos = decoder._DecodeVarint32(payload, n)
                 n = new_pos
-                msg_buf = payload[n:n+msg_len]
+                msg_buf = payload[n:n + msg_len]
                 n += msg_len
                 pb_msgs.append(msg_buf)
         except:
@@ -221,6 +249,26 @@ class CommController(object):
             pb_msgs = self.recv()
 
         return pb_msgs
+
+    def send_and_expect_reply(self, header, payload=None):
+        """
+        Sends the given header and paylaod messages via sendrec
+        and expects as return an apicallresponse message
+
+        Returns:
+          An ApiCallResponse object
+        """
+        proto_messages = self.sendrec(header, payload)
+
+        ret_hdr = MsgHeader()
+        ret_hdr.ParseFromString(proto_messages[0])
+        assert(ret_hdr.msg_id == header.msg_id)
+        assert(ret_hdr.api_call == API_REPLY)
+        assert(len(proto_messages) > 1)
+        p = MsgApiCallResponse()
+        p.ParseFromString(proto_messages[1])
+
+        return ApiCallResponse(p)
 
     def close(self):
         if self.current_sock:

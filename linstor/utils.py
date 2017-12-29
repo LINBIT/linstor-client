@@ -25,7 +25,6 @@ import operator
 import os
 import subprocess
 import sys
-from cStringIO import StringIO
 
 from linstor.consts import (
     DEFAULT_TERM_HEIGHT,
@@ -45,7 +44,6 @@ from linstor.consts import (
     SNAPS_NAME_VALID_CHARS,
     SNAPS_NAME_VALID_INNER_CHARS,
 )
-from linstor.sharedconsts import (MASK_ERROR, MASK_WARN, MASK_INFO)
 
 
 # TODO(rck): still a hack
@@ -103,32 +101,6 @@ def get_terminal_size():
         term_width = DEFAULT_TERM_WIDTH
         term_height = DEFAULT_TERM_HEIGHT
     return term_width, term_height
-
-
-class ApiCallResponse(object):
-    def __init__(self, proto_response):
-        self._proto_msg = proto_response
-
-    def is_error(self):
-        return True if self._proto_msg.ret_code & MASK_ERROR else False
-
-    def is_warning(self):
-        return True if self._proto_msg.ret_code & MASK_WARN else False
-
-    def is_info(self):
-        return True if self._proto_msg.ret_code & MASK_INFO else False
-
-    def is_success(self):
-        return not self.is_error() and not self.is_warning() and not self.is_info()
-
-    @property
-    def proto_msg(self):
-        return self._proto_msg
-
-    def __str__(self):
-        sio = StringIO()
-        Output.handle_ret({}, self._proto_msg, sio)
-        return sio.getvalue()
 
 
 class Output(object):
