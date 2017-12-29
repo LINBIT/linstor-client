@@ -1,7 +1,7 @@
 from proto.MsgCrtVlmDfn_pb2 import MsgCrtVlmDfn
-# from proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
+from proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN  # API_DEL_VLM_DFN
+from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN, API_DEL_VLM_DFN
 from linstor.commcontroller import need_communication
 from linstor.commands import Commands, ResourceCommands
 from linstor.utils import SizeCalc, approximate_size_string, namecheck
@@ -44,18 +44,18 @@ class VolumeDefinitionCommands(Commands):
         p_new_vol.set_defaults(func=VolumeDefinitionCommands.create)
         p_new_vol.set_defaults(command=p_new_vol_command)
 
-        # remove-volume
+        # remove-volume definition
         p_rm_vol = parser.add_parser(
             'delete-volume-definition',
             aliases=['delvlmdfn'],
-            description='Removes a volume from the drbdmanage cluster, and removes '
+            description='Removes a volume definition from the linstor cluster, and removes '
             'the volume definition from the resource definition. The volume is '
             'undeployed from all nodes and the volume entry is marked for removal '
-            "from the resource definition in drbdmanage's data tables. After all "
+            "from the resource definition in linstor's data tables. After all "
             'nodes have undeployed the volume, the volume entry is removed from '
             'the resource definition.')
         p_rm_vol.add_argument('-q', '--quiet', action="store_true",
-                              help='Unless this option is used, drbdmanage will issue a safety question '
+                              help='Unless this option is used, linstor will issue a safety question '
                               'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_vol.add_argument('-f', '--force', action="store_true",
                               help='If present, then the volume entry is removed from the resource '
@@ -64,6 +64,10 @@ class VolumeDefinitionCommands(Commands):
         # TODO completer
         p_rm_vol.add_argument('name',
                               help='Name of the volume definition')
+        p_rm_vol.add_argument(
+            'volume_nr',
+            type=int,
+            help="Volume number to delete.")
         p_rm_vol.set_defaults(func=VolumeDefinitionCommands.delete)
 
         # list volume definitions
@@ -74,7 +78,7 @@ class VolumeDefinitionCommands(Commands):
         p_lvols = parser.add_parser(
             'list-volume-definitions',
             aliases=['list-volume-definition', 'dspvlmdfn', 'display-volume-definitions', 'volume-definitions'],
-            description=' Prints a list of all volume definitions known to drbdmanage. '
+            description=' Prints a list of all volume definitions known to linstor. '
             'By default, the list is printed as a human readable table.')
         p_lvols.add_argument('-m', '--machine-readable', action="store_true")
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -96,8 +100,16 @@ class VolumeDefinitionCommands(Commands):
 
         return Commands._create(cc, API_CRT_VLM_DFN, p)
 
-    def delete(self):
-        raise NotImplementedError("delete has not been implemented yet.")
+    @staticmethod
+    @need_communication
+    def delete(cc, args):
+        p = MsgDelVlmDfn()
+        p.rsc_name = args.name
+        p.vlm_nr = args.volume_nr
+
+        Commands._delete_and_output(cc, args, API_DEL_VLM_DFN, [p])
+
+        return None
 
     @staticmethod
     @need_communication
