@@ -6,7 +6,7 @@ import json
 import os
 import tarfile
 import subprocess
-import shutil
+import zipfile
 
 
 db_xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -32,10 +32,16 @@ class LinstorTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         install_path = '/tmp/_linstor'
-        linstor_dir = os.path.abspath('../linstor')
-        if not os.path.exists(linstor_dir):
-            raise RuntimeError("linstor repository not found in: " + linstor_dir)
-        linstor_distri_tar = os.path.join(linstor_dir, 'build', 'distributions', 'linstor-1.0.tar')
+        linstor_file_name = 'linstor-1.0'
+        linstor_distri_tar = linstor_file_name + '.tar'
+        if not os.path.exists(linstor_distri_tar):
+            linstor_dir = os.path.abspath('../linstor')
+            if not os.path.exists(linstor_dir):
+                raise RuntimeError("Unable to find any linstor distribution: " + " or ".join(
+                    [linstor_distri_tar, linstor_dir]))
+            linstor_distri_tar = os.path.join(linstor_dir, 'build', 'distributions', linstor_distri_tar)
+
+        print("Using " + linstor_distri_tar)
         try:
             os.removedirs(install_path)
         except OSError:
@@ -44,16 +50,21 @@ class LinstorTestCase(unittest.TestCase):
         tar.extractall(install_path)
 
         database_cfg_path = os.path.join(install_path, 'database.cfg')
-        init_sql_path = os.path.join(linstor_dir, 'sql-src', 'drbd-init-derby.sql')
+        # get sql init script
         execute_init_sql_path = os.path.join(install_path, 'init.sql')
+        linjar_filename = os.path.join(install_path, linstor_file_name, 'lib', linstor_file_name + '.jar')
+        with zipfile.ZipFile(linjar_filename, 'r') as linjar:
+            with linjar.open('resource/drbd-init-derby.sql', 'r') as sqlfile:
+                with open(execute_init_sql_path, 'wt') as init_sql_file:
+                    for line in sqlfile:
+                        init_sql_file.write(line)
+                    # patch init sql file to start controller on different port
+                    init_sql_file.write(update_port_sql)
 
         with open(database_cfg_path, 'wt') as databasecfg:
             databasecfg.write(db_xml.format(path=os.path.join(install_path, 'linstor_db')))
-        shutil.copyfile(init_sql_path, execute_init_sql_path)
-        with open(execute_init_sql_path, 'at') as init_sql_file:
-            init_sql_file.write(update_port_sql)
 
-        linstor_bin = os.path.join(install_path, 'linstor-1.0', 'bin')
+        linstor_bin = os.path.join(install_path, linstor_file_name, 'bin')
         ret = subprocess.check_call(
             [
                 os.path.join(linstor_bin, 'RecreateDb'),
