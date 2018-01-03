@@ -89,11 +89,13 @@ class LinstorTestCase(unittest.TestCase):
         print('Waiting for controller to start, if this takes longer than 10s cancel')
         while True:
             line = cls.controller.stderr.readline()  # this will block
+            sys.stdout.write(line)
             if 'Controller initialized' in line:
                 break
 
     @classmethod
     def tearDownClass(cls):
+        sys.stdout.write("Terminating controller.\n")
         cls.controller.terminate()
 
     @classmethod
