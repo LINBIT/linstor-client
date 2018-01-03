@@ -24,6 +24,8 @@ controller_port = 63376
 update_port_sql = """
 UPDATE PROPS_CONTAINERS SET PROP_VALUE='{port}'
     WHERE PROPS_INSTANCE='CTRLCFG' AND PROP_KEY='netcom/PlainConnector/port';
+UPDATE PROPS_CONTAINERS SET PROP_VALUE='127.0.0.1'
+    WHERE PROPS_INSTANCE='CTRLCFG' AND PROP_KEY='netcom/PlainConnector/bindaddress';
 """.format(port=controller_port)
 
 
@@ -97,7 +99,7 @@ class LinstorTestCase(unittest.TestCase):
     @classmethod
     def add_controller_arg(cls, cmd_args):
         cmd_args.insert(0, '--controllers')
-        cmd_args.insert(1, 'localhost:' + str(controller_port))
+        cmd_args.insert(1, '127.0.0.1:' + str(controller_port))
 
     def execute(self, cmd_args):
         LinstorTestCase.add_controller_arg(cmd_args)
