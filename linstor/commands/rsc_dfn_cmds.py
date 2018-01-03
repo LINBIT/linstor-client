@@ -21,7 +21,7 @@ class ResourceDefinitionCommands(Commands):
             aliases=['crtrscdfn'],
             description='Defines a Linstor resource definition for use with linstor.')
         p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
-        p_new_res_dfn.add_argument('-s', '--secret', type=str)
+        # p_new_res_dfn.add_argument('-s', '--secret', type=str)
         p_new_res_dfn.add_argument('name', type=namecheck(RES_NAME), help='Name of the new resource definition')
         p_new_res_dfn.set_defaults(func=ResourceDefinitionCommands.create)
 
@@ -87,8 +87,8 @@ class ResourceDefinitionCommands(Commands):
         p.rsc_name = args.name
         if args.port:
             p.rsc_port = args.port
-        if args.secret:
-            p.secret = args.secret
+        # if args.secret:
+        #     p.secret = args.secret
 
         return Commands._create(cc, API_CRT_RSC_DFN, p)
 
