@@ -91,12 +91,6 @@ class StoragePoolCommands(Commands):
     @staticmethod
     @need_communication
     def create(cc, args):
-
-        # create storage pool definition
-        api_resp = ApiCallResponse(StoragePoolDefinitionCommands.create(cc, args.name))
-        if not api_resp.is_success():
-            return api_resp.proto_msg
-
         p = MsgCrtStorPool()
         p.stor_pool_name = args.name
         p.node_name = args.node_name
@@ -121,9 +115,6 @@ class StoragePoolCommands(Commands):
         prop.value = args.driver_device
 
         api_resp = ApiCallResponse(Commands._create(cc, API_CRT_STOR_POOL, p))
-        if api_resp.is_error():
-            # delete created storage pool definition
-            StoragePoolDefinitionCommands.delete(cc, args, [args.name])
 
         return api_resp.proto_msg
 
