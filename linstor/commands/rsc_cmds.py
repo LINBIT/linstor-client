@@ -4,7 +4,7 @@ from proto.MsgLstRsc_pb2 import MsgLstRsc
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands, NodeCommands, StoragePoolDefinitionCommands
-from linstor.utils import rangecheck, namecheck
+from linstor.utils import namecheck
 from linstor.sharedconsts import (
     API_CRT_RSC,
     API_DEL_RSC,
@@ -26,7 +26,6 @@ class ResourceCommands(Commands):
             description='Defines a DRBD resource for use with linstor. '
             'Unless a specific IP port-number is supplied, the port-number is '
             'automatically selected by the linstor controller on the current node. ')
-        p_new_res.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_new_res.add_argument(
             '-s', '--storage-pool',
             type=namecheck(STORPOOL_NAME),
@@ -43,7 +42,6 @@ class ResourceCommands(Commands):
             p_mod_res_command,
             aliases=['mr'],
             description='Modifies a DRBD resource.')
-        p_mod_res.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_mod_res.add_argument('-m', '--managed', choices=(BOOL_TRUE, BOOL_FALSE))
         p_mod_res.add_argument('name', type=namecheck(RES_NAME),
                                help='Name of the resource').completer = ResourceCommands.completer
