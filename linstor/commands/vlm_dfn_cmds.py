@@ -97,6 +97,8 @@ class VolumeDefinitionCommands(Commands):
 
         vlmdf = p.vlm_dfns.add()
         vlmdf.vlm_size = VolumeDefinitionCommands._get_volume_size(args.size)
+        if args.minor is not None:
+            vlmdf.vlm_minor = args.minor
 
         return Commands._create(cc, API_CRT_VLM_DFN, p)
 
