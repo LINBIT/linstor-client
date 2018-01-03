@@ -7,6 +7,7 @@ import os
 import tarfile
 import subprocess
 import zipfile
+import time
 
 
 db_xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -93,11 +94,14 @@ class LinstorTestCase(unittest.TestCase):
             sys.stdout.flush()
             if 'Controller initialized' in line:
                 break
+        time.sleep(1)
 
     @classmethod
     def tearDownClass(cls):
-        sys.stdout.write("Terminating controller.\n")
         cls.controller.terminate()
+        cls.controller.wait()
+        sys.stdout.write("Controller terminated.\n")
+        sys.stdout.flush()
 
     @classmethod
     def add_controller_arg(cls, cmd_args):
