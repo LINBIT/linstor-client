@@ -31,7 +31,7 @@ class LinstorTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        install_path = 'build/_linstor_unittests'
+        install_path = os.path.abspath('build/_linstor_unittests')
         linstor_file_name = 'linstor-1.0'
         linstor_distri_tar = linstor_file_name + '.tar'
         if not os.path.exists(linstor_distri_tar):
@@ -46,9 +46,9 @@ class LinstorTestCase(unittest.TestCase):
             os.removedirs(install_path)
         except OSError:
             pass
-        tar = tarfile.open(linstor_distri_tar)
-        tar.extractall(install_path)
-        linstor_file_name = os.listdir(install_path)[0]  # on jenkins the tar and folder within is named workspace-1.0
+        with tarfile.open(linstor_distri_tar) as tar:
+            tar.extractall(install_path)
+            linstor_file_name = tar.getnames()[0]  # on jenkins the tar and folder within is named workspace-1.0
 
         database_cfg_path = os.path.join(install_path, 'database.cfg')
         # get sql init script
@@ -76,8 +76,10 @@ class LinstorTestCase(unittest.TestCase):
             raise RuntimeError("Couldn't execute RecreateDb script")
 
         # start linstor controller
+        controller_bin = os.path.join(linstor_bin, linstor_file_name[:-4])
+        print("executing: " + controller_bin)
         cls.controller = subprocess.Popen(
-            [os.path.join(linstor_bin, 'linstor')],
+            [controller_bin],
             cwd=install_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE

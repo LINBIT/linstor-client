@@ -6,3 +6,7 @@
 # make python
 proto/*.py
 linstor/sharedconsts.py
+
+# unittests ignores
+build/
+test-reports/
