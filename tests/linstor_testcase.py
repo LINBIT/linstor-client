@@ -31,7 +31,7 @@ class LinstorTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        install_path = '/tmp/_linstor'
+        install_path = 'build/_linstor_unittests'
         linstor_file_name = 'linstor-1.0'
         linstor_distri_tar = linstor_file_name + '.tar'
         if not os.path.exists(linstor_distri_tar):
@@ -48,6 +48,7 @@ class LinstorTestCase(unittest.TestCase):
             pass
         tar = tarfile.open(linstor_distri_tar)
         tar.extractall(install_path)
+        linstor_file_name = os.listdir(install_path)[0]  # on jenkins the tar and folder within is named workspace-1.0
 
         database_cfg_path = os.path.join(install_path, 'database.cfg')
         # get sql init script
