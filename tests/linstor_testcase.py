@@ -90,6 +90,7 @@ class LinstorTestCase(unittest.TestCase):
         while True:
             line = cls.controller.stderr.readline()  # this will block
             sys.stdout.write(line)
+            sys.stdout.flush()
             if 'Controller initialized' in line:
                 break
 
