@@ -31,16 +31,16 @@ class ResourceDefinitionCommands(Commands):
             'delete-resource-definition',
             aliases=['delrscdfn'],
             description=" Removes a resource definition "
-            "from the drbdmanage cluster. The resource is undeployed from all nodes "
-            "and the resource entry is marked for removal from drbdmanage's data "
+            "from the linstor cluster. The resource is undeployed from all nodes "
+            "and the resource entry is marked for removal from linstor's data "
             "tables. After all nodes have undeployed the resource, the resource "
-            "entry is removed from drbdmanage's data tables.")
+            "entry is removed from linstor's data tables.")
         p_rm_res_dfn.add_argument('-q', '--quiet', action="store_true",
-                                  help='Unless this option is used, drbdmanage will issue a safety question '
+                                  help='Unless this option is used, linstor will issue a safety question '
                                   'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_res_dfn.add_argument('-f', '--force', action="store_true",
                                   help='If present, then the resource entry and all associated assignment '
-                                  "entries are removed from drbdmanage's data tables immediately, without "
+                                  "entries are removed from linstor's data tables immediately, without "
                                   'taking any action on the cluster nodes that have the resource deployed.')
         p_rm_res_dfn.add_argument(
             'name',
@@ -57,7 +57,7 @@ class ResourceDefinitionCommands(Commands):
             'list-resource-definitions',
             aliases=['list-resource-definition', 'dsprscdfn', 'display-resource-definitions', 'resource-definitions'],
             description='Prints a list of all resource definitions known to '
-            'drbdmanage. By default, the list is printed as a human readable table.')
+            'linstor. By default, the list is printed as a human readable table.')
         p_lrscdfs.add_argument('-m', '--machine-readable', action="store_true")
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscdfs.add_argument('-s', '--show', nargs='+',

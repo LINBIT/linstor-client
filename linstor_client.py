@@ -87,7 +87,7 @@ class LinStorCLI(object):
         self.cc = CommController()
 
     def setup_parser(self):
-        parser = argparse.ArgumentParser(prog='linstor')
+        parser = argparse.ArgumentParser(prog='linstor_client')
         parser.add_argument('--version', '-v', action='version',
                             version='%(prog)s ' + VERSION + '; ' + GITHASH)
         parser.add_argument('--no-color', action="store_true",
@@ -149,7 +149,7 @@ class LinStorCLI(object):
 
         p_quorum = subp.add_parser("quorum-control",
                                    aliases=["qc"],
-                                   description="Sets quorum parameters on drbdmanage cluster nodes")
+                                   description="Sets quorum parameters on linstor cluster nodes")
         p_quorum.add_argument('-o', '--override', action="store_true",
                               help="Override change protection in a partition without quorum")
         p_quorum.add_argument(
@@ -222,9 +222,9 @@ class LinStorCLI(object):
             help='New size of the volume. '
             'The default unit for size is GiB (size * (2 ^ 30) bytes). '
             'Another unit can be specified by using an according postfix. '
-            "Drbdmanage's internal granularity for the capacity of volumes is one "
+            "linstor's internal granularity for the capacity of volumes is one "
             'Kibibyte (2 ^ 10 bytes). All other unit specifications are implicitly '
-            'converted to Kibibyte, so that the actual size value used by drbdmanage '
+            'converted to Kibibyte, so that the actual size value used by linstor '
             'is the smallest natural number of Kibibytes that is large enough to '
             'accommodate a volume of the requested size in the specified size unit.'
         ).completer = size_completer
@@ -247,7 +247,7 @@ class LinStorCLI(object):
         p_mod_assg_command = 'modify-assignment'
         p_mod_assg = subp.add_parser(p_mod_assg_command,
                                      aliases=['ma'],
-                                     description='Modifies a drbdmanage assignment.')
+                                     description='Modifies a linstor assignment.')
         p_mod_assg.add_argument('resource', type=check_res_name,
                                 help='Name of the resource').completer = ResourceCommands.completer
         p_mod_assg.add_argument('node', help='Name of the node').completer = NodeCommands.completer
@@ -312,10 +312,10 @@ class LinStorCLI(object):
                                    'specified resource on the specified node.')
         p_assign.add_argument('--client', action="store_true")
         p_assign.add_argument('--overwrite', action="store_true",
-                              help='If specified, drbdmanage will issue a "drbdmadm -- --force primary" '
+                              help='If specified, linstor will issue a "drbdmadm -- --force primary" '
                               'after the resource has been started.')
         p_assign.add_argument('--discard', action="store_true",
-                              help='If specified, drbdmanage will issue a "drbdadm -- --discard-my-data" '
+                              help='If specified, linstor will issue a "drbdadm -- --discard-my-data" '
                               'connect after the resource has been started.')
         p_assign.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
         p_assign.add_argument('node', type=check_node_name, nargs="+").completer = NodeCommands.completer
@@ -343,8 +343,8 @@ class LinStorCLI(object):
         p_deploy = subp.add_parser('deploy-resource',
                                    aliases=['deploy'],
                                    description='Deploys a resource on n automatically selected nodes '
-                                   "of the drbdmanage cluster. Using the information in drbdmanage's data "
-                                   'tables, the drbdmanage server tries to find n nodes that have enough '
+                                   "of the linstor cluster. Using the information in linstor's data "
+                                   'tables, the linstor server tries to find n nodes that have enough '
                                    'free storage capacity to deploy the resource resname.')
         p_deploy.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
         p_deploy.add_argument('-i', '--increase', action="store_true",
@@ -369,7 +369,7 @@ class LinStorCLI(object):
         p_undeploy = subp.add_parser('undeploy-resource',
                                      aliases=['undeploy'],
                                      description='Undeploys a resource from all nodes. The resource '
-                                     "definition is still kept in drbdmanage's data tables.")
+                                     "definition is still kept in linstor's data tables.")
         p_undeploy.add_argument('-q', '--quiet', action="store_true")
         p_undeploy.add_argument('-f', '--force', action="store_true")
         p_undeploy.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
@@ -390,31 +390,31 @@ class LinStorCLI(object):
 
         # save
         p_save = subp.add_parser('save',
-                                 description='Orders the drbdmanage server to save the current '
-                                 "configuration of drbdmanage's resources to the data tables "
+                                 description='Orders the linstor server to save the current '
+                                 "configuration of linstor's resources to the data tables "
                                  'on the drbdmanaege control volume')
         p_save.set_defaults(func=self.cmd_enoimp)
 
         # load
         p_save = subp.add_parser('load',
-                                 description='Orders the drbdmanage server to reload the current '
-                                 "configuration of drbdmanage's resources from the data tables on "
-                                 'the drbdmanage control volume')
+                                 description='Orders the linstor server to reload the current '
+                                 "configuration of linstor's resources from the data tables on "
+                                 'the linstor control volume')
         p_save.set_defaults(func=self.cmd_enoimp)
 
         # unassign
         p_unassign = subp.add_parser('unassign-resource',
                                      aliases=['unassign'],
                                      description='Undeploys the specified resource from the specified '
-                                     "node and removes the assignment entry from drbdmanage's data "
+                                     "node and removes the assignment entry from linstor's data "
                                      'tables after the node has finished undeploying the resource. '
                                      'If the resource had been assigned to a node, but that node has '
                                      'not deployed the resource yet, the assignment is canceled.')
         p_unassign.add_argument('-q', '--quiet', action="store_true",
-                                help='Unless this option is used, drbdmanage will issue a safety question '
+                                help='Unless this option is used, linstor will issue a safety question '
                                 'that must be answered with yes, otherwise the operation is canceled.')
         p_unassign.add_argument('-f', '--force', action="store_true",
-                                help="If present, the assignment entry will be removed from drbdmanage's "
+                                help="If present, the assignment entry will be removed from linstor's "
                                 'data tables immediately, without taking any action on the node where '
                                 'the resource is been deployed.')
         p_unassign.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
@@ -503,10 +503,10 @@ class LinStorCLI(object):
                                help='If given, also send a shutdown command to connected satellites.',
                                default=False)
             p_cmd.add_argument('-q', '--quiet', action="store_true",
-                               help='Unless this option is used, drbdmanage will issue a safety question '
+                               help='Unless this option is used, linstor will issue a safety question '
                                'that must be answered with yes, otherwise the operation is canceled.')
             p_cmd.add_argument('-r', '--resources', action="store_true",
-                               help='Shutdown all drbdmanage-controlled resources too',
+                               help='Shutdown all linstor-controlled resources too',
                                default=False)
             p_cmd.add_argument('-c', '--ctrlvol', action="store_true",
                                help='Do not drbdadm down the control volume',
@@ -514,10 +514,10 @@ class LinStorCLI(object):
             p_cmd.set_defaults(func=func)
 
         # shutdown
-        shutdown_restart('shutdown', description='Stops the local drbdmanage server process.',
+        shutdown_restart('shutdown', description='Stops the local linstor server process.',
                          func=self.cmd_enoimp)
         # restart
-        shutdown_restart('restart', description='Restarts the local drbdmanage server process.',
+        shutdown_restart('restart', description='Restarts the local linstor server process.',
                          func=self.cmd_enoimp)
 
         # snapshots
@@ -587,10 +587,10 @@ class LinStorCLI(object):
 
         p_export = subp.add_parser('export-res', aliases=['export'],
                                    description='Exports the configuration files of the specified '
-                                   'drbdmanage resource for use with drbdadm. If "*" is used as '
-                                   'resource name, the configuration files of all drbdmanage resources '
+                                   'linstor resource for use with drbdadm. If "*" is used as '
+                                   'resource name, the configuration files of all linstor resources '
                                    'deployed on the local node are exported. The configuration files will '
-                                   'be created (or updated) in the drbdmanage directory for temporary '
+                                   'be created (or updated) in the linstor directory for temporary '
                                    'configuration files, typically /var/lib/drbd.d.')
         p_export.add_argument('resource', nargs="+", type=exportnamecheck,
                               help='Name of the resource').completer = ResourceCommands.completer
@@ -667,7 +667,7 @@ class LinStorCLI(object):
         # server-version
         p_server_version = subp.add_parser('server-version',
                                            description='Queries version information from the '
-                                           'drbdmanage server')
+                                           'linstor server')
         p_server_version.set_defaults(func=self.cmd_enoimp)
 
         # message-log
@@ -790,7 +790,7 @@ class LinStorCLI(object):
 
         # edit config
         p_editconf = subp.add_parser('modify-config',
-                                     description='Modify drbdmanage configuration',
+                                     description='Modify linstor configuration',
                                      aliases=['edit-config'])
         p_editconf.add_argument('--node', '-n', type=check_node_name,
                                 help='Name of the node. This enables node specific options '
@@ -800,7 +800,7 @@ class LinStorCLI(object):
 
         # export config
         p_exportconf = subp.add_parser('export-config',
-                                       description='Export drbdmanage configuration',
+                                       description='Export linstor configuration',
                                        aliases=['cat-config'])
         p_exportconf.add_argument('--node', '-n', type=check_node_name,
                                   help='Name of the node.').completer = NodeCommands.completer
@@ -811,16 +811,16 @@ class LinStorCLI(object):
 
         # export ctrl-vol
         p_exportctrlvol = subp.add_parser('export-ctrlvol',
-                                          description='Export drbdmanage control volume as json blob')
+                                          description='Export linstor control volume as json blob')
         p_exportctrlvol.add_argument('--file', '-f',
                                      help='File to save configuration json blob, if not given: stdout')
         p_exportctrlvol.set_defaults(func=self.cmd_enoimp)
 
         # import ctrl-vol
         p_importctrlvol = subp.add_parser('import-ctrlvol',
-                                          description='Import drbdmanage control volume from json blob')
+                                          description='Import linstor control volume from json blob')
         p_importctrlvol.add_argument('-q', '--quiet', action="store_true",
-                                     help='Unless this option is used, drbdmanage will issue a safety '
+                                     help='Unless this option is used, linstor will issue a safety '
                                      'question that must be answered with yes, otherwise the operation '
                                      'is canceled.')
         p_importctrlvol.add_argument('--file', '-f',
@@ -829,7 +829,7 @@ class LinStorCLI(object):
 
         # role
         p_role = subp.add_parser('role',
-                                 description='Show role of local drbdmanaged (controlnode/satellite/unknown)')
+                                 description='Show role of local linstor (controlnode/satellite/unknown)')
         p_role.set_defaults(func=self.cmd_enoimp)
 
         # reelect
@@ -1121,7 +1121,7 @@ class LinStorCLI(object):
             sys.stdout.write(v + k + COLOR_NONE + "\n")
         sys.stdout.write("\nNote: Do not directly edit these auto-generated"
                          " files as they will be overwritten.\n")
-        sys.stdout.write("Use the according drbdmanage sub-commands to set/unset options.\n")
+        sys.stdout.write("Use the according linstor sub-commands to set/unset options.\n")
 
     def user_confirm(self, question):
         """

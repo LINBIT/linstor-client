@@ -23,9 +23,9 @@ class ResourceCommands(Commands):
         p_new_res = parser.add_parser(
             'create-resource',
             aliases=['crtrsc'],
-            description='Defines a DRBD resource for use with drbdmanage. '
+            description='Defines a DRBD resource for use with linstor. '
             'Unless a specific IP port-number is supplied, the port-number is '
-            'automatically selected by the drbdmanage server on the current node. ')
+            'automatically selected by the linstor controller on the current node. ')
         p_new_res.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_new_res.add_argument(
             '-s', '--storage-pool',
@@ -55,16 +55,16 @@ class ResourceCommands(Commands):
             'delete-resource',
             aliases=['delrsc'],
             description=' Removes a resource and its associated resource definition '
-            'from the drbdmanage cluster. The resource is undeployed from all nodes '
-            "and the resource entry is marked for removal from drbdmanage's data "
+            'from the linstor cluster. The resource is undeployed from all nodes '
+            "and the resource entry is marked for removal from linstor's data "
             'tables. After all nodes have undeployed the resource, the resource '
-            "entry is removed from drbdmanage's data tables.")
+            "entry is removed from linstor's data tables.")
         p_rm_res.add_argument('-q', '--quiet', action="store_true",
-                              help='Unless this option is used, drbdmanage will issue a safety question '
+                              help='Unless this option is used, linstor will issue a safety question '
                               'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_res.add_argument('-f', '--force', action="store_true",
                               help='If present, then the resource entry and all associated assignment '
-                              "entries are removed from drbdmanage's data tables immediately, without "
+                              "entries are removed from linstor's data tables immediately, without "
                               'taking any action on the cluster nodes that have the resource deployed.')
         p_rm_res.add_argument('name',
                               help='Name of the resource to delete').completer = ResourceCommands.completer
@@ -82,7 +82,7 @@ class ResourceCommands(Commands):
             'list-resources',
             aliases=['list-resource', 'ls-rsc', 'display-resources'],
             description='Prints a list of all resource definitions known to '
-            'drbdmanage. By default, the list is printed as a human readable table.')
+            'linstor. By default, the list is printed as a human readable table.')
         p_lreses.add_argument('-m', '--machine-readable', action="store_true")
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lreses.add_argument(

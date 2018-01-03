@@ -50,12 +50,12 @@ class StoragePoolCommands(Commands):
         p_rm_storpool.add_argument(
             '-q', '--quiet',
             action="store_true",
-            help='Unless this option is used, drbdmanage will issue a safety question '
+            help='Unless this option is used, linstor will issue a safety question '
             'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_storpool.add_argument('-f', '--force',
                                    action="store_true",
                                    help='If present, then the storage pool entry and all associated assignment '
-                                   "entries are removed from drbdmanage's data tables immediately, without "
+                                   "entries are removed from linstor's data tables immediately, without "
                                    'taking any action on the cluster nodes that have the storage pool deployed.')
         p_rm_storpool.add_argument('name',
                                    help='Name of the storage pool to delete').completer = StoragePoolCommands.completer

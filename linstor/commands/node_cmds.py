@@ -89,15 +89,15 @@ class NodeCommands(Commands):
         p_rm_node = parser.add_parser(
             'delete-node',
             aliases=['delnode'],
-            description='Removes a node from the drbdmanage cluster. '
-            'All drbdmanage resources that are still deployed on the specified '
+            description='Removes a node from the linstor cluster. '
+            'All linstor resources that are still deployed on the specified '
             'node are marked for undeployment, and the node entry is marked for '
-            "removal from drbdmanage's data tables. The specified node is "
+            "removal from linstor's data tables. The specified node is "
             'expected to undeploy all resources. As soon as all resources have been '
             'undeployed from the node, the node entry is removed from '
-            "drbdmanage's data tables.")
+            "linstor's data tables.")
         p_rm_node.add_argument('-q', '--quiet', action="store_true",
-                               help='Unless this option is used, drbdmanage will issue a safety question '
+                               help='Unless this option is used, linstor will issue a safety question '
                                'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_node.add_argument('name',
                                help='Name of the node to remove').completer = NodeCommands.completer
@@ -112,7 +112,7 @@ class NodeCommands(Commands):
         p_lnodes = parser.add_parser(
             'list-nodes',
             aliases=['list-node', 'ls-nodes', 'display-nodes'],
-            description='Prints a list of all cluster nodes known to drbdmanage. '
+            description='Prints a list of all cluster nodes known to linstor. '
             'By default, the list is printed as a human readable table.')
         p_lnodes.add_argument('-m', '--machine-readable', action="store_true")
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
