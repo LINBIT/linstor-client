@@ -60,10 +60,6 @@ class ResourceCommands(Commands):
         p_rm_res.add_argument('-q', '--quiet', action="store_true",
                               help='Unless this option is used, linstor will issue a safety question '
                               'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_res.add_argument('-f', '--force', action="store_true",
-                              help='If present, then the resource entry and all associated assignment '
-                              "entries are removed from linstor's data tables immediately, without "
-                              'taking any action on the cluster nodes that have the resource deployed.')
         p_rm_res.add_argument('name',
                               help='Name of the resource to delete').completer = ResourceCommands.completer
         p_rm_res.add_argument('node_name',

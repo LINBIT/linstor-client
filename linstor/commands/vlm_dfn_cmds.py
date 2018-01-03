@@ -57,10 +57,6 @@ class VolumeDefinitionCommands(Commands):
         p_rm_vol.add_argument('-q', '--quiet', action="store_true",
                               help='Unless this option is used, linstor will issue a safety question '
                               'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_vol.add_argument('-f', '--force', action="store_true",
-                              help='If present, then the volume entry is removed from the resource '
-                              'definition immediately, without taking any action on the cluster nodes '
-                              'that have the volume deployed.')
         # TODO completer
         p_rm_vol.add_argument('name',
                               help='Name of the volume definition')
