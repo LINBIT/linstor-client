@@ -94,7 +94,7 @@ class LinstorTestCase(unittest.TestCase):
             sys.stdout.flush()
             if 'Controller initialized' in line:
                 break
-        time.sleep(1)
+        time.sleep(3)
 
     @classmethod
     def tearDownClass(cls):
