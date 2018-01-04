@@ -135,13 +135,16 @@ class LinstorTestCase(unittest.TestCase):
         try:
             sys.stdout = StringIO()
             retcode = linstor_cli.parse_and_execute(cmd_args + ["-m"])
+            self.assertEqual(0, retcode)
         except SystemExit as e:
-            retcode = e.code
+            pass
+        except Exception as e:
+            raise e
         finally:
-            self.assertEqual(retcode, 0)
-            jout = json.loads(sys.stdout.getvalue())
+            stdval = sys.stdout.getvalue()
             sys.stdout.close()
             sys.stdout = backupstd
+            jout = json.loads(stdval)
         return jout
 
     def assertHasProp(self, props, key, val):
