@@ -84,6 +84,7 @@ class LinstorTestCase(unittest.TestCase):
         cls.controller = subprocess.Popen(
             [controller_bin],
             cwd=install_path,
+            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
@@ -94,10 +95,12 @@ class LinstorTestCase(unittest.TestCase):
             sys.stdout.flush()
             if 'Controller initialized' in line:
                 break
-        time.sleep(3)
 
     @classmethod
     def tearDownClass(cls):
+        cls.controller.poll()
+        if cls.controller.returncode:
+            sys.stderr.write("Controller already down!!!.\n")
         cls.controller.terminate()
         cls.controller.wait()
         sys.stdout.write("Controller terminated.\n")
