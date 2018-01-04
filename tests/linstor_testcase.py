@@ -134,7 +134,7 @@ class LinstorTestCase(unittest.TestCase):
         jout = None
         try:
             sys.stdout = StringIO()
-            retcode = linstor_cli.parse_and_execute(cmd_args + ["-m"])
+            retcode = linstor_cli.parse_and_execute(cmd_args + ["-m", 'json'])
             self.assertEqual(0, retcode)
         except SystemExit as e:
             pass

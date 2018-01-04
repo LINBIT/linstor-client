@@ -2,6 +2,7 @@ import sys
 from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from linstor.utils import Output, Table
+from google.protobuf import text_format
 
 
 class Commands(object):
@@ -93,8 +94,16 @@ class Commands(object):
         and serializes the given lstmsg.
         """
         if args.machine_readable:
-            from google.protobuf import json_format
-            s = json_format.MessageToJson(lstmsg)
+            s = ''
+            if args.machine_readable == 'text':
+                s = text_format.MessageToString(lstmsg)
+            if args.machine_readable == 'json':
+                try:
+                    from google.protobuf import json_format
+                    s = json_format.MessageToJson(lstmsg)
+                except ImportError as e:
+                    sys.stderr.write("You are using a protobuf version prior to 2.7, which is needed for json output")
+                    return True
             print(s)
             return True
         return False

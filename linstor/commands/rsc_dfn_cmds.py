@@ -54,7 +54,7 @@ class ResourceDefinitionCommands(Commands):
             aliases=['list-resource-definition', 'dsprscdfn', 'display-resource-definitions', 'resource-definitions'],
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
-        p_lrscdfs.add_argument('-m', '--machine-readable', action="store_true")
+        p_lrscdfs.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='text', nargs='?')
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscdfs.add_argument('-s', '--show', nargs='+',
                                choices=resverbose).completer = res_verbose_completer

@@ -69,7 +69,7 @@ class StoragePoolCommands(Commands):
             aliases=['list-storage-pool', 'ls-storage-pool', 'display-storage-pools'],
             description='Prints a list of all storage pool known to '
             'linstor. By default, the list is printed as a human readable table.')
-        p_lstorpool.add_argument('-m', '--machine-readable', action="store_true")
+        p_lstorpool.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='text', nargs='?')
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
                                  choices=storpoolgroupby).completer = storpool_group_completer
