@@ -2,7 +2,7 @@ FROM ubuntu:xenial as builder
 MAINTAINER Roland Kammerer <roland.kammerer@linbit.com>
 
 ENV LINSTOR_CLI_VERSION 0.1
-ENV LINSTOR_CLI_PKGNAME linstor-cli
+ENV LINSTOR_CLI_PKGNAME linstor-client
 ENV LINSTOR_TAR_BALL ${LINSTOR_CLI_PKGNAME}-${LINSTOR_CLI_VERSION}.tar.gz
 
 RUN groupadd makepkg
