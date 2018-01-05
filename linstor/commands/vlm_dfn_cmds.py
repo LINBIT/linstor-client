@@ -127,9 +127,6 @@ class VolumeDefinitionCommands(Commands):
                         vlmminor=vlmdfn.vlm_minor,
                         vlmsize=approximate_size_string(vlmdfn.vlm_size)))
 
-                # for prop in n.node_props:
-                #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
-
         return None
 
     @classmethod
