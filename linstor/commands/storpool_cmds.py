@@ -2,8 +2,8 @@ from proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
 from proto.MsgDelStorPool_pb2 import MsgDelStorPool
 from linstor.commcontroller import need_communication, completer_communication, ApiCallResponse
-from linstor.commands import Commands, NodeCommands, StoragePoolDefinitionCommands
-from linstor.utils import namecheck
+from linstor.commands import Commands, NodeCommands
+from linstor.utils import namecheck, Table, Output
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL,
     API_DEL_STOR_POOL,
@@ -16,6 +16,11 @@ from linstor.consts import NODE_NAME, STORPOOL_NAME
 
 
 class StoragePoolCommands(Commands):
+    device_key_map = {
+        'Lvm': KEY_STOR_POOL_VOLUME_GROUP,
+        'LvmThin': KEY_STOR_POOL_THIN_POOL,
+        'Zfs': KEY_STOR_POOL_ZPOOL
+    }
 
     @staticmethod
     def setup_commands(parser):
@@ -101,17 +106,11 @@ class StoragePoolCommands(Commands):
         else:
             driver = args.driver.title()
 
-        device_key_map = {
-            'Lvm': KEY_STOR_POOL_VOLUME_GROUP,
-            'LvmThin': KEY_STOR_POOL_THIN_POOL,
-            'Zfs': KEY_STOR_POOL_ZPOOL
-        }
-
         p.driver = '{driver}Driver'.format(driver=driver)
 
         # set driver device pool property
         prop = p.stor_pool_props.add()
-        prop.key = device_key_map[driver]
+        prop.key = StoragePoolCommands.device_key_map[driver]
         prop.value = args.driver_device
 
         api_resp = ApiCallResponse(Commands._create(cc, API_CRT_STOR_POOL, p))
@@ -139,14 +138,31 @@ class StoragePoolCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL, MsgLstStorPool(), args)
 
         if lstmsg:
-            prntfrm = "{storpool:<20s} {uuid:<40s} {node:<30s} {driver:<20s}"
-            print(prntfrm.format(storpool="Storpool-name", uuid="UUID", node="Node", driver="Driver"))
+            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl.add_column("StoragePool")
+            tbl.add_column("Node")
+            tbl.add_column("Driver")
+            tbl.add_column("DriverDevice")
             for storpool in lstmsg.stor_pools:
-                print(prntfrm.format(
-                    storpool=storpool.stor_pool_name,
-                    uuid=storpool.stor_pool_uuid,
-                    node=storpool.node_name,
-                    driver=storpool.driver))
+                driver_device_prop = [x for x in storpool.props
+                                      if x.key == StoragePoolCommands.device_key_map[storpool.driver[:-len('Driver')]]]
+                driver_device = driver_device_prop[0].value if driver_device_prop else ''
+                tbl.add_row([
+                    storpool.stor_pool_name,
+                    storpool.node_name,
+                    storpool.driver,
+                    driver_device
+                ])
+            tbl.show()
+
+            # prntfrm = "{storpool:<20s} {uuid:<40s} {node:<30s} {driver:<20s}"
+            # print(prntfrm.format(storpool="Storpool-name", uuid="UUID", node="Node", driver="Driver"))
+            # for storpool in lstmsg.stor_pools:
+            #     print(prntfrm.format(
+            #         storpool=storpool.stor_pool_name,
+            #         uuid=storpool.stor_pool_uuid,
+            #         node=storpool.node_name,
+            #         driver=storpool.driver))
 
         return None
 

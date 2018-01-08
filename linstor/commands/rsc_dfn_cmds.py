@@ -3,11 +3,16 @@ from proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import rangecheck, namecheck
+from linstor.utils import rangecheck, namecheck, Table, Output
+from linstor.utils import (
+    COLOR_DARKGREEN,
+    COLOR_RED
+)
 from linstor.sharedconsts import (
     API_CRT_RSC_DFN,
     API_DEL_RSC_DFN,
-    API_LST_RSC_DFN
+    API_LST_RSC_DFN,
+    FLAG_DELETE
 )
 from linstor.consts import RES_NAME
 
@@ -108,13 +113,24 @@ class ResourceDefinitionCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args)
 
         if lstmsg:
-            prntfrm = "{rsc:<20s} {port:<10s} {uuid:<40s}"
-            print(prntfrm.format(rsc="Resource-name", port="Port", uuid="UUID"))
+            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl.add_column("ResourceName")
+            tbl.add_column("Port")
+            tbl.add_column("State", color=Output.color(COLOR_DARKGREEN, args.no_color))
             for rsc_dfn in lstmsg.rsc_dfns:
-                print(prntfrm.format(rsc=rsc_dfn.rsc_name, port=str(rsc_dfn.rsc_dfn_port), uuid=rsc_dfn.rsc_dfn_uuid))
+                tbl.add_row([
+                    rsc_dfn.rsc_name,
+                    rsc_dfn.rsc_dfn_port,
+                    tbl.color_cell("DELETING", COLOR_RED)
+                    if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", COLOR_DARKGREEN)
+                ])
+            tbl.show()
 
-                # for prop in n.node_props:
-                #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+            # prntfrm = "{rsc:<20s} {port:<10s} {uuid:<40s}"
+            # print(prntfrm.format(rsc="Resource-name", port="Port", uuid="UUID"))
+            # for rsc_dfn in lstmsg.rsc_dfns:
+            #     print(prntfrm.format(rsc=rsc_dfn.rsc_name,
+            #           port=str(rsc_dfn.rsc_dfn_port), uuid=rsc_dfn.rsc_dfn_uuid))
 
         return None
 

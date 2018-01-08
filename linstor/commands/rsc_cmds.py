@@ -4,12 +4,17 @@ from proto.MsgLstRsc_pb2 import MsgLstRsc
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands, NodeCommands, StoragePoolDefinitionCommands
-from linstor.utils import namecheck
+from linstor.utils import namecheck, Table, Output
+from linstor.utils import (
+    COLOR_DARKGREEN,
+    COLOR_RED
+)
 from linstor.sharedconsts import (
     API_CRT_RSC,
     API_DEL_RSC,
     API_LST_RSC,
-    KEY_STOR_POOL_NAME
+    KEY_STOR_POOL_NAME,
+    FLAG_DELETE
 )
 
 from linstor.consts import BOOL_TRUE, BOOL_FALSE, NODE_NAME, RES_NAME, STORPOOL_NAME
@@ -141,13 +146,26 @@ class ResourceCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_RSC, MsgLstRsc(), args)
 
         if lstmsg:
-            prntfrm = "{rsc:<20s} {uuid:<40s} {node:<30s}"
-            print(prntfrm.format(rsc="Resource-name", uuid="UUID", node="Node"))
+            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl.add_column("ResourceName")
+            tbl.add_column("Node")
+            tbl.add_column("State", color=Output.color(COLOR_DARKGREEN, args.no_color))
             for rsc in lstmsg.resources:
-                print(prntfrm.format(
-                    rsc=rsc.name,
-                    uuid=rsc.uuid,
-                    node=rsc.node_name))
+                tbl.add_row([
+                    rsc.name,
+                    rsc.node_name,
+                    tbl.color_cell("DELETING", COLOR_RED)
+                    if FLAG_DELETE in rsc.rsc_flags else tbl.color_cell("ok", COLOR_DARKGREEN)
+                ])
+            tbl.show()
+
+            # prntfrm = "{rsc:<20s} {uuid:<40s} {node:<30s}"
+            # print(prntfrm.format(rsc="Resource-name", uuid="UUID", node="Node"))
+            # for rsc in lstmsg.resources:
+            #     print(prntfrm.format(
+            #         rsc=rsc.name,
+            #         uuid=rsc.uuid,
+            #         node=rsc.node_name))
 
         return None
 

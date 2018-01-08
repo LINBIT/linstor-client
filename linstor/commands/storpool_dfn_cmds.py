@@ -3,7 +3,7 @@ from proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
 from proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import namecheck, Output
+from linstor.utils import namecheck, Output, Table
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL_DFN,
     API_DEL_STOR_POOL_DFN,
@@ -113,13 +113,18 @@ class StoragePoolDefinitionCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL_DFN, MsgLstStorPoolDfn(), args)
 
         if lstmsg:
-            prntfrm = "{storpool:<20s} {uuid:<40s}"
-            print(prntfrm.format(storpool="StorpoolDfn-name", uuid="UUID"))
+            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl.add_column("StoragePool")
             for storpool_dfn in lstmsg.stor_pool_dfns:
-                print(prntfrm.format(storpool=storpool_dfn.stor_pool_name, uuid=storpool_dfn.uuid))
+                tbl.add_row([
+                    storpool_dfn.stor_pool_name
+                ])
+            tbl.show()
 
-                # for prop in n.node_props:
-                #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+            # prntfrm = "{storpool:<20s} {uuid:<40s}"
+            # print(prntfrm.format(storpool="StorpoolDfn-name", uuid="UUID"))
+            # for storpool_dfn in lstmsg.stor_pool_dfns:
+            #     print(prntfrm.format(storpool=storpool_dfn.stor_pool_name, uuid=storpool_dfn.uuid))
 
         return None
 

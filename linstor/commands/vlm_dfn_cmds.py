@@ -4,8 +4,16 @@ from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN, API_DEL_VLM_DFN
 from linstor.commcontroller import need_communication
 from linstor.commands import Commands, ResourceCommands
-from linstor.utils import SizeCalc, approximate_size_string, namecheck
+from linstor.utils import SizeCalc, approximate_size_string, namecheck, Table, Output
 from linstor.consts import RES_NAME
+from linstor.utils import (
+    COLOR_DARKGREEN,
+    COLOR_RED
+)
+from linstor.sharedconsts import (
+    FLAG_DELETE
+)
+
 import re
 import sys
 
@@ -115,17 +123,35 @@ class VolumeDefinitionCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args)
 
         if lstmsg:
-            prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5s} {vlmminor:<10s} {vlmsize:<10s}"
-            print(prntfrm.format(res="Resource", uuid="UUID", vlmnr="VlmNr", vlmminor="VlmMinor", vlmsize="Size"))
-            prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5d} {vlmminor:<10d} {vlmsize:<20s}"
-            for rscdfn in lstmsg.rsc_dfns:
-                for vlmdfn in rscdfn.vlm_dfns:
-                    print(prntfrm.format(
-                        res=rscdfn.rsc_name,
-                        uuid=vlmdfn.vlm_dfn_uuid,
-                        vlmnr=vlmdfn.vlm_nr,
-                        vlmminor=vlmdfn.vlm_minor,
-                        vlmsize=approximate_size_string(vlmdfn.vlm_size)))
+            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl.add_column("ResourceName")
+            tbl.add_column("VolumeNr")
+            tbl.add_column("VolumeMinor")
+            tbl.add_column("Size")
+            tbl.add_column("State", color=Output.color(COLOR_DARKGREEN, args.no_color))
+            for rsc_dfn in lstmsg.rsc_dfns:
+                for vlmdfn in rsc_dfn.vlm_dfns:
+                    tbl.add_row([
+                        rsc_dfn.rsc_name,
+                        vlmdfn.vlm_nr,
+                        vlmdfn.vlm_minor,
+                        approximate_size_string(vlmdfn.vlm_size),
+                        tbl.color_cell("DELETING", COLOR_RED)
+                            if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", COLOR_DARKGREEN)
+                    ])
+            tbl.show()
+
+            # prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5s} {vlmminor:<10s} {vlmsize:<10s}"
+            # print(prntfrm.format(res="Resource", uuid="UUID", vlmnr="VlmNr", vlmminor="VlmMinor", vlmsize="Size"))
+            # prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5d} {vlmminor:<10d} {vlmsize:<20s}"
+            # for rscdfn in lstmsg.rsc_dfns:
+            #     for vlmdfn in rscdfn.vlm_dfns:
+            #         print(prntfrm.format(
+            #             res=rscdfn.rsc_name,
+            #             uuid=vlmdfn.vlm_dfn_uuid,
+            #             vlmnr=vlmdfn.vlm_nr,
+            #             vlmminor=vlmdfn.vlm_minor,
+            #             vlmsize=approximate_size_string(vlmdfn.vlm_size)))
 
         return None
 
