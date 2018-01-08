@@ -4,7 +4,7 @@ from proto.MsgLstNode_pb2 import MsgLstNode
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import Output, Table, rangecheck, namecheck, ip_completer
+from linstor.utils import Output, Table, rangecheck, namecheck, ip_completer, COLOR_DARKGREEN, COLOR_RED
 from linstor.consts import NODE_NAME
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
@@ -164,7 +164,7 @@ class NodeCommands(Commands):
             elif args.communication_type == VAL_NETCOM_TYPE_SSL:
                 port = DFLT_CTRL_PORT_SSL
             else:
-                Output.err("Communication type %s has no default port" % (args.communication_type))
+                Output.err("Communication type %s has no default port" % (args.communication_type), args.no_color)
         gen_nif(KEY_PORT_NR, str(port))
 
         satcon = p.satellite_connections.add()
@@ -198,29 +198,32 @@ class NodeCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode(), args)
 
         if lstmsg:
-            if False:  # disabled for now
-                tbl = Table()
-                tbl.add_column("Node")
-                tbl.add_column("NodeType")
-                tbl.add_column("UUID")
-                for n in lstmsg.nodes:
-                    tbl.add_row([n.name, n.type, n.uuid])
-                tbl.show()
-
-            prntfrm = "{node:<20s} {type:<10s} {uuid:<40s}"
-            print(prntfrm.format(node="Node", type="NodeType", uuid="UUID"))
-
-            netiffrm = " +   {name:<20s} {address:>20s}"
+            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl.add_column("Node")
+            tbl.add_column("NodeType")
+            tbl.add_column("IPs")
+            tbl.add_column("State", color=Output.color(COLOR_DARKGREEN, args.no_color))
             for n in lstmsg.nodes:
-                print(prntfrm.format(node=n.name, type=n.type, uuid=n.uuid))
+                ips = [if_.address for if_ in n.net_interfaces]
+                tbl.add_row([
+                    n.name,
+                    n.type,
+                    ",".join(ips),
+                    tbl.color_cell("ok", COLOR_DARKGREEN) if n.connected else tbl.color_cell("OFFLINE", COLOR_RED)
+                ])
+            tbl.show()
 
-                for interface in n.net_interfaces:
-                    print(netiffrm.format(
-                        name=interface.name,
-                        address=interface.address))
+            # prntfrm = "{node:<20s} {type:<10s} {uuid:<40s}"
+            # print(prntfrm.format(node="Node", type="NodeType", uuid="UUID"))
 
-                # for prop in n.node_props:
-                #     print('    {key:<30s} {val:<20s}'.format(key=prop.key, val=prop.value))
+            # netiffrm = " +   {name:<20s} {address:>20s}"
+            # for n in lstmsg.nodes:
+            #     print(prntfrm.format(node=n.name, type=n.type, uuid=n.uuid))
+
+            #     for interface in n.net_interfaces:
+            #         print(netiffrm.format(
+            #             name=interface.name,
+            #             address=interface.address))
 
         return None
 

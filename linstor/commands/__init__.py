@@ -137,7 +137,7 @@ class Commands(object):
 
     @staticmethod
     def cmd_enoimp(args):
-        Output.err('This command is deprecated or not implemented')
+        Output.err('This command is deprecated or not implemented', args.no_color)
 
 
 from node_cmds import NodeCommands

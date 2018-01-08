@@ -166,22 +166,22 @@ class Output(object):
 
     @staticmethod
     def color_str(string, color, args=None):
-        return '%s%s%s' % (Output.color(color, args), string, Output.color(COLOR_NONE, args))
+        return '%s%s%s' % (Output.color(color, args[0].no_color), string, Output.color(COLOR_NONE, args[0].no_color))
 
     @staticmethod
-    def color(col, args=None):
-        if args and args[0].no_color:
+    def color(col, no_color):
+        if no_color:
             return ''
         else:
             return col
 
     @staticmethod
-    def err(msg):
-        Output.bail_out(msg, COLOR_RED, 1)
+    def err(msg, no_color):
+        Output.bail_out(msg, COLOR_RED, 1, no_color)
 
     @staticmethod
-    def bail_out(msg, color, ret):
-        sys.stderr.write(Output.color_str(msg, color) + '\n')
+    def bail_out(msg, color, ret, no_color):
+        sys.stderr.write(Output.color_str(msg, color, no_color) + '\n')
         sys.exit(ret)
 
 
@@ -430,6 +430,9 @@ class Table():
                 return
             else:
                 raise
+
+    def color_cell(self, text, color):
+        return (color, text) if self.colors else text
 
 
 # a wrapper for subprocess.check_output

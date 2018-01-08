@@ -991,7 +991,7 @@ class LinStorCLI(object):
         sys.exit(self.parse_and_execute(sys.argv[1:]))
 
     def cmd_enoimp(self, args):
-        Output.err('This command is deprecated or not implemented')
+        Output.err('This command is deprecated or not implemented', args.no_color)
 
     @need_communication
     def cmd_ping(self, args):
