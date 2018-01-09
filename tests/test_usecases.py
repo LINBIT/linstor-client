@@ -39,13 +39,13 @@ class TestUseCases(LinstorTestCase):
         # check
         storagepool_list = self.execute_with_maschine_output(['list-storage-pools'])
         self.assertIsNotNone(storagepool_list)
-        self.assertTrue('storPools' in storagepool_list)
-        stor_pools = storagepool_list['storPools']
+        self.assertIn('stor_pools', storagepool_list)
+        stor_pools = storagepool_list['stor_pools']
         self.assertEqual(len(stor_pools), 1)
         stor_pool = stor_pools[0]
-        self.assertEqual('node1', stor_pool['nodeName'])
+        self.assertEqual('node1', stor_pool['node_name'])
         self.assertEqual('LvmDriver', stor_pool['driver'])
-        self.assertEqual('storage', stor_pool['storPoolName'])
+        self.assertEqual('storage', stor_pool['stor_pool_name'])
         self.assertHasProp(stor_pool['props'], 'LvmVg', '/dev/lvmpool')
 
         # create resource def
@@ -71,13 +71,11 @@ class TestUseCases(LinstorTestCase):
         self.assertIn('vlms', rsc1)
         vlms = rsc1['vlms']
         self.assertEqual(len(vlms), 1)
-        self.assertEqual(vlms[0]['vlmNr'], 0)
+        self.assertEqual(vlms[0]['vlm_nr'], 0)
 
-    def test_delete_resource(self):
+        # delete resource
         retcode = self.execute(['delete-resource', 'rsc1', 'node1'])
         self.assertEqual(0, retcode)
-
-        # self.execute(['list-resource', '-m', 'json'])
 
 
 if __name__ == '__main__':
