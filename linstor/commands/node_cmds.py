@@ -114,7 +114,7 @@ class NodeCommands(Commands):
             aliases=['list-node', 'ls-nodes', 'display-nodes'],
             description='Prints a list of all cluster nodes known to linstor. '
             'By default, the list is printed as a human readable table.')
-        p_lnodes.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='text', nargs='?')
+        p_lnodes.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='json', nargs='?')
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lnodes.add_argument('-s', '--show', nargs='+',
                               choices=nodesverbose).completer = nodes_verbose_completer

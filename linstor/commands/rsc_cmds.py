@@ -82,7 +82,7 @@ class ResourceCommands(Commands):
             aliases=['list-resource', 'ls-rsc', 'display-resources'],
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
-        p_lreses.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='text', nargs='?')
+        p_lreses.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='json', nargs='?')
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lreses.add_argument(
             '-s', '--show',
