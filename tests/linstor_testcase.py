@@ -101,6 +101,7 @@ class LinstorTestCase(unittest.TestCase):
         cls.controller.poll()
         if cls.controller.returncode:
             sys.stderr.write("Controller already down!!!.\n")
+            raise RuntimeError("Controller already down!!!.")
         cls.controller.terminate()
         cls.controller.wait()
         sys.stdout.write("Controller terminated.\n")
