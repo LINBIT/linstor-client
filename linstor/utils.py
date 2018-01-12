@@ -115,14 +115,14 @@ class Output(object):
         cause = answer.cause_format
         correction = answer.correction_format
         details = answer.details_format
-        if rc & MASK_ERROR:
+        if rc & MASK_ERROR == MASK_ERROR:
             ret = 1
             category = Output.color_str('ERROR:\n', COLOR_RED, no_color)
-        elif rc & MASK_WARN:
+        elif rc & MASK_WARN == MASK_WARN:
             if warn_as_error:  # otherwise keep at 0
                 ret = 1
             category = Output.color_str('WARNING:\n', COLOR_YELLOW, no_color)
-        elif rc & MASK_INFO:
+        elif rc & MASK_INFO == MASK_INFO:
             category = 'INFO: '
         else:  # do not use MASK_SUCCESS
             category = Output.color_str('SUCCESS:\n', COLOR_GREEN, no_color)

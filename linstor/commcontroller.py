@@ -66,13 +66,13 @@ class ApiCallResponse(object):
         self._proto_msg = proto_response
 
     def is_error(self):
-        return True if self._proto_msg.ret_code & MASK_ERROR else False
+        return True if self._proto_msg.ret_code & MASK_ERROR == MASK_ERROR else False
 
     def is_warning(self):
-        return True if self._proto_msg.ret_code & MASK_WARN else False
+        return True if self._proto_msg.ret_code & MASK_WARN == MASK_WARN else False
 
     def is_info(self):
-        return True if self._proto_msg.ret_code & MASK_INFO else False
+        return True if self._proto_msg.ret_code & MASK_INFO == MASK_INFO else False
 
     def is_success(self):
         return not self.is_error() and not self.is_warning() and not self.is_info()

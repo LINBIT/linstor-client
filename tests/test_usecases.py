@@ -34,7 +34,7 @@ class TestUseCases(LinstorTestCase):
 
         # create storagepool
         retcode = self.execute(['create-storage-pool', 'storage', 'node1', 'lvm', '/dev/lvmpool'])
-        self.assertEqual(1, retcode)  # no active connection
+        self.assertEqual(0, retcode)
 
         # check
         storagepool_list = self.execute_with_maschine_output(['list-storage-pools'])
