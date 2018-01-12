@@ -16,6 +16,8 @@ class TestUtils(unittest.TestCase):
         self._check_host_port("", "")
         self._check_host_port(None, None)
         self._check_host_port("127.0.0.1", "127.0.0.1")
+        self._check_host_port("localhost", "localhost")
+        self._check_host_port("localhost:3376", "localhost", "3376")
 
         self._check_host_port("10.43.8.103:6667", "10.43.8.103", "6667")
 

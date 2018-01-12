@@ -667,11 +667,8 @@ def parse_host(host_str):
         port_ipv6 = host_str[brace_close_pos + 2:]
         return (host_ipv6, port_ipv6 if port_ipv6 else None)
 
-    if '.' in host_str:
-        if ':' in host_str:
-            return host_str.split(':')
-        else:
-            return (host_str, None)
+    if host_str.count(':') == 1:
+        return host_str.split(':')
 
     return (host_str, None)
 
