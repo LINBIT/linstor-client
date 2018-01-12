@@ -13,6 +13,7 @@ from functools import wraps
 from linstor.consts import KEY_LS_CONTROLLERS
 from linstor.sharedconsts import DFLT_CTRL_PORT_PLAIN, API_REPLY, MASK_ERROR, MASK_WARN, MASK_INFO
 from linstor.utils import Output
+from linstor import utils
 
 
 def need_communication(f):
@@ -109,13 +110,10 @@ class CommController(object):
 
         servers = []
         for hp in cenv.split(','):
-            if ':' not in hp:
-                hp += ':' + str(DFLT_CTRL_PORT_PLAIN)
-            try:
-                h, p = hp.split(':')
-                servers.append((h, int(p)))
-            except:
-                pass
+            host, port = utils.parse_host(hp)
+            if not port:
+                port = DFLT_CTRL_PORT_PLAIN
+            servers.append((host, int(port)))
         return servers
 
     # Can be called multiple times and tries to find a good one
