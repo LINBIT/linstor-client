@@ -47,10 +47,9 @@ class Commands(object):
 
     @classmethod
     def _delete_and_output(cls, cc, args, api_call, del_msgs):
-        api_responses = Commands._delete(cc, api_call, del_msgs)
+        api_responses = Commands._delete(cc, api_call, del_msgs)  # type: List[utils.ApiCallResponse]
 
-        for ar in api_responses:
-            Output.handle_ret([args], ar.proto_msg)
+        return api_responses
 
     @classmethod
     def _request_list(cls, cc, api_call, lstMsg):

@@ -105,7 +105,7 @@ def get_terminal_size():
 
 class Output(object):
     @staticmethod
-    def handle_ret(args, answer, outstream=sys.stdout):
+    def handle_ret(answer, no_color, warn_as_error, outstream=sys.stdout):
         from linstor.sharedconsts import (MASK_ERROR, MASK_WARN, MASK_INFO)
 
         rc = answer.ret_code
@@ -117,15 +117,15 @@ class Output(object):
         details = answer.details_format
         if rc & MASK_ERROR:
             ret = 1
-            category = Output.color_str('ERROR:\n', COLOR_RED, args)
+            category = Output.color_str('ERROR:\n', COLOR_RED, no_color)
         elif rc & MASK_WARN:
-            if args[0].warn_as_error:  # otherwise keep at 0
+            if warn_as_error:  # otherwise keep at 0
                 ret = 1
-            category = Output.color_str('WARNING:\n', COLOR_YELLOW, args)
+            category = Output.color_str('WARNING:\n', COLOR_YELLOW, no_color)
         elif rc & MASK_INFO:
             category = 'INFO: '
         else:  # do not use MASK_SUCCESS
-            category = Output.color_str('SUCCESS:\n', COLOR_GREEN, args)
+            category = Output.color_str('SUCCESS:\n', COLOR_GREEN, no_color)
 
         outstream.write(category)
         have_message = message is not None and len(message) > 0
@@ -165,8 +165,8 @@ class Output(object):
             stream.write('\n')
 
     @staticmethod
-    def color_str(string, color, args=None):
-        return '%s%s%s' % (Output.color(color, args[0].no_color), string, Output.color(COLOR_NONE, args[0].no_color))
+    def color_str(string, color, no_color):
+        return '%s%s%s' % (Output.color(color, no_color), string, Output.color(COLOR_NONE, no_color))
 
     @staticmethod
     def color(col, no_color):

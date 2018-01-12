@@ -93,7 +93,7 @@ class StoragePoolDefinitionCommands(Commands):
         api_responses = StoragePoolDefinitionCommands.delete(cc, args, args.name)
 
         for ar in api_responses:
-            Output.handle_ret([args], ar.proto_msg)
+            Output.handle_ret(ar.proto_msg, args.no_color, args.warn_as_error)
         return None
 
     @staticmethod

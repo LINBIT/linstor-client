@@ -33,10 +33,16 @@ def need_communication(f):
             try:
                 p = f(cc, *args, **kwargs)
             except MsgApiCallResponse as callresponse:
-                return Output.handle_ret(args, callresponse)
+                return Output.handle_ret(callresponse, no_color=args[0].no_color, warn_as_error=args[0].warn_as_error)
 
         if p:  # could be None if no payload or if cmd_xyz does implicit return
-            return Output.handle_ret(args, p)
+            if isinstance(p, list):
+                for call_resp in p:
+                    rc = call_resp.output(warn_as_error=args[0].warn_as_error, no_color=args[0].no_color)
+                    if rc:
+                        return rc
+            else:
+                return Output.handle_ret(p, no_color=args[0].no_color, warn_as_error=args[0].warn_as_error)
         return 0
 
     return wrapper
@@ -72,12 +78,21 @@ class ApiCallResponse(object):
         return not self.is_error() and not self.is_warning() and not self.is_info()
 
     @property
+    def ret_code(self):
+        return self._proto_msg.ret_code
+
+    @property
     def proto_msg(self):
         return self._proto_msg
 
+    def output(self, warn_as_error, no_color):
+        return Output.handle_ret(
+            self._proto_msg, no_color=no_color, warn_as_error=warn_as_error
+        )
+
     def __str__(self):
         sio = StringIO()
-        Output.handle_ret({}, self._proto_msg, sio)
+        Output.handle_ret(self._proto_msg, no_color=True, warn_as_error=False, outstream=sio)
         return sio.getvalue()
 
 

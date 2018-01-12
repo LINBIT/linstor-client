@@ -188,9 +188,7 @@ class NodeCommands(Commands):
 
         del_msgs.append(p)
 
-        Commands._delete_and_output(cc, args, API_DEL_NODE, del_msgs)
-
-        return None
+        return Commands._delete_and_output(cc, args, API_DEL_NODE, del_msgs)
 
     @staticmethod
     @need_communication

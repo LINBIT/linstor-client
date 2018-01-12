@@ -1096,7 +1096,7 @@ class LinStorCLI(object):
                 return True
             for o in option_type:
                 if line.find(o) != -1:
-                    sys.stdout.write(Output.color_str(line.rstrip(), color, args) + '\n')
+                    sys.stdout.write(Output.color_str(line.rstrip(), color, args.no_color) + '\n')
                     return True
             return False
 

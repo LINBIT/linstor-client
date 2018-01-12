@@ -113,9 +113,7 @@ class VolumeDefinitionCommands(Commands):
         p.rsc_name = args.name
         p.vlm_nr = args.volume_nr
 
-        Commands._delete_and_output(cc, args, API_DEL_VLM_DFN, [p])
-
-        return None
+        return Commands._delete_and_output(cc, args, API_DEL_VLM_DFN, [p])
 
     @staticmethod
     @need_communication
