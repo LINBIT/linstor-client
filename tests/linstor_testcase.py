@@ -35,7 +35,7 @@ class LinstorTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         install_path = os.path.abspath('build/_linstor_unittests')
-        linstor_file_name = 'linstor-1.0'
+        linstor_file_name = 'linstor-0.1'
         linstor_distri_tar = linstor_file_name + '.tar'
         if not os.path.exists(linstor_distri_tar):
             linstor_dir = os.path.abspath('../linstor')
@@ -79,7 +79,7 @@ class LinstorTestCase(unittest.TestCase):
             raise RuntimeError("Couldn't execute RecreateDb script")
 
         # start linstor controller
-        controller_bin = os.path.join(linstor_bin, linstor_file_name[:-4])
+        controller_bin = os.path.join(linstor_bin, "Controller")
         print("executing: " + controller_bin)
         cls.controller = subprocess.Popen(
             [controller_bin],
@@ -104,6 +104,8 @@ class LinstorTestCase(unittest.TestCase):
             raise RuntimeError("Controller already down!!!.")
         cls.controller.terminate()
         cls.controller.wait()
+        sys.stdout.write(cls.controller.stdout.read())
+        sys.stdout.write(cls.controller.stderr.read())
         sys.stdout.write("Controller terminated.\n")
         sys.stdout.flush()
 
