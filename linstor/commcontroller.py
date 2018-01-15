@@ -216,12 +216,10 @@ class CommController(object):
         if self.current_sock is None:
             return []
 
-        try:
-            hdr = ""
-            while len(hdr) < 16:
-                hdr += self.current_sock.recv(16)
-        except:
-            return []
+
+        hdr = bytes()
+        while len(hdr) < 16:
+            hdr += self.current_sock.recv(16)
 
         # h_type, h_payload_length = hdr[:4], hdr[4:8]  # ignore reserved
         h_payload_length = hdr[4:8]  # ignore reserved
@@ -230,25 +228,19 @@ class CommController(object):
         h_payload_length = struct.unpack("!I", h_payload_length)[0]
 
         # slurp the whole payload
-        try:
-            payload = ""
-            while len(payload) < h_payload_length:
-                payload += self.current_sock.recv(h_payload_length)
-        except:
-            return []
+        payload = bytes()
+        while len(payload) < h_payload_length:
+            payload += self.current_sock.recv(h_payload_length)
 
         # split payload, just a list of pbs, the receiver has to deal with them
         pb_msgs = []
         n = 0
-        try:
-            while n < len(payload):
-                msg_len, new_pos = decoder._DecodeVarint32(payload, n)
-                n = new_pos
-                msg_buf = payload[n:n + msg_len]
-                n += msg_len
-                pb_msgs.append(msg_buf)
-        except:
-            return []
+        while n < len(payload):
+            msg_len, new_pos = decoder._DecodeVarint32(payload, n)
+            n = new_pos
+            msg_buf = payload[n:n + msg_len]
+            n += msg_len
+            pb_msgs.append(msg_buf)
 
         return pb_msgs
 
