@@ -1,5 +1,5 @@
 import unittest
-from linstor_testcase import LinstorTestCase
+from .linstor_testcase import LinstorTestCase
 
 
 class TestUseCases(LinstorTestCase):

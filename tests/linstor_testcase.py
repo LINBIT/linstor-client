@@ -1,13 +1,15 @@
 import unittest
 import linstor_client
 import sys
-from cStringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import json
 import os
 import tarfile
 import subprocess
 import zipfile
-import time
 
 
 db_xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
