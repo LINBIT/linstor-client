@@ -4,7 +4,10 @@ import socket
 import struct
 import sys
 import os
-from cStringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 from google.protobuf.internal import encoder
 from google.protobuf.internal import decoder
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
