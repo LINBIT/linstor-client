@@ -416,7 +416,7 @@ class Table():
                     else:
                         l, m, r = ctbl[enc]['ml'], ctbl[enc]['mdc'], ctbl[enc]['mr']
                     sep = l + m * (sum(columnmax) - co_sum + (3 * len(self.header)) - 1) + r
-                    if enc == 'utf8':  # should be save on non utf-8 too...
+                    if enc == 'utf8' and not isinstance(sep, str):  # should be save on non utf-8 too...
                         sep = sep.decode('utf-8')
 
                     if self.r_just and len(sep) < maxwidth:
