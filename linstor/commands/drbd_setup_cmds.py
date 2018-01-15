@@ -8,7 +8,7 @@ import pickle
 
 
 class DrbdOptions(object):
-    _options = pickle.loads(drbdoptions_raw)
+    _options = pickle.loads(drbdoptions_raw.encode())
 
     def __init__(self):
         self.unsetprefix = 'unset'
