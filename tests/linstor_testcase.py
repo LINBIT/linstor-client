@@ -22,7 +22,7 @@ db_xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
  </properties>
  """
 
-controller_port = 63376
+controller_port = 63374 + sys.version_info[0]
 
 update_port_sql = """
 UPDATE PROPS_CONTAINERS SET PROP_VALUE='{port}'
