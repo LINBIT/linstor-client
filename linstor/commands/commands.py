@@ -81,7 +81,7 @@ class Commands(object):
         """
         Sends the given api_call request to the controller connect cc.
         Checks the result is the expected request_msg and returns it.
-        If a MsgApiCallResponse was recieved an exception is raised with it
+        If a MsgApiCallResponse was received an exception is raised with it
         that is handled by the @needs_communication wrapper.
         Or if the machine_readable flag is set, it is printed and None is returned.
         """
