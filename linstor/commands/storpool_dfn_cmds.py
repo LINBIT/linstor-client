@@ -53,7 +53,6 @@ class StoragePoolDefinitionCommands(Commands):
             aliases=['list-storage-pool-definition', 'ls-storage-pool-dfn', 'display-storage-pool-definition'],
             description='Prints a list of all storage pool definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
-        p_lstorpooldfs.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='json', nargs='?')
         p_lstorpooldfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpooldfs.add_argument('-g', '--groupby', nargs='+',
                                     choices=storpooldfngroupby).completer = storpooldfn_group_completer
@@ -85,7 +84,7 @@ class StoragePoolDefinitionCommands(Commands):
         p = MsgCrtStorPoolDfn()
         p.stor_pool_name = storage_pool_name
 
-        return Commands._create(cc, API_CRT_STOR_POOL_DFN, p)
+        return Commands._create(cc, API_CRT_STOR_POOL_DFN, p, args)
 
     @staticmethod
     @need_communication

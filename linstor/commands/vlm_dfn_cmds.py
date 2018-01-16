@@ -84,7 +84,6 @@ class VolumeDefinitionCommands(Commands):
             aliases=['list-volume-definition', 'dspvlmdfn', 'display-volume-definitions', 'volume-definitions'],
             description=' Prints a list of all volume definitions known to linstor. '
             'By default, the list is printed as a human readable table.')
-        p_lvols.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='json', nargs='?')
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvols.add_argument('-g', '--groupby', nargs='+',
                              choices=volgroupby).completer = vol_group_completer
@@ -104,7 +103,7 @@ class VolumeDefinitionCommands(Commands):
         if args.minor is not None:
             vlmdf.vlm_minor = args.minor
 
-        return Commands._create(cc, API_CRT_VLM_DFN, p)
+        return Commands._create(cc, API_CRT_VLM_DFN, p, args)
 
     @staticmethod
     @need_communication

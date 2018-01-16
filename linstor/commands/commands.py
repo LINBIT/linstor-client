@@ -10,7 +10,7 @@ from linstor.protobuf_to_dict import protobuf_to_dict
 class Commands(object):
 
     @classmethod
-    def _create(cls, cc, api_call, msg):
+    def _create(cls, cc, api_call, msg, args=None):
         h = MsgHeader()
         h.api_call = api_call
         h.msg_id = 1
@@ -22,10 +22,12 @@ class Commands(object):
             h.ParseFromString(pbmsgs[0])
             p = MsgApiCallResponse()
             p.ParseFromString(pbmsgs[1])
-
         else:
-            sys.stderr.write('No msg recieved from controller {ctrl}'.format(ctrl=cc.servers_good))
+            sys.stderr.write('No msg received from controller {ctrl}'.format(ctrl=cc.servers_good))
             sys.exit(1)
+
+        if args and Commands._print_machine_readable(args, [p]):
+            return None
 
         return p
 
@@ -43,11 +45,15 @@ class Commands(object):
             api_responses.append(p)
 
             h.msg_id += 1
+
         return api_responses
 
     @classmethod
     def _delete_and_output(cls, cc, args, api_call, del_msgs):
-        api_responses = Commands._delete(cc, api_call, del_msgs)  # type: List[utils.ApiCallResponse]
+        api_responses = Commands._delete(cc, api_call, del_msgs)  # type: List[linstor.commcontroller.ApiCallResponse]
+
+        if args and Commands._print_machine_readable(args, [x.proto_msg for x in api_responses]):
+            return None
 
         return api_responses
 
@@ -83,32 +89,29 @@ class Commands(object):
         if isinstance(lstmsg, MsgApiCallResponse):
             raise lstmsg
 
-        if args and Commands._print_machine_readable(args, lstmsg):
+        if args and Commands._print_machine_readable(args, [lstmsg]):
             return None
 
         return lstmsg
 
     @classmethod
-    def _print_machine_readable(cls, args, lstmsg):
+    def _print_machine_readable(cls, args, data):
         """
         Checks if machine readable flag is set in args
         and serializes the given lstmsg.
         """
         if args.machine_readable:
-            s = ''
-            if args.machine_readable == 'text':
-                s = text_format.MessageToString(lstmsg)
-            if args.machine_readable == 'json':
-                d = protobuf_to_dict(lstmsg)
-                s = json.dumps(d, indent=2)
-                # print(s)
-                # try:
-                #     from google.protobuf import json_format
-                #     s = json_format.MessageToJson(lstmsg, preserving_proto_field_name=True)
-                # except ImportError as e:
-                #     sys.stderr.write(
-                #         "You are using a protobuf version prior to 2.7, which is needed for json output")
-                #     return True
+            assert(isinstance(data, list))
+            d = [protobuf_to_dict(x) for x in data]
+            s = json.dumps(d, indent=2)
+            # print(s)
+            # try:
+            #     from google.protobuf import json_format
+            #     s = json_format.MessageToJson(lstmsg, preserving_proto_field_name=True)
+            # except ImportError as e:
+            #     sys.stderr.write(
+            #         "You are using a protobuf version prior to 2.7, which is needed for json output")
+            #     return True
             print(s)
             return True
         return False

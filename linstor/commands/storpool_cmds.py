@@ -74,7 +74,6 @@ class StoragePoolCommands(Commands):
             aliases=['list-storage-pool', 'ls-storage-pool', 'display-storage-pools'],
             description='Prints a list of all storage pool known to '
             'linstor. By default, the list is printed as a human readable table.')
-        p_lstorpool.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='json', nargs='?')
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
                                  choices=storpoolgroupby).completer = storpool_group_completer
@@ -113,9 +112,7 @@ class StoragePoolCommands(Commands):
         prop.key = StoragePoolCommands.device_key_map[driver]
         prop.value = args.driver_device
 
-        api_resp = ApiCallResponse(Commands._create(cc, API_CRT_STOR_POOL, p))
-
-        return api_resp.proto_msg
+        return Commands._create(cc, API_CRT_STOR_POOL, p, args)
 
     @staticmethod
     @need_communication

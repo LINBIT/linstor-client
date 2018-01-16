@@ -27,6 +27,8 @@ class TestUseCases(LinstorTestCase):
 
         node_list = self.execute_with_maschine_output(['list-nodes'])
         self.assertIsNotNone(node_list)
+        self.assertIs(len(node_list), 1)
+        node_list = node_list[0]
         self.assertTrue('nodes' in node_list)
         nodes = node_list['nodes']
         self.assertGreater(len(nodes), 0)
@@ -39,6 +41,8 @@ class TestUseCases(LinstorTestCase):
         # check
         storagepool_list = self.execute_with_maschine_output(['list-storage-pools'])
         self.assertIsNotNone(storagepool_list)
+        self.assertIs(len(storagepool_list), 1)
+        storagepool_list = storagepool_list[0]
         self.assertIn('stor_pools', storagepool_list)
         stor_pools = storagepool_list['stor_pools']
         self.assertEqual(len(stor_pools), 1)
@@ -63,6 +67,8 @@ class TestUseCases(LinstorTestCase):
         # check resource
         resource_list = self.execute_with_maschine_output(['list-resources'])
         self.assertIsNotNone(resource_list)
+        self.assertIs(len(resource_list), 1)
+        resource_list = resource_list[0]
         self.assertIn('resources', resource_list)
         resources = resource_list['resources']
         self.assertEqual(len(resources), 1)

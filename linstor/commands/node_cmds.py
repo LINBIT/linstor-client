@@ -45,7 +45,6 @@ class NodeCommands(Commands):
                                     VAL_NETCOM_TYPE_PLAIN,
                                     DFLT_CTRL_PORT_SSL,
                                     VAL_NETCOM_TYPE_SSL))
-
         ntype_def = VAL_NODE_TYPE_STLT
         p_new_node.add_argument('--node-type', choices=(VAL_NODE_TYPE_CTRL, VAL_NODE_TYPE_AUX,
                                                         VAL_NODE_TYPE_CMBD, VAL_NODE_TYPE_STLT),
@@ -114,7 +113,6 @@ class NodeCommands(Commands):
             aliases=['list-node', 'ls-nodes', 'display-nodes'],
             description='Prints a list of all cluster nodes known to linstor. '
             'By default, the list is printed as a human readable table.')
-        p_lnodes.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='json', nargs='?')
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lnodes.add_argument('-s', '--show', nargs='+',
                               choices=nodesverbose).completer = nodes_verbose_completer
@@ -172,7 +170,7 @@ class NodeCommands(Commands):
         satcon.port = port
         satcon.encryption_type = args.communication_type
 
-        return Commands._create(cc, API_CRT_NODE, p)
+        return Commands._create(cc, API_CRT_NODE, p, args)
 
     @staticmethod
     @need_communication

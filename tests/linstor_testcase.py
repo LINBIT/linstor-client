@@ -33,6 +33,7 @@ UPDATE PROPS_CONTAINERS SET PROP_VALUE='127.0.0.1'
 
 
 class LinstorTestCase(unittest.TestCase):
+    controller = None
 
     @classmethod
     def setUpClass(cls):
@@ -143,7 +144,7 @@ class LinstorTestCase(unittest.TestCase):
         jout = None
         try:
             sys.stdout = StringIO()
-            retcode = linstor_cli.parse_and_execute(cmd_args + ["-m", 'json'])
+            retcode = linstor_cli.parse_and_execute(["-m"] + cmd_args)
             self.assertEqual(0, retcode)
         except SystemExit as e:
             pass
@@ -154,6 +155,7 @@ class LinstorTestCase(unittest.TestCase):
             sys.stdout.close()
             sys.stdout = backupstd
             jout = json.loads(stdval)
+            self.assertIsInstance(jout, list)
         return jout
 
     def assertHasProp(self, props, key, val):

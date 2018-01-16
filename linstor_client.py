@@ -100,6 +100,7 @@ class LinStorCLI(object):
                             help='Comma separated list of controllers (e.g.: "host1:port,host2:port"). '
                             'If the environment variable %s is set, '
                             'the ones set via this argument get appended.' % (KEY_LS_CONTROLLERS))
+        parser.add_argument('-m', '--machine-readable', action="store_true")
 
         subp = parser.add_subparsers(title='subcommands',
                                      description='valid subcommands',
@@ -332,7 +333,6 @@ class LinStorCLI(object):
                                    ' volume that could be deployed with the'
                                    ' specified level of redundancy',
                                    aliases=['free-space'])
-        p_fspace.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='json', nargs='?')
         p_fspace.add_argument('-s', '--site', default='',
                               help="only consider nodes from this site")
         p_fspace.add_argument('redundancy', type=redundancy_type,
@@ -526,7 +526,6 @@ class LinStorCLI(object):
 
         p_lsnaps = subp.add_parser('list-snapshots', aliases=['s', 'snapshots'],
                                    description='List available snapshots')
-        p_lsnaps.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='json', nargs='?')
         p_lsnaps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lsnaps.add_argument('-g', '--groupby', nargs='+',
                               choices=snapgroupby).completer = snap_group_completer
@@ -542,7 +541,6 @@ class LinStorCLI(object):
 
         p_lsnapas = subp.add_parser('list-snapshot-assignments', aliases=['sa', 'snapshot-assignments'],
                                     description='List snapshot assignments')
-        p_lsnapas.add_argument('-m', '--machine-readable', choices=['text', 'json'], const='json', nargs='?')
         p_lsnapas.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lsnapas.add_argument('-g', '--groupby', nargs='+',
                                choices=snapasgroupby).completer = snapas_group_completer

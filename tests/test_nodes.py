@@ -11,6 +11,8 @@ class TestNodeCommands(LinstorTestCase):
 
         node_list = self.execute_with_maschine_output(['list-nodes'])
         self.assertIsNotNone(node_list)
+        self.assertIs(len(node_list), 1)
+        node_list = node_list[0]
         self.assertTrue('nodes' in node_list)
         nodes = node_list['nodes']
         self.assertGreater(len(nodes), 0)
