@@ -63,7 +63,7 @@ class LinstorTestCase(unittest.TestCase):
             with linjar.open('resource/drbd-init-derby.sql', 'r') as sqlfile:
                 with open(execute_init_sql_path, 'wt') as init_sql_file:
                     for line in sqlfile:
-                        init_sql_file.write(line)
+                        init_sql_file.write(line.decode())
                     # patch init sql file to start controller on different port
                     init_sql_file.write(update_port_sql)
 
@@ -93,6 +93,7 @@ class LinstorTestCase(unittest.TestCase):
         print('Waiting for controller to start, if this takes longer than 10s cancel')
         while True:
             line = cls.controller.stderr.readline()  # this will block
+            line = line.decode()
             sys.stdout.write(line)
             sys.stdout.flush()
             if 'Controller initialized' in line:
@@ -106,8 +107,8 @@ class LinstorTestCase(unittest.TestCase):
             raise RuntimeError("Controller already down!!!.")
         cls.controller.terminate()
         cls.controller.wait()
-        sys.stdout.write(cls.controller.stdout.read())
-        sys.stdout.write(cls.controller.stderr.read())
+        sys.stdout.write(cls.controller.stdout.read().decode())
+        sys.stdout.write(cls.controller.stderr.read().decode())
         sys.stdout.write("Controller terminated.\n")
         sys.stdout.flush()
 
