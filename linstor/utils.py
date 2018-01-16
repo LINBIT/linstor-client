@@ -490,7 +490,7 @@ def checkrange(v, i, j):
 # "type" used for argparse
 def rangecheck(i, j):
     def range(v):
-        import argparse.argparse as argparse
+        import linstor.argparse.argparse as argparse
         v = int(v)
         if not checkrange(v, i, j):
             raise argparse.ArgumentTypeError('Range: [%d, %d]' % (i, j))
@@ -547,7 +547,7 @@ def check_name(name, min_length, max_length, valid_chars, valid_inner_chars):
         idx += 1
     if not alpha:
         return ""
-    checked_name = str(name_b)
+    checked_name = name_b.decode("utf-8")
     return checked_name
 
 
@@ -563,7 +563,7 @@ def check_node_name(name):
     name_len = len(name_b)
     if name_len < NODE_NAME_MINLEN or name_len > NODE_NAME_MAXLEN:
         return ""
-    for label in name_b.split("."):
+    for label in name_b.split(".".encode("utf-8")):
         if len(label) > NODE_NAME_LABEL_MAXLEN:
             return ""
     idx = 0
@@ -579,7 +579,7 @@ def check_node_name(name):
                 if not (letter == ord('.') or letter == ord('-')):
                     return ""
         idx += 1
-    checked_name = str(name_b)
+    checked_name = name_b.decode("utf-8")
     return checked_name
 
 
@@ -606,7 +606,7 @@ def namecheck(checktype):
         max_length = NODE_NAME_MAXLEN
 
     def check(name):
-        import argparse.argparse as argparse
+        import linstor.argparse.argparse as argparse
         if checktype == NODE_NAME:
             name = check_node_name(name)
         else:
@@ -851,4 +851,4 @@ class SizeCalc(object):
             result = (byte_sz / div_out) + 1
         else:
             result = byte_sz / div_out
-        return result
+        return int(result)
