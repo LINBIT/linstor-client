@@ -68,14 +68,25 @@ class ApiCallResponse(object):
     def __init__(self, proto_response):
         self._proto_msg = proto_response
 
+    @classmethod
+    def from_json(cls, json_data):
+        apiresp = MsgApiCallResponse()
+        apiresp.ret_code = json_data["ret_code"]
+        if "message_format" in json_data:
+            apiresp.message_format = json_data["message_format"]
+        if "details_format" in json_data:
+            apiresp.details_format = json_data["details_format"]
+
+        return ApiCallResponse(apiresp)
+
     def is_error(self):
-        return True if self._proto_msg.ret_code & MASK_ERROR == MASK_ERROR else False
+        return True if self.ret_code & MASK_ERROR == MASK_ERROR else False
 
     def is_warning(self):
-        return True if self._proto_msg.ret_code & MASK_WARN == MASK_WARN else False
+        return True if self.ret_code & MASK_WARN == MASK_WARN else False
 
     def is_info(self):
-        return True if self._proto_msg.ret_code & MASK_INFO == MASK_INFO else False
+        return True if self.ret_code & MASK_INFO == MASK_INFO else False
 
     def is_success(self):
         return not self.is_error() and not self.is_warning() and not self.is_info()

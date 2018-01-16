@@ -1,5 +1,6 @@
 import unittest
 from .linstor_testcase import LinstorTestCase
+from linstor.sharedconsts import RC_RSC_DEL_WARN_NOT_CONNECTED, RC_STOR_POOL_CRT_WARN_NOT_CONNECTED
 
 
 class TestUseCases(LinstorTestCase):
@@ -22,8 +23,8 @@ class TestUseCases(LinstorTestCase):
             self.assertEqual(0, self.execute([cmd, '--help']))
 
     def test_create_volume(self):
-        retcode = self.execute(['create-node', 'node1', '192.168.100.1'])
-        self.assertEqual(0, retcode)
+        cnode_resp = self.execute_with_single_resp(['create-node', 'node1', '192.168.100.1'])
+        self.assertTrue(cnode_resp.is_success())
 
         node_list = self.execute_with_maschine_output(['list-nodes'])
         self.assertIsNotNone(node_list)
@@ -35,8 +36,9 @@ class TestUseCases(LinstorTestCase):
         self.assertTrue([n for n in nodes if n['name'] == 'node1'])
 
         # create storagepool
-        retcode = self.execute(['create-storage-pool', 'storage', 'node1', 'lvm', '/dev/lvmpool'])
-        self.assertEqual(0, retcode)
+        storpool_resp = self.execute_with_single_resp(['create-storage-pool', 'storage', 'node1', 'lvm', '/dev/lvmpool'])
+        self.assertTrue(storpool_resp.is_warning())
+        self.assertEqual(RC_STOR_POOL_CRT_WARN_NOT_CONNECTED, storpool_resp.ret_code)
 
         # check
         storagepool_list = self.execute_with_maschine_output(['list-storage-pools'])
@@ -53,16 +55,16 @@ class TestUseCases(LinstorTestCase):
         self.assertHasProp(stor_pool['props'], 'LvmVg', '/dev/lvmpool')
 
         # create resource def
-        retcode = self.execute(['create-resource-definition', 'rsc1'])
-        self.assertEqual(0, retcode)
+        rsc_dfn_resp = self.execute_with_single_resp(['create-resource-definition', 'rsc1'])
+        self.assertTrue(rsc_dfn_resp.is_success())
 
         # create volume def
-        retcode = self.execute(['create-volume-definition', 'rsc1', '1Gib'])
-        self.assertEqual(0, retcode)
+        vlm_dfn_resp = self.execute_with_single_resp(['create-volume-definition', 'rsc1', '1Gib'])
+        self.assertTrue(vlm_dfn_resp.is_success())
 
         # create resource on node1
-        retcode = self.execute(['create-resource', '-s', 'storage', 'rsc1', 'node1'])
-        self.assertEqual(0, retcode)
+        rsc_resp = self.execute_with_single_resp(['create-resource', '-s', 'storage', 'rsc1', 'node1'])
+        self.assertTrue(rsc_resp.is_success())
 
         # check resource
         resource_list = self.execute_with_maschine_output(['list-resources'])
@@ -80,8 +82,9 @@ class TestUseCases(LinstorTestCase):
         self.assertEqual(vlms[0]['vlm_nr'], 0)
 
         # delete resource
-        retcode = self.execute(['delete-resource', 'rsc1', 'node1'])
-        self.assertEqual(0, retcode)
+        rsc_resp = self.execute_with_single_resp(['delete-resource', 'rsc1', 'node1'])
+        self.assertTrue(rsc_resp.is_warning(), str(rsc_resp))
+        self.assertEqual(RC_RSC_DEL_WARN_NOT_CONNECTED, rsc_resp.ret_code)
 
 
 if __name__ == '__main__':

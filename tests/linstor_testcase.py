@@ -10,6 +10,7 @@ import os
 import tarfile
 import subprocess
 import zipfile
+from linstor.commcontroller import ApiCallResponse
 
 
 db_xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -157,6 +158,15 @@ class LinstorTestCase(unittest.TestCase):
             jout = json.loads(stdval)
             self.assertIsInstance(jout, list)
         return jout
+
+    def execute_with_resp(self, cmd_args):
+        d = self.execute_with_maschine_output(cmd_args)
+        return [ApiCallResponse.from_json(x) for x in d]
+
+    def execute_with_single_resp(self, cmd_args):
+        responses = self.execute_with_resp(cmd_args)
+        self.assertEqual(len(responses), 1, "Zero or more than 1 api call responses")
+        return responses[0]
 
     def assertHasProp(self, props, key, val):
         for prop in props:
