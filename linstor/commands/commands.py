@@ -3,8 +3,8 @@ import json
 from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from linstor.utils import Output, Table
-from google.protobuf import text_format
 from linstor.protobuf_to_dict import protobuf_to_dict
+from linstor.commcontroller import ApiCallResponse
 
 
 class Commands(object):
@@ -17,19 +17,22 @@ class Commands(object):
 
         pbmsgs = cc.sendrec(h, msg)
 
+        responses = []
         if pbmsgs:
             h = MsgHeader()
             h.ParseFromString(pbmsgs[0])
-            p = MsgApiCallResponse()
-            p.ParseFromString(pbmsgs[1])
+            for resp in pbmsgs[1:]:
+                p = MsgApiCallResponse()
+                p.ParseFromString(resp)
+                responses.append(ApiCallResponse(p))
         else:
             sys.stderr.write('No msg received from controller {ctrl}'.format(ctrl=cc.servers_good))
             sys.exit(1)
 
-        if args and Commands._print_machine_readable(args, [p]):
+        if args and Commands._print_machine_readable(args, [r.proto_msg for r in responses]):
             return None
 
-        return p
+        return responses
 
     @classmethod
     def _delete(cls, cc, api_call, del_msgs):
@@ -50,12 +53,13 @@ class Commands(object):
 
     @classmethod
     def _delete_and_output(cls, cc, args, api_call, del_msgs):
-        api_responses = Commands._delete(cc, api_call, del_msgs)  # type: List[linstor.commcontroller.ApiCallResponse]
+        api_responses = Commands._delete(cc, api_call, del_msgs)  # type: List[List[linstor.commcontroller.ApiCallResponse]]
 
-        if args and Commands._print_machine_readable(args, [x.proto_msg for x in api_responses]):
+        flat_responses = [x for subx in api_responses for x in subx]
+        if args and Commands._print_machine_readable(args, [x.proto_msg for x in flat_responses]):
             return None
 
-        return api_responses
+        return flat_responses
 
     @classmethod
     def _request_list(cls, cc, api_call, lstMsg):

@@ -227,7 +227,6 @@ class CommController(object):
         if self.current_sock is None:
             return []
 
-
         hdr = bytes()
         while len(hdr) < 16:
             hdr += self.current_sock.recv(16)
@@ -284,10 +283,14 @@ class CommController(object):
         assert(ret_hdr.msg_id == header.msg_id)
         assert(ret_hdr.api_call == API_REPLY)
         assert(len(proto_messages) > 1)
-        p = MsgApiCallResponse()
-        p.ParseFromString(proto_messages[1])
 
-        return ApiCallResponse(p)
+        responses = []
+        for reply_msg in proto_messages[1:]:
+            p = MsgApiCallResponse()
+            p.ParseFromString(reply_msg)
+            responses.append(ApiCallResponse(p))
+
+        return responses
 
     def close(self):
         if self.current_sock:

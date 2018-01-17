@@ -36,9 +36,10 @@ class TestUseCases(LinstorTestCase):
         self.assertTrue([n for n in nodes if n['name'] == 'node1'])
 
         # create storagepool
-        storpool_resp = self.execute_with_single_resp(['create-storage-pool', 'storage', 'node1', 'lvm', '/dev/lvmpool'])
-        self.assertTrue(storpool_resp.is_warning())
-        self.assertEqual(RC_STOR_POOL_CRT_WARN_NOT_CONNECTED, storpool_resp.ret_code)
+        storpool_resps = self.execute_with_resp(['create-storage-pool', 'storage', 'node1', 'lvm', '/dev/lvmpool'])
+        self.assertTrue(storpool_resps[0].is_warning())
+        self.assertEqual(RC_STOR_POOL_CRT_WARN_NOT_CONNECTED, storpool_resps[0].ret_code)
+        self.assertTrue(storpool_resps[1].is_success())
 
         # check
         storagepool_list = self.execute_with_maschine_output(['list-storage-pools'])
@@ -63,8 +64,11 @@ class TestUseCases(LinstorTestCase):
         self.assertTrue(vlm_dfn_resp.is_success())
 
         # create resource on node1
-        rsc_resp = self.execute_with_single_resp(['create-resource', '-s', 'storage', 'rsc1', 'node1'])
-        self.assertTrue(rsc_resp.is_success())
+        rsc_resps = self.execute_with_resp(['create-resource', '-s', 'storage', 'rsc1', 'node1'])
+        self.assertEqual(3, len(rsc_resps))
+        self.assertTrue(rsc_resps[0].is_warning())  # satellite not reachable
+        self.assertTrue(rsc_resps[1].is_success())  # resource created
+        self.assertTrue(rsc_resps[2].is_success())  # volume created
 
         # check resource
         resource_list = self.execute_with_maschine_output(['list-resources'])
@@ -82,9 +86,12 @@ class TestUseCases(LinstorTestCase):
         self.assertEqual(vlms[0]['vlm_nr'], 0)
 
         # delete resource
-        rsc_resp = self.execute_with_single_resp(['delete-resource', 'rsc1', 'node1'])
-        self.assertTrue(rsc_resp.is_warning(), str(rsc_resp))
-        self.assertEqual(RC_RSC_DEL_WARN_NOT_CONNECTED, rsc_resp.ret_code)
+        rsc_resps = self.execute_with_resp(['delete-resource', 'rsc1', 'node1'])
+        self.assertEqual(2, len(rsc_resps))
+        warn_resp = rsc_resps[0]
+        self.assertTrue(warn_resp.is_warning(), str(warn_resp))
+        self.assertEqual(RC_RSC_DEL_WARN_NOT_CONNECTED, warn_resp.ret_code)
+        self.assertTrue(rsc_resps[1].is_success())
 
 
 if __name__ == '__main__':
