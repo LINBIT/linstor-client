@@ -32,7 +32,7 @@ def need_communication(f):
         servers = CommController.controller_list(cliargs.controllers)
 
         p = None
-        with CommController(servers) as cc:
+        with CommController(servers, cliargs.timeout) as cc:
             try:
                 p = f(cc, *args, **kwargs)
             except MsgApiCallResponse as callresponse:
@@ -59,7 +59,7 @@ def completer_communication(f):
     def wrapper(*args, **kwargs):
         cliargs = kwargs['parsed_args']
         servers = CommController.controller_list(cliargs.controllers)
-        with CommController(servers) as cc:
+        with CommController(servers, cliargs.timeout) as cc:
             return f(cc, *args, **kwargs)
     return wrapper
 
@@ -112,15 +112,17 @@ class ApiCallResponse(object):
 
 class CommController(object):
     # servers is a list of tuples containing host, port pairs
-    def __init__(self, servers=[]):
+    def __init__(self, servers=[], timeout=20):
         self.servers_good = servers
         self.servers_bad = []
         self.current_sock = None  # type: socket.Socket
         self.first_connect = True
+        self.timeout = timeout
 
     def _connect_single(self, server):
         try:
-            self.current_sock = socket.create_connection(server)
+            self.current_sock = socket.create_connection(server, timeout=self.timeout)
+            self.current_sock.settimeout(self.timeout)
         except:
             self.current_sock = None
 
@@ -227,20 +229,26 @@ class CommController(object):
         if self.current_sock is None:
             return []
 
-        hdr = bytes()
-        while len(hdr) < 16:
-            hdr += self.current_sock.recv(16)
+        try:
+            hdr = bytes()
+            while len(hdr) < 16:
+                hdr += self.current_sock.recv(16)
 
-        # h_type, h_payload_length = hdr[:4], hdr[4:8]  # ignore reserved
-        h_payload_length = hdr[4:8]  # ignore reserved
-        # we could assert the h_type to 0, but for now ignore
+            # h_type, h_payload_length = hdr[:4], hdr[4:8]  # ignore reserved
+            h_payload_length = hdr[4:8]  # ignore reserved
+            # we could assert the h_type to 0, but for now ignore
 
-        h_payload_length = struct.unpack("!I", h_payload_length)[0]
+            h_payload_length = struct.unpack("!I", h_payload_length)[0]
 
-        # slurp the whole payload
-        payload = bytes()
-        while len(payload) < h_payload_length:
-            payload += self.current_sock.recv(h_payload_length)
+            # slurp the whole payload
+            payload = bytes()
+            while len(payload) < h_payload_length:
+                payload += self.current_sock.recv(h_payload_length)
+        except socket.timeout as st:
+            sys.stderr.write("Error: Connection timeout receiving data from {addr}\n".format(
+                addr=CommController._adrtuple2str(self.current_sock.getpeername()))
+            )
+            sys.exit(20)
 
         # split payload, just a list of pbs, the receiver has to deal with them
         pb_msgs = []
@@ -296,3 +304,11 @@ class CommController(object):
         if self.current_sock:
             self.current_sock.close()
             self.current_sock = None
+
+    @staticmethod
+    def _adrtuple2str(tuple):
+        ip = tuple[0]
+        port = tuple[1]
+        s = "[{ip}]".format(ip=ip) if ':' in ip else ip
+        s += ":" + str(port)
+        return s

@@ -101,6 +101,8 @@ class LinStorCLI(object):
                             'If the environment variable %s is set, '
                             'the ones set via this argument get appended.' % (KEY_LS_CONTROLLERS))
         parser.add_argument('-m', '--machine-readable', action="store_true")
+        parser.add_argument('-t', '--timeout', default=20, type=int,
+                            help="Connection timeout value.")
 
         subp = parser.add_subparsers(title='subcommands',
                                      description='valid subcommands',
