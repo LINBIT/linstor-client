@@ -66,7 +66,7 @@ def completer_communication(f):
 
 class ApiCallResponse(object):
     def __init__(self, proto_response):
-        self._proto_msg = proto_response
+        self._proto_msg = proto_response  # type: MsgApiCallResponse
 
     @classmethod
     def from_json(cls, json_data):
@@ -115,9 +115,9 @@ class CommController(object):
     def __init__(self, servers=[], timeout=20):
         self.servers_good = servers
         self.servers_bad = []
-        self.current_sock = None  # type: socket.Socket
+        self.current_sock = None  # type: socket.SocketType
         self.first_connect = True
-        self.timeout = timeout
+        self.timeout = timeout  # type: int
 
     def _connect_single(self, server):
         try:
@@ -278,11 +278,15 @@ class CommController(object):
 
     def send_and_expect_reply(self, header, payload=None):
         """
-        Sends the given header and paylaod messages via sendrec
+        Sends the given header and payload messages via sendrec
         and expects as return an apicallresponse message
 
+        Args:
+            header (bytes): header byte data
+            payload (bytes): payload byte data
+
         Returns:
-          An ApiCallResponse object
+            ApiCallResponse: An ApiCallResponse object
         """
         proto_messages = self.sendrec(header, payload)
 

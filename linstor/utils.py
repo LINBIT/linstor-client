@@ -651,11 +651,13 @@ def parse_host(host_str):
     """
     Tries to parse an ipv4, ipv6 or host address.
 
+    Args:
+        host_str (str): host/ip string
     Returns:
-      a tuple with the ip/host and port
+      Tuple(str, str): a tuple with the ip/host and port
     """
     if not host_str:
-        return (host_str, None)
+        return host_str, None
 
     if host_str[0] == '[':
         # ipv6 with port
@@ -665,12 +667,12 @@ def parse_host(host_str):
 
         host_ipv6 = host_str[:brace_close_pos + 1].strip('[]')
         port_ipv6 = host_str[brace_close_pos + 2:]
-        return (host_ipv6, port_ipv6 if port_ipv6 else None)
+        return host_ipv6, port_ipv6 if port_ipv6 else None
 
     if host_str.count(':') == 1:
         return host_str.split(':')
 
-    return (host_str, None)
+    return host_str, None
 
 
 # mainly used for DrbdSetupOpts()
