@@ -108,10 +108,12 @@ class Commands(object):
             assert(isinstance(data, list))
             d = [protobuf_to_dict(x) for x in data]
             s = json.dumps(d, indent=2)
-            # print(s)
+
             # try:
+            #     s = ""
             #     from google.protobuf import json_format
-            #     s = json_format.MessageToJson(lstmsg, preserving_proto_field_name=True)
+            #     for x in data:
+            #         s += json_format.MessageToJson(x, preserving_proto_field_name=True)
             # except ImportError as e:
             #     sys.stderr.write(
             #         "You are using a protobuf version prior to 2.7, which is needed for json output")
