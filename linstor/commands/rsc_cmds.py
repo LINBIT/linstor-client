@@ -138,6 +138,13 @@ class ResourceCommands(Commands):
         return Commands._delete_and_output(cc, args, API_DEL_RSC, del_msgs)
 
     @staticmethod
+    def find_rsc_state(rsc_states, rsc_name, node_name):
+        for rscst in rsc_states:
+            if rscst.rsc_name == rsc_name and rscst.node_name == node_name:
+                return rscst
+        return None
+
+    @staticmethod
     @need_communication
     def list(cc, args):
         lstmsg = Commands._get_list_message(cc, API_LST_RSC, MsgLstRsc(), args)
@@ -147,7 +154,9 @@ class ResourceCommands(Commands):
             tbl.add_column("ResourceName")
             tbl.add_column("Node")
             tbl.add_column("State", color=Output.color(COLOR_DARKGREEN, args.no_color))
+
             for rsc in lstmsg.resources:
+                # rsc_state = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
                 tbl.add_row([
                     rsc.name,
                     rsc.node_name,
