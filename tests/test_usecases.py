@@ -1,6 +1,6 @@
 import unittest
 from .linstor_testcase import LinstorTestCase
-from linstor.sharedconsts import RC_RSC_DEL_WARN_NOT_CONNECTED, RC_STOR_POOL_CRT_WARN_NOT_CONNECTED
+from linstor.sharedconsts import WARN_NOT_CONNECTED, MASK_DEL, MASK_RSC, MASK_STOR_POOL, MASK_CRT
 
 
 class TestUseCases(LinstorTestCase):
@@ -38,7 +38,7 @@ class TestUseCases(LinstorTestCase):
         # create storagepool
         storpool_resps = self.execute_with_resp(['create-storage-pool', 'storage', 'node1', 'lvm', '/dev/lvmpool'])
         self.assertTrue(storpool_resps[0].is_warning())
-        self.assertEqual(RC_STOR_POOL_CRT_WARN_NOT_CONNECTED, storpool_resps[0].ret_code)
+        self.assertEqual(WARN_NOT_CONNECTED | MASK_STOR_POOL | MASK_CRT, storpool_resps[0].ret_code)
         self.assertTrue(storpool_resps[1].is_success())
 
         # check
@@ -90,7 +90,7 @@ class TestUseCases(LinstorTestCase):
         self.assertEqual(2, len(rsc_resps))
         warn_resp = rsc_resps[0]
         self.assertTrue(warn_resp.is_warning(), str(warn_resp))
-        self.assertEqual(RC_RSC_DEL_WARN_NOT_CONNECTED, warn_resp.ret_code)
+        self.assertEqual(WARN_NOT_CONNECTED | MASK_RSC | MASK_DEL, warn_resp.ret_code)
         self.assertTrue(rsc_resps[1].is_success())
 
 
