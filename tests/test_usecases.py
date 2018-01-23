@@ -84,6 +84,7 @@ class TestUseCases(LinstorTestCase):
         vlms = rsc1['vlms']
         self.assertEqual(len(vlms), 1)
         self.assertEqual(vlms[0]['vlm_nr'], 0)
+        self.assertIn('vlm_minor_nr', vlms[0])
 
         # delete resource
         rsc_resps = self.execute_with_resp(['delete-resource', 'rsc1', 'node1'])
