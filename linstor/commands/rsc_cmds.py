@@ -14,7 +14,8 @@ from linstor.sharedconsts import (
     API_DEL_RSC,
     API_LST_RSC,
     KEY_STOR_POOL_NAME,
-    FLAG_DELETE
+    FLAG_DELETE,
+    FLAG_DISKLESS
 )
 
 from linstor.consts import BOOL_TRUE, BOOL_FALSE, NODE_NAME, RES_NAME, STORPOOL_NAME
@@ -35,6 +36,7 @@ class ResourceCommands(Commands):
             '-s', '--storage-pool',
             type=namecheck(STORPOOL_NAME),
             help="Storage pool name to use.").completer = StoragePoolDefinitionCommands.completer
+        p_new_res.add_argument('-d', '--diskless', action="store_true", help='Should the resource be diskless')
         p_new_res.add_argument('name', type=namecheck(RES_NAME), help='Name of the new resource')
         p_new_res.add_argument('node_name',
                                type=namecheck(NODE_NAME),
@@ -116,11 +118,14 @@ class ResourceCommands(Commands):
         p.rsc.name = args.name
         p.rsc.node_name = args.node_name
 
-        if args.storage_pool:
+        if not args.diskless and args.storage_pool:
             prop = LinStorMapEntry()
             prop.key = KEY_STOR_POOL_NAME
             prop.value = args.storage_pool
             p.rsc.props.extend([prop])
+
+        if args.diskless:
+            p.rsc.rsc_flags.append(FLAG_DISKLESS)
 
         return Commands._create(cc, API_CRT_RSC, p, args)
 
