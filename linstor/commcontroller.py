@@ -109,6 +109,9 @@ class ApiCallResponse(object):
         Output.handle_ret(self._proto_msg, no_color=True, warn_as_error=False, outstream=sio)
         return sio.getvalue()
 
+    def __repr__(self):
+        return "ApiCallResponse({retcode}, {msg})".format(retcode=self.ret_code, msg=self.proto_msg.message_format)
+
 
 class CommController(object):
     # servers is a list of tuples containing host, port pairs
