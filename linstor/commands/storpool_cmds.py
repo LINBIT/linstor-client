@@ -96,8 +96,8 @@ class StoragePoolCommands(Commands):
     @need_communication
     def create(cc, args):
         p = MsgCrtStorPool()
-        p.stor_pool_name = args.name
-        p.node_name = args.node_name
+        p.stor_pool.stor_pool_name = args.name
+        p.stor_pool.node_name = args.node_name
 
         # construct correct driver name
         if args.driver == 'lvmthin':
@@ -105,10 +105,10 @@ class StoragePoolCommands(Commands):
         else:
             driver = args.driver.title()
 
-        p.driver = '{driver}Driver'.format(driver=driver)
+        p.stor_pool.driver = '{driver}Driver'.format(driver=driver)
 
         # set driver device pool property
-        prop = p.stor_pool_props.add()
+        prop = p.stor_pool.props.add()
         prop.key = StoragePoolCommands.device_key_map[driver]
         prop.value = args.driver_device
 

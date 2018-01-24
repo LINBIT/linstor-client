@@ -84,9 +84,9 @@ class ResourceDefinitionCommands(Commands):
     @need_communication
     def create(cc, args):
         p = MsgCrtRscDfn()
-        p.rsc_name = args.name
+        p.rsc_dfn.rsc_name = args.name
         if args.port:
-            p.rsc_port = args.port
+            p.rsc_dfn.rsc_port = args.port
         # if args.secret:
         #     p.secret = args.secret
 

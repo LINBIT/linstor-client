@@ -25,7 +25,7 @@ class StoragePoolDefinitionCommands(Commands):
             'name',
             type=namecheck(STORPOOL_NAME),
             help='Name of the new storpool definition')
-        p_new_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.argsparse_create)
+        p_new_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.argparse_create)
 
         # modify-storpool
 
@@ -76,15 +76,18 @@ class StoragePoolDefinitionCommands(Commands):
 
     @staticmethod
     @need_communication
-    def argsparse_create(cc, args):
-        return StoragePoolDefinitionCommands.create(cc, args.name)
+    def argparse_create(cc, args):
+        p = MsgCrtStorPoolDfn()
+        p.stor_pool_dfn.stor_pool_name = args.name
+
+        return Commands._create(cc, API_CRT_STOR_POOL_DFN, p, args)
 
     @staticmethod
     def create(cc, storage_pool_name):
         p = MsgCrtStorPoolDfn()
-        p.stor_pool_name = storage_pool_name
+        p.stor_pool_dfn.stor_pool_name = storage_pool_name
 
-        return Commands._create(cc, API_CRT_STOR_POOL_DFN, p, args)
+        return Commands._create(cc, API_CRT_STOR_POOL_DFN, p)
 
     @staticmethod
     @need_communication

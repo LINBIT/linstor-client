@@ -113,14 +113,14 @@ class ResourceCommands(Commands):
     @need_communication
     def create(cc, args):
         p = MsgCrtRsc()
-        p.rsc_name = args.name
-        p.node_name = args.node_name
+        p.rsc.name = args.name
+        p.rsc.node_name = args.node_name
 
         if args.storage_pool:
             prop = LinStorMapEntry()
             prop.key = KEY_STOR_POOL_NAME
             prop.value = args.storage_pool
-            p.rsc_props.extend([prop])
+            p.rsc.props.extend([prop])
 
         return Commands._create(cc, API_CRT_RSC, p, args)
 
