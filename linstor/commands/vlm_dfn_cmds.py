@@ -36,8 +36,8 @@ class VolumeDefinitionCommands(Commands):
         p_new_vol.add_argument('-d', '--deploy', type=int)
         p_new_vol.add_argument('-s', '--site', default='',
                                help="only consider nodes from this site")
-        p_new_vol.add_argument('name', type=namecheck(RES_NAME),
-                               help='Name of a new/existing resource').completer = ResourceCommands.completer
+        p_new_vol.add_argument('resource_name', type=namecheck(RES_NAME),
+                               help='Name of an existing resource').completer = ResourceCommands.completer
         p_new_vol.add_argument(
             'size',
             help='Size of the volume in resource. '
@@ -66,8 +66,8 @@ class VolumeDefinitionCommands(Commands):
                               help='Unless this option is used, linstor will issue a safety question '
                               'that must be answered with yes, otherwise the operation is canceled.')
         # TODO completer
-        p_rm_vol.add_argument('name',
-                              help='Name of the volume definition')
+        p_rm_vol.add_argument('resource_name',
+                              help='Resource name of the volume definition').completer = ResourceCommands.completer
         p_rm_vol.add_argument(
             'volume_nr',
             type=int,
@@ -96,7 +96,7 @@ class VolumeDefinitionCommands(Commands):
     @need_communication
     def create(cc, args):
         p = MsgCrtVlmDfn()
-        p.rsc_name = args.name
+        p.rsc_name = args.resource_name
 
         vlmdf = p.vlm_dfns.add()
         vlmdf.vlm_size = VolumeDefinitionCommands._get_volume_size(args.size)
