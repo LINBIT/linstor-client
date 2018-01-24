@@ -1,6 +1,6 @@
 import unittest
 from .linstor_testcase import LinstorTestCase
-from linstor.sharedconsts import WARN_NOT_CONNECTED, MASK_DEL, MASK_RSC, MASK_STOR_POOL, MASK_CRT
+from linstor.sharedconsts import *
 
 
 class TestUseCases(LinstorTestCase):
@@ -93,6 +93,71 @@ class TestUseCases(LinstorTestCase):
         self.assertTrue(warn_resp.is_warning(), str(warn_resp))
         self.assertEqual(WARN_NOT_CONNECTED | MASK_RSC | MASK_DEL, warn_resp.ret_code)
         self.assertTrue(rsc_resps[1].is_success())
+
+
+class TestCreateCommands(LinstorTestCase):
+
+    def test_create_storage_pool_dfn(self):
+        storpooldfn = self.execute_with_single_resp(['create-storage-pool-definition', 'mystorpool'])
+        self.assertTrue(storpooldfn.is_success())
+        self.assertEqual(MASK_STOR_POOL_DFN | CREATED, storpooldfn.ret_code)
+
+        storpooldfns = self.execute_with_maschine_output(['list-storage-pool-definition'])
+        self.assertEqual(1, len(storpooldfns))
+        self.assertIn('stor_pool_dfns', storpooldfns[0])
+        storpooldfns = storpooldfns[0]['stor_pool_dfns']
+        mystorpool = [spd for spd in storpooldfns if spd['stor_pool_name'] == 'mystorpool']
+        self.assertEqual(1, len(mystorpool), "storpool definition 'mystorpool' not found")
+
+        # illegal name is already catched from argparse
+        retcode = self.execute(['create-storage-pool-definition', '13394'])
+        self.assertEqual(2, retcode)
+
+    def test_create_node(self):
+        node = self.execute_with_single_resp(['create-node', 'node1', '195.0.0.1'])
+        self.assertTrue(node.is_success())
+        self.assertEqual(MASK_NODE | CREATED, node.ret_code)
+
+    def test_create_storage_pool(self):
+        node = self.execute_with_single_resp(['create-node', 'storpool.node1', '195.0.0.2'])
+        self.assertTrue(node.is_success())
+        self.assertEqual(MASK_NODE | CREATED, node.ret_code)
+
+        storpool = self.execute_with_resp(['create-storage-pool', 'storpool', 'storpool.node1', 'lvm', '/dev/drbdpool'])
+        no_active = storpool[0]
+        storpool = storpool[1]
+        self.assertTrue(no_active.is_warning())
+        self.assertTrue(storpool.is_success())
+        self.assertEqual(MASK_STOR_POOL | CREATED, storpool.ret_code)
+
+    def test_create_storage_pool_missing_node(self):
+        storpool = self.execute_with_single_resp(['create-storage-pool', 'storpool', 'nonode', 'lvm', '/dev/drbdpool'])
+        self.assertTrue(storpool.is_error())
+        self.assertEqual(MASK_STOR_POOL | MASK_CRT | FAIL_NOT_FOUND_NODE, storpool.ret_code)
+
+    def test_create_resource_dfn(self):
+        rsc_dfn = self.execute_with_single_resp(['create-resource-definition', 'rsc1'])
+        self.assertTrue(rsc_dfn.is_success())
+
+        rsc_dfns = self.execute_with_maschine_output(['list-resource-definition'])
+        self.assertEqual(1, len(rsc_dfns))
+        self.assertIn('rsc_dfns', rsc_dfns[0])
+        rsc_dfns = rsc_dfns[0]['rsc_dfns']
+        rsc1 = [spd for spd in rsc_dfns if spd['rsc_name'] == 'rsc1']
+        self.assertEqual(1, len(rsc1), "resource definition 'rsc1' not found")
+
+    def test_create_volume_dfn(self):
+        rsc_dfn = self.execute_with_single_resp(['create-resource-definition', 'rscvlm'])
+        self.assertTrue(rsc_dfn.is_success())
+
+        vlm_dfn = self.execute_with_single_resp(['create-volume-definition', 'rscvlm', '128MiB'])
+        self.assertTrue(vlm_dfn.is_success())
+
+    def test_create_volume_dfn_no_res(self):
+        vlm_dfn = self.execute_with_single_resp(['create-volume-definition', 'rsc-does-not-exist', '128MiB'])
+        self.assertFalse(vlm_dfn.is_success())
+        self.assertTrue(vlm_dfn.is_error())
+        self.assertEqual(FAIL_NOT_FOUND_RSC_DFN | MASK_CRT | MASK_VLM_DFN, vlm_dfn.ret_code)
 
 
 if __name__ == '__main__':
