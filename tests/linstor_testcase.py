@@ -149,14 +149,15 @@ class LinstorTestCase(unittest.TestCase):
             self.assertEqual(0, retcode)
         except SystemExit as e:
             pass
-        except Exception as e:
-            raise e
         finally:
             stdval = sys.stdout.getvalue()
             sys.stdout.close()
             sys.stdout = backupstd
-            jout = json.loads(stdval)
-            self.assertIsInstance(jout, list)
+            if stdval:
+                jout = json.loads(stdval)
+                self.assertIsInstance(jout, list)
+            else:
+                sys.stderr.write(str(cmd_args) + " Result empty")
         return jout
 
     def execute_with_resp(self, cmd_args):
