@@ -132,6 +132,12 @@ class Commands(object):
             tbl.add_row([p.key, p.value])
         tbl.show()
 
+    @classmethod
+    def _get_prop(cls, prop_map, key):
+        """Finds a property in the given property map"""
+        prop = next((x for x in prop_map if x.key == key), None)
+        return prop.value if prop else None
+
     @staticmethod
     def show_group_completer(lst, where):
         def completer(prefix, parsed_args, **kwargs):

@@ -22,6 +22,10 @@ class StoragePoolCommands(Commands):
         'Zfs': KEY_STOR_POOL_ZPOOL
     }
 
+    @classmethod
+    def get_driver_key(cls, driver_name):
+        return StoragePoolCommands.device_key_map[driver_name[:-len('Driver')]]
+
     @staticmethod
     def setup_commands(parser):
         # new-storpol
