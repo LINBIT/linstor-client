@@ -130,6 +130,14 @@ class TestCreateCommands(LinstorTestCase):
         self.assertTrue(storpool.is_success())
         self.assertEqual(MASK_STOR_POOL | CREATED, storpool.ret_code)
 
+        stor_pools = self.execute_with_maschine_output(['list-storage-pools'])
+        self.assertEqual(1, len(stor_pools))
+        stor_pools = stor_pools[0]
+        self.assertIn('stor_pools', stor_pools)
+        stor_pools = stor_pools['stor_pools']
+        stor_pool = [sp for sp in stor_pools if sp['stor_pool_name'] == 'storpool']
+        self.assertEqual(1, len(stor_pool), "created storpool 'storpool' not in list")
+
     def test_create_storage_pool_missing_node(self):
         storpool = self.execute_with_single_resp(['create-storage-pool', 'storpool', 'nonode', 'lvm', '/dev/drbdpool'])
         self.assertTrue(storpool.is_error())
