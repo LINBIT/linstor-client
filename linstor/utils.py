@@ -365,26 +365,26 @@ class Table():
         # build format string
         ctbl = {
             'utf8': {
-                'tl': '╭',   # top left
-                'tr': '╮',   # top right
-                'bl': '╰',   # bottom left
-                'br': '╯',   # bottom right
-                'mr': '╡',   # middle right
-                'ml': '╞',   # middle left
-                'mdc': '┄',  # middle dotted connector
-                'msc': '─',  # middle straight connector
-                'pipe': '┊'
+                'tl': u'╭',   # top left
+                'tr': u'╮',   # top right
+                'bl': u'╰',   # bottom left
+                'br': u'╯',   # bottom right
+                'mr': u'╡',   # middle right
+                'ml': u'╞',   # middle left
+                'mdc': u'┄',  # middle dotted connector
+                'msc': u'─',  # middle straight connector
+                'pipe': u'┊'
             },
             'ascii': {
-                'tl': '+',
-                'tr': '+',
-                'bl': '+',
-                'br': '+',
-                'mr': '|',
-                'ml': '|',
-                'mdc': '-',
-                'msc': '-',
-                'pipe': '|'
+                'tl': u'+',
+                'tr': u'+',
+                'bl': u'+',
+                'br': u'+',
+                'mr': u'|',
+                'ml': u'|',
+                'mdc': u'-',
+                'msc': u'-',
+                'pipe': u'|'
             }
         }
 
@@ -404,7 +404,7 @@ class Table():
                 if space_and_overhead >= 0:
                     fstr += ' ' * space_and_overhead + ctbl[enc]['pipe']
 
-            fstr += ' {' + str(idx) + ':' + col['just_txt'] + str(columnmax[idx]) + '} ' + ctbl[enc]['pipe']
+            fstr += u' {' + str(idx) + u':' + col['just_txt'] + str(columnmax[idx]) + u'} ' + ctbl[enc]['pipe']
 
         try:
             for idx, row in enumerate(self.table):
@@ -416,15 +416,13 @@ class Table():
                     else:
                         l, m, r = ctbl[enc]['ml'], ctbl[enc]['mdc'], ctbl[enc]['mr']
                     sep = l + m * (sum(columnmax) - co_sum + (3 * len(self.header)) - 1) + r
-                    if enc == 'utf8' and not isinstance(sep, str):  # should be save on non utf-8 too...
-                        sep = sep.decode('utf-8')
 
                     if self.r_just and len(sep) < maxwidth:
-                        sys.stdout.write(l + m * (maxwidth - 2) + r + "\n")
+                        sys.stdout.write(l + m * (maxwidth - 2) + r + u"\n")
                     else:
-                        sys.stdout.write(sep + "\n")
+                        sys.stdout.write(sep + u"\n")
                 else:
-                    sys.stdout.write(fstr.format(*row) + "\n")
+                    sys.stdout.write(fstr.format(*row) + u"\n")
         except IOError as e:
             if e.errno == errno.EPIPE:
                 return
