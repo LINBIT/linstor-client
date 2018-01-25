@@ -7,11 +7,7 @@ from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands, NodeCommands, StoragePoolDefinitionCommands, StoragePoolCommands
 from linstor.utils import namecheck, Table, Output
-from linstor.utils import (
-    COLOR_DARKGREEN,
-    COLOR_RED,
-    COLOR_GREEN
-)
+from linstor.consts import Color
 from linstor.sharedconsts import (
     API_CRT_RSC,
     API_DEL_RSC,
@@ -170,8 +166,8 @@ class ResourceCommands(Commands):
             tbl.add_column("ResourceName")
             tbl.add_column("Node")
             tbl.add_column("Port")
-            tbl.add_column("Device", color=Output.color(COLOR_DARKGREEN, args.no_color))
-            tbl.add_column("State", color=Output.color(COLOR_DARKGREEN, args.no_color), just_txt='>')
+            tbl.add_column("Device", color=Output.color(Color.DARKGREEN, args.no_color))
+            tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
             for rsc in lstmsg.resources:
                 rsc_dfn = rsc_dfn_map[rsc.name]
@@ -188,8 +184,8 @@ class ResourceCommands(Commands):
                     rsc.name,
                     rsc.node_name,
                     rsc_dfn.rsc_dfn_port,
-                    tbl.color_cell("DISKLESS", COLOR_GREEN) if diskless else block_device,
-                    tbl.color_cell("DELETING", COLOR_RED) if marked_delete else "ok"
+                    tbl.color_cell("DISKLESS", Color.GREEN) if diskless else block_device,
+                    tbl.color_cell("DELETING", Color.RED) if marked_delete else "ok"
                 ])
             tbl.show()
 

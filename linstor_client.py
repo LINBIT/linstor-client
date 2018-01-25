@@ -46,7 +46,8 @@ from linstor.consts import (
     VERSION,
     NODE_NAME,
     RES_NAME,
-    SNAPS_NAME
+    SNAPS_NAME,
+    Color
 )
 
 from linstor.utils import (
@@ -55,12 +56,6 @@ from linstor.utils import (
     namecheck,
     rangecheck,
     ip_completer,
-    COLOR_BROWN,
-    COLOR_DARKPINK,
-    COLOR_GREEN,
-    COLOR_NONE,
-    COLOR_RED,
-    COLOR_TEAL
 )
 
 from linstor.sharedconsts import (
@@ -1028,7 +1023,7 @@ class LinStorCLI(object):
         Selects a color for a level returned by GenericView subclasses
         """
         # TODO(rck): just a hack
-        level_color = COLOR_RED
+        level_color = Color.RED
         return Output.color(level_color)
 
     def check_mutex_opts(self, args, names):
@@ -1070,10 +1065,10 @@ class LinStorCLI(object):
         net_options = filter_prohibited(net_options, ('shared-secret', 'cram-hmac-alg'))
 
         colors = {
-            'net-options': Output.color(COLOR_TEAL, args),
-            'disk-options': Output.color(COLOR_BROWN, args),
-            'peer-device-options': Output.color(COLOR_GREEN, args),
-            'resource-options': Output.color(COLOR_DARKPINK, args),
+            'net-options': Output.color(Color.TEAL, args),
+            'disk-options': Output.color(Color.BROWN, args),
+            'peer-device-options': Output.color(Color.GREEN, args),
+            'resource-options': Output.color(Color.DARKPINK, args),
         }
 
         # TODO(rck):
@@ -1118,7 +1113,7 @@ class LinStorCLI(object):
 
         sys.stdout.write("Legend:\n")
         for k, v in colors.items():
-            sys.stdout.write(v + k + COLOR_NONE + "\n")
+            sys.stdout.write(v + k + Color.NONE + "\n")
         sys.stdout.write("\nNote: Do not directly edit these auto-generated"
                          " files as they will be overwritten.\n")
         sys.stdout.write("Use the according linstor sub-commands to set/unset options.\n")

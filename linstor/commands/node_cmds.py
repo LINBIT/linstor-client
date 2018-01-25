@@ -4,8 +4,8 @@ from proto.MsgLstNode_pb2 import MsgLstNode
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import Output, Table, rangecheck, namecheck, ip_completer, COLOR_DARKGREEN, COLOR_RED
-from linstor.consts import NODE_NAME
+from linstor.utils import Output, Table, rangecheck, namecheck, ip_completer
+from linstor.consts import NODE_NAME, Color
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
@@ -198,14 +198,14 @@ class NodeCommands(Commands):
             tbl.add_column("Node")
             tbl.add_column("NodeType")
             tbl.add_column("IPs")
-            tbl.add_column("State", color=Output.color(COLOR_DARKGREEN, args.no_color))
+            tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
             for n in lstmsg.nodes:
                 ips = [if_.address for if_ in n.net_interfaces]
                 tbl.add_row([
                     n.name,
                     n.type,
                     ",".join(ips),
-                    tbl.color_cell("ok", COLOR_DARKGREEN) if n.connected else tbl.color_cell("OFFLINE", COLOR_RED)
+                    tbl.color_cell("ok", Color.DARKGREEN) if n.connected else tbl.color_cell("OFFLINE", Color.RED)
                 ])
             tbl.show()
 

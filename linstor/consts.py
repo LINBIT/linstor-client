@@ -62,3 +62,24 @@ BOOL_TRUE = "true"
 BOOL_FALSE = "false"
 
 KEY_LS_CONTROLLERS = 'LS_CONTROLLERS'
+
+
+class Color(object):
+    # Do not reorder
+    (BLACK,
+     DARKRE,
+     DARKGREEN,
+     BROWN,
+     DARKBLUE,
+     DARKPINK,
+     TEAL,
+     GRAY,
+     DARKGRAY,
+     RED,
+     GREEN,
+     YELLOW,
+     BLUE,
+     PINK,
+     TURQUOIS,
+     WHITE,
+     NONE) = [chr(0x1b) + "[%d;%dm" % (i, j) for i in range(2) for j in range(30, 38)] + [chr(0x1b) + "[0m"]

@@ -43,34 +43,13 @@ from linstor.consts import (
     SNAPS_NAME_MINLEN,
     SNAPS_NAME_VALID_CHARS,
     SNAPS_NAME_VALID_INNER_CHARS,
+    Color
 )
 
 
 # TODO(rck): still a hack
 class SyntaxException(Exception):
     pass
-
-
-# TODO(rck): move them to consts
-
-# Do not reorder
-(COLOR_BLACK,
- COLOR_DARKRE,
- COLOR_DARKGREEN,
- COLOR_BROWN,
- COLOR_DARKBLUE,
- COLOR_DARKPINK,
- COLOR_TEAL,
- COLOR_GRAY,
- COLOR_DARKGRAY,
- COLOR_RED,
- COLOR_GREEN,
- COLOR_YELLOW,
- COLOR_BLUE,
- COLOR_PINK,
- COLOR_TURQUOIS,
- COLOR_WHITE,
- COLOR_NONE) = [chr(0x1b) + "[%d;%dm" % (i, j) for i in range(2) for j in range(30, 38)] + [chr(0x1b) + "[0m"]
 
 
 def get_terminal_size():
@@ -117,15 +96,15 @@ class Output(object):
         details = answer.details_format
         if rc & MASK_ERROR == MASK_ERROR:
             ret = 1
-            category = Output.color_str('ERROR:\n', COLOR_RED, no_color)
+            category = Output.color_str('ERROR:\n', Color.RED, no_color)
         elif rc & MASK_WARN == MASK_WARN:
             if warn_as_error:  # otherwise keep at 0
                 ret = 1
-            category = Output.color_str('WARNING:\n', COLOR_YELLOW, no_color)
+            category = Output.color_str('WARNING:\n', Color.YELLOW, no_color)
         elif rc & MASK_INFO == MASK_INFO:
             category = 'INFO: '
         else:  # do not use MASK_SUCCESS
-            category = Output.color_str('SUCCESS:\n', COLOR_GREEN, no_color)
+            category = Output.color_str('SUCCESS:\n', Color.GREEN, no_color)
 
         outstream.write(category)
         have_message = message is not None and len(message) > 0
@@ -166,7 +145,7 @@ class Output(object):
 
     @staticmethod
     def color_str(string, color, no_color):
-        return '%s%s%s' % (Output.color(color, no_color), string, Output.color(COLOR_NONE, no_color))
+        return '%s%s%s' % (Output.color(color, no_color), string, Output.color(Color.NONE, no_color))
 
     @staticmethod
     def color(col, no_color):
@@ -177,7 +156,7 @@ class Output(object):
 
     @staticmethod
     def err(msg, no_color):
-        Output.bail_out(msg, COLOR_RED, 1, no_color)
+        Output.bail_out(msg, Color.RED, 1, no_color)
 
     @staticmethod
     def bail_out(msg, color, ret, no_color):
@@ -286,7 +265,7 @@ class Table():
             maxwidth = 110 if term_width > 110 else term_width
 
         # color overhead
-        co = len(COLOR_RED) + len(COLOR_NONE)
+        co = len(Color.RED) + len(Color.NONE)
         co_sum = 0
 
         hdrnames = [h['name'] for h in self.header]
@@ -349,7 +328,7 @@ class Table():
                         color = self.coloroverride[ridx][idx]
                     else:
                         color = col["color"]
-                    row[idx] = color + row[idx] + COLOR_NONE
+                    row[idx] = color + row[idx] + Color.NONE
                 columnmax[idx] = max(len(row[idx]), columnmax[idx])
             ridx += 1
 

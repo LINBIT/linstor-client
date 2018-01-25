@@ -5,11 +5,7 @@ from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN, API_DEL_VLM_D
 from linstor.commcontroller import need_communication
 from linstor.commands import Commands, ResourceCommands
 from linstor.utils import SizeCalc, approximate_size_string, namecheck, Table, Output
-from linstor.consts import RES_NAME
-from linstor.utils import (
-    COLOR_DARKGREEN,
-    COLOR_RED
-)
+from linstor.consts import RES_NAME, Color
 from linstor.sharedconsts import (
     FLAG_DELETE
 )
@@ -125,7 +121,7 @@ class VolumeDefinitionCommands(Commands):
             tbl.add_column("VolumeNr")
             tbl.add_column("VolumeMinor")
             tbl.add_column("Size")
-            tbl.add_column("State", color=Output.color(COLOR_DARKGREEN, args.no_color))
+            tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
             for rsc_dfn in lstmsg.rsc_dfns:
                 for vlmdfn in rsc_dfn.vlm_dfns:
                     tbl.add_row([
@@ -133,8 +129,8 @@ class VolumeDefinitionCommands(Commands):
                         vlmdfn.vlm_nr,
                         vlmdfn.vlm_minor,
                         approximate_size_string(vlmdfn.vlm_size),
-                        tbl.color_cell("DELETING", COLOR_RED)
-                            if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", COLOR_DARKGREEN)
+                        tbl.color_cell("DELETING", Color.RED)
+                            if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
                     ])
             tbl.show()
 
