@@ -2,7 +2,7 @@
 """
     LINSTOR - management of distributed storage/DRBD9 resources
     Copyright (C) 2013 - 2017  LINBIT HA-Solutions GmbH
-    Author: Robert Altnoeder, Roland Kammerer
+    Author: Robert Altnoeder, Roland Kammerer, Rene Peinthor
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
