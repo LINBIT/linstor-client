@@ -157,7 +157,7 @@ class VolumeDefinitionCommands(Commands):
             size = int(m.group(1))
         except AttributeError:
             sys.stderr.write('Size is not a valid number\n')
-            return None
+            sys.exit(12)
 
         unit_str = m.group(2)
         if unit_str == "":
@@ -167,7 +167,7 @@ class VolumeDefinitionCommands(Commands):
         except KeyError:
             sys.stderr.write('"%s" is not a valid unit!\n' % (unit_str))
             sys.stderr.write('Valid units: %s\n' % (','.join(SizeCalc.UNITS_MAP.keys())))
-            return None
+            sys.exit(12)
 
         unit = SizeCalc.UNITS_MAP[unit_str.lower()]
 
