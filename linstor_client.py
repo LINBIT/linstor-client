@@ -176,23 +176,6 @@ class LinStorCLI(object):
         # add all volume definition commands
         VolumeDefinitionCommands.setup_commands(subp)
 
-        # new-volume
-        def size_completer(prefix, **kwargs):
-            # TODO(rck): why not use UNITS_MAP?
-            choices = ('kB', 'MB', 'GB', 'TB', 'PB', 'kiB', 'MiB', 'GiB',
-                       'TiB', 'PiB')
-            m = re.match('(\d+)(\D*)', prefix)
-
-            digits = m.group(1)
-            unit = m.group(2)
-
-            if unit and unit != "":
-                p_units = [x for x in choices if x.startswith(unit)]
-            else:
-                p_units = choices
-
-            return [digits + u for u in p_units]
-
         def vol_completer(prefix, parsed_args, **kwargs):
             server_rc, res_list = self.__list_resources(True)
             possible = set()
@@ -225,7 +208,7 @@ class LinStorCLI(object):
             'converted to Kibibyte, so that the actual size value used by linstor '
             'is the smallest natural number of Kibibytes that is large enough to '
             'accommodate a volume of the requested size in the specified size unit.'
-        ).completer = size_completer
+        ).completer = VolumeDefinitionCommands.size_completer
         p_resize_vol.set_defaults(func=self.cmd_enoimp)
         p_resize_vol.set_defaults(command=p_resize_vol_command)
 
