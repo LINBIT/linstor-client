@@ -20,7 +20,6 @@
 
 import sys
 import os
-import re
 # import locale
 import linstor.argparse.argparse as argparse
 import linstor.argcomplete as argcomplete
@@ -79,8 +78,6 @@ class LinStorCLI(object):
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds()
 
-        self.cc = CommController()
-
     def setup_parser(self):
         parser = argparse.ArgumentParser(prog='linstor_client')
         parser.add_argument('--version', '-v', action='version',
@@ -91,7 +88,7 @@ class LinStorCLI(object):
                             help='Do not use utf-8 characters in output (i.e., tables).')
         parser.add_argument('--warn-as-error', action="store_true",
                             help='Treat WARN return code as error (i.e., return code > 0).')
-        parser.add_argument('--controllers', default='localhost:%s' % str(DFLT_CTRL_PORT_PLAIN),
+        parser.add_argument('--controllers', default='localhost:%d' % DFLT_CTRL_PORT_PLAIN,
                             help='Comma separated list of controllers (e.g.: "host1:port,host2:port"). '
                             'If the environment variable %s is set, '
                             'the ones set via this argument get appended.' % (KEY_LS_CONTROLLERS))
@@ -362,26 +359,6 @@ class LinStorCLI(object):
                                   'tables on the control volume.')
         p_upool.set_defaults(func=self.cmd_enoimp)
 
-        # reconfigure
-        p_reconfigure = subp.add_parser('reconfigure',
-                                        description='Re-reads server configuration and'
-                                        ' reloads storage plugin')
-        p_reconfigure.set_defaults(func=self.cmd_enoimp)
-
-        # save
-        p_save = subp.add_parser('save',
-                                 description='Orders the linstor server to save the current '
-                                 "configuration of linstor's resources to the data tables "
-                                 'on the drbdmanaege control volume')
-        p_save.set_defaults(func=self.cmd_enoimp)
-
-        # load
-        p_save = subp.add_parser('load',
-                                 description='Orders the linstor server to reload the current '
-                                 "configuration of linstor's resources from the data tables on "
-                                 'the linstor control volume')
-        p_save.set_defaults(func=self.cmd_enoimp)
-
         # unassign
         p_unassign = subp.add_parser('unassign-resource',
                                      aliases=['unassign'],
@@ -639,15 +616,6 @@ class LinStorCLI(object):
                                  'server should answer with a "Pong"')
         p_ping.set_defaults(func=self.cmd_ping)
 
-        # wait-for-startup
-        p_ping = subp.add_parser('wait-for-startup', description='Wait until server is started up')
-        p_ping.set_defaults(func=self.cmd_enoimp)
-
-        # startup
-        p_startup = subp.add_parser('startup',
-                                    description='Start the server via D-Bus')
-        p_startup.set_defaults(func=self.cmd_enoimp)
-
         class IPAddressCheck(object):
             def __init__(self):
                 pass
@@ -856,7 +824,7 @@ class LinStorCLI(object):
         for cmd in self._all_commands:
             sys.stdout.write("- " + cmd[0])
             if len(cmd) > 1:
-                sys.stdout.write("(%s)" % (", ".join(cmd[1:])))
+                sys.stdout.write(" (%s)" % (", ".join(cmd[1:])))
             sys.stdout.write("\n")
 
     def cmd_interactive(self, args):
@@ -936,14 +904,15 @@ class LinStorCLI(object):
     def cmd_enoimp(self, args):
         Output.err('This command is deprecated or not implemented', args.no_color)
 
+    @staticmethod
     @need_communication
-    def cmd_ping(self, args):
+    def cmd_ping(cc, args):
         from linstor.sharedconsts import (API_PING, API_PONG)
         h = MsgHeader()
         h.api_call = API_PING
         h.msg_id = 1
 
-        pbmsgs = self.cc.sendrec(h)
+        pbmsgs = cc.sendrec(h)
 
         h = MsgHeader()
         h.ParseFromString(pbmsgs[0])
@@ -953,12 +922,6 @@ class LinStorCLI(object):
             sys.exit(1)
 
         # no return is fine, implicitly returns None, which need_communication handles
-
-    def color(self, col, args=None):
-        if args and args[0].no_color:
-            return ''
-        else:
-            return col
 
     # Code that we most likely want to use anyways/hacks to keep the current state happy
 
