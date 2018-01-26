@@ -20,6 +20,11 @@
 
 import sys
 import os
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
+
 # import locale
 import linstor.argparse.argparse as argparse
 import linstor.argcomplete as argcomplete
@@ -34,7 +39,7 @@ from linstor.commands import (
     DrbdOptions
 )
 
-from linstor.commcontroller import need_communication, CommController
+from linstor.commcontroller import need_communication
 
 from proto.MsgHeader_pb2 import MsgHeader
 
@@ -95,6 +100,8 @@ class LinStorCLI(object):
         parser.add_argument('-m', '--machine-readable', action="store_true")
         parser.add_argument('-t', '--timeout', default=20, type=int,
                             help="Connection timeout value.")
+        parser.add_argument('--disable-config', action="store_true",
+                            help="Disable config loading and only use commandline arguments.")
 
         subp = parser.add_subparsers(title='subcommands',
                                      description='valid subcommands',
@@ -756,7 +763,40 @@ class LinStorCLI(object):
 
         return parser
 
+    @staticmethod
+    def read_config(config_file):
+        cp = configparser.SafeConfigParser()
+        cp.read(config_file)
+        config = {}
+        for section in cp.sections():
+            config[section] = cp.items(section)
+        return config
+
+    @staticmethod
+    def merge_config_arguments(pargs):
+        home_dir = os.path.expanduser("~")
+        config_file_name = "linstor-client.conf"
+        user_conf = os.path.join(home_dir, ".config", "linstor", config_file_name)
+        sys_conf = os.path.join('/etc', 'linstor', config_file_name)
+
+        entries = None
+        if os.path.exists(user_conf):
+            entries = LinStorCLI.read_config(user_conf)
+        elif os.path.exists(sys_conf):
+            entries = LinStorCLI.read_config(sys_conf)
+
+        if entries:
+            global_entries = entries.get('global', [])
+            for key, val in global_entries:
+                pargs.insert(0, "--" + key)
+                if val:
+                    pargs.insert(1, val)
+        return pargs
+
     def parse(self, pargs):
+        # read global options from config file
+        if '--disable-config' not in pargs:
+            pargs = LinStorCLI.merge_config_arguments(pargs)
         return self._parser.parse_args(pargs)
 
     def parse_and_execute(self, pargs):
