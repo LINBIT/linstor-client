@@ -625,44 +625,9 @@ class LinStorCLI(object):
         p_query_minor_nr.add_argument('minor', help='Device file minor number')
         p_query_minor_nr.set_defaults(func=self.cmd_enoimp)
 
-        def ll_debug_cmd_completer(prefix, **kwargs):
-            self.dbus_init()
-            # needed to wait for completion
-            self._server.Introspect()
-            fns = []
-            expected = DBUS_DRBDMANAGED + "."
-            expected_len = len(expected)
-            for fn in self._server._introspect_method_map.iterkeys():
-                if not fn.startswith(expected):
-                    continue
-                fn_short = fn[expected_len:]
-                if fn_short.startswith(prefix):
-                    fns.append(fn_short)
-            return fns
-
-        p_lowlevel_debug = subp.add_parser("lowlevel-debug", description="JSON-to-DBus debug interface")
-        p_lowlevel_debug.add_argument("cmd",
-                                      help="DBusServer function to call").completer = ll_debug_cmd_completer
-
-        def ll_debug_json_completer(prefix, parsed_args=None, **kwargs):
-            self.dbus_init()
-            fn = getattr(self._server, parsed_args.cmd)
-            if not fn:
-                return []
-
-            # TODO: introspect fn, to see whether array/dict/etc. is wanted..
-            if prefix == '':
-                return ['[]', '{}']
-            return []
-        p_lowlevel_debug.add_argument("json",
-                                      help="JSON to deserialize",
-                                      nargs="*").completer = ll_debug_json_completer
-        p_lowlevel_debug.set_defaults(func=self.cmd_enoimp)
-
         # server-version
         p_server_version = subp.add_parser('server-version',
-                                           description='Queries version information from the '
-                                           'linstor server')
+                                           description='Queries version information from the linstor server')
         p_server_version.set_defaults(func=self.cmd_enoimp)
 
         # message-log
