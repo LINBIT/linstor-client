@@ -100,7 +100,7 @@ class TestCreateCommands(LinstorTestCase):
     def test_create_storage_pool_dfn(self):
         storpooldfn = self.execute_with_single_resp(['create-storage-pool-definition', 'mystorpool'])
         self.assertTrue(storpooldfn.is_success())
-        self.assertEqual(MASK_STOR_POOL_DFN | CREATED, storpooldfn.ret_code)
+        self.assertEqual(MASK_STOR_POOL_DFN | MASK_CRT | CREATED, storpooldfn.ret_code)
 
         storpooldfns = self.execute_with_machine_output(['list-storage-pool-definition'])
         self.assertEqual(1, len(storpooldfns))
@@ -116,19 +116,19 @@ class TestCreateCommands(LinstorTestCase):
     def test_create_node(self):
         node = self.execute_with_single_resp(['create-node', 'node1', '195.0.0.1'])
         self.assertTrue(node.is_success())
-        self.assertEqual(MASK_NODE | CREATED, node.ret_code)
+        self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node.ret_code)
 
     def test_create_storage_pool(self):
         node = self.execute_with_single_resp(['create-node', 'storpool.node1', '195.0.0.2'])
         self.assertTrue(node.is_success())
-        self.assertEqual(MASK_NODE | CREATED, node.ret_code)
+        self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node.ret_code)
 
         storpool = self.execute_with_resp(['create-storage-pool', 'storpool', 'storpool.node1', 'lvm', '/dev/drbdpool'])
         no_active = storpool[0]
         storpool = storpool[1]
         self.assertTrue(no_active.is_warning())
         self.assertTrue(storpool.is_success())
-        self.assertEqual(MASK_STOR_POOL | CREATED, storpool.ret_code)
+        self.assertEqual(MASK_STOR_POOL | MASK_CRT | CREATED, storpool.ret_code)
 
         stor_pools = self.execute_with_machine_output(['list-storage-pools'])
         self.assertEqual(1, len(stor_pools))
