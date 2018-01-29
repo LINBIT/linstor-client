@@ -42,7 +42,8 @@ class LinstorTestCase(unittest.TestCase):
         linstor_file_name = 'linstor-0.1'
         linstor_distri_tar = linstor_file_name + '.tar'
         if not os.path.exists(linstor_distri_tar):
-            linstor_dir = os.path.abspath('../linstor')
+            linstor_dir = os.path.abspath('../linstor') \
+                if os.path.exists('../linstor') else os.path.abspath('../linstor-server')
             if not os.path.exists(linstor_dir):
                 raise RuntimeError("Unable to find any linstor distribution: " + " or ".join(
                     [linstor_distri_tar, linstor_dir]))
