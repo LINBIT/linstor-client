@@ -69,9 +69,8 @@ def get_terminal_size():
     term_dim = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
     if not term_dim:
         try:
-            term_fd = os.open(os.ctermid(), os.O_RDONLY)
-            term_dim = ioctl_GWINSZ(term_fd)
-            os.close(term_fd)
+            with os.open(os.ctermid(), os.O_RDONLY) as term_fd:
+                term_dim = ioctl_GWINSZ(term_fd)
         except:
             pass
     try:
