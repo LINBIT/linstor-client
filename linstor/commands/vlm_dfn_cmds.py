@@ -83,7 +83,6 @@ class VolumeDefinitionCommands(Commands):
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvols.add_argument('-g', '--groupby', nargs='+',
                              choices=volgroupby).completer = vol_group_completer
-        p_lvols.add_argument('--separators', action="store_true")
         p_lvols.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
                              help='Filter by list of resources').completer = ResourceCommands.completer
         p_lvols.set_defaults(func=VolumeDefinitionCommands.list)

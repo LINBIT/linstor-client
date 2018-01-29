@@ -60,7 +60,6 @@ class StoragePoolDefinitionCommands(Commands):
             '-R', '--storpool', nargs='+', type=namecheck(STORPOOL_NAME),
             help='Filter by list of storage pool'
         ).completer = StoragePoolDefinitionCommands.completer
-        p_lstorpooldfs.add_argument('--separators', action="store_true")
         p_lstorpooldfs.set_defaults(func=StoragePoolDefinitionCommands.list)
 
         # show properties

@@ -120,7 +120,6 @@ class NodeCommands(Commands):
                               choices=nodesgroupby).completer = nodes_group_completer
         p_lnodes.add_argument('-N', '--nodes', nargs='+', type=namecheck(NODE_NAME),
                               help='Filter by list of nodes').completer = NodeCommands.completer
-        p_lnodes.add_argument('--separators', action="store_true")
         p_lnodes.set_defaults(func=NodeCommands.list)
 
         # show properties

@@ -493,7 +493,6 @@ class LinStorCLI(object):
         p_lsnaps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lsnaps.add_argument('-g', '--groupby', nargs='+',
                               choices=snapgroupby).completer = snap_group_completer
-        p_lsnaps.add_argument('--separators', action="store_true")
         p_lsnaps.add_argument('-R', '--resources', nargs='+', type=check_res_name,
                               help='Filter by list of resources').completer = ResourceCommands.completer
         p_lsnaps.set_defaults(func=self.cmd_enoimp)
@@ -508,7 +507,6 @@ class LinStorCLI(object):
         p_lsnapas.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lsnapas.add_argument('-g', '--groupby', nargs='+',
                                choices=snapasgroupby).completer = snapas_group_completer
-        p_lsnapas.add_argument('--separators', action="store_true")
         p_lsnapas.add_argument('-N', '--nodes', nargs='+', type=check_node_name,
                                help='Filter by list of nodes').completer = NodeCommands.completer
         p_lsnapas.add_argument('-R', '--resources', nargs='+', type=check_res_name,
@@ -534,7 +532,6 @@ class LinStorCLI(object):
                                    choices=assignverbose).completer = ass_verbose_completer
         p_assignments.add_argument('-g', '--groupby', nargs='+',
                                    choices=assigngroupby).completer = ass_group_completer
-        p_assignments.add_argument('--separators', action="store_true")
         p_assignments.add_argument('-N', '--nodes', nargs='+', type=check_node_name,
                                    help='Filter by list of nodes').completer = NodeCommands.completer
         p_assignments.add_argument('-R', '--resources', nargs='+', type=check_res_name,

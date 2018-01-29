@@ -62,7 +62,6 @@ class ResourceDefinitionCommands(Commands):
                                choices=resgroupby).completer = res_group_completer
         p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
                                help='Filter by list of resources').completer = ResourceDefinitionCommands.completer
-        p_lrscdfs.add_argument('--separators', action="store_true")
         p_lrscdfs.set_defaults(func=ResourceDefinitionCommands.list)
 
         # show properties

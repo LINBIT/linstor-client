@@ -83,7 +83,6 @@ class StoragePoolCommands(Commands):
                                  choices=storpoolgroupby).completer = storpool_group_completer
         p_lstorpool.add_argument('-R', '--storpool', nargs='+', type=namecheck(STORPOOL_NAME),
                                  help='Filter by list of storage pool').completer = StoragePoolCommands.completer
-        p_lstorpool.add_argument('--separators', action="store_true")
         p_lstorpool.set_defaults(func=StoragePoolCommands.list)
 
         # show properties

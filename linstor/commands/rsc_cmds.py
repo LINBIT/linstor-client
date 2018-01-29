@@ -99,7 +99,6 @@ class ResourceCommands(Commands):
             nargs='+',
             type=namecheck(RES_NAME),
             help='Filter by list of resources').completer = ResourceCommands.completer
-        p_lreses.add_argument('--separators', action="store_true")
         p_lreses.set_defaults(func=ResourceCommands.list)
 
         # show properties
