@@ -4,7 +4,7 @@ from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from linstor.utils import Output, Table
 from linstor.protobuf_to_dict import protobuf_to_dict
-from linstor.commcontroller import ApiCallResponse
+from linstor.commcontroller import ApiCallResponse, ApiCallResponseError
 
 
 class Commands(object):
@@ -91,7 +91,7 @@ class Commands(object):
         """
         lstmsg = Commands._request_list(cc, api_call, request_msg)
         if isinstance(lstmsg, MsgApiCallResponse):
-            raise lstmsg
+            raise ApiCallResponseError(lstmsg)
 
         if args and Commands._print_machine_readable(args, [lstmsg]):
             return None

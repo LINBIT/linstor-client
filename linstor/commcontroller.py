@@ -35,8 +35,11 @@ def need_communication(f):
         with CommController(servers, cliargs.timeout) as cc:
             try:
                 p = f(cc, *args, **kwargs)
-            except MsgApiCallResponse as callresponse:
-                return Output.handle_ret(callresponse, no_color=args[0].no_color, warn_as_error=args[0].warn_as_error)
+            except ApiCallResponseError as callresponse:
+                return callresponse.apicallresponse.output(
+                    no_color=args[0].no_color,
+                    warn_as_error=args[0].warn_as_error
+                )
 
         if p:  # could be None if no payload or if cmd_xyz does implicit return
             if isinstance(p, list):
@@ -111,6 +114,17 @@ class ApiCallResponse(object):
 
     def __repr__(self):
         return "ApiCallResponse({retcode}, {msg})".format(retcode=self.ret_code, msg=self.proto_msg.message_format)
+
+
+class ApiCallResponseError(BaseException):
+    """Exception thrown if an ApiCall error was received."""
+
+    def __init__(self, proto_msg):
+        self._apicallresp = ApiCallResponse(proto_msg)
+
+    @property
+    def apicallresponse(self):
+        return self._apicallresp
 
 
 class CommController(object):
