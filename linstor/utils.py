@@ -163,7 +163,7 @@ class Output(object):
         sys.exit(ret)
 
 
-class Table():
+class Table(object):
     def __init__(self, colors=True, utf8=False, pastable=False):
         self.r_just = False
         self.got_column = False
@@ -199,7 +199,7 @@ class Table():
             'just_col': just_col,
             'just_txt': just_txt})
 
-    def add_row(self, row, color=False, just_txt='<'):
+    def add_row(self, row):
         self.got_row = True
         if not self.got_column:
             raise SyntaxException("Not allowed to define rows before columns")
