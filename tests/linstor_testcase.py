@@ -111,6 +111,9 @@ class LinstorTestCase(unittest.TestCase):
         cls.controller.wait()
         sys.stdout.write(cls.controller.stdout.read().decode())
         sys.stdout.write(cls.controller.stderr.read().decode())
+        cls.controller.stderr.close()
+        cls.controller.stdout.close()
+        cls.controller.stdin.close()
         sys.stdout.write("Controller terminated.\n")
         sys.stdout.flush()
 
