@@ -9,7 +9,7 @@ class TestNodeCommands(LinstorTestCase):
         retcode = self.execute(['create-node', 'node1', '192.168.100.1'])
         self.assertEqual(0, retcode)
 
-        node_list = self.execute_with_maschine_output(['list-nodes'])
+        node_list = self.execute_with_machine_output(['list-nodes'])
         self.assertIsNotNone(node_list)
         self.assertIs(len(node_list), 1)
         node_list = node_list[0]

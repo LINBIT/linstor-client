@@ -26,7 +26,7 @@ class TestUseCases(LinstorTestCase):
         cnode_resp = self.execute_with_single_resp(['create-node', 'node1', '192.168.100.1'])
         self.assertTrue(cnode_resp.is_success())
 
-        node_list = self.execute_with_maschine_output(['list-nodes'])
+        node_list = self.execute_with_machine_output(['list-nodes'])
         self.assertIsNotNone(node_list)
         self.assertIs(len(node_list), 1)
         node_list = node_list[0]
@@ -42,7 +42,7 @@ class TestUseCases(LinstorTestCase):
         self.assertTrue(storpool_resps[1].is_success())
 
         # check
-        storagepool_list = self.execute_with_maschine_output(['list-storage-pools'])
+        storagepool_list = self.execute_with_machine_output(['list-storage-pools'])
         self.assertIsNotNone(storagepool_list)
         self.assertIs(len(storagepool_list), 1)
         storagepool_list = storagepool_list[0]
@@ -71,7 +71,7 @@ class TestUseCases(LinstorTestCase):
         self.assertTrue(rsc_resps[2].is_success())  # volume created
 
         # check resource
-        resource_list = self.execute_with_maschine_output(['list-resources'])
+        resource_list = self.execute_with_machine_output(['list-resources'])
         self.assertIsNotNone(resource_list)
         self.assertIs(len(resource_list), 1)
         resource_list = resource_list[0]
@@ -102,7 +102,7 @@ class TestCreateCommands(LinstorTestCase):
         self.assertTrue(storpooldfn.is_success())
         self.assertEqual(MASK_STOR_POOL_DFN | CREATED, storpooldfn.ret_code)
 
-        storpooldfns = self.execute_with_maschine_output(['list-storage-pool-definition'])
+        storpooldfns = self.execute_with_machine_output(['list-storage-pool-definition'])
         self.assertEqual(1, len(storpooldfns))
         self.assertIn('stor_pool_dfns', storpooldfns[0])
         storpooldfns = storpooldfns[0]['stor_pool_dfns']
@@ -130,7 +130,7 @@ class TestCreateCommands(LinstorTestCase):
         self.assertTrue(storpool.is_success())
         self.assertEqual(MASK_STOR_POOL | CREATED, storpool.ret_code)
 
-        stor_pools = self.execute_with_maschine_output(['list-storage-pools'])
+        stor_pools = self.execute_with_machine_output(['list-storage-pools'])
         self.assertEqual(1, len(stor_pools))
         stor_pools = stor_pools[0]
         self.assertIn('stor_pools', stor_pools)
@@ -147,7 +147,7 @@ class TestCreateCommands(LinstorTestCase):
         rsc_dfn = self.execute_with_single_resp(['create-resource-definition', 'rsc1'])
         self.assertTrue(rsc_dfn.is_success())
 
-        rsc_dfns = self.execute_with_maschine_output(['list-resource-definition'])
+        rsc_dfns = self.execute_with_machine_output(['list-resource-definition'])
         self.assertEqual(1, len(rsc_dfns))
         self.assertIn('rsc_dfns', rsc_dfns[0])
         rsc_dfns = rsc_dfns[0]['rsc_dfns']

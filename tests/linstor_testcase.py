@@ -137,7 +137,7 @@ class LinstorTestCase(unittest.TestCase):
 
         return linstor_cli.parse(cmd_args)
 
-    def execute_with_maschine_output(self, cmd_args):
+    def execute_with_machine_output(self, cmd_args):
         """
         Execute the given cmd_args command and adds the machine readable flag.
         Returns the parsed json output.
@@ -162,7 +162,7 @@ class LinstorTestCase(unittest.TestCase):
         return jout
 
     def execute_with_resp(self, cmd_args):
-        d = self.execute_with_maschine_output(cmd_args)
+        d = self.execute_with_machine_output(cmd_args)
         self.assertIsNotNone(d, "No result returned")
         return [ApiCallResponse.from_json(x) for x in d]
 
