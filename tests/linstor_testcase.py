@@ -150,8 +150,6 @@ class LinstorTestCase(unittest.TestCase):
             sys.stdout = StringIO()
             retcode = linstor_cli.parse_and_execute(["-m"] + cmd_args)
             self.assertEqual(0, retcode)
-        except SystemExit as e:
-            pass
         finally:
             stdval = sys.stdout.getvalue()
             sys.stdout.close()
@@ -165,6 +163,7 @@ class LinstorTestCase(unittest.TestCase):
 
     def execute_with_resp(self, cmd_args):
         d = self.execute_with_maschine_output(cmd_args)
+        self.assertIsNotNone(d, "No result returned")
         return [ApiCallResponse.from_json(x) for x in d]
 
     def execute_with_single_resp(self, cmd_args):

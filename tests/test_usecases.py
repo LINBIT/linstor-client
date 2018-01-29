@@ -161,6 +161,13 @@ class TestCreateCommands(LinstorTestCase):
         vlm_dfn = self.execute_with_single_resp(['create-volume-definition', 'rscvlm', '128MiB'])
         self.assertTrue(vlm_dfn.is_success())
 
+        vlm_dfn = self.execute_with_single_resp(['create-volume-definition', 'rscvlm', '0'])
+        self.assertTrue(vlm_dfn.is_error())
+        self.assertEqual(MASK_VLM_DFN | MASK_CRT | FAIL_INVLD_VLM_SIZE, vlm_dfn.ret_code)
+
+        with self.assertRaises(SystemExit):
+            self.execute_with_single_resp(['create-volume-definition', 'rscvlm', '1Gi'])
+
     def test_create_volume_dfn_no_res(self):
         vlm_dfn = self.execute_with_single_resp(['create-volume-definition', 'rsc-does-not-exist', '128MiB'])
         self.assertFalse(vlm_dfn.is_success())
