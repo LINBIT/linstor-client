@@ -101,6 +101,16 @@ class ResourceCommands(Commands):
             help='Filter by list of resources').completer = ResourceCommands.completer
         p_lreses.set_defaults(func=ResourceCommands.list)
 
+        # list volumes
+        p_lvlms = parser.add_parser(
+            'list-volumes',
+            aliases=['list-volume', 'ls-vlm', 'display-volumes'],
+            description='Prints a list of all volumes.'
+        )
+        p_lvlms.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_lvlms.add_argument('resource', nargs='?')
+        p_lvlms.set_defaults(func=ResourceCommands.list_volumes)
+
         # show properties
         p_sp = parser.add_parser(
             'get-resource-properties',
@@ -188,13 +198,62 @@ class ResourceCommands(Commands):
                 ])
             tbl.show()
 
-            # prntfrm = "{rsc:<20s} {uuid:<40s} {node:<30s}"
-            # print(prntfrm.format(rsc="Resource-name", uuid="UUID", node="Node"))
-            # for rsc in lstmsg.resources:
-            #     print(prntfrm.format(
-            #         rsc=rsc.name,
-            #         uuid=rsc.uuid,
-            #         node=rsc.node_name))
+        return None
+
+    @staticmethod
+    def get_resource_state(res_states, node_name, resource_name):
+        for rsc_state in res_states:
+            if rsc_state.node_name == node_name and rsc_state.rsc_name == resource_name:
+                return rsc_state
+        return None
+
+    @staticmethod
+    def get_volume_state(volume_states, volume_nr):
+        for volume_state in volume_states:
+            if volume_state.vlm_nr == volume_nr:
+                return volume_state
+        return None
+
+    @staticmethod
+    @need_communication
+    def list_volumes(cc, args):
+        lstmsg = Commands._get_list_message(cc, API_LST_RSC, MsgLstRsc(), args)  # type: MsgLstRsc
+
+        if lstmsg:
+            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl.add_column("Node")
+            tbl.add_column("Resource")
+            tbl.add_column("VolumeNr")
+            tbl.add_column("MinorNr")
+            tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
+
+            for rsc in lstmsg.resources:
+                rsc_state = ResourceCommands.get_resource_state(lstmsg.resource_states, rsc.node_name, rsc.name)
+                for vlm in rsc.vlms:
+                    if rsc_state:
+                        vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr)
+                    else:
+                        vlm_state = None
+                    state = tbl.color_cell("unknown", Color.YELLOW)
+                    if vlm_state:
+                        state = "ok"
+                        problems = []
+                        if not vlm_state.is_present:
+                            problems.append("not present")
+                        if vlm_state.disk_failed:
+                            problems.append("disk failed")
+
+                        if problems:
+                            state = tbl.color_cell(", ".join(problems), Color.RED)
+                    tbl.add_row([
+                        rsc.node_name,
+                        rsc.name,
+                        str(vlm.vlm_nr),
+                        str(vlm.vlm_minor_nr),
+                        state
+                    ])
+
+            tbl.show()
 
         return None
 
