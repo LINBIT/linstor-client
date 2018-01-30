@@ -10,7 +10,8 @@ from linstor.sharedconsts import (
     API_LST_STOR_POOL,
     KEY_STOR_POOL_VOLUME_GROUP,
     KEY_STOR_POOL_THIN_POOL,
-    KEY_STOR_POOL_ZPOOL
+    KEY_STOR_POOL_ZPOOL,
+    KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
 )
 from linstor.consts import NODE_NAME, STORPOOL_NAME
 
@@ -141,15 +142,21 @@ class StoragePoolCommands(Commands):
             tbl.add_column("Node")
             tbl.add_column("Driver")
             tbl.add_column("DriverDevice")
+            tbl.add_column("SupportsSnapshots")
             for storpool in lstmsg.stor_pools:
                 driver_device_prop = [x for x in storpool.props
                                       if x.key == StoragePoolCommands.device_key_map[storpool.driver[:-len('Driver')]]]
                 driver_device = driver_device_prop[0].value if driver_device_prop else ''
+
+                supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
+                supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
+
                 tbl.add_row([
                     storpool.stor_pool_name,
                     storpool.node_name,
                     storpool.driver,
-                    driver_device
+                    driver_device,
+                    supports_snapshots
                 ])
             tbl.show()
 
