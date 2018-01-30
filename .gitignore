@@ -1,5 +1,6 @@
-# ide dirs
+# ide files and dirs
 .idea/
+*.iml
 
 # ignore "compiled" python
 *.pyc
