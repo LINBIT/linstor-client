@@ -157,7 +157,7 @@ class NodeCommands(Commands):
         port = args.port
         if not port:
             if args.communication_type == VAL_NETCOM_TYPE_PLAIN:
-                port = DFLT_STLT_PORT_PLAIN if p.node.type == VAL_NODE_TYPE_STLT else DFLT_CTRL_PORT_PLAIN
+                port = DFLT_CTRL_PORT_PLAIN if p.node.type == VAL_NODE_TYPE_CTRL else DFLT_STLT_PORT_PLAIN
             elif args.communication_type == VAL_NETCOM_TYPE_SSL:
                 port = DFLT_CTRL_PORT_SSL
             else:
