@@ -77,7 +77,8 @@ class VolumeDefinitionCommands(Commands):
 
         p_lvols = parser.add_parser(
             'list-volume-definitions',
-            aliases=['list-volume-definition', 'dspvlmdfn', 'display-volume-definitions', 'volume-definitions'],
+            aliases=['list-volume-definition', 'dspvlmdfn', 'display-volume-definitions', 'volume-definitions',
+                     'dspvlmdfn'],
             description=' Prints a list of all volume definitions known to linstor. '
             'By default, the list is printed as a human readable table.')
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')

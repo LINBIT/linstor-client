@@ -52,7 +52,8 @@ class ResourceDefinitionCommands(Commands):
 
         p_lrscdfs = parser.add_parser(
             'list-resource-definitions',
-            aliases=['list-resource-definition', 'dsprscdfn', 'display-resource-definitions', 'resource-definitions'],
+            aliases=['list-resource-definition', 'dsprscdfn', 'display-resource-definitions', 'resource-definitions',
+                     'dsprscdfn'],
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -67,7 +68,7 @@ class ResourceDefinitionCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             'get-resource-definition-properties',
-            aliases=['get-resource-definition-props'],
+            aliases=['get-resource-definition-props', 'dsprscdfnprp'],
             description="Prints all properties of the given resource definitions.")
         p_sp.add_argument(
             'resource_name',

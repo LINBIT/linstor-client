@@ -71,7 +71,7 @@ class NodeCommands(Commands):
         p_mod_node_command = 'modify-node'
         p_mod_node = parser.add_parser(
             p_mod_node_command,
-            aliases=['modnode', 'mn'],
+            aliases=['mfynode', 'mn'],
             description='Modifies a linstor node.')
         p_mod_node.add_argument('-a', '--address-family', metavar="FAMILY",
                                 choices=['ipv4', 'ipv6'],
@@ -110,7 +110,7 @@ class NodeCommands(Commands):
         nodes_group_completer = Commands.show_group_completer(nodesgroupby, "groupby")
         p_lnodes = parser.add_parser(
             'list-nodes',
-            aliases=['list-node', 'ls-nodes', 'display-nodes'],
+            aliases=['list-node', 'ls-nodes', 'display-nodes', 'dspnode'],
             description='Prints a list of all cluster nodes known to linstor. '
             'By default, the list is printed as a human readable table.')
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -125,7 +125,7 @@ class NodeCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             'get-node-properties',
-            aliases=['get-node-props'],
+            aliases=['get-node-props', 'dspnodeprp'],
             description="Prints all properties of the given node.")
         p_sp.add_argument(
             'node_name',

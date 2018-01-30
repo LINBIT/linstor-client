@@ -19,7 +19,7 @@ class StoragePoolDefinitionCommands(Commands):
         # new-storpol definition
         p_new_storpool_dfn = parser.add_parser(
             'create-storage-pool-definition',
-            aliases=['crtstoragepooldfn'],
+            aliases=['crtstorpooldfn'],
             description='Defines a Linstor storpool definition for use with linstor.')
         p_new_storpool_dfn.add_argument(
             'name',
@@ -33,7 +33,7 @@ class StoragePoolDefinitionCommands(Commands):
         # TODO description
         p_rm_storpool_dfn = parser.add_parser(
             'delete-storage-pool-definition',
-            aliases=['delstoragepooldfn'],
+            aliases=['delstorpooldfn'],
             description=' Removes a storage pool definition ')
         p_rm_storpool_dfn.add_argument('-q', '--quiet', action="store_true",
                                        help='Unless this option is used, linstor will issue a safety question '
@@ -50,7 +50,8 @@ class StoragePoolDefinitionCommands(Commands):
 
         p_lstorpooldfs = parser.add_parser(
             'list-storage-pool-definitions',
-            aliases=['list-storage-pool-definition', 'ls-storage-pool-dfn', 'display-storage-pool-definition'],
+            aliases=['list-storage-pool-definition', 'ls-storage-pool-dfn', 'display-storage-pool-definition',
+                     'dspstorpooldfn'],
             description='Prints a list of all storage pool definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpooldfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -65,7 +66,7 @@ class StoragePoolDefinitionCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             'get-storage-pool-definition-properties',
-            aliases=['get-storage-pool-definition-props'],
+            aliases=['get-storage-pool-definition-props', 'dspstorpoolprp'],
             description="Prints all properties of the given storage pool definition.")
         p_sp.add_argument(
             'storage_pool_name',

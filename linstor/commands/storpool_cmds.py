@@ -31,7 +31,7 @@ class StoragePoolCommands(Commands):
         # new-storpol
         p_new_storpool = parser.add_parser(
             'create-storage-pool',
-            aliases=['crtstoragepool'],
+            aliases=['crtstorpool'],
             description='Defines a Linstor storage pool for use with Linstor.')
         p_new_storpool.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the new storage pool')
         p_new_storpool.add_argument(
@@ -54,7 +54,7 @@ class StoragePoolCommands(Commands):
         # TODO description
         p_rm_storpool = parser.add_parser(
             'delete-storage-pool',
-            aliases=['delstoragepool'],
+            aliases=['delstorpool'],
             description=' Removes a storage pool ')
         p_rm_storpool.add_argument(
             '-q', '--quiet',
@@ -75,7 +75,7 @@ class StoragePoolCommands(Commands):
 
         p_lstorpool = parser.add_parser(
             'list-storage-pools',
-            aliases=['list-storage-pool', 'ls-storage-pool', 'display-storage-pools'],
+            aliases=['list-storage-pool', 'ls-storage-pool', 'display-storage-pools', 'dspstorpool'],
             description='Prints a list of all storage pool known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -88,7 +88,7 @@ class StoragePoolCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             'get-storage-pool-properties',
-            aliases=['get-storage-pool-props'],
+            aliases=['get-storage-pool-props', 'dspstorpoolprp'],
             description="Prints all properties of the given storage pool.")
         p_sp.add_argument(
             'storage_pool_name',

@@ -48,7 +48,7 @@ class ResourceCommands(Commands):
         p_mod_res_command = 'modify-resource'
         p_mod_res = parser.add_parser(
             p_mod_res_command,
-            aliases=['mr'],
+            aliases=['mfyrsc', 'mr'],
             description='Modifies a DRBD resource.')
         p_mod_res.add_argument('-m', '--managed', choices=(BOOL_TRUE, BOOL_FALSE))
         p_mod_res.add_argument('name', type=namecheck(RES_NAME),
@@ -82,7 +82,7 @@ class ResourceCommands(Commands):
 
         p_lreses = parser.add_parser(
             'list-resources',
-            aliases=['list-resource', 'ls-rsc', 'display-resources'],
+            aliases=['list-resource', 'ls-rsc', 'display-resources', 'dsprsc'],
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -104,7 +104,7 @@ class ResourceCommands(Commands):
         # list volumes
         p_lvlms = parser.add_parser(
             'list-volumes',
-            aliases=['list-volume', 'ls-vlm', 'display-volumes'],
+            aliases=['list-volume', 'ls-vlm', 'display-volumes', 'dspvlm'],
             description='Prints a list of all volumes.'
         )
         p_lvlms.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -114,7 +114,7 @@ class ResourceCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             'get-resource-properties',
-            aliases=['get-resource-props'],
+            aliases=['get-resource-props', 'dsprscprp'],
             description="Prints all properties of the given resource.")
         p_sp.add_argument(
             'resource_name',
