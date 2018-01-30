@@ -104,7 +104,7 @@ class VolumeDefinitionCommands(Commands):
     @need_communication
     def delete(cc, args):
         p = MsgDelVlmDfn()
-        p.rsc_name = args.name
+        p.rsc_name = args.resource_name
         p.vlm_nr = args.volume_nr
 
         return Commands._delete_and_output(cc, args, API_DEL_VLM_DFN, [p])
