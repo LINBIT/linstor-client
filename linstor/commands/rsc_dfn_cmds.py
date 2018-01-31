@@ -82,7 +82,7 @@ class ResourceDefinitionCommands(Commands):
         p = MsgCrtRscDfn()
         p.rsc_dfn.rsc_name = args.name
         if args.port:
-            p.rsc_dfn.rsc_port = args.port
+            p.rsc_dfn.rsc_dfn_port = args.port
         # if args.secret:
         #     p.secret = args.secret
 
