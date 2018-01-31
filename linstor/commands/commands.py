@@ -4,7 +4,8 @@ from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from linstor.utils import Output, Table
 from linstor.protobuf_to_dict import protobuf_to_dict
-from linstor.commcontroller import ApiCallResponse, ApiCallResponseError
+from linstor.commcontroller import ApiCallResponseError
+from linstor.sharedconsts import API_REPLY
 
 
 class Commands(object):
@@ -15,19 +16,7 @@ class Commands(object):
         h.api_call = api_call
         h.msg_id = 1
 
-        pbmsgs = cc.sendrec(h, msg)
-
-        responses = []
-        if pbmsgs:
-            h = MsgHeader()
-            h.ParseFromString(pbmsgs[0])
-            for resp in pbmsgs[1:]:
-                p = MsgApiCallResponse()
-                p.ParseFromString(resp)
-                responses.append(ApiCallResponse(p))
-        else:
-            sys.stderr.write('No msg received from controller {ctrl}'.format(ctrl=cc.servers_good))
-            sys.exit(1)
+        responses = cc.send_and_expect_reply(h, msg)
 
         if args and Commands._print_machine_readable(args, [r.proto_msg for r in responses]):
             return None
@@ -73,9 +62,13 @@ class Commands(object):
         h = MsgHeader()
         h.ParseFromString(pbmsgs[0])
         if h.api_call != api_call:
-            p = MsgApiCallResponse()
-            p.ParseFromString(pbmsgs[1])
-            return p
+            if h.api_call == API_REPLY:
+                p = MsgApiCallResponse()
+                p.ParseFromString(pbmsgs[1])
+                return p
+            else:
+                cc.unexpected_reply(h)
+                return None
 
         lstMsg.ParseFromString(pbmsgs[1])
         return lstMsg

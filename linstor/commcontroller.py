@@ -12,9 +12,11 @@ from google.protobuf.internal import encoder
 from google.protobuf.internal import decoder
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.MsgHeader_pb2 import MsgHeader
+from proto.MsgApiVersion_pb2 import MsgApiVersion
 from functools import wraps
 from linstor.consts import KEY_LS_CONTROLLERS
-from linstor.sharedconsts import DFLT_CTRL_PORT_PLAIN, API_REPLY, MASK_ERROR, MASK_WARN, MASK_INFO
+from linstor.consts import API_VERSION as API_VERSION_NR
+from linstor.sharedconsts import DFLT_CTRL_PORT_PLAIN, API_REPLY, MASK_ERROR, MASK_WARN, MASK_INFO, API_VERSION
 from linstor.utils import Output
 from linstor import utils
 
@@ -140,12 +142,14 @@ class CommController(object):
         try:
             self.current_sock = socket.create_connection(server, timeout=self.timeout)
             self.current_sock.settimeout(self.timeout)
-        except:
+        except socket.error as err:
             self.current_sock = None
+            sys.stderr.write("{ip} -> {msg}\n".format(ip=CommController._adrtuple2str(server), msg=str(err)))
 
     def __enter__(self):
         if not self.connect():
-            sys.stderr.write('Could not connect to any controller %s\n' % (self.servers_bad))
+            sys.stderr.write('Could not connect to any controller %s\n'
+                             % [CommController._adrtuple2str(x) for x in self.servers_bad])
             sys.exit(1)
         return self
 
@@ -161,31 +165,38 @@ class CommController(object):
             host, port = utils.parse_host(hp)
             if not port:
                 port = DFLT_CTRL_PORT_PLAIN
-            servers.append((host, int(port)))
+            if host:
+                servers.append((host, int(port)))
         return servers
+
+    def _connected(self):
+        """Checks the api version"""
+        msg_apiversion = self.recv()
+        assert(len(msg_apiversion) == 2)
+        hdr = CommController.parse_header(msg_apiversion[0])  # type: MsgHeader
+        if hdr.api_call == API_VERSION:
+            api_msg = MsgApiVersion()
+            api_msg.ParseFromString(msg_apiversion[1])
+            if API_VERSION_NR < api_msg.version:
+                sys.stderr.write(
+                    "Error: Client API version '{v}' is incompatible with controller version '{r}'.\n".format(
+                        v=API_VERSION_NR,
+                        r=api_msg.version
+                    )
+                )
+                return False
+        return True
 
     # Can be called multiple times and tries to find a good one
     def connect(self):
-        for s in self.servers_good[:]:
+        for s in self.servers_good:
             self._connect_single(s)
             if self.current_sock:
                 self.first_connect = False
-                return True
+                if self._connected():
+                    return True
             self.servers_good.remove(s)
             self.servers_bad.append(s)
-
-        if self.first_connect:
-            # we don't give the servers a second chance that failed.
-            # unlikely that they recovered that fast...
-            return False
-
-        # give the bad ones a 2nd chance
-        for s in self.servers_bad[:]:
-            self._connect_single(s)
-            if self.current_sock:
-                self.servers_good.append(s)
-                self.servers_bad.remove(s)
-                return True
 
         return False
 
@@ -241,8 +252,13 @@ class CommController(object):
 
         return False
 
-    # return a list of pb msgs, receiver has to deal with it
     def recv(self):
+        """Return a list of pb msgs, receiver has to deal with it
+
+        Returns:
+            List[str]: read messages as byte strings
+
+        """
         if self.current_sock is None:
             return []
 
@@ -293,6 +309,17 @@ class CommController(object):
 
         return pb_msgs
 
+    @staticmethod
+    def parse_header(header_data):
+        ret_hdr = MsgHeader()
+        ret_hdr.ParseFromString(header_data)
+        return ret_hdr
+
+    @staticmethod
+    def unexpected_reply(hdr):
+        sys.stderr.write("Error: Unexpected api call reply '{api}' received.\n".format(api=hdr.api_call))
+        sys.exit(98)
+
     def send_and_expect_reply(self, header, payload=None):
         """
         Sends the given header and payload messages via sendrec
@@ -303,15 +330,17 @@ class CommController(object):
             payload (bytes): payload byte data
 
         Returns:
-            ApiCallResponse: An ApiCallResponse object
+            List[ApiCallResponse]: A list of ApiCallResponse objects
         """
         proto_messages = self.sendrec(header, payload)
-
-        ret_hdr = MsgHeader()
-        ret_hdr.ParseFromString(proto_messages[0])
-        assert(ret_hdr.msg_id == header.msg_id)
-        assert(ret_hdr.api_call == API_REPLY)
         assert(len(proto_messages) > 1)
+
+        ret_hdr = CommController.parse_header(proto_messages[0])
+
+        if ret_hdr.api_call != API_REPLY:
+            CommController.unexpected_reply(ret_hdr)
+
+        assert(ret_hdr.msg_id == header.msg_id)
 
         responses = []
         for reply_msg in proto_messages[1:]:
