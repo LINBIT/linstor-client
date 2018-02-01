@@ -58,9 +58,7 @@ from linstor.consts import (
 from linstor.utils import (
     Output,
     filter_prohibited,
-    namecheck,
-    rangecheck,
-    ip_completer,
+    namecheck
 )
 
 from linstor.sharedconsts import (
@@ -214,31 +212,6 @@ class LinStorCLI(object):
         p_resize_vol.set_defaults(func=self.cmd_enoimp)
         p_resize_vol.set_defaults(command=p_resize_vol_command)
 
-        # modify-volume
-        p_mod_vol_command = 'modify-volume'
-        p_mod_vol = subp.add_parser(p_mod_vol_command,
-                                    aliases=['mv'],
-                                    description='Modifies a DRBD volume.')
-        p_mod_vol.add_argument('name', type=check_res_name,
-                               help='Name of the resource').completer = ResourceCommands.completer
-        p_mod_vol.add_argument('id', help='Volume id', type=int).completer = vol_completer
-        p_mod_vol.add_argument('-m', '--minor', type=rangecheck(0, 1048575))
-        p_mod_vol.set_defaults(func=self.cmd_enoimp)
-        p_mod_vol.set_defaults(command=p_mod_vol_command)
-
-        # modify-assignment
-        p_mod_assg_command = 'modify-assignment'
-        p_mod_assg = subp.add_parser(p_mod_assg_command,
-                                     aliases=['ma'],
-                                     description='Modifies a linstor assignment.')
-        p_mod_assg.add_argument('resource', type=check_res_name,
-                                help='Name of the resource').completer = ResourceCommands.completer
-        p_mod_assg.add_argument('node', help='Name of the node').completer = NodeCommands.completer
-        p_mod_assg.add_argument('-o', '--overwrite')
-        p_mod_assg.add_argument('-d', '--discard')
-        p_mod_assg.set_defaults(func=self.cmd_enoimp)
-        p_mod_assg.set_defaults(command=p_mod_assg_command)
-
         # connect
         p_conn = subp.add_parser('connect-resource', description='Connect resource on node',
                                  aliases=['connect'])
@@ -272,37 +245,6 @@ class LinStorCLI(object):
         p_flags.add_argument('--overwrite', choices=(0, 1), type=int)
         p_flags.add_argument('--discard', choices=(0, 1), type=int)
         p_flags.set_defaults(func=self.cmd_enoimp)
-
-        # attach
-        p_attach = subp.add_parser('attach-volume', description='Attach volume from node',
-                                   aliases=['attach'])
-        p_attach.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
-        p_attach.add_argument('id', help='Volume ID', type=int).completer = vol_completer
-        p_attach.add_argument('node', type=check_node_name).completer = NodeCommands.completer
-        p_attach.set_defaults(func=self.cmd_enoimp, fname='attach')
-        # detach
-        p_detach = subp.add_parser('detach-volume', description='Detach volume from node',
-                                   aliases=['detach'])
-        p_detach.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
-        p_detach.add_argument('id', help='Volume ID', type=int).completer = vol_completer
-        p_detach.add_argument('node', type=check_node_name).completer = NodeCommands.completer
-        p_detach.set_defaults(func=self.cmd_enoimp, fname='detach')
-
-        # assign
-        p_assign = subp.add_parser('assign-resource',
-                                   aliases=['assign'],
-                                   description='Creates an assignment for the deployment of the '
-                                   'specified resource on the specified node.')
-        p_assign.add_argument('--client', action="store_true")
-        p_assign.add_argument('--overwrite', action="store_true",
-                              help='If specified, linstor will issue a "drbdmadm -- --force primary" '
-                              'after the resource has been started.')
-        p_assign.add_argument('--discard', action="store_true",
-                              help='If specified, linstor will issue a "drbdadm -- --discard-my-data" '
-                              'connect after the resource has been started.')
-        p_assign.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
-        p_assign.add_argument('node', type=check_node_name, nargs="+").completer = NodeCommands.completer
-        p_assign.set_defaults(func=self.cmd_enoimp)
 
         # free space
         def redundancy_type(r):
@@ -363,25 +305,6 @@ class LinStorCLI(object):
                                   'the local node and updates the associated values in the data '
                                   'tables on the control volume.')
         p_upool.set_defaults(func=self.cmd_enoimp)
-
-        # unassign
-        p_unassign = subp.add_parser('unassign-resource',
-                                     aliases=['unassign'],
-                                     description='Undeploys the specified resource from the specified '
-                                     "node and removes the assignment entry from linstor's data "
-                                     'tables after the node has finished undeploying the resource. '
-                                     'If the resource had been assigned to a node, but that node has '
-                                     'not deployed the resource yet, the assignment is canceled.')
-        p_unassign.add_argument('-q', '--quiet', action="store_true",
-                                help='Unless this option is used, linstor will issue a safety question '
-                                'that must be answered with yes, otherwise the operation is canceled.')
-        p_unassign.add_argument('-f', '--force', action="store_true",
-                                help="If present, the assignment entry will be removed from linstor's "
-                                'data tables immediately, without taking any action on the node where '
-                                'the resource is been deployed.')
-        p_unassign.add_argument('resource', type=check_res_name).completer = ResourceCommands.completer
-        p_unassign.add_argument('node', type=check_node_name, nargs="+").completer = NodeCommands.completer
-        p_unassign.set_defaults(func=self.cmd_enoimp)
 
         # new-snapshot
         p_nsnap = subp.add_parser('add-snapshot',
@@ -511,31 +434,6 @@ class LinStorCLI(object):
                                help='Filter by list of resources').completer = ResourceCommands.completer
         p_lsnapas.set_defaults(func=self.cmd_enoimp)
 
-        # assignments
-        assignverbose = ('Blockdevice', 'Node_ID')
-        assigngroupby = ('Node', 'Resource', 'Vol_ID', 'Blockdevice',
-                         'Node_ID', 'State')
-
-        ass_verbose_completer = Commands.show_group_completer(assignverbose, "show")
-        ass_group_completer = Commands.show_group_completer(assigngroupby, "groupby")
-
-        p_assignments = subp.add_parser('list-assignments', aliases=['a', 'assignments'],
-                                        description="Prints a list of each node's assigned resources."
-                                        "Nodes that do not have any resources assigned do not appear in the "
-                                        "list. By default, the list is printed as a human readable table.")
-        p_assignments.add_argument('-m', '--machine-readable',
-                                   action="store_true")
-        p_assignments.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_assignments.add_argument('-s', '--show', nargs='+',
-                                   choices=assignverbose).completer = ass_verbose_completer
-        p_assignments.add_argument('-g', '--groupby', nargs='+',
-                                   choices=assigngroupby).completer = ass_group_completer
-        p_assignments.add_argument('-N', '--nodes', nargs='+', type=check_node_name,
-                                   help='Filter by list of nodes').completer = NodeCommands.completer
-        p_assignments.add_argument('-R', '--resources', nargs='+', type=check_res_name,
-                                   help='Filter by list of resources').completer = ResourceCommands.completer
-        p_assignments.set_defaults(func=self.cmd_enoimp)
-
         # export
         def exportnamecheck(name):
             if name == '*':
@@ -552,18 +450,6 @@ class LinStorCLI(object):
         p_export.add_argument('resource', nargs="+", type=exportnamecheck,
                               help='Name of the resource').completer = ResourceCommands.completer
         p_export.set_defaults(func=self.cmd_enoimp)
-
-        # howto-join
-        p_howtojoin = subp.add_parser('howto-join',
-                                      description='Print the command to'
-                                      ' execute on the given node in order to'
-                                      ' join the cluster')
-        p_howtojoin.add_argument('node', type=check_node_name,
-                                 help='Name of the node to join').completer = NodeCommands.completer
-        p_howtojoin.add_argument('-q', '--quiet', action="store_true",
-                                 help="If the --quiet option is used, the join command is printed "
-                                      "with a --quiet option")
-        p_howtojoin.set_defaults(func=self.cmd_enoimp)
 
         # free-port-nr
         p_free_port_nr = subp.add_parser('free-port-nr',
@@ -617,43 +503,6 @@ class LinStorCLI(object):
         p_ping = subp.add_parser('ping', description='Pings the server. The '
                                  'server should answer with a "Pong"')
         p_ping.set_defaults(func=self.cmd_ping)
-
-        class IPAddressCheck(object):
-            def __init__(self):
-                pass
-
-            # used for "in" via "choices":
-            def __contains__(self, key):
-                import socket
-                try:
-                    ips = socket.getaddrinfo(key, 0)
-                except socket.gaierror:
-                    return None
-                if len(ips) == 0:
-                    return None
-                return ips[0][4][0]
-
-            def __iter__(self):
-                return iter([])  # gives no sane text
-                return iter(["any valid IP address"])  # completes this text
-
-        # join
-        p_join = subp.add_parser('join-cluster',
-                                 description='Join an existing cluster',
-                                 aliases=['join'])
-        p_join.add_argument('-a', '--address-family', metavar="FAMILY",
-                            default='ipv4', choices=['ipv4', 'ipv6'],
-                            help='FAMILY: "ipv4" (default) or "ipv6"')
-        p_join.add_argument('-p', '--port', type=rangecheck(1, 65535),
-                            default=1234)  # TODO(rck): fix/rm
-        p_join.add_argument('-q', '--quiet', action="store_true")
-        p_join.add_argument('local_ip')
-        p_join.add_argument('local_node_id')
-        p_join.add_argument('peer_name', type=check_node_name)
-        p_join.add_argument('peer_ip').completer = ip_completer("peer_ip")
-        p_join.add_argument('peer_node_id')
-        p_join.add_argument('secret')
-        p_join.set_defaults(func=self.cmd_enoimp)
 
         # initcv
         p_join = subp.add_parser('initcv',
