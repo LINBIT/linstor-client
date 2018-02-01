@@ -143,6 +143,15 @@ class TestCreateCommands(LinstorTestCase):
         self.assertTrue(storpool.is_error())
         self.assertEqual(MASK_STOR_POOL | MASK_CRT | FAIL_NOT_FOUND_NODE, storpool.ret_code)
 
+    def test_create_delete_storage_pool_dfn(self):
+        storpooldf = self.execute_with_single_resp(['create-storage-pool-definition', 'teststorpooldf'])
+        self.assertTrue(storpooldf.is_success())
+        self.assertEqual(MASK_STOR_POOL_DFN | MASK_CRT | CREATED, storpooldf.ret_code)
+
+        storpooldf = self.execute_with_single_resp(['delete-storage-pool-definition', 'teststorpooldf'])
+        self.assertTrue(storpooldf.is_success())
+        self.assertEqual(MASK_STOR_POOL_DFN | MASK_DEL | DELETED, storpooldf.ret_code)
+
     def test_create_resource_dfn(self):
         rsc_dfn = self.execute_with_single_resp(['create-resource-definition', 'rsc1'])
         self.assertTrue(rsc_dfn.is_success())
