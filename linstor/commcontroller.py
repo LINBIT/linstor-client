@@ -158,7 +158,7 @@ class CommController(object):
 
     @staticmethod
     def controller_list(cmdl_args_controllers):
-        cenv = cmdl_args_controllers + ',' + os.environ.get(KEY_LS_CONTROLLERS, "")
+        cenv = os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + cmdl_args_controllers
 
         servers = []
         for hp in cenv.split(','):
