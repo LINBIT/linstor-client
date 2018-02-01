@@ -5,7 +5,9 @@ from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
-from linstor.commands import Commands, NodeCommands, StoragePoolDefinitionCommands, StoragePoolCommands
+from linstor.commands import (
+    Commands, NodeCommands, StoragePoolDefinitionCommands, StoragePoolCommands, ResourceDefinitionCommands
+)
 from linstor.utils import namecheck, Table, Output
 from linstor.consts import Color
 from linstor.sharedconsts import (
@@ -38,7 +40,10 @@ class ResourceCommands(Commands):
             type=namecheck(STORPOOL_NAME),
             help="Storage pool name to use.").completer = StoragePoolDefinitionCommands.completer
         p_new_res.add_argument('-d', '--diskless', action="store_true", help='Should the resource be diskless')
-        p_new_res.add_argument('name', type=namecheck(RES_NAME), help='Name of the new resource')
+        p_new_res.add_argument(
+            'resource_name',
+            type=namecheck(RES_NAME),
+            help='Name of the resource definition').completer = ResourceDefinitionCommands.completer
         p_new_res.add_argument('node_name',
                                type=namecheck(NODE_NAME),
                                help='Name of the new resource').completer = NodeCommands.completer
@@ -125,7 +130,7 @@ class ResourceCommands(Commands):
     @need_communication
     def create(cc, args):
         p = MsgCrtRsc()
-        p.rsc.name = args.name
+        p.rsc.name = args.resource_name
         p.rsc.node_name = args.node_name
 
         if not args.diskless and args.storage_pool:

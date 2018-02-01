@@ -147,7 +147,7 @@ class ResourceDefinitionCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn())
 
         if lstmsg:
-            for rsc_dfn in lstmsg.resources:
+            for rsc_dfn in lstmsg.rsc_dfns:
                 possible.add(rsc_dfn.rsc_name)
 
             if prefix:

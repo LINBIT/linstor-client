@@ -3,7 +3,7 @@ from proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN, API_DEL_VLM_DFN
 from linstor.commcontroller import need_communication
-from linstor.commands import Commands, ResourceCommands
+from linstor.commands import Commands, ResourceDefinitionCommands
 from linstor.utils import SizeCalc, approximate_size_string, namecheck, Table, Output
 from linstor.consts import RES_NAME, Color
 from linstor.sharedconsts import (
@@ -33,7 +33,7 @@ class VolumeDefinitionCommands(Commands):
         p_new_vol.add_argument('-s', '--site', default='',
                                help="only consider nodes from this site")
         p_new_vol.add_argument('resource_name', type=namecheck(RES_NAME),
-                               help='Name of an existing resource').completer = ResourceCommands.completer
+                               help='Name of an existing resource').completer = ResourceDefinitionCommands.completer
         p_new_vol.add_argument(
             'size',
             help='Size of the volume in resource. '
@@ -61,9 +61,9 @@ class VolumeDefinitionCommands(Commands):
         p_rm_vol.add_argument('-q', '--quiet', action="store_true",
                               help='Unless this option is used, linstor will issue a safety question '
                               'that must be answered with yes, otherwise the operation is canceled.')
-        # TODO completer
         p_rm_vol.add_argument('resource_name',
-                              help='Resource name of the volume definition').completer = ResourceCommands.completer
+                              help='Resource name of the volume definition'
+                              ).completer = ResourceDefinitionCommands.completer
         p_rm_vol.add_argument(
             'volume_nr',
             type=int,
@@ -85,7 +85,7 @@ class VolumeDefinitionCommands(Commands):
         p_lvols.add_argument('-g', '--groupby', nargs='+',
                              choices=volgroupby).completer = vol_group_completer
         p_lvols.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
-                             help='Filter by list of resources').completer = ResourceCommands.completer
+                             help='Filter by list of resources').completer = ResourceDefinitionCommands.completer
         p_lvols.set_defaults(func=VolumeDefinitionCommands.list)
 
     @staticmethod
