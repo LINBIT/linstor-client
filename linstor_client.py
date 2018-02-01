@@ -80,11 +80,11 @@ class LinStorCLI(object):
         self._all_commands = self.parser_cmds()
 
     def setup_parser(self):
-        parser = argparse.ArgumentParser(prog='linstor_client')
+        parser = argparse.ArgumentParser(prog="linstor")
         parser.add_argument('--version', '-v', action='version',
                             version='%(prog)s ' + VERSION + '; ' + GITHASH)
         parser.add_argument('--no-color', action="store_true",
-                            help='Do not use colors in output. Usefull for old terminals/scripting.')
+                            help='Do not use colors in output. Useful for old terminals/scripting.')
         parser.add_argument('--no-utf8', action="store_true",
                             help='Do not use utf-8 characters in output (i.e., tables).')
         parser.add_argument('--warn-as-error', action="store_true",
@@ -92,7 +92,7 @@ class LinStorCLI(object):
         parser.add_argument('--controllers', default='localhost:%d' % DFLT_CTRL_PORT_PLAIN,
                             help='Comma separated list of controllers (e.g.: "host1:port,host2:port"). '
                             'If the environment variable %s is set, '
-                            'the ones set via this argument get appended.' % (KEY_LS_CONTROLLERS))
+                            'the ones set via this argument get appended.' % KEY_LS_CONTROLLERS)
         parser.add_argument('-m', '--machine-readable', action="store_true")
         parser.add_argument('-t', '--timeout', default=20, type=int,
                             help="Connection timeout value.")
