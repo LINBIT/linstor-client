@@ -20,6 +20,7 @@
 
 import sys
 import os
+import traceback
 try:
     import ConfigParser as configparser
 except ImportError:
@@ -65,9 +66,6 @@ from linstor.utils import (
 from linstor.sharedconsts import (
     DFLT_CTRL_PORT_PLAIN
 )
-
-if hasattr(__builtins__, 'raw_input'):
-    input = raw_input
 
 
 class LinStorCLI(object):
@@ -863,46 +861,54 @@ class LinStorCLI(object):
             if len(cmd) > 1:
                 sys.stdout.write(" (%s)" % (", ".join(cmd[1:])))
             sys.stdout.write("\n")
+        return 0
 
     def cmd_interactive(self, args):
         all_cmds = [i for sl in self._all_commands for i in sl]
 
         # helper function
         def unknown(cmd):
-            sys.stdout.write("\n" + "Command \"%s\" not known!\n" % (cmd))
+            sys.stdout.write("\n" + "Command \"%s\" not known!\n" % cmd)
             self.cmd_list(args)
 
         # helper function
-        def parsecatch(cmds, stoprec=False):
+        def parsecatch(cmds_, stoprec=False):
             try:
-                self.parse_and_execute(cmds)
-            except SystemExit:  # raised by argparse
+                self.parse_and_execute(cmds_)
+            except SystemExit:
                 if stoprec:
                     return
 
-                cmd = cmds[0]
+                cmd = cmds_[0]
                 if cmd == "exit":
                     sys.exit(0)
                 elif cmd == "help":
-                    if len(cmds) == 1:
+                    if len(cmds_) == 1:
                         self.cmd_list(args)
                         return
                     else:
-                        cmd = " ".join(cmds[1:])
+                        cmd = " ".join(cmds_[1:])
                         if cmd not in all_cmds:
                             unknown(cmd)
                 elif cmd in all_cmds:
-                    if '-h' in cmds or '--help' in cmds:
+                    if '-h' in cmds_ or '--help' in cmds:
                         return
                     sys.stdout.write("\nIncorrect syntax. Use the command as follows:\n")
                     parsecatch(["help", cmd], stoprec=True)
                 else:
                     unknown(cmd)
+            except BaseException:
+                traceback.print_exc(file=sys.stdout)
 
         # main part of interactive mode:
 
         # try to load readline
         # if loaded, raw_input makes use of it
+        if sys.version_info < (3,):
+            my_input = raw_input
+        else:
+            my_input = input
+
         try:
             import readline
             # seems after importing readline it is not possible to output to sys.stderr
@@ -917,7 +923,7 @@ class LinStorCLI(object):
         while True:
             try:
                 sys.stdout.write("\n")
-                cmds = input('> ').strip()
+                cmds = my_input('> ').strip()
 
                 cmds = [cmd.strip() for cmd in cmds.split()]
                 if not cmds:
@@ -929,10 +935,10 @@ class LinStorCLI(object):
                 return
 
     def cmd_help(self, args):
-        sys.exit(self.parse_and_execute([args.command, "-h"]))
+        return self.parse_and_execute([args.command, "-h"])
 
     def cmd_exit(self, _):
-        exit(0)
+        sys.exit(0)
 
     def run(self):
         # TODO(rck): try/except
