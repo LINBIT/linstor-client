@@ -1,9 +1,9 @@
 from proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
 from proto.MsgDelStorPool_pb2 import MsgDelStorPool
-from linstor.commcontroller import need_communication, completer_communication, ApiCallResponse
+from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands, NodeCommands
-from linstor.utils import namecheck, Table, Output
+from linstor.utils import namecheck, Table
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL,
     API_DEL_STOR_POOL,
@@ -11,7 +11,8 @@ from linstor.sharedconsts import (
     KEY_STOR_POOL_VOLUME_GROUP,
     KEY_STOR_POOL_THIN_POOL,
     KEY_STOR_POOL_ZPOOL,
-    KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
+    KEY_STOR_POOL_SUPPORTS_SNAPSHOTS,
+    NAMESPC_STORAGE_DRIVER
 )
 from linstor.consts import NODE_NAME, STORPOOL_NAME
 
@@ -25,7 +26,7 @@ class StoragePoolCommands(Commands):
 
     @classmethod
     def get_driver_key(cls, driver_name):
-        return StoragePoolCommands.device_key_map[driver_name[:-len('Driver')]]
+        return NAMESPC_STORAGE_DRIVER + '/' + StoragePoolCommands.device_key_map[driver_name[:-len('Driver')]]
 
     @staticmethod
     def setup_commands(parser):
@@ -44,8 +45,9 @@ class StoragePoolCommands(Commands):
             choices=StoragePoolCommands.driver_completer(""),
             help='Name of the driver used for the new storage pool').completer = StoragePoolCommands.driver_completer
         p_new_storpool.add_argument(
-            'driver_device',
-            help='Device to use with driver')
+            'driver_pool_name',
+            type=namecheck(STORPOOL_NAME),  # TODO use STORPOOL_NAME check for now
+            help='Volumegroup/Pool name of the driver e.g. drbdpool')
         p_new_storpool.set_defaults(func=StoragePoolCommands.create)
 
         # modify-storpool
@@ -113,8 +115,8 @@ class StoragePoolCommands(Commands):
 
         # set driver device pool property
         prop = p.stor_pool.props.add()
-        prop.key = StoragePoolCommands.device_key_map[driver]
-        prop.value = args.driver_device
+        prop.key = StoragePoolCommands.get_driver_key(p.stor_pool.driver)
+        prop.value = args.driver_pool_name
 
         return Commands._create(cc, API_CRT_STOR_POOL, p, args)
 
@@ -141,11 +143,11 @@ class StoragePoolCommands(Commands):
             tbl.add_column("StoragePool")
             tbl.add_column("Node")
             tbl.add_column("Driver")
-            tbl.add_column("DriverDevice")
+            tbl.add_column("PoolName")
             tbl.add_column("SupportsSnapshots")
             for storpool in lstmsg.stor_pools:
                 driver_device_prop = [x for x in storpool.props
-                                      if x.key == StoragePoolCommands.device_key_map[storpool.driver[:-len('Driver')]]]
+                                      if x.key == StoragePoolCommands.get_driver_key(storpool.driver)]
                 driver_device = driver_device_prop[0].value if driver_device_prop else ''
 
                 supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
