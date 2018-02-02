@@ -43,6 +43,11 @@ from linstor.consts import (
     SNAPS_NAME_MINLEN,
     SNAPS_NAME_VALID_CHARS,
     SNAPS_NAME_VALID_INNER_CHARS,
+    STORPOOL_NAME,
+    STORPOOL_NAME_MAXLEN,
+    STORPOOL_NAME_MINLEN,
+    STORPOOL_NAME_VALID_CHARS,
+    STORPOOL_NAME_VALID_INNER_CHARS,
     Color
 )
 
@@ -577,6 +582,11 @@ def namecheck(checktype):
         max_length = SNAPS_NAME_MAXLEN
         valid_chars = SNAPS_NAME_VALID_CHARS
         valid_inner_chars = SNAPS_NAME_VALID_INNER_CHARS
+    elif checktype == STORPOOL_NAME:
+        min_length = STORPOOL_NAME_MINLEN
+        max_length = STORPOOL_NAME_MAXLEN
+        valid_chars = STORPOOL_NAME_VALID_CHARS
+        valid_inner_chars = STORPOOL_NAME_VALID_INNER_CHARS
     else:  # checktype == NODE_NAME, use that as rather arbitrary default
         min_length = NODE_NAME_MINLEN
         max_length = NODE_NAME_MAXLEN
