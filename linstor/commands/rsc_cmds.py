@@ -2,11 +2,10 @@ from proto.MsgCrtRsc_pb2 import MsgCrtRsc
 from proto.MsgDelRsc_pb2 import MsgDelRsc
 from proto.MsgLstRsc_pb2 import MsgLstRsc
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import (
-    Commands, NodeCommands, StoragePoolDefinitionCommands, StoragePoolCommands, ResourceDefinitionCommands
+    Commands, NodeCommands, StoragePoolDefinitionCommands, ResourceDefinitionCommands
 )
 from linstor.utils import namecheck, Table, Output
 from linstor.consts import Color
@@ -15,7 +14,6 @@ from linstor.sharedconsts import (
     API_DEL_RSC,
     API_LST_RSC,
     API_LST_RSC_DFN,
-    API_LST_STOR_POOL,
     KEY_STOR_POOL_NAME,
     FLAG_DELETE,
     FLAG_DISKLESS
@@ -173,32 +171,20 @@ class ResourceCommands(Commands):
             rsc_dfns = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args).rsc_dfns
             rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
 
-            stor_pools = Commands._get_list_message(cc, API_LST_STOR_POOL, MsgLstStorPool(), args).stor_pools
-            stor_pool_map = {x.stor_pool_name: x for x in stor_pools}
-
             tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("ResourceName")
             tbl.add_column("Node")
             tbl.add_column("Port")
-            tbl.add_column("Device", color=Output.color(Color.DARKGREEN, args.no_color))
             tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
             for rsc in lstmsg.resources:
                 rsc_dfn = rsc_dfn_map[rsc.name]
-                diskless = FLAG_DISKLESS in rsc.rsc_flags
-                if not diskless:
-                    storage_pool_name = Commands._get_prop(rsc.props, KEY_STOR_POOL_NAME)
-                    storage_pool = stor_pool_map[storage_pool_name]
-                    driver_key = StoragePoolCommands.get_driver_key(storage_pool.driver)
-                    block_device = Commands._get_prop(storage_pool.props, driver_key)
-                    # print(storage_pool)
                 marked_delete = FLAG_DELETE in rsc.rsc_flags
                 # rsc_state = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
                 tbl.add_row([
                     rsc.name,
                     rsc.node_name,
                     rsc_dfn.rsc_dfn_port,
-                    tbl.color_cell("DISKLESS", Color.GREEN) if diskless else block_device,
                     tbl.color_cell("DELETING", Color.RED) if marked_delete else "ok"
                 ])
             tbl.show()
