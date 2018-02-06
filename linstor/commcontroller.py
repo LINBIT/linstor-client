@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 import socket
+import ssl
 import struct
 import sys
 import os
@@ -8,6 +9,10 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import StringIO
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
 from google.protobuf.internal import encoder
 from google.protobuf.internal import decoder
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
@@ -16,7 +21,15 @@ from proto.MsgApiVersion_pb2 import MsgApiVersion
 from functools import wraps
 from linstor.consts import KEY_LS_CONTROLLERS
 from linstor.consts import API_VERSION as API_VERSION_NR
-from linstor.sharedconsts import DFLT_CTRL_PORT_PLAIN, API_REPLY, MASK_ERROR, MASK_WARN, MASK_INFO, API_VERSION
+from linstor.sharedconsts import (
+    DFLT_CTRL_PORT_PLAIN,
+    DFLT_CTRL_PORT_SSL,
+    API_REPLY,
+    MASK_ERROR,
+    MASK_WARN,
+    MASK_INFO,
+    API_VERSION
+)
 from linstor.utils import Output
 from linstor import utils
 
@@ -34,7 +47,7 @@ def need_communication(f):
         servers = CommController.controller_list(cliargs.controllers)
 
         p = None
-        with CommController(servers, cliargs.timeout) as cc:
+        with CommController(servers, timeout=cliargs.timeout) as cc:
             try:
                 p = f(cc, *args, **kwargs)
             except ApiCallResponseError as callresponse:
@@ -64,7 +77,7 @@ def completer_communication(f):
     def wrapper(*args, **kwargs):
         cliargs = kwargs['parsed_args']
         servers = CommController.controller_list(cliargs.controllers)
-        with CommController(servers, cliargs.timeout) as cc:
+        with CommController(servers, timeout=cliargs.timeout) as cc:
             return f(cc, *args, **kwargs)
     return wrapper
 
@@ -131,7 +144,7 @@ class ApiCallResponseError(BaseException):
 
 class CommController(object):
     # servers is a list of tuples containing host, port pairs
-    def __init__(self, servers=[], timeout=20):
+    def __init__(self, servers, timeout=20):
         self.servers_good = servers
         self.servers_bad = []
         self.current_sock = None  # type: socket.SocketType
@@ -140,16 +153,28 @@ class CommController(object):
 
     def _connect_single(self, server):
         try:
-            self.current_sock = socket.create_connection(server, timeout=self.timeout)
+            url = urlparse(server)
+
+            if not url.scheme.startswith('linstor'):
+                raise RuntimeError("Unknown uri scheme '{sc}' in '{uri}'.".format(sc=url.scheme, uri=server))
+
+            host, port = utils.parse_host(url.netloc)
+            if not port:
+                port = DFLT_CTRL_PORT_SSL if url.scheme == 'linstor+ssl' else DFLT_CTRL_PORT_PLAIN
+            self.current_sock = socket.create_connection((host, port), timeout=self.timeout)
+
+            # check if ssl
+            if url.scheme == 'linstor+ssl':
+                self.current_sock = ssl.wrap_socket(self.current_sock)
             self.current_sock.settimeout(self.timeout)
         except socket.error as err:
             self.current_sock = None
-            sys.stderr.write("{ip} -> {msg}\n".format(ip=CommController._adrtuple2str(server), msg=str(err)))
+            sys.stderr.write("{ip} -> {msg}\n".format(ip=server, msg=str(err)))
 
     def __enter__(self):
         if not self.connect():
             sys.stderr.write('Could not connect to any controller %s\n'
-                             % [CommController._adrtuple2str(x) for x in self.servers_bad])
+                             % self.servers_bad)
             sys.exit(1)
         return self
 
@@ -161,12 +186,13 @@ class CommController(object):
         cenv = os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + cmdl_args_controllers
 
         servers = []
+        # add linstor uri scheme
         for hp in cenv.split(','):
-            host, port = utils.parse_host(hp)
-            if not port:
-                port = DFLT_CTRL_PORT_PLAIN
-            if host:
-                servers.append((host, int(port)))
+            if hp:
+                if '://' in hp:
+                    servers.append(hp)
+                else:
+                    servers.append("linstor://" + hp)
         return servers
 
     def _connected(self):
@@ -300,6 +326,7 @@ class CommController(object):
     def sendrec(self, header, payload=None):
         succ = self.sendall(header, payload)
         if not succ:
+            sys.stderr.write('Send failed retry connect.\n')
             succ = self.connect()
             if not succ:
                 return []
