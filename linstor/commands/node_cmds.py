@@ -193,18 +193,6 @@ class NodeCommands(Commands):
                 ])
             tbl.show()
 
-            # prntfrm = "{node:<20s} {type:<10s} {uuid:<40s}"
-            # print(prntfrm.format(node="Node", type="NodeType", uuid="UUID"))
-
-            # netiffrm = " +   {name:<20s} {address:>20s}"
-            # for n in lstmsg.nodes:
-            #     print(prntfrm.format(node=n.name, type=n.type, uuid=n.uuid))
-
-            #     for interface in n.net_interfaces:
-            #         print(netiffrm.format(
-            #             name=interface.name,
-            #             address=interface.address))
-
         return None
 
     @staticmethod
