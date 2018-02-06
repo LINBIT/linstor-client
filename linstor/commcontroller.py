@@ -244,13 +244,15 @@ class CommController(object):
         if len(msg_serialized) == 0:
             return False
 
-        try:
-            if self.current_sock.sendall(overall) is None:
-                return True
-        except:
-            return False
+        len_tosend = len(overall)
+        total_sent = 0
+        while total_sent < len_tosend:
+            sent = self.current_sock.send(overall[total_sent:])
+            if sent == 0:
+                raise RuntimeError("socket connection broken")
+            total_sent += sent
 
-        return False
+        return True
 
     def recv(self):
         """Return a list of pb msgs, receiver has to deal with it
