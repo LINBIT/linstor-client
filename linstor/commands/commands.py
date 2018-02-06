@@ -11,7 +11,7 @@ from linstor.sharedconsts import API_REPLY
 class Commands(object):
 
     @classmethod
-    def _create(cls, cc, api_call, msg, args=None):
+    def _send_msg(cls, cc, api_call, msg, args=None):
         h = MsgHeader()
         h.api_call = api_call
         h.msg_id = 1

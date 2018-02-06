@@ -118,7 +118,7 @@ class StoragePoolCommands(Commands):
         prop.key = StoragePoolCommands.get_driver_key(p.stor_pool.driver)
         prop.value = args.driver_pool_name
 
-        return Commands._create(cc, API_CRT_STOR_POOL, p, args)
+        return Commands._send_msg(cc, API_CRT_STOR_POOL, p, args)
 
     @staticmethod
     @need_communication

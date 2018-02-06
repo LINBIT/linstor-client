@@ -169,7 +169,7 @@ class NodeCommands(Commands):
         satcon.port = port
         satcon.encryption_type = args.communication_type
 
-        return Commands._create(cc, API_CRT_NODE, p, args)
+        return Commands._send_msg(cc, API_CRT_NODE, p, args)
 
     @staticmethod
     @need_communication

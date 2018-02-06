@@ -80,7 +80,7 @@ class StoragePoolDefinitionCommands(Commands):
         p = MsgCrtStorPoolDfn()
         p.stor_pool_dfn.stor_pool_name = args.name
 
-        return Commands._create(cc, API_CRT_STOR_POOL_DFN, p, args)
+        return Commands._send_msg(cc, API_CRT_STOR_POOL_DFN, p, args)
 
     @staticmethod
     @need_communication

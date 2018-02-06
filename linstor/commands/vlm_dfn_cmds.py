@@ -99,7 +99,7 @@ class VolumeDefinitionCommands(Commands):
         if args.minor is not None:
             vlmdf.vlm_minor = args.minor
 
-        return Commands._create(cc, API_CRT_VLM_DFN, p, args)
+        return Commands._send_msg(cc, API_CRT_VLM_DFN, p, args)
 
     @staticmethod
     @need_communication

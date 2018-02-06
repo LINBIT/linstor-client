@@ -140,7 +140,7 @@ class ResourceCommands(Commands):
         if args.diskless:
             p.rsc.rsc_flags.append(FLAG_DISKLESS)
 
-        return Commands._create(cc, API_CRT_RSC, p, args)
+        return Commands._send_msg(cc, API_CRT_RSC, p, args)
 
     @staticmethod
     @need_communication

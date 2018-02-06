@@ -86,7 +86,7 @@ class ResourceDefinitionCommands(Commands):
         # if args.secret:
         #     p.secret = args.secret
 
-        return Commands._create(cc, API_CRT_RSC_DFN, p, args)
+        return Commands._send_msg(cc, API_CRT_RSC_DFN, p, args)
 
     @staticmethod
     @need_communication
