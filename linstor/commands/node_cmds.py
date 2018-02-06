@@ -10,10 +10,6 @@ from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
     DFLT_CTRL_PORT_SSL,
-    KEY_NETCOM_TYPE,
-    KEY_NETIF_TYPE,
-    KEY_PORT_NR,
-    NAMESPC_NETIF,
     VAL_NETCOM_TYPE_PLAIN,
     VAL_NETCOM_TYPE_SSL,
     VAL_NODE_TYPE_STLT,
@@ -137,16 +133,6 @@ class NodeCommands(Commands):
     def create(cc, args):
         p = MsgCrtNode()
 
-        def gen_nif(k, v):
-            prop = LinStorMapEntry()
-            prop.key = "%s/%s/%s" % (NAMESPC_NETIF, args.interface_name, k)
-            prop.value = v
-            p.node.props.extend([prop])
-
-        # interface
-        gen_nif(KEY_NETIF_TYPE, args.interface_type)
-        gen_nif(KEY_NETCOM_TYPE, args.communication_type)
-
         p.node.name = args.name
         p.node.type = args.node_type
 
@@ -162,7 +148,6 @@ class NodeCommands(Commands):
                 port = DFLT_CTRL_PORT_SSL
             else:
                 Output.err("Communication type %s has no default port" % (args.communication_type), args.no_color)
-        gen_nif(KEY_PORT_NR, str(port))
 
         satcon = p.satellite_connections.add()
         satcon.net_interface_name = args.interface_name
