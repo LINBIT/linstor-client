@@ -39,7 +39,7 @@ class ResourceCommands(Commands):
             help="Storage pool name to use.").completer = StoragePoolDefinitionCommands.completer
         p_new_res.add_argument('-d', '--diskless', action="store_true", help='Should the resource be diskless')
         p_new_res.add_argument(
-            'resource_name',
+            'resource_definition_name',
             type=namecheck(RES_NAME),
             help='Name of the resource definition').completer = ResourceDefinitionCommands.completer
         p_new_res.add_argument('node_name',
@@ -121,14 +121,34 @@ class ResourceCommands(Commands):
             description="Prints all properties of the given resource.")
         p_sp.add_argument(
             'resource_name',
-            help="Resource for which to print the properties").completer = ResourceCommands.completer
+            help="Resource name").completer = ResourceCommands.completer
+        p_sp.add_argument(
+            'node_name',
+            help="Node name where the resource is deployed.").completer = ResourceCommands.completer
         p_sp.set_defaults(func=ResourceCommands.print_props)
+
+        # set properties
+        p_setprop = parser.add_parser(
+            'set-resource-properties',
+            aliases=['set-resource-props', 'setrscprp'],
+            description='Sets properties for the given resource on the given node.')
+        p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource')
+        p_setprop.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            help='Node name where resource is deployed.').completer = NodeCommands.completer
+        p_setprop.add_argument(
+            'key_value_pair',
+            nargs='+',
+            help="Key value pair in the format 'key=value'."
+        )
+        p_setprop.set_defaults(func=ResourceCommands.set_props)
 
     @staticmethod
     @need_communication
     def create(cc, args):
         p = MsgCrtRsc()
-        p.rsc.name = args.resource_name
+        p.rsc.name = args.resource_definition_name
         p.rsc.node_name = args.node_name
 
         if not args.diskless and args.storage_pool:
