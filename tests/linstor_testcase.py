@@ -37,17 +37,26 @@ class LinstorTestCase(unittest.TestCase):
     controller = None
 
     @classmethod
+    def find_linstor_tar(cls, paths):
+        for spath in paths:
+            if os.path.exists(spath):
+                for f in os.listdir(spath):
+                    if f.endswith('.tar'):
+                        return os.path.join(spath, f)
+        return None
+
+    @classmethod
     def setUpClass(cls):
         install_path = os.path.abspath('build/_linstor_unittests')
-        linstor_file_name = 'linstor-0.1'
-        linstor_distri_tar = linstor_file_name + '.tar'
-        if not os.path.exists(linstor_distri_tar):
-            linstor_dir = os.path.abspath('../linstor') \
-                if os.path.exists('../linstor') else os.path.abspath('../linstor-server')
-            if not os.path.exists(linstor_dir):
-                raise RuntimeError("Unable to find any linstor distribution: " + " or ".join(
-                    [linstor_distri_tar, linstor_dir]))
-            linstor_distri_tar = os.path.join(linstor_dir, 'build', 'distributions', linstor_distri_tar)
+        linstor_tar_search_paths = [
+            os.path.abspath(os.path.join('../linstor', 'build', 'distributions')),
+            os.path.abspath(os.path.join('../linstor-server', 'build', 'distributions')),
+            os.path.abspath(os.path.join('./', 'distributions'))
+        ]
+        linstor_distri_tar = cls.find_linstor_tar(linstor_tar_search_paths)
+
+        if linstor_distri_tar is None:
+            raise RuntimeError("Unable to find any linstor distribution tar: " + str(linstor_tar_search_paths))
 
         print("Using " + linstor_distri_tar)
         try:
