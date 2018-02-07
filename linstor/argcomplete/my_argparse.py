@@ -140,9 +140,10 @@ class IntrospectiveArgumentParser(ArgumentParser):
                     # contents of its parsed namespace into the parent namespace. Do that here to allow completers to
                     # access the partially parsed arguments for the subparser.
                     if isinstance(action, _SubParsersAction):
-                        subnamespace = action._name_parser_map[argument_values[0]]._argcomplete_namespace
-                        for key, value in vars(subnamespace).items():
-                            setattr(namespace, key, value)
+                        if hasattr(action._name_parser_map[argument_values[0]], '_argcomplete_namespace'):
+                            subnamespace = action._name_parser_map[argument_values[0]]._argcomplete_namespace
+                            for key, value in vars(subnamespace).items():
+                                setattr(namespace, key, value)
                     # End added by argcomplete
                     raise
 
