@@ -49,18 +49,6 @@ class ResourceCommands(Commands):
                                help='Name of the node to deploy the resource').completer = NodeCommands.completer
         p_new_res.set_defaults(func=ResourceCommands.create)
 
-        # modify-resource
-        p_mod_res_command = 'modify-resource'
-        p_mod_res = parser.add_parser(
-            p_mod_res_command,
-            aliases=['mfyrsc', 'mr'],
-            description='Modifies a DRBD resource.')
-        p_mod_res.add_argument('-m', '--managed', choices=(BOOL_TRUE, BOOL_FALSE))
-        p_mod_res.add_argument('name', type=namecheck(RES_NAME),
-                               help='Name of the resource').completer = ResourceCommands.completer
-        p_mod_res.set_defaults(func=Commands.cmd_enoimp)
-        p_mod_res.set_defaults(command=p_mod_res_command)
-
         # remove-resource
         p_rm_res = parser.add_parser(
             'delete-resource',

@@ -29,8 +29,6 @@ class StoragePoolDefinitionCommands(Commands):
             help='Name of the new storpool definition')
         p_new_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.create)
 
-        # modify-storpool
-
         # remove-storpool definition
         # TODO description
         p_rm_storpool_dfn = parser.add_parser(

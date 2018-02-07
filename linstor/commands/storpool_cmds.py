@@ -52,9 +52,6 @@ class StoragePoolCommands(Commands):
             help='Volumegroup/Pool name of the driver e.g. drbdpool')
         p_new_storpool.set_defaults(func=StoragePoolCommands.create)
 
-        # modify-storpool
-        # TODO
-
         # remove-storpool
         # TODO description
         p_rm_storpool = parser.add_parser(

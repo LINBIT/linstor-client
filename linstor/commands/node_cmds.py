@@ -65,23 +65,6 @@ class NodeCommands(Commands):
                                 help='IP address of the new node').completer = ip_completer("name")
         p_new_node.set_defaults(func=NodeCommands.create)
 
-        # modify-node
-        p_mod_node_command = 'modify-node'
-        p_mod_node = parser.add_parser(
-            p_mod_node_command,
-            aliases=['mfynode', 'mn'],
-            description='Modifies a linstor node.')
-        p_mod_node.add_argument('-a', '--address-family', metavar="FAMILY",
-                                choices=['ipv4', 'ipv6'],
-                                help='FAMILY: "ipv4" (default) or "ipv6"')
-        p_mod_node.add_argument('-s', '--storage')
-        p_mod_node.add_argument('name', type=namecheck(NODE_NAME),
-                                help='Name of the node').completer = NodeCommands.completer
-        p_mod_node.add_argument('--address',
-                                help='Network address of the node').completer = ip_completer("name")
-        p_mod_node.set_defaults(func=Commands.cmd_enoimp)
-        p_mod_node.set_defaults(command=NodeCommands.modify)
-
         # remove-node
         p_rm_node = parser.add_parser(
             'delete-node',
