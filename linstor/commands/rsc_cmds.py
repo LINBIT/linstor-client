@@ -30,7 +30,7 @@ class ResourceCommands(Commands):
     def setup_commands(parser):
         # new-resource
         p_new_res = parser.add_parser(
-            'create-resource',
+            Commands.CREATE_RESOURCE,
             aliases=['crtrsc'],
             description='Defines a DRBD resource for use with linstor. '
             'Unless a specific IP port-number is supplied, the port-number is '
@@ -51,7 +51,7 @@ class ResourceCommands(Commands):
 
         # remove-resource
         p_rm_res = parser.add_parser(
-            'delete-resource',
+            Commands.DELETE_RESOURCE,
             aliases=['delrsc'],
             description=' Removes a resource and its associated resource definition '
             'from the linstor cluster. The resource is undeployed from all nodes '
@@ -74,7 +74,7 @@ class ResourceCommands(Commands):
         res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
 
         p_lreses = parser.add_parser(
-            'list-resources',
+            Commands.LIST_RESOURCE,
             aliases=['list-resource', 'ls-rsc', 'display-resources', 'dsprsc'],
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
@@ -96,7 +96,7 @@ class ResourceCommands(Commands):
 
         # list volumes
         p_lvlms = parser.add_parser(
-            'list-volumes',
+            Commands.LIST_VOLUME,
             aliases=['list-volume', 'ls-vlm', 'display-volumes', 'dspvlm'],
             description='Prints a list of all volumes.'
         )
@@ -106,8 +106,8 @@ class ResourceCommands(Commands):
 
         # show properties
         p_sp = parser.add_parser(
-            'get-resource-properties',
-            aliases=['get-resource-props', 'dsprscprp'],
+            Commands.GET_RESOURCE_PROPS,
+            aliases=['get-resource-properties', 'dsprscprp'],
             description="Prints all properties of the given resource.")
         p_sp.add_argument(
             'resource_name',
@@ -119,8 +119,8 @@ class ResourceCommands(Commands):
 
         # set properties
         p_setprop = parser.add_parser(
-            'set-resource-properties',
-            aliases=['set-resource-props', 'setrscprp'],
+            Commands.SET_RESOURCE_PROPS,
+            aliases=['set-resource-properties', 'setrscprp'],
             description='Sets properties for the given resource on the given node.')
         p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource')
         p_setprop.add_argument(

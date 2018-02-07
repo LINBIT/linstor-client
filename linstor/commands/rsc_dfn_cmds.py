@@ -20,7 +20,7 @@ class ResourceDefinitionCommands(Commands):
     @staticmethod
     def setup_commands(parser):
         p_new_res_dfn = parser.add_parser(
-            'create-resource-definition',
+            Commands.CREATE_RESOURCE_DEF,
             aliases=['crtrscdfn'],
             description='Defines a Linstor resource definition for use with linstor.')
         p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
@@ -31,7 +31,7 @@ class ResourceDefinitionCommands(Commands):
         # remove-resource definition
         # TODO description
         p_rm_res_dfn = parser.add_parser(
-            'delete-resource-definition',
+            Commands.DELETE_RESOURCE_DEF,
             aliases=['delrscdfn'],
             description=" Removes a resource definition "
             "from the linstor cluster. The resource is undeployed from all nodes "
@@ -53,7 +53,7 @@ class ResourceDefinitionCommands(Commands):
         res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
 
         p_lrscdfs = parser.add_parser(
-            'list-resource-definitions',
+            Commands.LIST_RESOURCE_DEF,
             aliases=['list-resource-definition', 'dsprscdfn', 'display-resource-definitions', 'resource-definitions',
                      'dsprscdfn'],
             description='Prints a list of all resource definitions known to '
@@ -69,8 +69,8 @@ class ResourceDefinitionCommands(Commands):
 
         # show properties
         p_sp = parser.add_parser(
-            'get-resource-definition-properties',
-            aliases=['get-resource-definition-props', 'dsprscdfnprp'],
+            Commands.GET_RESOURCE_DEF_PROPS,
+            aliases=['get-resource-definition-properties', 'dsprscdfnprp'],
             description="Prints all properties of the given resource definitions.")
         p_sp.add_argument(
             'resource_name',
@@ -80,8 +80,8 @@ class ResourceDefinitionCommands(Commands):
 
         # set properties
         p_setprop = parser.add_parser(
-            'set-resource-definition-properties',
-            aliases=['set-resource-definition-props', 'setrscdfnprp'],
+            Commands.SET_RESOURCE_DEF_PROPS,
+            aliases=['set-resource-definition-properties', 'setrscdfnprp'],
             description='Sets properties for the given resource definition.')
         p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
         p_setprop.add_argument(

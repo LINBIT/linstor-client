@@ -31,7 +31,7 @@ class NodeCommands(Commands):
     def setup_commands(parser):
         # create node
         p_new_node = parser.add_parser(
-            'create-node',
+            Commands.CREATE_NODE,
             aliases=['crtnode'],
             description='Creates a node entry for a node that participates in the '
             'linstor cluster.')
@@ -67,7 +67,7 @@ class NodeCommands(Commands):
 
         # remove-node
         p_rm_node = parser.add_parser(
-            'delete-node',
+            Commands.DELETE_NODE,
             aliases=['delnode'],
             description='Removes a node from the linstor cluster. '
             'All linstor resources that are still deployed on the specified '
@@ -90,7 +90,7 @@ class NodeCommands(Commands):
         nodes_verbose_completer = Commands.show_group_completer(nodesverbose, "show")
         nodes_group_completer = Commands.show_group_completer(nodesgroupby, "groupby")
         p_lnodes = parser.add_parser(
-            'list-nodes',
+            Commands.LIST_NODE,
             aliases=['list-node', 'ls-nodes', 'display-nodes', 'dspnode'],
             description='Prints a list of all cluster nodes known to linstor. '
             'By default, the list is printed as a human readable table.')
@@ -105,8 +105,8 @@ class NodeCommands(Commands):
 
         # show properties
         p_sp = parser.add_parser(
-            'get-node-properties',
-            aliases=['get-node-props', 'dspnodeprp'],
+            Commands.GET_NODE_PROPS,
+            aliases=['get-node-properties', 'dspnodeprp'],
             description="Prints all properties of the given node.")
         p_sp.add_argument(
             'node_name',
@@ -115,8 +115,8 @@ class NodeCommands(Commands):
 
         # set properties
         p_setp = parser.add_parser(
-            'set-node-properties',
-            aliases=['set-node-props', 'setnodeprp'],
+            Commands.SET_NODE_PROPS,
+            aliases=['set-node-properties', 'setnodeprp'],
             description="Set a property on the given node."
         )
         p_setp.add_argument(

@@ -9,6 +9,77 @@ from linstor.sharedconsts import API_REPLY
 
 
 class Commands(object):
+    CREATE_NODE = 'create-node'
+    CREATE_RESOURCE = 'create-resource'
+    CREATE_RESOURCE_DEF = 'create-resource-definition'
+    CREATE_STORAGE_POOL = 'create-storage-pool'
+    CREATE_STORAGE_POOL_DEF = 'create-storage-pool-definition'
+    CREATE_VOLUME_DEF = 'create-volume-definition'
+    DELETE_NODE = 'delete-node'
+    DELETE_RESOURCE = 'delete-resource'
+    DELETE_RESOURCE_DEF = 'delete-resource-definition'
+    DELETE_STORAGE_POOL = 'delete-storage-pool'
+    DELETE_STORAGE_POOL_DEF = 'delete-storage-pool-definition'
+    DELETE_VOLUME_DEF = 'delete-volume-definition'
+    LIST_NODE = 'list-nodes'
+    LIST_RESOURCE_DEF = 'list-resource-definitions'
+    LIST_RESOURCE = 'list-resources'
+    LIST_STORAGE_POOL_DEF = 'list-storage-pool-definitions'
+    LIST_STORAGE_POOL = 'list-storage-pools'
+    LIST_VOLUME_DEF = 'list-volume-definitions'
+    LIST_VOLUME = 'list-volumes'
+    DRBD_OPTIONS = 'drbd-options'
+    EXIT = 'exit'
+    GET_NODE_PROPS = 'get-node-props'
+    GET_RESOURCE_DEF_PROPS = 'get-resource-definition-props'
+    GET_RESOURCE_PROPS = 'get-resource-props'
+    GET_STORAGE_POOL_DEF_PROPS = 'get-storage-pool-definition-props'
+    GET_STORAGE_POOL_PROPS = 'get-storage-pool-props'
+    HELP = 'help'
+    INTERACTIVE = 'interactive'
+    LIST_COMMANDS = 'list-commands'
+    SET_NODE_PROPS = 'set-node-props'
+    SET_RESOURCE_DEF_PROPS = 'set-resource-definition-props'
+    SET_RESOURCE_PROPS = 'set-resource-props'
+    SET_STORAGE_POOL_DEF_PROPS = 'set-storage-pool-definition-props'
+    SET_STORAGE_POOL_PROPS = 'set-storage-pool-props'
+
+    MainList = [
+        CREATE_NODE,
+        CREATE_RESOURCE,
+        CREATE_RESOURCE_DEF,
+        CREATE_STORAGE_POOL,
+        CREATE_STORAGE_POOL_DEF,
+        CREATE_VOLUME_DEF,
+        DELETE_NODE,
+        DELETE_RESOURCE,
+        DELETE_RESOURCE_DEF,
+        DELETE_STORAGE_POOL,
+        DELETE_STORAGE_POOL_DEF,
+        DELETE_VOLUME_DEF,
+        LIST_NODE,
+        LIST_RESOURCE_DEF,
+        LIST_RESOURCE,
+        LIST_STORAGE_POOL_DEF,
+        LIST_STORAGE_POOL,
+        LIST_VOLUME_DEF,
+        LIST_VOLUME,
+        DRBD_OPTIONS,
+        EXIT,
+        GET_NODE_PROPS,
+        GET_RESOURCE_DEF_PROPS,
+        GET_RESOURCE_PROPS,
+        GET_STORAGE_POOL_DEF_PROPS,
+        GET_STORAGE_POOL_PROPS,
+        HELP,
+        INTERACTIVE,
+        LIST_COMMANDS,
+        SET_NODE_PROPS,
+        SET_RESOURCE_DEF_PROPS,
+        SET_RESOURCE_PROPS,
+        SET_STORAGE_POOL_DEF_PROPS,
+        SET_STORAGE_POOL_PROPS
+    ]
 
     @classmethod
     def _send_msg(cls, cc, api_call, msg, args=None):

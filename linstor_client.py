@@ -30,14 +30,14 @@ except ImportError:
 import linstor.argparse.argparse as argparse
 import linstor.argcomplete as argcomplete
 from linstor.commands import (
-    Commands,
     VolumeDefinitionCommands,
     StoragePoolDefinitionCommands,
     StoragePoolCommands,
     ResourceDefinitionCommands,
     ResourceCommands,
     NodeCommands,
-    DrbdOptions
+    DrbdOptions,
+    Commands
 )
 
 from linstor.consts import (
@@ -62,7 +62,7 @@ class LinStorCLI(object):
         self._utf8 = True
 
         self._parser = self.setup_parser()
-        self._all_commands = self.parser_cmds()
+        self._all_commands = self.parser_cmds(self._parser)
 
     def setup_parser(self):
         parser = argparse.ArgumentParser(prog="linstor")
@@ -90,23 +90,23 @@ class LinStorCLI(object):
                                      'nicer looking overview of all valid commands')
 
         # interactive mode
-        parser_ia = subp.add_parser('interactive',
+        parser_ia = subp.add_parser(Commands.INTERACTIVE,
                                     description='Start interactive mode')
         parser_ia.set_defaults(func=self.cmd_interactive)
 
         # help
-        p_help = subp.add_parser('help',
+        p_help = subp.add_parser(Commands.HELP,
                                  description='Print help for a command')
         p_help.add_argument('command')
         p_help.set_defaults(func=self.cmd_help)
 
         # list
-        p_list = subp.add_parser('list', aliases=['commands', 'list-commands'],
+        p_list = subp.add_parser(Commands.LIST_COMMANDS, aliases=['commands', 'list'],
                                  description='List available commands')
         p_list.set_defaults(func=self.cmd_list)
 
         # exit
-        p_exit = subp.add_parser('exit', aliases=['quit'],
+        p_exit = subp.add_parser(Commands.EXIT, aliases=['quit'],
                                  description='Only useful in interactive mode')
         p_exit.set_defaults(func=self.cmd_exit)
 
@@ -138,6 +138,8 @@ class LinStorCLI(object):
         drbd_options.setup_commands(subp)
 
         argcomplete.autocomplete(parser)
+
+        subp.metavar = "{%s}" % ", ".join(Commands.MainList)
 
         return parser
 
@@ -181,14 +183,13 @@ class LinStorCLI(object):
         args = self.parse(pargs)
         return args.func(args)
 
-    def parser_cmds(self):
+    @staticmethod
+    def parser_cmds(parser):
         # AFAIK there is no other way to get the subcommands out of argparse.
         # This avoids at least to manually keep track of subcommands
 
         cmds = dict()
-        subparsers_actions = [
-            action for action in self._parser._actions if isinstance(action,
-                                                                     argparse._SubParsersAction)]
+        subparsers_actions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
         for subparsers_action in subparsers_actions:
             for choice, subparser in subparsers_action.choices.items():
                 parser_hash = subparser.__hash__
@@ -209,7 +210,7 @@ class LinStorCLI(object):
             idx = 0
             found = False
             for idx, cmd in enumerate(cmds):
-                if cmd.startswith("add-") or cmd.startswith("remove-"):
+                if cmd.startswith("create-") or cmd.startswith("delete-"):
                     found = True
                     break
             if found:
@@ -233,16 +234,40 @@ class LinStorCLI(object):
 
         return description
 
+    def check_parser_commands(self):
+
+        for cmd in LinStorCLI.parser_cmds(self._parser):
+            mcos = [x for x in cmd if x in Commands.MainList]
+            if len(mcos) != 1:
+                raise AssertionError("no main command found for group: " + str(cmd))
+
+        return True
+
+    @staticmethod
+    def get_commands(parser, with_aliases=True):
+        cmds = []
+        for cmd in LinStorCLI.parser_cmds(parser):
+            cmds.append(cmd[0])
+            if with_aliases:
+                for al in cmd[1:]:
+                    cmds.append(al)
+        return cmds
+
+    @staticmethod
+    def get_command_aliases(all_commands, cmd):
+        return [x for subx in all_commands if cmd in subx for x in subx if cmd not in x]
+
     def cmd_list(self, args):
         sys.stdout.write('Use "help <command>" to get help for a specific command.\n\n')
         sys.stdout.write('Available commands:\n')
         # import pprint
         # pp = pprint.PrettyPrinter()
         # pp.pprint(self._all_commands)
-        for cmd in self._all_commands:
-            sys.stdout.write("- " + cmd[0])
-            if len(cmd) > 1:
-                sys.stdout.write(" (%s)" % (", ".join(cmd[1:])))
+        for cmd in Commands.MainList:
+            sys.stdout.write("- " + cmd)
+            aliases = LinStorCLI.get_command_aliases(self._all_commands, cmd)
+            if aliases:
+                sys.stdout.write(" (%s)" % (", ".join(aliases)))
             sys.stdout.write("\n")
         return 0
 

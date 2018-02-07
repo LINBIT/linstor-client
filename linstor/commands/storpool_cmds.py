@@ -34,7 +34,7 @@ class StoragePoolCommands(Commands):
     def setup_commands(parser):
         # new-storpol
         p_new_storpool = parser.add_parser(
-            'create-storage-pool',
+            Commands.CREATE_STORAGE_POOL,
             aliases=['crtstorpool'],
             description='Defines a Linstor storage pool for use with Linstor.')
         p_new_storpool.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the new storage pool')
@@ -55,7 +55,7 @@ class StoragePoolCommands(Commands):
         # remove-storpool
         # TODO description
         p_rm_storpool = parser.add_parser(
-            'delete-storage-pool',
+            Commands.DELETE_STORAGE_POOL,
             aliases=['delstorpool'],
             description=' Removes a storage pool ')
         p_rm_storpool.add_argument(
@@ -76,7 +76,7 @@ class StoragePoolCommands(Commands):
         storpool_group_completer = Commands.show_group_completer(storpoolgroupby, "groupby")
 
         p_lstorpool = parser.add_parser(
-            'list-storage-pools',
+            Commands.LIST_STORAGE_POOL,
             aliases=['list-storage-pool', 'ls-storage-pool', 'display-storage-pools', 'dspstorpool'],
             description='Prints a list of all storage pool known to '
             'linstor. By default, the list is printed as a human readable table.')
@@ -89,8 +89,8 @@ class StoragePoolCommands(Commands):
 
         # show properties
         p_sp = parser.add_parser(
-            'get-storage-pool-properties',
-            aliases=['get-storage-pool-props', 'dspstorpoolprp'],
+            Commands.GET_STORAGE_POOL_PROPS,
+            aliases=['get-storage-pool-properties', 'dspstorpoolprp'],
             description="Prints all properties of the given storage pool.")
         p_sp.add_argument(
             'storage_pool_name',
@@ -103,8 +103,8 @@ class StoragePoolCommands(Commands):
 
         # set properties
         p_setprop = parser.add_parser(
-            'set-storage-pool-properties',
-            aliases=['set-storage-pool-props', 'setstorpoolprp'],
+            Commands.SET_STORAGE_POOL_PROPS,
+            aliases=['set-storage-pool-properties', 'setstorpoolprp'],
             description='Sets properties for the given storage pool on the given node.')
         p_setprop.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the storage pool')
         p_setprop.add_argument(

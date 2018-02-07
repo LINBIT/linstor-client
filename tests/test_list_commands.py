@@ -1,5 +1,6 @@
 import unittest
 from .linstor_testcase import LinstorTestCase
+import linstor_client
 
 
 class TestListCommands(LinstorTestCase):
@@ -27,6 +28,10 @@ class TestListCommands(LinstorTestCase):
     def test_volume_definitions(self):
         jout = self.execute_with_machine_output(["list-volume-definitions"])
         self.assertIsNotNone(jout)
+
+    def test_main_commands(self):
+        cli = linstor_client.LinStorCLI()
+        cli.check_parser_commands()
 
 
 if __name__ == '__main__':

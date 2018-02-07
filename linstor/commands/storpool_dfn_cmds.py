@@ -20,7 +20,7 @@ class StoragePoolDefinitionCommands(Commands):
     def setup_commands(parser):
         # new-storpol definition
         p_new_storpool_dfn = parser.add_parser(
-            'create-storage-pool-definition',
+            Commands.CREATE_STORAGE_POOL_DEF,
             aliases=['crtstorpooldfn'],
             description='Defines a Linstor storpool definition for use with linstor.')
         p_new_storpool_dfn.add_argument(
@@ -32,7 +32,7 @@ class StoragePoolDefinitionCommands(Commands):
         # remove-storpool definition
         # TODO description
         p_rm_storpool_dfn = parser.add_parser(
-            'delete-storage-pool-definition',
+            Commands.DELETE_STORAGE_POOL_DEF,
             aliases=['delstorpooldfn'],
             description=' Removes a storage pool definition ')
         p_rm_storpool_dfn.add_argument('-q', '--quiet', action="store_true",
@@ -49,7 +49,7 @@ class StoragePoolDefinitionCommands(Commands):
         storpooldfn_group_completer = Commands.show_group_completer(storpooldfngroupby, "groupby")
 
         p_lstorpooldfs = parser.add_parser(
-            'list-storage-pool-definitions',
+            Commands.LIST_STORAGE_POOL_DEF,
             aliases=['list-storage-pool-definition', 'ls-storage-pool-dfn', 'display-storage-pool-definition',
                      'dspstorpooldfn'],
             description='Prints a list of all storage pool definitions known to '
@@ -65,8 +65,8 @@ class StoragePoolDefinitionCommands(Commands):
 
         # show properties
         p_sp = parser.add_parser(
-            'get-storage-pool-definition-properties',
-            aliases=['get-storage-pool-definition-props', 'dspstorpoolprp'],
+            Commands.GET_STORAGE_POOL_DEF_PROPS,
+            aliases=['get-storage-pool-definition-properties', 'dspstorpoolprp'],
             description="Prints all properties of the given storage pool definition.")
         p_sp.add_argument(
             'storage_pool_name',
@@ -76,8 +76,8 @@ class StoragePoolDefinitionCommands(Commands):
 
         # set properties
         p_setprop = parser.add_parser(
-            'set-storage-pool-definition-properties',
-            aliases=['set-storage-pool-definition-props', 'setstorpooldfnprp'],
+            Commands.SET_STORAGE_POOL_DEF_PROPS,
+            aliases=['set-storage-pool-definition-properties', 'setstorpooldfnprp'],
             description='Sets properties for the given storage pool definition.')
         p_setprop.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the storage pool definition')
         p_setprop.add_argument(
