@@ -1,6 +1,7 @@
 from proto.MsgCrtRsc_pb2 import MsgCrtRsc
 from proto.MsgDelRsc_pb2 import MsgDelRsc
 from proto.MsgLstRsc_pb2 import MsgLstRsc
+from proto.MsgModRsc_pb2 import MsgModRsc
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
@@ -14,6 +15,7 @@ from linstor.sharedconsts import (
     API_DEL_RSC,
     API_LST_RSC,
     API_LST_RSC_DFN,
+    API_MOD_RSC,
     KEY_STOR_POOL_NAME,
     FLAG_DELETE,
     FLAG_DISKLESS
@@ -273,13 +275,26 @@ class ResourceCommands(Commands):
     def print_props(cc, args):
         lstmsg = Commands._request_list(cc, API_LST_RSC, MsgLstRsc())
 
+        result = []
         if lstmsg:
             for rsc in lstmsg.resources:
-                if rsc.name == args.resource_name:
-                    Commands._print_props(rsc.props)
+                if rsc.name == args.resource_name and rsc.node_name == args.node_name:
+                    result.append(rsc.props)
                     break
 
+        Commands._print_props(result, args.machine_readable)
         return None
+
+    @staticmethod
+    @need_communication
+    def set_props(cc, args):
+        mmn = MsgModRsc()
+        mmn.node_name = args.node_name
+        mmn.rsc_name = args.name
+
+        Commands.fill_override_props(mmn, args.key_value_pair)
+
+        return Commands._send_msg(cc, API_MOD_RSC, mmn, args)
 
     @staticmethod
     @completer_communication

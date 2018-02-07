@@ -1,6 +1,7 @@
 from proto.MsgCrtNode_pb2 import MsgCrtNode
 from proto.MsgDelNode_pb2 import MsgDelNode
 from proto.MsgLstNode_pb2 import MsgLstNode
+from proto.MsgModNode_pb2 import MsgModNode
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
@@ -18,6 +19,7 @@ from linstor.sharedconsts import (
     VAL_NODE_TYPE_CMBD,
     VAL_NETIF_TYPE_IP,
     API_CRT_NODE,
+    API_MOD_NODE,
     API_DEL_NODE,
     API_LST_NODE
 )
@@ -128,6 +130,23 @@ class NodeCommands(Commands):
             help="Node for which to print the properties").completer = NodeCommands.completer
         p_sp.set_defaults(func=NodeCommands.print_props)
 
+        # set properties
+        p_setp = parser.add_parser(
+            'set-node-properties',
+            aliases=['set-node-props', 'setnodeprp'],
+            description="Set a property on the given node."
+        )
+        p_setp.add_argument(
+            'node_name',
+            help="Node for which to set the property"
+        ).completer = NodeCommands.completer
+        p_setp.add_argument(
+            'key_value_pair',
+            nargs='+',
+            help="Key value pair in the format 'key=value'."
+        )
+        p_setp.set_defaults(func=NodeCommands.set_props)
+
     @staticmethod
     @need_communication
     def create(cc, args):
@@ -200,13 +219,25 @@ class NodeCommands(Commands):
     def print_props(cc, args):
         lstmsg = Commands._request_list(cc, API_LST_NODE, MsgLstNode())
 
+        result = []
         if lstmsg:
             for n in lstmsg.nodes:
                 if n.name == args.node_name:
-                    Commands._print_props(n.props)
+                    result.append(n.props)
                     break
 
+        Commands._print_props(result, machine_readable=args.machine_readable)
         return None
+
+    @staticmethod
+    @need_communication
+    def set_props(cc, args):
+        mmn = MsgModNode()
+        mmn.node_name = args.node_name
+
+        Commands.fill_override_props(mmn, args.key_value_pair)
+
+        return Commands._send_msg(cc, API_MOD_NODE, mmn, args)
 
     @staticmethod
     @completer_communication

@@ -116,14 +116,61 @@ class Commands(object):
         return False
 
     @classmethod
-    def _print_props(cls, prop_map):
-        """Print properties in human readable format"""
-        tbl = Table()
-        tbl.add_column("Key")
-        tbl.add_column("Value")
-        for p in prop_map:
-            tbl.add_row([p.key, p.value])
-        tbl.show()
+    def parse_key_value_pairs(cls, kv_pairs):
+        """
+        Parses a key value pair pairs in an easier to use dict.
+        If a key has no value it will be put on the delete list.
+
+        Args:
+            kv_pairs (list): a list of key value pair strings. ['key=val', 'key2=val2']
+
+        Returns:
+            dict: A dictionary in the following format.
+
+            { 'pairs': [('key', 'val')], 'delete': ['key', 'key'] }
+
+        """
+        parsed = {
+            'pairs': [],
+            'delete': []
+        }
+        for kv in kv_pairs:
+            key, value = kv.split('=', 1)
+            if value:
+                parsed['pairs'].append((key, value))
+            else:
+                parsed['delete'].append(key)
+        return parsed
+
+    @classmethod
+    def fill_override_props(cls, msg, kv_pairs):
+        """Fill override props and deletes in a modify protobuf message"""
+        mod_prop_dict = Commands.parse_key_value_pairs(kv_pairs)
+        msg.delete_prop_keys.extend(mod_prop_dict['delete'])
+        for kv in mod_prop_dict['pairs']:
+            lin_kv = msg.override_props.add()
+            lin_kv.key = kv[0]
+            lin_kv.value = kv[1]
+
+        return msg
+
+    @classmethod
+    def _print_props(cls, prop_list_map, machine_readable):
+        """Print properties in machine or human readable format"""
+
+        if machine_readable:
+            d = [[protobuf_to_dict(y) for y in x] for x in prop_list_map]
+            s = json.dumps(d, indent=2)
+            print(s)
+            return None
+
+        for prop_map in prop_list_map:
+            tbl = Table()
+            tbl.add_column("Key")
+            tbl.add_column("Value")
+            for p in prop_map:
+                tbl.add_row([p.key, p.value])
+            tbl.show()
 
     @classmethod
     def _get_prop(cls, prop_map, key):

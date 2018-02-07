@@ -1,11 +1,13 @@
 from proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
 from proto.MsgDelStorPool_pb2 import MsgDelStorPool
+from proto.MsgModStorPool_pb2 import MsgModStorPool
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands, NodeCommands
 from linstor.utils import namecheck, Table
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL,
+    API_MOD_STOR_POOL,
     API_DEL_STOR_POOL,
     API_LST_STOR_POOL,
     KEY_STOR_POOL_VOLUME_GROUP,
@@ -96,7 +98,28 @@ class StoragePoolCommands(Commands):
         p_sp.add_argument(
             'storage_pool_name',
             help="Storage pool for which to print the properties").completer = StoragePoolCommands.completer
+        p_sp.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            help='Name of the node for the storage pool').completer = NodeCommands.completer
         p_sp.set_defaults(func=StoragePoolCommands.print_props)
+
+        # set properties
+        p_setprop = parser.add_parser(
+            'set-storage-pool-properties',
+            aliases=['set-storage-pool-props', 'setstorpoolprp'],
+            description='Sets properties for the given storage pool on the given node.')
+        p_setprop.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the storage pool')
+        p_setprop.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            help='Name of the node for the storage pool').completer = NodeCommands.completer
+        p_setprop.add_argument(
+            'key_value_pair',
+            nargs='+',
+            help="Key value pair in the format 'key=value'."
+        )
+        p_setprop.set_defaults(func=StoragePoolCommands.set_props)
 
     @staticmethod
     @need_communication
@@ -162,15 +185,6 @@ class StoragePoolCommands(Commands):
                 ])
             tbl.show()
 
-            # prntfrm = "{storpool:<20s} {uuid:<40s} {node:<30s} {driver:<20s}"
-            # print(prntfrm.format(storpool="Storpool-name", uuid="UUID", node="Node", driver="Driver"))
-            # for storpool in lstmsg.stor_pools:
-            #     print(prntfrm.format(
-            #         storpool=storpool.stor_pool_name,
-            #         uuid=storpool.stor_pool_uuid,
-            #         node=storpool.node_name,
-            #         driver=storpool.driver))
-
         return None
 
     @staticmethod
@@ -178,13 +192,26 @@ class StoragePoolCommands(Commands):
     def print_props(cc, args):
         lstmsg = Commands._request_list(cc, API_LST_STOR_POOL, MsgLstStorPool())
 
+        result = []
         if lstmsg:
             for stp in lstmsg.stor_pools:
-                if stp.stor_pool_name == args.storage_pool_name:
-                    Commands._print_props(stp.props)
+                if stp.stor_pool_name == args.storage_pool_name and stp.node_name == args.node_name:
+                    result.append(stp.props)
                     break
 
+        Commands._print_props(result, args.machine_readable)
         return None
+
+    @staticmethod
+    @need_communication
+    def set_props(cc, args):
+        mmn = MsgModStorPool()
+        mmn.node_name = args.node_name
+        mmn.stor_pool_name = args.name
+
+        Commands.fill_override_props(mmn, args.key_value_pair)
+
+        return Commands._send_msg(cc, API_MOD_STOR_POOL, mmn, args)
 
     @staticmethod
     @completer_communication

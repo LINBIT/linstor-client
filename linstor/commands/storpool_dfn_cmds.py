@@ -1,13 +1,15 @@
 from proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
 from proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
 from proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
+from proto.MsgModStorPoolDfn_pb2 import MsgModStorPoolDfn
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import namecheck, Output, Table
+from linstor.utils import namecheck, Table
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL_DFN,
     API_DEL_STOR_POOL_DFN,
-    API_LST_STOR_POOL_DFN
+    API_LST_STOR_POOL_DFN,
+    API_MOD_STOR_POOL_DFN
 )
 from linstor.consts import STORPOOL_NAME
 
@@ -74,6 +76,19 @@ class StoragePoolDefinitionCommands(Commands):
         ).completer = StoragePoolDefinitionCommands.completer
         p_sp.set_defaults(func=StoragePoolDefinitionCommands.print_props)
 
+        # set properties
+        p_setprop = parser.add_parser(
+            'set-storage-pool-definition-properties',
+            aliases=['set-storage-pool-definition-props', 'setstorpooldfnprp'],
+            description='Sets properties for the given storage pool definition.')
+        p_setprop.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the storage pool definition')
+        p_setprop.add_argument(
+            'key_value_pair',
+            nargs='+',
+            help="Key value pair in the format 'key=value'."
+        )
+        p_setprop.set_defaults(func=StoragePoolDefinitionCommands.set_props)
+
     @staticmethod
     @need_communication
     def create(cc, args):
@@ -120,13 +135,25 @@ class StoragePoolDefinitionCommands(Commands):
     def print_props(cc, args):
         lstmsg = Commands._request_list(cc, API_LST_STOR_POOL_DFN, MsgLstStorPoolDfn())
 
+        result = []
         if lstmsg:
             for storpool_dfn in lstmsg.stor_pool_dfns:
                 if storpool_dfn.stor_pool_name == args.storage_pool_name:
-                    Commands._print_props(storpool_dfn.props)
+                    result.append(storpool_dfn.props)
                     break
 
+        Commands._print_props(result, args.machine_readable)
         return None
+
+    @staticmethod
+    @need_communication
+    def set_props(cc, args):
+        mmn = MsgModStorPoolDfn()
+        mmn.stor_pool_name = args.name
+
+        Commands.fill_override_props(mmn, args.key_value_pair)
+
+        return Commands._send_msg(cc, API_MOD_STOR_POOL_DFN, mmn, args)
 
     @staticmethod
     @completer_communication

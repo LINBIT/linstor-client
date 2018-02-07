@@ -1,6 +1,7 @@
 from proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
 from proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
+from proto.MsgModRscDfn_pb2 import MsgModRscDfn
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
 from linstor.utils import rangecheck, namecheck, Table, Output
@@ -8,6 +9,7 @@ from linstor.sharedconsts import (
     API_CRT_RSC_DFN,
     API_DEL_RSC_DFN,
     API_LST_RSC_DFN,
+    API_MOD_RSC_DFN,
     FLAG_DELETE
 )
 from linstor.consts import RES_NAME, Color
@@ -76,6 +78,19 @@ class ResourceDefinitionCommands(Commands):
         ).completer = ResourceDefinitionCommands.completer
         p_sp.set_defaults(func=ResourceDefinitionCommands.print_props)
 
+        # set properties
+        p_setprop = parser.add_parser(
+            'set-resource-definition-properties',
+            aliases=['set-resource-definition-props', 'setrscdfnprp'],
+            description='Sets properties for the given resource definition.')
+        p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
+        p_setprop.add_argument(
+            'key_value_pair',
+            nargs='+',
+            help="Key value pair in the format 'key=value'."
+        )
+        p_setprop.set_defaults(func=ResourceDefinitionCommands.set_props)
+
     @staticmethod
     @need_communication
     def create(cc, args):
@@ -132,13 +147,25 @@ class ResourceDefinitionCommands(Commands):
     def print_props(cc, args):
         lstmsg = Commands._request_list(cc, API_LST_RSC_DFN, MsgLstRscDfn())
 
+        result = []
         if lstmsg:
             for rsc_dfn in lstmsg.rsc_dfns:
                 if rsc_dfn.rsc_name == args.resource_name:
-                    Commands._print_props(rsc_dfn.rsc_dfn_props)
+                    result.append(rsc_dfn.rsc_dfn_props)
                     break
 
+        Commands._print_props(result, args.machine_readable)
         return None
+
+    @staticmethod
+    @need_communication
+    def set_props(cc, args):
+        mmn = MsgModRscDfn()
+        mmn.rsc_name = args.name
+
+        Commands.fill_override_props(mmn, args.key_value_pair)
+
+        return Commands._send_msg(cc, API_MOD_RSC_DFN, mmn, args)
 
     @staticmethod
     @completer_communication
