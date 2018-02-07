@@ -44,7 +44,7 @@ class ResourceCommands(Commands):
             help='Name of the resource definition').completer = ResourceDefinitionCommands.completer
         p_new_res.add_argument('node_name',
                                type=namecheck(NODE_NAME),
-                               help='Name of the new resource').completer = NodeCommands.completer
+                               help='Name of the node to deploy the resource').completer = NodeCommands.completer
         p_new_res.set_defaults(func=ResourceCommands.create)
 
         # modify-resource
