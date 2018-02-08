@@ -129,9 +129,10 @@ class LinStorCLI(object):
         VolumeDefinitionCommands.setup_commands(subp)
 
         # shutdown
-        """shutdown_restart('shutdown', description='Stops the local linstor server process.',
-                         func=self.cmd_enoimp)
-        """
+        c_shutdown = subp.add_parser(Commands.SHUTDOWN,
+                        description='Shutdown the linstor controller')
+        c_shutdown.set_defaults(func=Commands.cmd_shutdown)
+
 
         # drbd options
         drbd_options = DrbdOptions()

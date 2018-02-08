@@ -2,10 +2,11 @@ import sys
 import json
 from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
+from proto.MsgControlCtrl_pb2 import MsgControlCtrl
 from linstor.utils import Output, Table
 from linstor.protobuf_to_dict import protobuf_to_dict
-from linstor.commcontroller import ApiCallResponseError
-from linstor.sharedconsts import API_REPLY
+from linstor.commcontroller import ApiCallResponseError, need_communication
+from linstor.sharedconsts import API_REPLY, API_CMD_SHUTDOWN, API_CONTROL_CTRL
 
 
 class Commands(object):
@@ -38,6 +39,7 @@ class Commands(object):
     HELP = 'help'
     INTERACTIVE = 'interactive'
     LIST_COMMANDS = 'list-commands'
+    SHUTDOWN = 'shutdown'
     SET_NODE_PROPS = 'set-node-props'
     SET_RESOURCE_DEF_PROPS = 'set-resource-definition-props'
     SET_RESOURCE_PROPS = 'set-resource-props'
@@ -74,6 +76,7 @@ class Commands(object):
         HELP,
         INTERACTIVE,
         LIST_COMMANDS,
+        SHUTDOWN,
         SET_NODE_PROPS,
         SET_RESOURCE_DEF_PROPS,
         SET_RESOURCE_PROPS,
@@ -268,5 +271,9 @@ class Commands(object):
         return completer
 
     @staticmethod
-    def cmd_enoimp(args):
-        Output.err('This command is deprecated or not implemented', args.no_color)
+    @need_communication
+    def cmd_shutdown(cc, args):
+        mcc = MsgControlCtrl()
+        mcc.command = API_CMD_SHUTDOWN
+
+        return Commands._send_msg(cc, API_CONTROL_CTRL, mcc, args)
