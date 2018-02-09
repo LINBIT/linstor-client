@@ -47,9 +47,13 @@ def need_communication(f):
         servers = CommController.controller_list(cliargs.controllers)
 
         p = None
+        rc = 0
         with CommController(servers, timeout=cliargs.timeout) as cc:
             try:
                 p = f(cc, *args, **kwargs)
+            except RuntimeError as re:
+                sys.stderr.write(str(re) + '\n')
+                return 2
             except ApiCallResponseError as callresponse:
                 return callresponse.apicallresponse.output(
                     no_color=args[0].no_color,
@@ -59,12 +63,12 @@ def need_communication(f):
         if p:  # could be None if no payload or if cmd_xyz does implicit return
             if isinstance(p, list):
                 for call_resp in p:
-                    rc = call_resp.output(warn_as_error=args[0].warn_as_error, no_color=args[0].no_color)
-                    if rc:
-                        return rc
+                    current_rc = call_resp.output(warn_as_error=args[0].warn_as_error, no_color=args[0].no_color)
+                    if current_rc != 0:
+                        rc = current_rc
             else:
                 return Output.handle_ret(p, no_color=args[0].no_color, warn_as_error=args[0].warn_as_error)
-        return 0
+        return rc
 
     return wrapper
 
