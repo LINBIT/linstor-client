@@ -237,9 +237,10 @@ class ResourceCommands(Commands):
                         vlm_state = None
                     state = tbl.color_cell("unknown", Color.YELLOW)
                     if vlm_state:
-                        state = "ok"
+                        state = "diskless" if not vlm_state.has_disk and not vlm_state.disk_failed else "ok"
                         problems = []
-                        if not vlm_state.is_present:
+
+                        if not vlm_state.is_present and vlm_state.has_disk:
                             problems.append("not present")
                         if vlm_state.disk_failed:
                             problems.append("disk failed")
