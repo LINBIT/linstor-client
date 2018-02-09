@@ -1,3 +1,211 @@
+linstor-client (0.1.1-1) experimental; urgency=medium
+
+  [ Roland Kammerer ]
+  * Initial commit
+  * add .pep8 config
+  * build: add proto files/tools from linstor-common
+  * build: clean generated files on pkg build
+  * add README.md for packaging
+  * debian: add python-protobuf as build dependency
+  * build: also regenerate src on doc
+  * build: don't build doc, included in tarball
+  * debian: move gensrc to rules
+  * build: add comment about Debian gensrc
+  * build: add Dockerfile
+  * fix ping command
+  * implement new-node command
+  * renamed port constants
+  * docker: clean apt pkg cache
+  * debian: fix indenting
+  * build: fix tarball generation
+  * build: rename to linbit-cli
+  * build: rename to linstor-client
+  * README.md: update information
+  * switch submodule urls to github
+
+  [ Rene Peinthor ]
+  * fix --controllers argument
+  * use default ports for satellite and controller
+  * add .gitignore (*.pyc and generated proto msgs)
+  * add wip commands
+  * use latest linstor-common
+  * update submodule to updated protobuf structure (working in py3)
+  * python3 compat changes
+  * move get controllers list into its own function
+  * _handle_ret() will not exit by itself anymore
+  * CommController: added __enter__/__exit__, small fix to sendrecv
+  * add storpooldfn commands for new, del and list
+  * storpooldfn: fix listing storpool definitions
+  * storpool: add commands creating, deleting and listing
+  * add node interfaces to the list-nodes output
+  * add create-resource, delete-resource, list-resources commands
+  * package name will be added on server
+  * variable is not needed anymore
+  * reduce command aliases to create and delete variations and remove abbr [...]
+  * linstor-common up / use string uuids
+  * code restructuring of commands
+  * fix pep8 warnings
+  * fix imports and some coding errors
+  * add approximate_size_string() from old drbdmanage client
+  * correctly read size from commandline (with converting) for vlmdfns
+  * remove reference from drbdmanage
+  * uuid's are strings now
+  * add linstor.commands package to setup.py
+  * new msgcrtnode support, all list commands support now -m arg
+  * unittests: add first basic unittests for list commands
+  * resource definition proto got some prefixes
+  * add default value for args argument
+  * raw_input() was renamed to input()
+  * move completer functions into their command classes and implement them
+  * split parse method into parse and parse_and_execute
+  * improve linstore_cli unittest setup and add tests for node
+  * utils: use variable for output stream
+  * fix interactive mode
+  * move driver completer to storpool class
+  * dirty fix of the json_format dependency problem until a replacement is found
+  * add get-*-properties commands to all objects and restructure code further
+  * restructured stub for setting drbd options in linstor
+  * remove _controller_list method, is now in ComController
+  * add list aliases without 's'
+  * add ApiCallResponse wrapper class that can be asked if it is an error
+  * 2 stage the Command*._delete into _delete and _delete_and_output
+  * implicit adding of a storage pool definition on adding an storage pool
+  * fix create-storage-pool
+  * add delete volume definition command
+  * use ApiCallResponse class in delete calls and simplify code
+  * tests: LinstorTestCase will now clean and start a fresh Controller per [...]
+  * tests: get the init sql script from the linstor.jar
+  * tests: add xmlrunnter unittest script
+  * add unittest ignores
+  * remove remaining strings of drbdmanage (-> linstor)
+  * create-resource: remove port argument
+  * create-volume-definition: use minor number argument
+  * create-resource-definition: hide secret argument
+  * remove --force arguments from delete commands
+  * unittest: force bind on ipv4 localhost
+  * prefer commandline argument controllers
+  * add debug output for jenkins
+  * tests: force flush stdout
+  * unittests: wait for controller to be terminated
+  * storage pool definition is now implicitly created on linstore-server
+  * show all exception errors
+  * machine readable output can now be text or json
+  * unittest: increase wait time for controller start
+  * unittest: finally fix unittest on jenkins
+  * remove commented code, props can be read with get-*-property command
+  * add skipped test to dump command help
+  * use new stringlist api flags
+  * nodes: rework list output
+  * all list commands are now using the util.Table class
+  * add protobuf_to_dict library
+  * move Commands class into its own file and use protobuf_to_dict for jso [...]
+  * change default machine-readable output to json
+  * tests: raise exception if linstor controller should be down already
+  * tests: json field names are not camelcase anymore
+  * do better parsing of ip/hostname addresses and with that enable ipv6
+  * include utils test in module
+  * fix parsing of simple hostnames
+  * rework output of delete api call responses
+  * update linstortestcase to current packaging standards
+  * fix return code mask checks
+  * use py3 compatible imports
+  * py2/3 safe import
+  * fix byte concatination and stop eating exceptions
+  * protobuf_to_dict: py2/3 fixed TYPE map
+  * convert to bytes before pickle load
+  * only decode if not a str (py3)
+  * make imports also work in python3
+  * tests: decode controller output
+  * linstor-client now also works in python3
+  * every command will now have a machine readable output argument
+  * apicallresponse uses now unsigned int64 for return code
+  * run controller on different port depending on python version
+  * tests: commands can and will now be checked on their api call return code
+  * fix typo
+  * make sure commands return all of their api call responses
+  * add timeout parameter for linstor-client connections
+  * add .idea to git ignore
+  * code cleanup and adding some type hinting
+  * fix commented out proto2json version
+  * add function to find the corresponding resource state
+  * fix unittests for removed RC_* constants
+  * check vlm_minor_nr is in volumes result
+  * unittests: improve exception handling
+  * adapt to latest protobuf changes
+  * add diskless argument for create-resource
+  * add __repr__ for ApiCallResponse
+  * improve help text in volume definition commands
+  * unittest: add test for creation commands
+  * unittest: check in list command if storage pool exist
+  * fix table column justify output with utf8
+  * add more info output in the list-resource command
+  * move colors into a class and a different package
+  * remove obsolete dbus debug commands
+  * remove copy of size_completer function
+  * cleanup more commands
+  * add myself to authors
+  * exit if volume sizes are wrong
+  * global arguments can now also specified via a config file
+  * close open file descriptors
+  * open to with open
+  * python3 does not allow to catch an exception object that is not child  [...]
+  * improve unittesting
+  * unittest: fix german typo
+  * check also linstor-server sibling directory for a distribution
+  * fix unittests for new MASK_CRT returncodes
+  * small utils.Table cleanup
+  * remove separators argument, not used anymore
+  * add list-volumes command
+  * clients excepts now a api version message, improved server connection errors
+  * fix interactive mode
+  * cleanup not needed commands
+  * update argcomplete to version 1.9.3
+  * use correct completer functions
+  * fix some commandline help strings
+  * give environment controllers priority
+  * add test for creating and deleting storage pool definitions
+  * fix STORPOOL_NAME check was not in place
+  * storage-pool: correclty set storage driver properties
+  * it makes no sense to show the used storage pool for a resource
+  * socket.sendall does not work with ssl wrapped sockets, rewrite with so [...]
+  * client now uses an internal linstor:// uri scheme and support ssl conn [...]
+  * rename Commands._create to Commands._send_msg
+  * netinterface node properties aren't needed anymore
+  * remove commented print code
+  * fix incorrect create-resource node_name help description
+  * don't look for a specific linstor tar, just search some folders for any tar
+  * make origin of resource name more understandable
+  * add set property methods for all objects and rework get property methods
+  * remove all obsolete or not implemented commands
+  * explicitly define main commands and show aliases only in the list-command
+  * argcomplete: fix accessing non existing _argcomplete_namespace
+  * add a shutdown controller command
+  * remove the 's' in property command, so it doesn't collide in auto complete
+  * output all apicallresponse message
+  * support retrieving and setting(basic) controller properties
+  * list-volumes: correctly display diskless volumes
+
+  [ Robert Altnoeder ]
+  * Fixed receiver so it supports asynchronous replies
+  * More detailed output, basic delete-node command
+  * Added command aliases:
+  * Added command aliases for various commands
+  * Fixed network I/O: incomplete recv() of message data
+  * Modified/added command aliases
+
+  [ Peter Schwindt ]
+  * Naming is serious, too
+
+  [ Joel Colledge ]
+  * Correct the default satellite connection port for combined nodes
+  * Look up the correct parameter name for the volume deletion command
+  * Ignore .iml files from IntelliJ IDEA
+  * Use the correct port field when creating a resource definition with a  [...]
+  * Fetch snapshot support status when listing storage pools
+  * Fix storage pool definition deletion
+
+ -- Roland Kammerer <roland.kammerer@linbit.com>  Fri, 09 Feb 2018 16:12:40 +0100
+
 linstor-client (0.1-1) experimental; urgency=medium
 
   Initiial version of this package.

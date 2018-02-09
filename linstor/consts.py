@@ -21,7 +21,7 @@
 Global constants for linstor
 """
 
-VERSION = "0.1"
+VERSION = "0.1.1"
 
 API_VERSION = 0
 
