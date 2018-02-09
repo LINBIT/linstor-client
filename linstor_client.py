@@ -46,9 +46,7 @@ from linstor.consts import (
     VERSION
 )
 
-from linstor.sharedconsts import (
-    DFLT_CTRL_PORT_PLAIN
-)
+from linstor import sharedconsts
 
 
 class LinStorCLI(object):
@@ -74,7 +72,7 @@ class LinStorCLI(object):
                             help='Do not use utf-8 characters in output (i.e., tables).')
         parser.add_argument('--warn-as-error', action="store_true",
                             help='Treat WARN return code as error (i.e., return code > 0).')
-        parser.add_argument('--controllers', default='localhost:%d' % DFLT_CTRL_PORT_PLAIN,
+        parser.add_argument('--controllers', default='localhost:%d' % sharedconsts.DFLT_CTRL_PORT_PLAIN,
                             help='Comma separated list of controllers (e.g.: "host1:port,host2:port"). '
                             'If the environment variable %s is set, '
                             'the ones set via this argument get appended.' % KEY_LS_CONTROLLERS)
@@ -128,11 +126,27 @@ class LinStorCLI(object):
         # add all volume definition commands
         VolumeDefinitionCommands.setup_commands(subp)
 
+        # controller - get props
+        c_ctrl_props = subp.add_parser(Commands.GET_CONTROLLER_PROPS,
+                                       aliases=['get-controller-properties'],
+                                       description='Print current controller config properties.')
+        c_ctrl_props.set_defaults(func=Commands.cmd_print_controller_props)
+
+        #  controller - set props
+        c_set_ctrl_props = subp.add_parser(Commands.SET_CONTROLLER_PROP,
+                                           aliases=['set-controller-property'],
+                                           description='Set a controller config property.')
+        c_set_ctrl_props.add_argument(
+            'key_value_pair',
+            nargs='+',
+            help="Key value pair in the format 'key=value'."
+        )
+        c_set_ctrl_props.set_defaults(func=Commands.cmd_set_controller_props)
+
         # shutdown
         c_shutdown = subp.add_parser(Commands.SHUTDOWN,
                         description='Shutdown the linstor controller')
         c_shutdown.set_defaults(func=Commands.cmd_shutdown)
-
 
         # drbd options
         drbd_options = DrbdOptions()

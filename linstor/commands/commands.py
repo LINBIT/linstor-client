@@ -3,10 +3,12 @@ import json
 from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.MsgControlCtrl_pb2 import MsgControlCtrl
+from proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
+from proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
 from linstor.utils import Output, Table
 from linstor.protobuf_to_dict import protobuf_to_dict
 from linstor.commcontroller import ApiCallResponseError, need_communication
-from linstor.sharedconsts import API_REPLY, API_CMD_SHUTDOWN, API_CONTROL_CTRL
+from linstor.sharedconsts import API_REPLY, API_CMD_SHUTDOWN, API_CONTROL_CTRL, API_LST_CFG_VAL, API_SET_CFG_VAL
 
 
 class Commands(object):
@@ -36,6 +38,7 @@ class Commands(object):
     GET_RESOURCE_PROPS = 'get-resource-prop'
     GET_STORAGE_POOL_DEF_PROPS = 'get-storage-pool-definition-prop'
     GET_STORAGE_POOL_PROPS = 'get-storage-pool-prop'
+    GET_CONTROLLER_PROPS = 'get-controller-prop'
     HELP = 'help'
     INTERACTIVE = 'interactive'
     LIST_COMMANDS = 'list-commands'
@@ -45,6 +48,7 @@ class Commands(object):
     SET_RESOURCE_PROPS = 'set-resource-prop'
     SET_STORAGE_POOL_DEF_PROPS = 'set-storage-pool-definition-prop'
     SET_STORAGE_POOL_PROPS = 'set-storage-pool-prop'
+    SET_CONTROLLER_PROP = 'set-controller-prop'
 
     MainList = [
         CREATE_NODE,
@@ -73,6 +77,7 @@ class Commands(object):
         GET_RESOURCE_PROPS,
         GET_STORAGE_POOL_DEF_PROPS,
         GET_STORAGE_POOL_PROPS,
+        GET_CONTROLLER_PROPS,
         HELP,
         INTERACTIVE,
         LIST_COMMANDS,
@@ -81,7 +86,8 @@ class Commands(object):
         SET_RESOURCE_DEF_PROPS,
         SET_RESOURCE_PROPS,
         SET_STORAGE_POOL_DEF_PROPS,
-        SET_STORAGE_POOL_PROPS
+        SET_STORAGE_POOL_PROPS,
+        SET_CONTROLLER_PROP
     ]
 
     @classmethod
@@ -92,8 +98,26 @@ class Commands(object):
 
         responses = cc.send_and_expect_reply(h, msg)
 
-        if args and Commands._print_machine_readable(args, [r.proto_msg for r in responses]):
+        if args and args.machine_readable:
+            Commands._print_machine_readable([r.proto_msg for r in responses])
             return None
+
+        return responses
+
+    @classmethod
+    def _send_msg_without_output(cls, cc, api_call, msg):
+        """
+        Use this method if you call it multiple times and handle machine readable output later at once.
+        :param cc: CommunicationController to use
+        :param api_call: api call constant
+        :param msg: proto msg payload to send
+        :return: a list of ApiCallResponses
+        """
+        h = MsgHeader()
+        h.api_call = api_call
+        h.msg_id = 1
+
+        responses = cc.send_and_expect_reply(h, msg)
 
         return responses
 
@@ -115,14 +139,18 @@ class Commands(object):
         return api_responses
 
     @classmethod
+    def _output_or_flatten(cls, args, api_responses):
+        flat_responses = [x for subx in api_responses for x in subx]
+        if args and args.machine_readable:
+            Commands._print_machine_readable([x.proto_msg for x in flat_responses])
+            return None
+        return flat_responses
+
+    @classmethod
     def _delete_and_output(cls, cc, args, api_call, del_msgs):
         api_responses = Commands._delete(cc, api_call, del_msgs)  # type: List[List[linstor.commcontroller.ApiCallResponse]]
 
-        flat_responses = [x for subx in api_responses for x in subx]
-        if args and Commands._print_machine_readable(args, [x.proto_msg for x in flat_responses]):
-            return None
-
-        return flat_responses
+        return Commands._output_or_flatten(args, api_responses)
 
     @classmethod
     def _request_list(cls, cc, api_call, lstMsg):
@@ -160,34 +188,32 @@ class Commands(object):
         if isinstance(lstmsg, MsgApiCallResponse):
             raise ApiCallResponseError(lstmsg)
 
-        if args and Commands._print_machine_readable(args, [lstmsg]):
+        if args and args.machine_readable:
+            Commands._print_machine_readable([lstmsg])
             return None
 
         return lstmsg
 
     @classmethod
-    def _print_machine_readable(cls, args, data):
+    def _print_machine_readable(cls, data):
         """
-        Checks if machine readable flag is set in args
-        and serializes the given lstmsg.
+        serializes the given protobuf data and prints to stdout.
         """
-        if args.machine_readable:
-            assert(isinstance(data, list))
-            d = [protobuf_to_dict(x) for x in data]
-            s = json.dumps(d, indent=2)
+        assert(isinstance(data, list))
+        d = [protobuf_to_dict(x) for x in data]
+        s = json.dumps(d, indent=2)
 
-            # try:
-            #     s = ""
-            #     from google.protobuf import json_format
-            #     for x in data:
-            #         s += json_format.MessageToJson(x, preserving_proto_field_name=True)
-            # except ImportError as e:
-            #     sys.stderr.write(
-            #         "You are using a protobuf version prior to 2.7, which is needed for json output")
-            #     return True
-            print(s)
-            return True
-        return False
+        # try:
+        #     s = ""
+        #     from google.protobuf import json_format
+        #     for x in data:
+        #         s += json_format.MessageToJson(x, preserving_proto_field_name=True)
+        # except ImportError as e:
+        #     sys.stderr.write(
+        #         "You are using a protobuf version prior to 2.7, which is needed for json output")
+        #     return True
+        print(s)
+        return True
 
     @classmethod
     def parse_key_value_pairs(cls, kv_pairs):
@@ -209,6 +235,10 @@ class Commands(object):
             'delete': []
         }
         for kv in kv_pairs:
+            if '=' not in kv:
+                raise RuntimeError(
+                    "KeyValueParseError: Key value '{kv}' pair does not contain a '='".format(kv=kv)
+                )
             key, value = kv.split('=', 1)
             if value:
                 parsed['pairs'].append((key, value))
@@ -269,6 +299,37 @@ class Commands(object):
 
             return possible
         return completer
+
+    @staticmethod
+    @need_communication
+    def cmd_print_controller_props(cc, args):
+        lstmsg = Commands._request_list(cc, API_LST_CFG_VAL, MsgLstCtrlCfgProps())
+
+        result = []
+        if lstmsg:
+            result.append(lstmsg.props)
+
+        Commands._print_props(result, args.machine_readable)
+        return None
+
+    @staticmethod
+    @need_communication
+    def cmd_set_controller_props(cc, args):
+        props = Commands.parse_key_value_pairs(args.key_value_pair)
+
+        api_responses = []
+        for mod_prop in props['pairs']:
+            msccp = MsgSetCtrlCfgProp()
+            ns_pos = mod_prop[0].rfind('/')
+            msccp.key = mod_prop[0]
+            msccp.value = mod_prop[1]
+            if ns_pos >= 0:
+                msccp.namespace = msccp.key[:ns_pos]
+                msccp.key = msccp.key[ns_pos + 1:]
+
+            api_responses.append(Commands._send_msg_without_output(cc, API_SET_CFG_VAL, msccp))
+
+        return Commands._output_or_flatten(args, api_responses)
 
     @staticmethod
     @need_communication
