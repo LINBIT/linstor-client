@@ -67,6 +67,16 @@ BOOL_FALSE = "false"
 KEY_LS_CONTROLLERS = 'LS_CONTROLLERS'
 
 
+class ExitCode(object):
+    OK = 0
+    UNKNOWN_ERROR = 1
+    ARGPARSE_ERROR = 2
+    OBJECT_NOT_FOUND = 3
+    CONNECTION_ERROR = 20
+    CONNECTION_TIMEOUT = 21
+    UNEXPECTED_REPLY = 22
+
+
 class Color(object):
     # Do not reorder
     (BLACK,
