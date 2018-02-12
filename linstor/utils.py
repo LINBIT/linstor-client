@@ -188,7 +188,7 @@ class Table(object):
             self.colors = colors
             self.utf8 = utf8
 
-    def add_column(self, name, color=False, just_col='<', just_txt='<'):
+    def add_column(self, name, color=None, just_col='<', just_txt='<'):
         self.got_column = True
         if self.got_row:
             raise SyntaxException("Not allowed to define columns after rows")
@@ -197,6 +197,9 @@ class Table(object):
                 raise SyntaxException("Not allowed to use multiple times")
             else:
                 self.r_just = True
+
+        if not self.colors:
+            color = None
 
         self.header.append({
             'name': name,
@@ -323,7 +326,7 @@ class Table(object):
         self.coloroverride.insert(0, [None] * len(self.header))
 
         for row in self.table:
-            if not row[0]:
+            if row[0] is None:
                 continue
             for idx, col in enumerate(self.header):
                 row[idx] = str(row[idx])
@@ -391,7 +394,7 @@ class Table(object):
 
         try:
             for idx, row in enumerate(self.table):
-                if not row[0]:  # print a separator
+                if row[0] is None:  # print a separator
                     if idx == 0:
                         l, m, r = ctbl[enc]['tl'], ctbl[enc]['msc'], ctbl[enc]['tr']
                     elif idx == len(self.table) - 1:
@@ -410,7 +413,7 @@ class Table(object):
             if e.errno == errno.EPIPE:
                 return
             else:
-                raise
+                raise e
 
     def color_cell(self, text, color):
         return (color, text) if self.colors else text
