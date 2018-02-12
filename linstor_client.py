@@ -303,7 +303,7 @@ class LinStorCLI(object):
                     return
 
                 cmd = cmds_[0]
-                if cmd == "exit":
+                if cmd in ["exit", "quit"]:
                     sys.exit(0)
                 elif cmd == "help":
                     if len(cmds_) == 1:
