@@ -5,8 +5,8 @@ from proto.MsgModNode_pb2 import MsgModNode
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import Output, Table, rangecheck, namecheck, ip_completer
-from linstor.consts import NODE_NAME, Color
+from linstor.utils import Output, Table, rangecheck, namecheck, ip_completer, LinstorError
+from linstor.consts import NODE_NAME, Color, ExitCode
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
@@ -103,6 +103,19 @@ class NodeCommands(Commands):
                               help='Filter by list of nodes').completer = NodeCommands.completer
         p_lnodes.set_defaults(func=NodeCommands.list)
 
+        # list netinterface
+        p_lnetif = parser.add_parser(
+            Commands.LIST_NETINTERFACE,
+            aliases=['list-netinterface', 'ls-netinterface', 'ls-netif', 'display-netinterface', 'dspnetif'],
+            description='Prints a list of netinterfaces from a node.'
+        )
+        p_lnetif.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_lnetif.add_argument(
+            'node_name',
+            help='Node name for which to print the net interfaces'
+        ).completer = NodeCommands.completer
+        p_lnetif.set_defaults(func=NodeCommands.list_netinterfaces)
+
         # show properties
         p_sp = parser.add_parser(
             Commands.GET_NODE_PROPS,
@@ -198,16 +211,49 @@ class NodeCommands(Commands):
         return None
 
     @staticmethod
+    def find_node(proto_node_list, node_name):
+        if proto_node_list:
+            for n in proto_node_list.nodes:
+                if n.name == node_name:
+                    return n
+        return None
+
+    @staticmethod
+    @need_communication
+    def list_netinterfaces(cc, args):
+        lstres = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode(), args)
+
+        node = NodeCommands.find_node(lstres, args.node_name)
+        if node:
+            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl.add_column(node.name, color=Color.GREEN)
+            tbl.add_column("NetInterface")
+            tbl.add_column("IP")
+            for netif in node.net_interfaces:
+                tbl.add_row([
+                    "",
+                    netif.name,
+                    netif.address
+                ])
+            tbl.show()
+        else:
+            raise LinstorError("Node '{n}' not found on controller.".format(n=args.node_name),
+                               ExitCode.OBJECT_NOT_FOUND)
+
+        return None
+
+    @staticmethod
     @need_communication
     def print_props(cc, args):
         lstmsg = Commands._request_list(cc, API_LST_NODE, MsgLstNode())
 
         result = []
-        if lstmsg:
-            for n in lstmsg.nodes:
-                if n.name == args.node_name:
-                    result.append(n.props)
-                    break
+        node = NodeCommands.find_node(lstmsg, args.node_name)
+        if node:
+            result.append(node.props)
+        else:
+            raise LinstorError("Node '{n}' not found on controller.".format(n=args.node_name),
+                               ExitCode.OBJECT_NOT_FOUND)
 
         Commands._print_props(result, machine_readable=args.machine_readable)
         return None

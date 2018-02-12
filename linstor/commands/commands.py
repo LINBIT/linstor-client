@@ -31,6 +31,7 @@ class Commands(object):
     LIST_STORAGE_POOL = 'list-storage-pools'
     LIST_VOLUME_DEF = 'list-volume-definitions'
     LIST_VOLUME = 'list-volumes'
+    LIST_NETINTERFACE = 'list-netinterfaces'
     DRBD_OPTIONS = 'drbd-options'
     EXIT = 'exit'
     GET_NODE_PROPS = 'get-node-prop'
@@ -70,6 +71,7 @@ class Commands(object):
         LIST_STORAGE_POOL,
         LIST_VOLUME_DEF,
         LIST_VOLUME,
+        LIST_NETINTERFACE,
         DRBD_OPTIONS,
         EXIT,
         GET_NODE_PROPS,
