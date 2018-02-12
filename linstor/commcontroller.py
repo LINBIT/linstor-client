@@ -30,7 +30,7 @@ from linstor.sharedconsts import (
     MASK_INFO,
     API_VERSION
 )
-from linstor.utils import Output
+from linstor.utils import Output, LinstorError
 from linstor import utils
 
 
@@ -51,6 +51,9 @@ def need_communication(f):
         with CommController(servers, timeout=cliargs.timeout) as cc:
             try:
                 p = f(cc, *args, **kwargs)
+            except LinstorError as le:
+                sys.stderr.write(str(le) + '\n')
+                sys.exit(le.exit_code)
             except RuntimeError as re:
                 sys.stderr.write(str(re) + '\n')
                 return 2

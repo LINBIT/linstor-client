@@ -843,3 +843,22 @@ class SizeCalc(object):
         else:
             result = byte_sz / div_out
         return int(result)
+
+
+class LinstorError(Exception):
+    """
+    Linstor exception with a message and exit code information
+    """
+    def __init__(self, msg, exit_code):
+        self._msg = msg
+        self._exit_code = exit_code
+
+    @property
+    def exit_code(self):
+        return self._exit_code
+
+    def __str__(self):
+        return "Error: {msg}".format(msg=self._msg)
+
+    def __repr__(self):
+        return "LinstorError('{msg}', {ec})".format(msg=self._msg, ec=self._exit_code)
