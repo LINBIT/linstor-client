@@ -205,5 +205,5 @@ setup(
         "build_man": BuildManCommand,
         "versionup2date": CheckUpToDate
     },
-    test_suite="tests"
+#    test_suite="tests.test_without_controller"
 )
