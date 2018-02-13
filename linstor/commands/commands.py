@@ -18,12 +18,14 @@ class Commands(object):
     CREATE_STORAGE_POOL = 'create-storage-pool'
     CREATE_STORAGE_POOL_DEF = 'create-storage-pool-definition'
     CREATE_VOLUME_DEF = 'create-volume-definition'
+    CREATE_NETINTERFACE = 'create-netinterface'
     DELETE_NODE = 'delete-node'
     DELETE_RESOURCE = 'delete-resource'
     DELETE_RESOURCE_DEF = 'delete-resource-definition'
     DELETE_STORAGE_POOL = 'delete-storage-pool'
     DELETE_STORAGE_POOL_DEF = 'delete-storage-pool-definition'
     DELETE_VOLUME_DEF = 'delete-volume-definition'
+    DELETE_NETINTERFACE = 'delete-netinterface'
     LIST_NODE = 'list-nodes'
     LIST_RESOURCE_DEF = 'list-resource-definitions'
     LIST_RESOURCE = 'list-resources'
@@ -58,12 +60,14 @@ class Commands(object):
         CREATE_STORAGE_POOL,
         CREATE_STORAGE_POOL_DEF,
         CREATE_VOLUME_DEF,
+        CREATE_NETINTERFACE,
         DELETE_NODE,
         DELETE_RESOURCE,
         DELETE_RESOURCE_DEF,
         DELETE_STORAGE_POOL,
         DELETE_STORAGE_POOL_DEF,
         DELETE_VOLUME_DEF,
+        DELETE_NETINTERFACE,
         LIST_NODE,
         LIST_RESOURCE_DEF,
         LIST_RESOURCE,

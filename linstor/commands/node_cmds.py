@@ -2,6 +2,8 @@ from proto.MsgCrtNode_pb2 import MsgCrtNode
 from proto.MsgDelNode_pb2 import MsgDelNode
 from proto.MsgLstNode_pb2 import MsgLstNode
 from proto.MsgModNode_pb2 import MsgModNode
+from proto.MsgCrtNetInterface_pb2 import MsgCrtNetInterface
+from proto.MsgDelNetInterface_pb2 import MsgDelNetInterface
 from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
@@ -21,7 +23,9 @@ from linstor.sharedconsts import (
     API_CRT_NODE,
     API_MOD_NODE,
     API_DEL_NODE,
-    API_LST_NODE
+    API_LST_NODE,
+    API_CRT_NET_IF,
+    API_DEL_NET_IF
 )
 
 
@@ -82,6 +86,43 @@ class NodeCommands(Commands):
         p_rm_node.add_argument('name',
                                help='Name of the node to remove').completer = NodeCommands.completer
         p_rm_node.set_defaults(func=NodeCommands.delete)
+
+        # create net interface
+        p_create_netinterface = parser.add_parser(
+            Commands.CREATE_NETINTERFACE,
+            aliases=['create-netif'],
+            description='Creates and adds a new netinterface to a given node. If port is specified this netinterface '
+                        'is used as satellite port'
+        )
+        p_create_netinterface.add_argument('-p', '--port', type=rangecheck(1, 65535),
+                                help='Port to use for satellite connections')
+        p_create_netinterface.add_argument('--communication-type', choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
+                                default=ctype_def,
+                                help='Communication type (default: %s)' % ctype_def)
+        p_create_netinterface.add_argument(
+            "node_name",
+            help="Name of the node to add the net interface"
+        ).completer = NodeCommands.completer
+        p_create_netinterface.add_argument("interface_name", help="Interface name")
+        p_create_netinterface.add_argument('ip', help='IP address of the new node')
+        p_create_netinterface.set_defaults(func=NodeCommands.create_netif)
+
+        # delete net interface
+        p_delete_netinterface = parser.add_parser(
+            Commands.DELETE_NETINTERFACE,
+            aliases=['delnetinterface'],
+            description='Delete a netinterface from a node.'
+        )
+        p_delete_netinterface.add_argument(
+            "node_name",
+            help="Name of the node to remove the net interface"
+        ).completer = NodeCommands.completer
+        p_delete_netinterface.add_argument(
+            "interface_name",
+            nargs='+',
+            help="Interface name"
+        ).completer = NodeCommands.completer_netif
+        p_delete_netinterface.set_defaults(func=NodeCommands.delete_netif)
 
         # list nodes
         nodesverbose = ('Family', 'IP', 'Site')
@@ -162,12 +203,10 @@ class NodeCommands(Commands):
             elif args.communication_type == VAL_NETCOM_TYPE_SSL:
                 port = DFLT_CTRL_PORT_SSL
             else:
-                Output.err("Communication type %s has no default port" % (args.communication_type), args.no_color)
+                Output.err("Communication type %s has no default port" % args.communication_type, args.no_color)
 
-        satcon = p.satellite_connections.add()
-        satcon.net_interface_name = args.interface_name
-        satcon.port = port
-        satcon.encryption_type = args.communication_type
+            netif.stlt_port = port
+            netif.stlt_encryption_type = args.communication_type
 
         return Commands._send_msg(cc, API_CRT_NODE, p, args)
 
@@ -223,22 +262,25 @@ class NodeCommands(Commands):
     def list_netinterfaces(cc, args):
         lstres = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode(), args)
 
-        node = NodeCommands.find_node(lstres, args.node_name)
-        if node:
-            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-            tbl.add_column(node.name, color=Color.GREEN)
-            tbl.add_column("NetInterface")
-            tbl.add_column("IP")
-            for netif in node.net_interfaces:
-                tbl.add_row([
-                    "",
-                    netif.name,
-                    netif.address
-                ])
-            tbl.show()
-        else:
-            raise LinstorError("Node '{n}' not found on controller.".format(n=args.node_name),
-                               ExitCode.OBJECT_NOT_FOUND)
+        if lstres:
+            node = NodeCommands.find_node(lstres, args.node_name)
+            if node:
+                tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+                tbl.add_column(node.name, color=Color.GREEN)
+                tbl.add_column("NetInterface")
+                tbl.add_column("IP")
+                #tbl.add_column("ForSatellite")
+                for netif in node.net_interfaces:
+                    tbl.add_row([
+                        "+",
+                        netif.name,
+                        netif.address,
+                        #"{p} {t}".format(p=netif.stlt_port, t=netif.stlt_encryption_type) if netif.stlt_port else ""
+                    ])
+                tbl.show()
+            else:
+                raise LinstorError("Node '{n}' not found on controller.".format(n=args.node_name),
+                                   ExitCode.OBJECT_NOT_FOUND)
 
         return None
 
@@ -269,6 +311,35 @@ class NodeCommands(Commands):
         return Commands._send_msg(cc, API_MOD_NODE, mmn, args)
 
     @staticmethod
+    @need_communication
+    def create_netif(cc, args):
+        p = MsgCrtNetInterface()
+        p.node_name = args.node_name
+
+        p.net_if.name = args.interface_name
+        p.net_if.address = args.ip
+
+        if args.port:
+            p.net_if.stlt_port = args.port
+            p.net_if.stlt_encryption_type = args.communication_type
+
+        return Commands._send_msg(cc, API_CRT_NET_IF, p, args)
+
+    @staticmethod
+    @need_communication
+    def delete_netif(cc, args):
+        del_msgs = []
+
+        for netif in args.interface_name:
+            p = MsgDelNetInterface()
+            p.node_name = args.node_name
+            p.net_if_name = netif
+
+            del_msgs.append(p)
+
+        return Commands._delete_and_output(cc, args, API_DEL_NET_IF, del_msgs)
+
+    @staticmethod
     @completer_communication
     def completer(cc, prefix, **kwargs):
         possible = set()
@@ -280,5 +351,21 @@ class NodeCommands(Commands):
 
             if prefix:
                 return [node for node in possible if node.startswith(prefix)]
+
+        return possible
+
+    @staticmethod
+    @completer_communication
+    def completer_netif(cc, prefix, **kwargs):
+        possible = set()
+        lstmsg = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode())
+
+        node = NodeCommands.find_node(lstmsg, kwargs['parsed_args'].node_name)
+        if node:
+            for netif in node.net_interfaces:
+                possible.add(netif.name)
+
+            if prefix:
+                return [netif for netif in possible if netif.startswith(prefix)]
 
         return possible
