@@ -39,19 +39,18 @@ class LinstorTestCase(unittest.TestCase):
     @classmethod
     def find_linstor_tar(cls, paths):
         for spath in paths:
-            if os.path.exists(spath):
-                for f in os.listdir(spath):
-                    if f.endswith('.tar'):
-                        return os.path.join(spath, f)
+            tarpath = os.path.join(spath, "linstor.tar")
+            if os.path.exists(tarpath):
+                return tarpath
         return None
 
     @classmethod
     def setUpClass(cls):
         install_path = os.path.abspath('build/_linstor_unittests')
         linstor_tar_search_paths = [
+            os.path.abspath(os.path.join('./')),
             os.path.abspath(os.path.join('../linstor', 'build', 'distributions')),
-            os.path.abspath(os.path.join('../linstor-server', 'build', 'distributions')),
-            os.path.abspath(os.path.join('./', 'distributions'))
+            os.path.abspath(os.path.join('../linstor-server', 'build', 'distributions'))
         ]
         linstor_distri_tar = cls.find_linstor_tar(linstor_tar_search_paths)
 
