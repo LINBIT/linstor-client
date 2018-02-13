@@ -165,7 +165,11 @@ class LinstorTestCase(unittest.TestCase):
             sys.stdout.close()
             sys.stdout = backupstd
             if stdval:
-                jout = json.loads(stdval)
+                try:
+                    jout = json.loads(stdval)
+                except ValueError as ve:
+                    sys.stderr.write("Could not parse: {j}\n".format(j=stdval))
+                    raise ve
                 self.assertIsInstance(jout, list)
             else:
                 sys.stderr.write(str(cmd_args) + " Result empty")
