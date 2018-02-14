@@ -4,7 +4,6 @@ from proto.MsgLstNode_pb2 import MsgLstNode
 from proto.MsgModNode_pb2 import MsgModNode
 from proto.MsgCrtNetInterface_pb2 import MsgCrtNetInterface
 from proto.MsgDelNetInterface_pb2 import MsgDelNetInterface
-from proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
 from linstor.utils import Output, Table, rangecheck, namecheck, ip_completer, LinstorError
@@ -168,21 +167,31 @@ class NodeCommands(Commands):
         p_sp.set_defaults(func=NodeCommands.print_props)
 
         # set properties
-        p_setp = parser.add_parser(
-            Commands.SET_NODE_PROPS,
-            aliases=['set-node-properties', 'setnodeprp'],
-            description="Set a property on the given node."
+        # disabled until there are properties
+        # p_setp = parser.add_parser(
+        #     Commands.SET_NODE_PROP,
+        #     aliases=['set-node-property', 'setnodeprp'],
+        #     description="Set a property on the given node."
+        # )
+        # p_setp.add_argument(
+        #     'node_name',
+        #     help="Node for which to set the property"
+        # ).completer = NodeCommands.completer
+        # Commands.add_parser_keyvalue(p_setp, "node")
+        # p_setp.set_defaults(func=NodeCommands.set_props)
+
+        # set aux properties
+        p_setauxp = parser.add_parser(
+            Commands.SET_NODE_AUX_PROP,
+            aliases=['set-node-aux-property', 'setnodeauxprp'],
+            description="Set a auxiliary property on the given node."
         )
-        p_setp.add_argument(
+        p_setauxp.add_argument(
             'node_name',
             help="Node for which to set the property"
         ).completer = NodeCommands.completer
-        p_setp.add_argument(
-            'key_value_pair',
-            nargs='+',
-            help="Key value pair in the format 'key=value'."
-        )
-        p_setp.set_defaults(func=NodeCommands.set_props)
+        Commands.add_parser_keyvalue(p_setauxp)
+        p_setauxp.set_defaults(func=NodeCommands.set_prop_aux)
 
     @staticmethod
     @need_communication
@@ -306,7 +315,7 @@ class NodeCommands(Commands):
         mmn = MsgModNode()
         mmn.node_name = args.node_name
 
-        Commands.fill_override_props(mmn, args.key_value_pair)
+        Commands.fill_override_prop(mmn, args.key, args.value)
 
         return Commands._send_msg(cc, API_MOD_NODE, mmn, args)
 

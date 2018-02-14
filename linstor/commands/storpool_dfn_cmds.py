@@ -75,17 +75,31 @@ class StoragePoolDefinitionCommands(Commands):
         p_sp.set_defaults(func=StoragePoolDefinitionCommands.print_props)
 
         # set properties
-        p_setprop = parser.add_parser(
-            Commands.SET_STORAGE_POOL_DEF_PROPS,
-            aliases=['set-storage-pool-definition-properties', 'setstorpooldfnprp'],
-            description='Sets properties for the given storage pool definition.')
-        p_setprop.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the storage pool definition')
-        p_setprop.add_argument(
-            'key_value_pair',
-            nargs='+',
-            help="Key value pair in the format 'key=value'."
-        )
-        p_setprop.set_defaults(func=StoragePoolDefinitionCommands.set_props)
+        # disabled until there are properties
+        # p_setprop = parser.add_parser(
+        #     Commands.SET_STORAGE_POOL_DEF_PROP,
+        #     aliases=['set-storage-pool-definition-property', 'setstorpooldfnprp'],
+        #     description='Sets properties for the given storage pool definition.')
+        # p_setprop.add_argument(
+        #     'name',
+        #     type=namecheck(STORPOOL_NAME),
+        #     help='Name of the storage pool definition'
+        # ).competer = StoragePoolDefinitionCommands.completer
+        # Commands.add_parser_keyvalue(p_setprop, "storagepool-definition")
+        # p_setprop.set_defaults(func=StoragePoolDefinitionCommands.set_props)
+
+        # set properties
+        p_setauxprop = parser.add_parser(
+            Commands.SET_STORAGE_POOL_DEF_AUX_PROP,
+            aliases=['set-storage-pool-definition-aux-property', 'setstorpooldfnauxprp'],
+            description='Sets auxiliary properties for the given storage pool definition.')
+        p_setauxprop.add_argument(
+            'name',
+            type=namecheck(STORPOOL_NAME),
+            help='Name of the storage pool definition'
+        ).competer = StoragePoolDefinitionCommands.completer
+        Commands.add_parser_keyvalue(p_setauxprop)
+        p_setauxprop.set_defaults(func=StoragePoolDefinitionCommands.set_prop_aux)
 
     @staticmethod
     @need_communication
@@ -149,7 +163,7 @@ class StoragePoolDefinitionCommands(Commands):
         mmn = MsgModStorPoolDfn()
         mmn.stor_pool_name = args.name
 
-        Commands.fill_override_props(mmn, args.key_value_pair)
+        Commands.fill_override_prop(mmn, args.key, args.value)
 
         return Commands._send_msg(cc, API_MOD_STOR_POOL_DFN, mmn, args)
 

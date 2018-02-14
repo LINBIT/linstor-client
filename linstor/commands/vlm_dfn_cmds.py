@@ -1,7 +1,8 @@
 from proto.MsgCrtVlmDfn_pb2 import MsgCrtVlmDfn
 from proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
 from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN, API_DEL_VLM_DFN
+from proto.MsgModVlmDfn_pb2 import MsgModVlmDfn
+from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN, API_DEL_VLM_DFN, API_MOD_VLM_DFN
 from linstor.commcontroller import need_communication
 from linstor.commands import Commands, ResourceDefinitionCommands
 from linstor.utils import SizeCalc, approximate_size_string, namecheck, Table, Output
@@ -87,6 +88,51 @@ class VolumeDefinitionCommands(Commands):
         p_lvols.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
                              help='Filter by list of resources').completer = ResourceDefinitionCommands.completer
         p_lvols.set_defaults(func=VolumeDefinitionCommands.list)
+
+        # show properties
+        p_sp = parser.add_parser(
+            Commands.GET_VOLUME_DEF_PROPS,
+            aliases=['get-volume-definition-properties', 'dspvlmdefprps'],
+            description="Prints all properties of the given volume definition.")
+        p_sp.add_argument(
+            'resource_name',
+            help="Resource name").completer = ResourceDefinitionCommands.completer
+        p_sp.add_argument(
+            'volume_nr',
+            type=int,
+            help="Volume number")
+        p_sp.set_defaults(func=VolumeDefinitionCommands.print_props)
+
+        # set properties
+        # disabled until there are properties
+        # p_setprop = parser.add_parser(
+        #     Commands.SET_VOLUME_DEF_PROP,
+        #     aliases=['set-volume-definition-property', 'setvlmdfnprp'],
+        #     description='Sets properties for the given volume definition.')
+        # p_setprop.add_argument(
+        #     'resource_name',
+        #     help="Resource name").completer = ResourceDefinitionCommands.completer
+        # p_setprop.add_argument(
+        #     'volume_nr',
+        #     type=int,
+        #     help="Volume number")
+        # Commands.add_parser_keyvalue(p_setprop, "volume-definition")
+        # p_setprop.set_defaults(func=VolumeDefinitionCommands.set_props)
+
+        # set aux properties
+        p_setprop = parser.add_parser(
+            Commands.SET_VOLUME_DEF_AUX_PROP,
+            aliases=['set-volume-definition-aux-property', 'setvlmdfnauxprp'],
+            description='Sets properties for the given volume definition.')
+        p_setprop.add_argument(
+            'resource_name',
+            help="Resource name").completer = ResourceDefinitionCommands.completer
+        p_setprop.add_argument(
+            'volume_nr',
+            type=int,
+            help="Volume number")
+        Commands.add_parser_keyvalue(p_setprop)
+        p_setprop.set_defaults(func=VolumeDefinitionCommands.set_prop_aux)
 
     @staticmethod
     @need_communication
@@ -191,3 +237,30 @@ class VolumeDefinitionCommands(Commands):
             p_units = choices
 
         return [digits + u for u in p_units]
+
+    @staticmethod
+    @need_communication
+    def print_props(cc, args):
+        lstmsg = Commands._request_list(cc, API_LST_RSC_DFN, MsgLstRscDfn())
+
+        result = []
+        if lstmsg:
+            for rsc_dfn in [x for x in lstmsg.rsc_dfns if x.rsc_name == args.resource_name]:
+                for vlmdfn in rsc_dfn.vlm_dfns:
+                    if vlmdfn.vlm_nr == args.volume_nr:
+                        result.append(vlmdfn.vlm_props)
+                        break
+
+        Commands._print_props(result, args.machine_readable)
+        return None
+
+    @staticmethod
+    @need_communication
+    def set_props(cc, args):
+        mmn = MsgModVlmDfn()
+        mmn.vlm_nr = args.volume_nr
+        mmn.rsc_name = args.resource_name
+
+        Commands.fill_override_prop(mmn, args.key, args.value)
+
+        return Commands._send_msg(cc, API_MOD_VLM_DFN, mmn, args)

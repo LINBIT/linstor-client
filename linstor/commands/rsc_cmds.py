@@ -21,7 +21,7 @@ from linstor.sharedconsts import (
     FLAG_DISKLESS
 )
 
-from linstor.consts import BOOL_TRUE, BOOL_FALSE, NODE_NAME, RES_NAME, STORPOOL_NAME
+from linstor.consts import NODE_NAME, RES_NAME, STORPOOL_NAME
 
 
 class ResourceCommands(Commands):
@@ -119,20 +119,29 @@ class ResourceCommands(Commands):
 
         # set properties
         p_setprop = parser.add_parser(
-            Commands.SET_RESOURCE_PROPS,
-            aliases=['set-resource-properties', 'setrscprp'],
+            Commands.SET_RESOURCE_PROP,
+            aliases=['set-resource-property', 'setrscprp'],
             description='Sets properties for the given resource on the given node.')
         p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource')
         p_setprop.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
             help='Node name where resource is deployed.').completer = NodeCommands.completer
-        p_setprop.add_argument(
-            'key_value_pair',
-            nargs='+',
-            help="Key value pair in the format 'key=value'."
-        )
+        Commands.add_parser_keyvalue(p_setprop, "resource")
         p_setprop.set_defaults(func=ResourceCommands.set_props)
+
+        # set aux properties
+        p_setauxprop = parser.add_parser(
+            Commands.SET_RESOURCE_AUX_PROP,
+            aliases=['set-resource-aux-property', 'setrscauxprp'],
+            description='Sets auxiliary properties for the given resource on the given node.')
+        p_setauxprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource')
+        p_setauxprop.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            help='Node name where resource is deployed.').completer = NodeCommands.completer
+        Commands.add_parser_keyvalue(p_setauxprop)
+        p_setauxprop.set_defaults(func=ResourceCommands.set_prop_aux)
 
     @staticmethod
     @need_communication
@@ -281,7 +290,7 @@ class ResourceCommands(Commands):
         mmn.node_name = args.node_name
         mmn.rsc_name = args.name
 
-        Commands.fill_override_props(mmn, args.key_value_pair)
+        Commands.fill_override_prop(mmn, args.key, args.value)
 
         return Commands._send_msg(cc, API_MOD_RSC, mmn, args)
 

@@ -8,7 +8,11 @@ from proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
 from linstor.utils import Output, Table
 from linstor.protobuf_to_dict import protobuf_to_dict
 from linstor.commcontroller import ApiCallResponseError, need_communication
-from linstor.sharedconsts import API_REPLY, API_CMD_SHUTDOWN, API_CONTROL_CTRL, API_LST_CFG_VAL, API_SET_CFG_VAL
+from linstor.sharedconsts import (
+    API_REPLY, API_CMD_SHUTDOWN, API_CONTROL_CTRL, API_LST_CFG_VAL, API_SET_CFG_VAL,
+    NAMESPC_AUXILIARY
+)
+from linstor.properties import properties
 
 
 class Commands(object):
@@ -41,17 +45,25 @@ class Commands(object):
     GET_RESOURCE_PROPS = 'get-resource-prop'
     GET_STORAGE_POOL_DEF_PROPS = 'get-storage-pool-definition-prop'
     GET_STORAGE_POOL_PROPS = 'get-storage-pool-prop'
+    GET_VOLUME_DEF_PROPS = 'get-volume-definition-prop'
     GET_CONTROLLER_PROPS = 'get-controller-prop'
     HELP = 'help'
     INTERACTIVE = 'interactive'
     LIST_COMMANDS = 'list-commands'
     SHUTDOWN = 'shutdown'
-    SET_NODE_PROPS = 'set-node-prop'
-    SET_RESOURCE_DEF_PROPS = 'set-resource-definition-prop'
-    SET_RESOURCE_PROPS = 'set-resource-prop'
-    SET_STORAGE_POOL_DEF_PROPS = 'set-storage-pool-definition-prop'
-    SET_STORAGE_POOL_PROPS = 'set-storage-pool-prop'
+    # SET_NODE_PROP = 'set-node-prop'
+    # SET_RESOURCE_DEF_PROP = 'set-resource-definition-prop'
+    SET_RESOURCE_PROP = 'set-resource-prop'
+    # SET_STORAGE_POOL_DEF_PROP = 'set-storage-pool-definition-prop'
+    SET_STORAGE_POOL_PROP = 'set-storage-pool-prop'
+    # SET_VOLUME_DEF_PROP = 'set-volume-definition-prop'
     SET_CONTROLLER_PROP = 'set-controller-prop'
+    SET_NODE_AUX_PROP = 'set-node-aux-prop'
+    SET_RESOURCE_DEF_AUX_PROP = 'set-resource-definition-aux-prop'
+    SET_RESOURCE_AUX_PROP = 'set-resource-aux-prop'
+    SET_STORAGE_POOL_DEF_AUX_PROP = 'set-storage-pool-definition-aux-prop'
+    SET_STORAGE_POOL_AUX_PROP = 'set-storage-pool-aux-prop'
+    SET_VOLUME_DEF_AUX_PROP = 'set-volume-definition-aux-prop'
 
     MainList = [
         CREATE_NODE,
@@ -83,17 +95,25 @@ class Commands(object):
         GET_RESOURCE_PROPS,
         GET_STORAGE_POOL_DEF_PROPS,
         GET_STORAGE_POOL_PROPS,
+        GET_VOLUME_DEF_PROPS,
         GET_CONTROLLER_PROPS,
         HELP,
         INTERACTIVE,
         LIST_COMMANDS,
         SHUTDOWN,
-        SET_NODE_PROPS,
-        SET_RESOURCE_DEF_PROPS,
-        SET_RESOURCE_PROPS,
-        SET_STORAGE_POOL_DEF_PROPS,
-        SET_STORAGE_POOL_PROPS,
-        SET_CONTROLLER_PROP
+        # SET_NODE_PROP,
+        # SET_RESOURCE_DEF_PROP,
+        SET_RESOURCE_PROP,
+        # SET_STORAGE_POOL_DEF_PROP,
+        SET_STORAGE_POOL_PROP,
+        # SET_VOLUME_DEF_PROP,
+        SET_CONTROLLER_PROP,
+        SET_NODE_AUX_PROP,
+        SET_RESOURCE_DEF_AUX_PROP,
+        SET_RESOURCE_AUX_PROP,
+        SET_STORAGE_POOL_DEF_AUX_PROP,
+        SET_STORAGE_POOL_AUX_PROP,
+        SET_VOLUME_DEF_AUX_PROP
     ]
 
     @classmethod
@@ -253,6 +273,17 @@ class Commands(object):
         return parsed
 
     @classmethod
+    def fill_override_prop(cls, msg, key, value):
+        """
+        Pack a key value pair into a list and call fill_override_props
+        :param msg:
+        :param key:
+        :param value:
+        :return:
+        """
+        return cls.fill_override_props(msg, [key + '=' + value])
+
+    @classmethod
     def fill_override_props(cls, msg, kv_pairs):
         """Fill override props and deletes in a modify protobuf message"""
         mod_prop_dict = Commands.parse_key_value_pairs(kv_pairs)
@@ -263,6 +294,27 @@ class Commands(object):
             lin_kv.value = kv[1]
 
         return msg
+
+    @classmethod
+    def add_parser_keyvalue(cls, parser, property_object=None):
+        if property_object:
+            props = Commands.get_allowed_props(property_object)
+            parser.add_argument(
+                'key',
+                choices=Commands.get_allowed_prop_keys(property_object),
+                help='; '.join([x['key'] + ': ' + x['info'] for x in props if 'info' in x])
+            )
+        else:
+            parser.add_argument(
+                'key',
+                help='a property key that will reside in the auxiliary namespace.'
+            )
+        parser.add_argument(
+            'value',
+            nargs='?',
+            default='',
+            help='Value for the chosen property. If empty property will be removed.'
+        )
 
     @classmethod
     def _print_props(cls, prop_list_map, machine_readable):
@@ -283,10 +335,23 @@ class Commands(object):
             tbl.show()
 
     @classmethod
+    def get_allowed_props(cls, objname):
+        return [x for x in properties[objname] if not x.get('internal', False)]
+
+    @classmethod
+    def get_allowed_prop_keys(cls, objname):
+        return [x['key'] for x in cls.get_allowed_props(objname)]
+
+    @classmethod
     def _get_prop(cls, prop_map, key):
         """Finds a property in the given property map"""
         prop = next((x for x in prop_map if x.key == key), None)
         return prop.value if prop else None
+
+    @classmethod
+    def set_prop_aux(cls, args):
+        args.key = NAMESPC_AUXILIARY + '/' + args.key
+        return cls.set_props(args)
 
     @staticmethod
     def show_group_completer(lst, where):
@@ -321,7 +386,7 @@ class Commands(object):
     @staticmethod
     @need_communication
     def cmd_set_controller_props(cc, args):
-        props = Commands.parse_key_value_pairs(args.key_value_pair)
+        props = Commands.parse_key_value_pairs([args.key + '=' + args.value])
 
         api_responses = []
         for mod_prop in props['pairs']:

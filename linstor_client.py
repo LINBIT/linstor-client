@@ -136,16 +136,14 @@ class LinStorCLI(object):
         c_set_ctrl_props = subp.add_parser(Commands.SET_CONTROLLER_PROP,
                                            aliases=['set-controller-property'],
                                            description='Set a controller config property.')
-        c_set_ctrl_props.add_argument(
-            'key_value_pair',
-            nargs='+',
-            help="Key value pair in the format 'key=value'."
-        )
+        Commands.add_parser_keyvalue(c_set_ctrl_props, "controller")
         c_set_ctrl_props.set_defaults(func=Commands.cmd_set_controller_props)
 
         # shutdown
-        c_shutdown = subp.add_parser(Commands.SHUTDOWN,
-                        description='Shutdown the linstor controller')
+        c_shutdown = subp.add_parser(
+            Commands.SHUTDOWN,
+            description='Shutdown the linstor controller'
+        )
         c_shutdown.set_defaults(func=Commands.cmd_shutdown)
 
         # drbd options
@@ -251,10 +249,16 @@ class LinStorCLI(object):
 
     def check_parser_commands(self):
 
-        for cmd in LinStorCLI.parser_cmds(self._parser):
+        parser_cmds = LinStorCLI.parser_cmds(self._parser)
+        for cmd in parser_cmds:
             mcos = [x for x in cmd if x in Commands.MainList]
             if len(mcos) != 1:
                 raise AssertionError("no main command found for group: " + str(cmd))
+
+        all_cmds = [y for x in parser_cmds for y in x]
+        for cmd in Commands.MainList:
+            if cmd not in all_cmds:
+                raise AssertionError("defined command not used in argparse: " + str(cmd))
 
         return True
 

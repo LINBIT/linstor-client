@@ -79,17 +79,23 @@ class ResourceDefinitionCommands(Commands):
         p_sp.set_defaults(func=ResourceDefinitionCommands.print_props)
 
         # set properties
-        p_setprop = parser.add_parser(
-            Commands.SET_RESOURCE_DEF_PROPS,
-            aliases=['set-resource-definition-properties', 'setrscdfnprp'],
-            description='Sets properties for the given resource definition.')
-        p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
-        p_setprop.add_argument(
-            'key_value_pair',
-            nargs='+',
-            help="Key value pair in the format 'key=value'."
-        )
-        p_setprop.set_defaults(func=ResourceDefinitionCommands.set_props)
+        # disabled until there are properties
+        # p_setprop = parser.add_parser(
+        #     Commands.SET_RESOURCE_DEF_PROP,
+        #     aliases=['set-resource-definition-property', 'setrscdfnprp'],
+        #     description='Sets properties for the given resource definition.')
+        # p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
+        # Commands.add_parser_keyvalue(p_setprop, 'resource-definition')
+        # p_setprop.set_defaults(func=ResourceDefinitionCommands.set_props)
+
+        # set aux properties
+        p_setauxprop = parser.add_parser(
+            Commands.SET_RESOURCE_DEF_AUX_PROP,
+            aliases=['set-resource-definition-aux-property', 'setrscdfnauxprp'],
+            description='Sets auxiliary properties for the given resource definition.')
+        p_setauxprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
+        Commands.add_parser_keyvalue(p_setauxprop)
+        p_setauxprop.set_defaults(func=ResourceDefinitionCommands.set_prop_aux)
 
     @staticmethod
     @need_communication
@@ -163,7 +169,7 @@ class ResourceDefinitionCommands(Commands):
         mmn = MsgModRscDfn()
         mmn.rsc_name = args.name
 
-        Commands.fill_override_props(mmn, args.key_value_pair)
+        Commands.fill_override_prop(mmn, args.key, args.value)
 
         return Commands._send_msg(cc, API_MOD_RSC_DFN, mmn, args)
 

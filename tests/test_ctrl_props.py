@@ -3,7 +3,6 @@ from linstor.sharedconsts import *
 
 
 class TestProperties(LinstorTestCase):
-    NAMESPC_AUX = "aux"
 
     def find_prop(self, props, key):
         for prop in props:
@@ -48,7 +47,7 @@ class TestProperties(LinstorTestCase):
 
         # start prop tests
         node_resp = self.execute_with_single_resp(
-            ['set-node-prop', 'node1', TestProperties.NAMESPC_AUX + '/test_prop=val']
+            ['set-node-aux-prop', 'node1', 'test_prop', 'val']
         )
         self.assertTrue(node_resp.is_success())
 
@@ -56,11 +55,11 @@ class TestProperties(LinstorTestCase):
         self.assertEqual(1, len(node_props))
         node_props = node_props[0]
         self.assertEqual(1, len(node_props))
-        prop = self.find_prop(node_props, TestProperties.NAMESPC_AUX + '/test_prop')
-        self.check_prop(prop, TestProperties.NAMESPC_AUX + '/test_prop', 'val')
+        prop = self.find_prop(node_props, NAMESPC_AUXILIARY + '/test_prop')
+        self.check_prop(prop, NAMESPC_AUXILIARY + '/test_prop', 'val')
 
         node_resp = self.execute_with_single_resp(
-            ['set-node-prop', 'node1', TestProperties.NAMESPC_AUX + '/another_prop=value with spaces']
+            ['set-node-aux-prop', 'node1', 'another_prop', 'value with spaces']
         )
         self.assertTrue(node_resp.is_success())
 
@@ -68,15 +67,15 @@ class TestProperties(LinstorTestCase):
         self.assertEqual(1, len(node_props))
         node_props = node_props[0]
         self.assertEqual(2, len(node_props))
-        prop = self.find_prop(node_props, TestProperties.NAMESPC_AUX + '/test_prop')
-        self.check_prop(prop, TestProperties.NAMESPC_AUX + '/test_prop', 'val')
+        prop = self.find_prop(node_props, NAMESPC_AUXILIARY + '/test_prop')
+        self.check_prop(prop, NAMESPC_AUXILIARY + '/test_prop', 'val')
 
-        prop = self.find_prop(node_props, TestProperties.NAMESPC_AUX + '/another_prop')
-        self.check_prop(prop, TestProperties.NAMESPC_AUX + '/another_prop', 'value with spaces')
+        prop = self.find_prop(node_props, NAMESPC_AUXILIARY + '/another_prop')
+        self.check_prop(prop, NAMESPC_AUXILIARY + '/another_prop', 'value with spaces')
 
         # storage pool definition props
         storage_resp = self.execute_with_single_resp(
-            ['set-storage-pool-definition-prop', 'DfltStorPool', TestProperties.NAMESPC_AUX + '/stor=lvmcomplex']
+            ['set-storage-pool-definition-aux-prop', 'DfltStorPool', 'stor', 'lvmcomplex']
         )
         self.assertTrue(storage_resp.is_success())
 
@@ -84,8 +83,8 @@ class TestProperties(LinstorTestCase):
         self.assertEqual(1, len(storage_props))
         storage_props = storage_props[0]
         self.assertEqual(1, len(storage_props))
-        prop = self.find_prop(storage_props, TestProperties.NAMESPC_AUX + '/stor')
-        self.check_prop(prop, TestProperties.NAMESPC_AUX + '/stor', 'lvmcomplex')
+        prop = self.find_prop(storage_props, NAMESPC_AUXILIARY + '/stor')
+        self.check_prop(prop, NAMESPC_AUXILIARY + '/stor', 'lvmcomplex')
 
         # storage pool props
         storage_props = self.execute_with_machine_output(['get-storage-pool-prop', 'storage', 'node1'])
@@ -96,7 +95,7 @@ class TestProperties(LinstorTestCase):
         self.check_prop(prop, NAMESPC_STORAGE_DRIVER + '/LvmVg', 'lvmpool')
 
         storage_resp = self.execute_with_resp(
-            ['set-storage-pool-prop', 'storage', 'node1', TestProperties.NAMESPC_AUX + '/stor=lvmcomplex']
+            ['set-storage-pool-aux-prop', 'storage', 'node1', 'stor', 'lvmcomplex']
         )
         self.assertEqual(2, len(storage_resp))
         self.assertTrue(storage_resp[0].is_success())
@@ -108,22 +107,36 @@ class TestProperties(LinstorTestCase):
         prop = self.find_prop(storage_props, NAMESPC_STORAGE_DRIVER + '/LvmVg')
         self.check_prop(prop, NAMESPC_STORAGE_DRIVER + '/LvmVg', 'lvmpool')
 
-        prop = self.find_prop(storage_props, TestProperties.NAMESPC_AUX + '/stor')
-        self.check_prop(prop, TestProperties.NAMESPC_AUX + '/stor', 'lvmcomplex')
+        prop = self.find_prop(storage_props, NAMESPC_AUXILIARY + '/stor')
+        self.check_prop(prop, NAMESPC_AUXILIARY + '/stor', 'lvmcomplex')
 
         # resource definition
-        storage_resp = self.execute_with_resp(
-            ['set-resource-definition-prop', 'rsc1', TestProperties.NAMESPC_AUX + '/user=alexa']
+        resourcedef_resp = self.execute_with_resp(
+            ['set-resource-definition-aux-prop', 'rsc1', 'user', 'alexa']
         )
-        self.assertEqual(2, len(storage_resp))
+        self.assertEqual(2, len(resourcedef_resp))
+        self.assertTrue(resourcedef_resp[0].is_success())
+
+        resourcedef_props = self.execute_with_machine_output(['get-resource-definition-prop', 'rsc1'])
+        self.assertEqual(1, len(resourcedef_props))
+        resourcedef_props = resourcedef_props[0]
+        self.assertEqual(1, len(resourcedef_props))
+        prop = self.find_prop(resourcedef_props, NAMESPC_AUXILIARY + '/user')
+        self.check_prop(prop, NAMESPC_AUXILIARY + '/user', 'alexa')
+
+        # volume definition
+        volumedef_resp = self.execute_with_resp(
+            ['set-volume-definition-aux-prop', 'rsc1', '0', 'volumespec', 'cascading']
+        )
+        self.assertEqual(2, len(volumedef_resp))
         self.assertTrue(storage_resp[0].is_success())
 
-        storage_props = self.execute_with_machine_output(['get-resource-definition-prop', 'rsc1'])
-        self.assertEqual(1, len(storage_props))
-        storage_props = storage_props[0]
-        self.assertEqual(1, len(storage_props))
-        prop = self.find_prop(storage_props, TestProperties.NAMESPC_AUX + '/user')
-        self.check_prop(prop, TestProperties.NAMESPC_AUX + '/user', 'alexa')
+        volumedef_props = self.execute_with_machine_output(['get-volume-definition-prop', 'rsc1', '0'])
+        self.assertEqual(1, len(volumedef_props))
+        volumedef_props = volumedef_props[0]
+        self.assertEqual(1, len(volumedef_props))
+        prop = self.find_prop(volumedef_props, NAMESPC_AUXILIARY + '/volumespec')
+        self.check_prop(prop, NAMESPC_AUXILIARY + '/volumespec', 'cascading')
 
         # resource
         resource_props = self.execute_with_machine_output(['get-resource-prop', 'rsc1', 'node1'])
@@ -134,7 +147,7 @@ class TestProperties(LinstorTestCase):
         self.check_prop(prop, KEY_STOR_POOL_NAME, 'storage')
 
         storage_resp = self.execute_with_resp(
-            ['set-resource-prop', 'rsc1', 'node1', TestProperties.NAMESPC_AUX + '/NIC=10.0.0.1']
+            ['set-resource-aux-prop', 'rsc1', 'node1', 'NIC', '10.0.0.1']
         )
         self.assertEqual(2, len(storage_resp))
         self.assertTrue(storage_resp[0].is_warning())
@@ -146,5 +159,5 @@ class TestProperties(LinstorTestCase):
         self.assertEqual(2, len(resource_props))
         prop = self.find_prop(resource_props, KEY_STOR_POOL_NAME)
         self.check_prop(prop, KEY_STOR_POOL_NAME, 'storage')
-        prop = self.find_prop(resource_props, TestProperties.NAMESPC_AUX + '/NIC')
-        self.check_prop(prop, TestProperties.NAMESPC_AUX + '/NIC', '10.0.0.1')
+        prop = self.find_prop(resource_props, NAMESPC_AUXILIARY + '/NIC')
+        self.check_prop(prop, NAMESPC_AUXILIARY + '/NIC', '10.0.0.1')

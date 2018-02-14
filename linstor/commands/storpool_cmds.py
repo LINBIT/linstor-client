@@ -103,20 +103,37 @@ class StoragePoolCommands(Commands):
 
         # set properties
         p_setprop = parser.add_parser(
-            Commands.SET_STORAGE_POOL_PROPS,
-            aliases=['set-storage-pool-properties', 'setstorpoolprp'],
+            Commands.SET_STORAGE_POOL_PROP,
+            aliases=['set-storage-pool-property', 'setstorpoolprp'],
             description='Sets properties for the given storage pool on the given node.')
-        p_setprop.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the storage pool')
+        p_setprop.add_argument(
+            'name',
+            type=namecheck(STORPOOL_NAME),
+            help='Name of the storage pool'
+        ).completer = StoragePoolCommands.completer
         p_setprop.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
             help='Name of the node for the storage pool').completer = NodeCommands.completer
-        p_setprop.add_argument(
-            'key_value_pair',
-            nargs='+',
-            help="Key value pair in the format 'key=value'."
-        )
+        Commands.add_parser_keyvalue(p_setprop, 'storagepool')
         p_setprop.set_defaults(func=StoragePoolCommands.set_props)
+
+        # set aux properties
+        p_setauxprop = parser.add_parser(
+            Commands.SET_STORAGE_POOL_AUX_PROP,
+            aliases=['set-storage-pool-aux-property', 'setstorpoolauxprp'],
+            description='Sets auxiliary properties for the given storage pool on the given node.')
+        p_setauxprop.add_argument(
+            'name',
+            type=namecheck(STORPOOL_NAME),
+            help='Name of the storage pool'
+        ).completer = StoragePoolCommands.completer
+        p_setauxprop.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            help='Name of the node for the storage pool').completer = NodeCommands.completer
+        Commands.add_parser_keyvalue(p_setauxprop)
+        p_setauxprop.set_defaults(func=StoragePoolCommands.set_prop_aux)
 
     @staticmethod
     @need_communication
@@ -206,7 +223,7 @@ class StoragePoolCommands(Commands):
         mmn.node_name = args.node_name
         mmn.stor_pool_name = args.name
 
-        Commands.fill_override_props(mmn, args.key_value_pair)
+        Commands.fill_override_prop(mmn, args.key, args.value)
 
         return Commands._send_msg(cc, API_MOD_STOR_POOL, mmn, args)
 
@@ -217,7 +234,7 @@ class StoragePoolCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL, MsgLstStorPool())
 
         if lstmsg:
-            for storpool in lstmsg.resources:
+            for storpool in lstmsg.stor_pools:
                 possible.add(storpool.stor_pool_name)
 
             if prefix:
