@@ -13,16 +13,6 @@ import zipfile
 from linstor.commcontroller import ApiCallResponse
 
 
-db_xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
- <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
- <properties>
-     <comment>LinStor database configuration</comment>
-     <entry key="user">linstor</entry>
-     <entry key="password">linstor</entry>
-     <entry key="connection-url">jdbc:derby:{path};create=true</entry>
- </properties>
- """
-
 controller_port = 63374 + sys.version_info[0]
 
 update_port_sql = """
@@ -66,7 +56,6 @@ class LinstorTestCase(unittest.TestCase):
             tar.extractall(install_path)
             linstor_file_name = tar.getnames()[0]  # on jenkins the tar and folder within is named workspace-1.0
 
-        database_cfg_path = os.path.join(install_path, 'database.cfg')
         # get sql init script
         execute_init_sql_path = os.path.join(install_path, 'init.sql')
         linjar_filename = os.path.join(install_path, linstor_file_name, 'lib', linstor_file_name + '.jar')
@@ -78,24 +67,13 @@ class LinstorTestCase(unittest.TestCase):
                     # patch init sql file to start controller on different port
                     init_sql_file.write(update_port_sql)
 
-        with open(database_cfg_path, 'wt') as databasecfg:
-            databasecfg.write(db_xml.format(path=os.path.join(install_path, 'linstor_db')))
-
         linstor_bin = os.path.join(install_path, linstor_file_name, 'bin')
-        ret = subprocess.check_call(
-            [
-                os.path.join(linstor_bin, 'RecreateDb'),
-                database_cfg_path,
-                execute_init_sql_path
-            ])
-        if ret != 0:
-            raise RuntimeError("Couldn't execute RecreateDb script")
 
         # start linstor controller
         controller_bin = os.path.join(linstor_bin, "Controller")
         print("executing: " + controller_bin)
         cls.controller = subprocess.Popen(
-            [controller_bin],
+            [controller_bin, "--memory_database", execute_init_sql_path],
             cwd=install_path,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
