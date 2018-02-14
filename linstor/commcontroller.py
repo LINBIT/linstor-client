@@ -20,7 +20,7 @@ from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiVersion_pb2 import MsgApiVersion
 from functools import wraps
 from linstor.consts import KEY_LS_CONTROLLERS
-from linstor.consts import API_VERSION as API_VERSION_NR
+from linstor.consts import API_VERSION as API_VERSION_NR, API_VERSION_MIN
 from linstor.sharedconsts import (
     DFLT_CTRL_PORT_PLAIN,
     DFLT_CTRL_PORT_SSL,
@@ -210,7 +210,7 @@ class CommController(object):
         if hdr.api_call == API_VERSION:
             api_msg = MsgApiVersion()
             api_msg.ParseFromString(msg_apiversion[1])
-            if API_VERSION_NR < api_msg.version:
+            if API_VERSION_MIN > api_msg.version or api_msg.version > API_VERSION_NR:
                 sys.stderr.write(
                     "Error: Client API version '{v}' is incompatible with controller version '{r}'.\n".format(
                         v=API_VERSION_NR,
