@@ -10,6 +10,7 @@
 # make python
 proto/*.py
 linstor/sharedconsts.py
+linstor/properties.py
 
 # unittests ignores
 build/
