@@ -23,6 +23,7 @@ class Commands(object):
     CREATE_STORAGE_POOL_DEF = 'create-storage-pool-definition'
     CREATE_VOLUME_DEF = 'create-volume-definition'
     CREATE_NETINTERFACE = 'create-netinterface'
+    MODIFY_NETINTERFACE = 'modify-netinterface'
     DELETE_NODE = 'delete-node'
     DELETE_RESOURCE = 'delete-resource'
     DELETE_RESOURCE_DEF = 'delete-resource-definition'
@@ -73,6 +74,7 @@ class Commands(object):
         CREATE_STORAGE_POOL_DEF,
         CREATE_VOLUME_DEF,
         CREATE_NETINTERFACE,
+        MODIFY_NETINTERFACE,
         DELETE_NODE,
         DELETE_RESOURCE,
         DELETE_RESOURCE_DEF,

@@ -3,6 +3,7 @@ from proto.MsgDelNode_pb2 import MsgDelNode
 from proto.MsgLstNode_pb2 import MsgLstNode
 from proto.MsgModNode_pb2 import MsgModNode
 from proto.MsgCrtNetInterface_pb2 import MsgCrtNetInterface
+from proto.MsgModNetInterface_pb2 import MsgModNetInterface
 from proto.MsgDelNetInterface_pb2 import MsgDelNetInterface
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
@@ -24,6 +25,7 @@ from linstor.sharedconsts import (
     API_DEL_NODE,
     API_LST_NODE,
     API_CRT_NET_IF,
+    API_MOD_NET_IF,
     API_DEL_NET_IF
 )
 
@@ -103,8 +105,27 @@ class NodeCommands(Commands):
             help="Name of the node to add the net interface"
         ).completer = NodeCommands.completer
         p_create_netinterface.add_argument("interface_name", help="Interface name")
-        p_create_netinterface.add_argument('ip', help='IP address of the new node')
+        p_create_netinterface.add_argument('ip', help='New IP address for the network interface')
         p_create_netinterface.set_defaults(func=NodeCommands.create_netif)
+
+        # modify net interface
+        p_mod_netif = parser.add_parser(
+            Commands.MODIFY_NETINTERFACE,
+            aliases=['modify-netif'],
+            description='Change the ip listen address of a netinterface on the given node.'
+        )
+        p_mod_netif.add_argument('-p', '--port', type=rangecheck(1, 65535),
+                                 help='Port to use for satellite connections')
+        p_mod_netif.add_argument('--communication-type', choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
+                                 default=ctype_def,
+                                 help='Communication type (default: %s)' % ctype_def)
+        p_mod_netif.add_argument(
+            "node_name",
+            help="Name of the node"
+        ).completer = NodeCommands.completer
+        p_mod_netif.add_argument("interface_name", help="Interface name to change")
+        p_mod_netif.add_argument('ip', help='New IP address for the network interface')
+        p_mod_netif.set_defaults(func=NodeCommands.modify_netif)
 
         # delete net interface
         p_delete_netinterface = parser.add_parser(
@@ -333,6 +354,22 @@ class NodeCommands(Commands):
             p.net_if.stlt_encryption_type = args.communication_type
 
         return Commands._send_msg(cc, API_CRT_NET_IF, p, args)
+
+    @staticmethod
+    @need_communication
+    def modify_netif(cc, args):
+        p = MsgModNetInterface()
+
+        p.node_name = args.node_name
+
+        p.net_if.name = args.interface_name
+        p.net_if.address = args.ip
+
+        if args.port:
+            p.net_if.stlt_port = args.port
+            p.net_if.stlt_encryption_type = args.communication_type
+
+        return Commands._send_msg(cc, API_MOD_NET_IF, p, args)
 
     @staticmethod
     @need_communication
