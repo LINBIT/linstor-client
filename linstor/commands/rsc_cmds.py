@@ -114,7 +114,7 @@ class ResourceCommands(Commands):
             help="Resource name").completer = ResourceCommands.completer
         p_sp.add_argument(
             'node_name',
-            help="Node name where the resource is deployed.").completer = ResourceCommands.completer
+            help="Node name where the resource is deployed.").completer = NodeCommands.completer
         p_sp.set_defaults(func=ResourceCommands.print_props)
 
         # set properties
@@ -122,7 +122,11 @@ class ResourceCommands(Commands):
             Commands.SET_RESOURCE_PROP,
             aliases=['set-resource-property', 'setrscprp'],
             description='Sets properties for the given resource on the given node.')
-        p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource')
+        p_setprop.add_argument(
+            'name',
+            type=namecheck(RES_NAME),
+            help='Name of the resource'
+        ).completer = ResourceCommands.completer
         p_setprop.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
@@ -135,7 +139,11 @@ class ResourceCommands(Commands):
             Commands.SET_RESOURCE_AUX_PROP,
             aliases=['set-resource-aux-property', 'setrscauxprp'],
             description='Sets auxiliary properties for the given resource on the given node.')
-        p_setauxprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource')
+        p_setauxprop.add_argument(
+            'name',
+            type=namecheck(RES_NAME),
+            help='Name of the resource'
+        ).completer = ResourceCommands.completer
         p_setauxprop.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
