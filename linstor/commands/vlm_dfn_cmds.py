@@ -28,6 +28,7 @@ class VolumeDefinitionCommands(Commands):
             'with default settings. Unless minornr is specified, a minor number for '
             "the volume's DRBD block device is assigned automatically by the "
             'linstor server.')
+        p_new_vol.add_argument('-n', '--vlmnr', type=int)
         p_new_vol.add_argument('-m', '--minor', type=int)
         p_new_vol.add_argument('-d', '--deploy', type=int)
         p_new_vol.add_argument('-s', '--site', default='',
@@ -142,6 +143,9 @@ class VolumeDefinitionCommands(Commands):
         vlmdf.vlm_size = VolumeDefinitionCommands._get_volume_size(args.size)
         if args.minor is not None:
             vlmdf.vlm_minor = args.minor
+
+        if args.vlmnr is not None:
+            vlmdf.vlm_nr = args.vlmnr
 
         return Commands._send_msg(cc, API_CRT_VLM_DFN, p, args)
 

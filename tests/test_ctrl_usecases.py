@@ -1,6 +1,7 @@
 import unittest
 from .linstor_testcase import LinstorTestCase
 from linstor.sharedconsts import *
+from linstor.utils import SizeCalc
 
 
 class TestUseCases(LinstorTestCase):
@@ -163,16 +164,39 @@ class TestCreateCommands(LinstorTestCase):
         rsc1 = [spd for spd in rsc_dfns if spd['rsc_name'] == 'rsc1']
         self.assertEqual(1, len(rsc1), "resource definition 'rsc1' not found")
 
+    def assert_volume_def(self, rsc_name, vlmnr, minornr, size):
+        rscdfs = self.execute_with_machine_output(['list-volume-definition'])
+        self.assertEqual(1, len(rscdfs))
+        rscdfs = rscdfs[0]
+        self.assertIn('rsc_dfns', rscdfs)
+        rscdfs = rscdfs['rsc_dfns']
+        rsc = [x for x in rscdfs if x['rsc_name'] == rsc_name]
+        self.assertEqual(1, len(rsc))
+        rsc = rsc[0]
+        self.assertIn('vlm_dfns', rsc)
+        vlmdfns = rsc['vlm_dfns']
+        vlmdfn = [x for x in vlmdfns if x['vlm_nr'] == vlmnr]
+        self.assertEqual(1, len(vlmdfn), "volume definition not found")
+        vlmdfn = vlmdfn[0]
+        self.assertEqual(minornr, vlmdfn['vlm_minor'])
+        self.assertEqual(size, vlmdfn['vlm_size'])
+
     def test_create_volume_dfn(self):
         rsc_dfn = self.execute_with_single_resp(['create-resource-definition', 'rscvlm'])
         self.assertTrue(rsc_dfn.is_success())
 
         vlm_dfn = self.execute_with_single_resp(['create-volume-definition', 'rscvlm', '128MiB'])
         self.assertTrue(vlm_dfn.is_success())
+        self.assert_volume_def('rscvlm', 0, 1000, SizeCalc.convert_round_up(128, SizeCalc.UNIT_MiB, SizeCalc.UNIT_kiB))
 
         vlm_dfn = self.execute_with_single_resp(['create-volume-definition', 'rscvlm', '0'])
         self.assertTrue(vlm_dfn.is_error())
         self.assertEqual(MASK_VLM_DFN | MASK_CRT | FAIL_INVLD_VLM_SIZE, vlm_dfn.ret_code)
+
+        vlm_dfn = self.execute_with_single_resp(['create-volume-definition', 'rscvlm', '--vlmnr', '3', '256Mib'])
+        self.assertTrue(vlm_dfn.is_success())
+        self.assertEqual(MASK_VLM_DFN | MASK_CRT | CREATED, vlm_dfn.ret_code)
+        self.assert_volume_def('rscvlm', 3, 1002, SizeCalc.convert_round_up(256, SizeCalc.UNIT_MiB, SizeCalc.UNIT_kiB))
 
         with self.assertRaises(SystemExit):
             self.execute_with_single_resp(['create-volume-definition', 'rscvlm', '1Gi'])
