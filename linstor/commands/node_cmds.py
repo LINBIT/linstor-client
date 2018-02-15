@@ -91,7 +91,7 @@ class NodeCommands(Commands):
         # create net interface
         p_create_netinterface = parser.add_parser(
             Commands.CREATE_NETINTERFACE,
-            aliases=['create-netif'],
+            aliases=['crtnetif', 'create-netif'],
             description='Creates and adds a new netinterface to a given node. If port is specified this netinterface '
                         'is used as satellite port'
         )
@@ -111,7 +111,7 @@ class NodeCommands(Commands):
         # modify net interface
         p_mod_netif = parser.add_parser(
             Commands.MODIFY_NETINTERFACE,
-            aliases=['modify-netif'],
+            aliases=['mfynetif', 'modify-netif'],
             description='Change the ip listen address of a netinterface on the given node.'
         )
         p_mod_netif.add_argument('-p', '--port', type=rangecheck(1, 65535),
@@ -130,7 +130,7 @@ class NodeCommands(Commands):
         # delete net interface
         p_delete_netinterface = parser.add_parser(
             Commands.DELETE_NETINTERFACE,
-            aliases=['delnetinterface'],
+            aliases=['delnetif', 'delnetinterface'],
             description='Delete a netinterface from a node.'
         )
         p_delete_netinterface.add_argument(

@@ -91,7 +91,7 @@ class VolumeDefinitionCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             Commands.GET_VOLUME_DEF_PROPS,
-            aliases=['get-volume-definition-properties', 'dspvlmdefprps'],
+            aliases=['get-volume-definition-properties', 'dspvlmdfnprps'],
             description="Prints all properties of the given volume definition.")
         p_sp.add_argument(
             'resource_name',
