@@ -178,18 +178,6 @@ class VolumeDefinitionCommands(Commands):
                     ])
             tbl.show()
 
-            # prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5s} {vlmminor:<10s} {vlmsize:<10s}"
-            # print(prntfrm.format(res="Resource", uuid="UUID", vlmnr="VlmNr", vlmminor="VlmMinor", vlmsize="Size"))
-            # prntfrm = "{res:<15s} {uuid:<40s} {vlmnr:<5d} {vlmminor:<10d} {vlmsize:<20s}"
-            # for rscdfn in lstmsg.rsc_dfns:
-            #     for vlmdfn in rscdfn.vlm_dfns:
-            #         print(prntfrm.format(
-            #             res=rscdfn.rsc_name,
-            #             uuid=vlmdfn.vlm_dfn_uuid,
-            #             vlmnr=vlmdfn.vlm_nr,
-            #             vlmminor=vlmdfn.vlm_minor,
-            #             vlmsize=approximate_size_string(vlmdfn.vlm_size)))
-
         return None
 
     @classmethod
