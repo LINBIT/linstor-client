@@ -1,3 +1,32 @@
+linstor-client (0.1.2-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * utils.Table: allow first column to be empty, easier use of colorless tables
+  * introduces a LinstorError exception
+  * define constant exit codes
+  * node: list-netinterfaces command
+  * interactive: quit is an accepted exit aliases
+  * unittests: show unparsable json output
+  * unittest: look again for a fixed linstor.tar file
+  * add create/delete netinterface commands, adapt to merged satcon/netif
+  * move controller independent main_commands test into own file
+  * gitignore: linstor/properties.py is generated
+  * add set aux property commands and restrict others
+  * submodule: auxiliary namespace is needed
+  * implement modify netinterface command
+  * update API_VERSION number to 1, introduce min version
+  * unittest: run controller with the new memory_database option
+  * volumedfn: use Command constants
+  * volumedfn: remove old print code
+  * create-volume-def: add volume number option
+  * use defined exit codes
+  * fix incorrect completer for resource commands
+
+  [ Robert Altnoeder ]
+  * Added/Corrected command alias names
+
+ -- Roland Kammerer <roland.kammerer@linbit.com>  Thu, 15 Feb 2018 19:11:07 +0100
+
 linstor-client (0.1.1-1) experimental; urgency=medium
 
   [ Roland Kammerer ]
