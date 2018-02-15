@@ -53,6 +53,7 @@ class Commands(object):
     INTERACTIVE = 'interactive'
     LIST_COMMANDS = 'list-commands'
     SHUTDOWN = 'shutdown'
+    DMMIGRATE = 'dm-migrate'
     # SET_NODE_PROP = 'set-node-prop'
     # SET_RESOURCE_DEF_PROP = 'set-resource-definition-prop'
     SET_RESOURCE_PROP = 'set-resource-prop'
@@ -118,7 +119,8 @@ class Commands(object):
         SET_VOLUME_DEF_AUX_PROP
     ]
     Hidden = [
-        EXIT
+        EXIT,
+        DMMIGRATE
     ]
 
     @classmethod
