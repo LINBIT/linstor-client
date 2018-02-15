@@ -19,9 +19,8 @@ class VolumeDefinitionCommands(Commands):
 
     @staticmethod
     def setup_commands(parser):
-        p_new_vol_command = 'create-volume-definition'
         p_new_vol = parser.add_parser(
-            p_new_vol_command,
+            Commands.CREATE_VOLUME_DEF,
             aliases=['crtvlmdfn'],
             description='Defines a volume with a capacity of size for use with '
             'linstore. If the resource resname exists already, a new volume is '
@@ -47,11 +46,10 @@ class VolumeDefinitionCommands(Commands):
             'accommodate a volume of the requested size in the specified size unit.'
         ).completer = VolumeDefinitionCommands.size_completer
         p_new_vol.set_defaults(func=VolumeDefinitionCommands.create)
-        p_new_vol.set_defaults(command=p_new_vol_command)
 
         # remove-volume definition
         p_rm_vol = parser.add_parser(
-            'delete-volume-definition',
+            Commands.DELETE_VOLUME_DEF,
             aliases=['delvlmdfn'],
             description='Removes a volume definition from the linstor cluster, and removes '
             'the volume definition from the resource definition. The volume is '
@@ -77,7 +75,7 @@ class VolumeDefinitionCommands(Commands):
         vol_group_completer = Commands.show_group_completer(volgroupby, 'groupby')
 
         p_lvols = parser.add_parser(
-            'list-volume-definitions',
+            Commands.LIST_VOLUME_DEF,
             aliases=['list-volume-definition', 'dspvlmdfn', 'display-volume-definitions', 'volume-definitions',
                      'dspvlmdfn'],
             description=' Prints a list of all volume definitions known to linstor. '
