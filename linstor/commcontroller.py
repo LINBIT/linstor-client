@@ -19,8 +19,7 @@ from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.MsgHeader_pb2 import MsgHeader
 from proto.MsgApiVersion_pb2 import MsgApiVersion
 from functools import wraps
-from linstor.consts import KEY_LS_CONTROLLERS
-from linstor.consts import API_VERSION as API_VERSION_NR, API_VERSION_MIN
+from linstor.consts import KEY_LS_CONTROLLERS, ExitCode, API_VERSION as API_VERSION_NR, API_VERSION_MIN
 from linstor.sharedconsts import (
     DFLT_CTRL_PORT_PLAIN,
     DFLT_CTRL_PORT_SSL,
@@ -47,16 +46,13 @@ def need_communication(f):
         servers = CommController.controller_list(cliargs.controllers)
 
         p = None
-        rc = 0
+        rc = ExitCode.OK
         with CommController(servers, timeout=cliargs.timeout) as cc:
             try:
                 p = f(cc, *args, **kwargs)
             except LinstorError as le:
                 sys.stderr.write(str(le) + '\n')
                 sys.exit(le.exit_code)
-            except RuntimeError as re:
-                sys.stderr.write(str(re) + '\n')
-                return 2
             except ApiCallResponseError as callresponse:
                 return callresponse.apicallresponse.output(
                     no_color=args[0].no_color,
@@ -67,7 +63,7 @@ def need_communication(f):
             if isinstance(p, list):
                 for call_resp in p:
                     current_rc = call_resp.output(warn_as_error=args[0].warn_as_error, no_color=args[0].no_color)
-                    if current_rc != 0:
+                    if current_rc != ExitCode.OK:
                         rc = current_rc
             else:
                 return Output.handle_ret(p, no_color=args[0].no_color, warn_as_error=args[0].warn_as_error)
@@ -182,7 +178,7 @@ class CommController(object):
         if not self.connect():
             sys.stderr.write('Could not connect to any controller %s\n'
                              % self.servers_bad)
-            sys.exit(1)
+            sys.exit(ExitCode.CONNECTION_ERROR)
         return self
 
     def __exit__(self, type, value, traceback):
@@ -316,7 +312,7 @@ class CommController(object):
             sys.stderr.write("Error: Connection timeout receiving data from {addr}\n".format(
                 addr=CommController._adrtuple2str(self.current_sock.getpeername()))
             )
-            sys.exit(20)
+            sys.exit(ExitCode.CONNECTION_TIMEOUT)
 
         # split payload, just a list of pbs, the receiver has to deal with them
         pb_msgs = []
@@ -354,7 +350,7 @@ class CommController(object):
     @staticmethod
     def unexpected_reply(hdr):
         sys.stderr.write("Error: Unexpected api call reply '{api}' received.\n".format(api=hdr.api_call))
-        sys.exit(98)
+        sys.exit(ExitCode.UNEXPECTED_REPLY)
 
     def send_and_expect_reply(self, header, payload=None):
         """

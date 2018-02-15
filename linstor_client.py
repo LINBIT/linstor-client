@@ -43,7 +43,8 @@ from linstor.commands import (
 from linstor.consts import (
     GITHASH,
     KEY_LS_CONTROLLERS,
-    VERSION
+    VERSION,
+    ExitCode
 )
 
 from linstor import sharedconsts
@@ -308,7 +309,7 @@ class LinStorCLI(object):
 
                 cmd = cmds_[0]
                 if cmd in ["exit", "quit"]:
-                    sys.exit(0)
+                    sys.exit(ExitCode.OK)
                 elif cmd == "help":
                     if len(cmds_) == 1:
                         self.cmd_list(args)
@@ -365,7 +366,7 @@ class LinStorCLI(object):
         return self.parse_and_execute([args.command, "-h"])
 
     def cmd_exit(self, _):
-        sys.exit(0)
+        sys.exit(ExitCode.OK)
 
     def run(self):
         # TODO(rck): try/except

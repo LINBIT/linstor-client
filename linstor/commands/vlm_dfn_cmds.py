@@ -6,7 +6,7 @@ from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN, API_DEL_VLM_D
 from linstor.commcontroller import need_communication
 from linstor.commands import Commands, ResourceDefinitionCommands
 from linstor.utils import SizeCalc, approximate_size_string, namecheck, Table, Output
-from linstor.consts import RES_NAME, Color
+from linstor.consts import RES_NAME, Color, ExitCode
 from linstor.sharedconsts import (
     FLAG_DELETE
 )
@@ -193,7 +193,7 @@ class VolumeDefinitionCommands(Commands):
             size = int(m.group(1))
         except AttributeError:
             sys.stderr.write('Size is not a valid number\n')
-            sys.exit(12)
+            sys.exit(ExitCode.ARGPARSE_ERROR)
 
         unit_str = m.group(2)
         if unit_str == "":
@@ -203,7 +203,7 @@ class VolumeDefinitionCommands(Commands):
         except KeyError:
             sys.stderr.write('"%s" is not a valid unit!\n' % (unit_str))
             sys.stderr.write('Valid units: %s\n' % (','.join(SizeCalc.UNITS_MAP.keys())))
-            sys.exit(12)
+            sys.exit(ExitCode.ARGPARSE_ERROR)
 
         unit = SizeCalc.UNITS_MAP[unit_str.lower()]
 

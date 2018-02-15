@@ -1,6 +1,6 @@
 from linstor.utils import rangecheck, filter_new_args, namecheck
 from linstor.commands import ResourceCommands
-from linstor.consts import RES_NAME
+from linstor.consts import RES_NAME, ExitCode
 from proto.MsgModRsc_pb2 import MsgModRsc
 from linstor.drbdsetup_options import drbdoptions_raw
 import sys
@@ -69,12 +69,12 @@ class DrbdOptions(object):
             if args.__dict__[o]:
                 if target:
                     sys.stderr.write("--%s and --%s are mutually exclusive\n" % (o, target))
-                    sys.exit(1)
+                    sys.exit(ExitCode.ARGPARSE_ERROR)
                 target = o
 
         if not target:
             sys.stderr.write("You have to specify (exactly) one of %s\n" % ('--' + ' --'.join(names)))
-            sys.exit(1)
+            sys.exit(ExitCode.ARGPARSE_ERROR)
 
         return target
 
@@ -122,7 +122,7 @@ class DrbdOptions(object):
         valid, errmsg = self._check_options(target, a)
         if not valid:
             print(errmsg)
-            sys.exit(1)
+            sys.exit(ExitCode.ARGPARSE_ERROR)
 
         if target == 'resource':
             print('TODO set {opts} for resource {rsc}'.format(opts=",".join(a.keys()), rsc=args.resource))

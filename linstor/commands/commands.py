@@ -5,13 +5,14 @@ from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from proto.MsgControlCtrl_pb2 import MsgControlCtrl
 from proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
 from proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
-from linstor.utils import Output, Table
+from linstor.utils import Output, Table, LinstorError
 from linstor.protobuf_to_dict import protobuf_to_dict
 from linstor.commcontroller import ApiCallResponseError, need_communication
 from linstor.sharedconsts import (
     API_REPLY, API_CMD_SHUTDOWN, API_CONTROL_CTRL, API_LST_CFG_VAL, API_SET_CFG_VAL,
     NAMESPC_AUXILIARY
 )
+from linstor.consts import ExitCode
 from linstor.properties import properties
 
 
@@ -264,8 +265,9 @@ class Commands(object):
         }
         for kv in kv_pairs:
             if '=' not in kv:
-                raise RuntimeError(
-                    "KeyValueParseError: Key value '{kv}' pair does not contain a '='".format(kv=kv)
+                raise LinstorError(
+                    "KeyValueParseError: Key value '{kv}' pair does not contain a '='".format(kv=kv),
+                    ExitCode.ARGPARSE_ERROR
                 )
             key, value = kv.split('=', 1)
             if value:
