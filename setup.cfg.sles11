@@ -1,5 +1,5 @@
 [bdist_rpm]
-release = 2
+release = 1
 group = System Environment/Daemons
 packager = LINSTOR Team <drbd-user@lists.linbit.com>
 vendor = LINBIT HA-Solutions GmbH
