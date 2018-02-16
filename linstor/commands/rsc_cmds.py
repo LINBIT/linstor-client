@@ -1,9 +1,9 @@
-from proto.MsgCrtRsc_pb2 import MsgCrtRsc
-from proto.MsgDelRsc_pb2 import MsgDelRsc
-from proto.MsgLstRsc_pb2 import MsgLstRsc
-from proto.MsgModRsc_pb2 import MsgModRsc
-from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from proto.LinStorMapEntry_pb2 import LinStorMapEntry
+from linstor.proto.MsgCrtRsc_pb2 import MsgCrtRsc
+from linstor.proto.MsgDelRsc_pb2 import MsgDelRsc
+from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
+from linstor.proto.MsgModRsc_pb2 import MsgModRsc
+from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
+from linstor.proto.LinStorMapEntry_pb2 import LinStorMapEntry
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import (
     Commands, NodeCommands, StoragePoolDefinitionCommands, ResourceDefinitionCommands

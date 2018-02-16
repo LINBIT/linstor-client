@@ -196,7 +196,7 @@ setup(
         "linstor.argcomplete",
         "linstor.commands",
         "linstor.protobuf_to_dict",
-        "proto",
+        "linstor.proto",
     ],
     py_modules=["linstor_client"],
     scripts=["scripts/linstor"],

@@ -1,7 +1,7 @@
 from linstor.utils import rangecheck, filter_new_args, namecheck
 from linstor.commands import ResourceCommands
 from linstor.consts import RES_NAME, ExitCode
-from proto.MsgModRsc_pb2 import MsgModRsc
+from linstor.proto.MsgModRsc_pb2 import MsgModRsc
 from linstor.drbdsetup_options import drbdoptions_raw
 import sys
 import pickle

@@ -15,9 +15,9 @@ except ImportError:
     from urllib.parse import urlparse
 from google.protobuf.internal import encoder
 from google.protobuf.internal import decoder
-from proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
-from proto.MsgHeader_pb2 import MsgHeader
-from proto.MsgApiVersion_pb2 import MsgApiVersion
+from linstor.proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
+from linstor.proto.MsgHeader_pb2 import MsgHeader
+from linstor.proto.MsgApiVersion_pb2 import MsgApiVersion
 from functools import wraps
 from linstor.consts import KEY_LS_CONTROLLERS, ExitCode, API_VERSION as API_VERSION_NR, API_VERSION_MIN
 from linstor.sharedconsts import (

@@ -1,7 +1,7 @@
-from proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
-from proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
-from proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
-from proto.MsgModStorPoolDfn_pb2 import MsgModStorPoolDfn
+from linstor.proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
+from linstor.proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
+from linstor.proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
+from linstor.proto.MsgModStorPoolDfn_pb2 import MsgModStorPoolDfn
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
 from linstor.utils import namecheck, Table

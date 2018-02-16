@@ -1,7 +1,7 @@
-from proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
-from proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
-from proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from proto.MsgModRscDfn_pb2 import MsgModRscDfn
+from linstor.proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
+from linstor.proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
+from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
+from linstor.proto.MsgModRscDfn_pb2 import MsgModRscDfn
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
 from linstor.utils import rangecheck, namecheck, Table, Output

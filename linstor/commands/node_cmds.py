@@ -1,10 +1,10 @@
-from proto.MsgCrtNode_pb2 import MsgCrtNode
-from proto.MsgDelNode_pb2 import MsgDelNode
-from proto.MsgLstNode_pb2 import MsgLstNode
-from proto.MsgModNode_pb2 import MsgModNode
-from proto.MsgCrtNetInterface_pb2 import MsgCrtNetInterface
-from proto.MsgModNetInterface_pb2 import MsgModNetInterface
-from proto.MsgDelNetInterface_pb2 import MsgDelNetInterface
+from linstor.proto.MsgCrtNode_pb2 import MsgCrtNode
+from linstor.proto.MsgDelNode_pb2 import MsgDelNode
+from linstor.proto.MsgLstNode_pb2 import MsgLstNode
+from linstor.proto.MsgModNode_pb2 import MsgModNode
+from linstor.proto.MsgCrtNetInterface_pb2 import MsgCrtNetInterface
+from linstor.proto.MsgModNetInterface_pb2 import MsgModNetInterface
+from linstor.proto.MsgDelNetInterface_pb2 import MsgDelNetInterface
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
 from linstor.utils import Output, Table, rangecheck, namecheck, ip_completer, LinstorError
