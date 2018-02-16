@@ -92,7 +92,6 @@ class Commands(object):
         LIST_VOLUME,
         LIST_NETINTERFACE,
         DRBD_OPTIONS,
-        EXIT,
         GET_NODE_PROPS,
         GET_RESOURCE_DEF_PROPS,
         GET_RESOURCE_PROPS,
@@ -117,6 +116,9 @@ class Commands(object):
         SET_STORAGE_POOL_DEF_AUX_PROP,
         SET_STORAGE_POOL_AUX_PROP,
         SET_VOLUME_DEF_AUX_PROP
+    ]
+    Hidden = [
+        EXIT
     ]
 
     @classmethod

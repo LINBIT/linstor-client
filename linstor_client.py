@@ -252,12 +252,12 @@ class LinStorCLI(object):
 
         parser_cmds = LinStorCLI.parser_cmds(self._parser)
         for cmd in parser_cmds:
-            mcos = [x for x in cmd if x in Commands.MainList]
+            mcos = [x for x in cmd if x in Commands.MainList + Commands.Hidden]
             if len(mcos) != 1:
                 raise AssertionError("no main command found for group: " + str(cmd))
 
         all_cmds = [y for x in parser_cmds for y in x]
-        for cmd in Commands.MainList:
+        for cmd in Commands.MainList + Commands.Hidden:
             if cmd not in all_cmds:
                 raise AssertionError("defined command not used in argparse: " + str(cmd))
 
