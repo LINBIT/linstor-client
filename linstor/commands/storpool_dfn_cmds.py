@@ -174,7 +174,7 @@ class StoragePoolDefinitionCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL_DFN, MsgLstStorPoolDfn())
 
         if lstmsg:
-            for storpool_dfn in lstmsg.resources:
+            for storpool_dfn in lstmsg.stor_pool_dfns:
                 possible.add(storpool_dfn.stor_pool_name)
 
             if prefix:
