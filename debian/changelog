@@ -1,3 +1,10 @@
+linstor-client (0.1.2-2) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * moved generated protobuf messages into linstor package
+
+ -- Roland Kammerer <roland.kammerer@linbit.com>  Fri, 16 Feb 2018 09:57:00 +0100
+
 linstor-client (0.1.2-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
