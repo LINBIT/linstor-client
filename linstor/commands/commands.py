@@ -125,6 +125,17 @@ class Commands(object):
 
     @classmethod
     def _send_msg(cls, cc, api_call, msg, args=None):
+        """
+        Creates and sends a valid linstor message.
+        A header is created with the given api_call and the given payload message,
+        then the message is send and a reply message is expected and waited for.
+
+        :param linstor.commcontroller.CommController cc: CommController object for sending and retrieving
+        :param str api_call: Type of the api call.
+        :param msg: a finished protobuf message
+        :param args: argparse args object that decides if machine readable output is printed
+        :return: a list of received responses
+        """
         h = MsgHeader()
         h.api_call = api_call
         h.msg_id = 1
@@ -254,14 +265,8 @@ class Commands(object):
         Parses a key value pair pairs in an easier to use dict.
         If a key has no value it will be put on the delete list.
 
-        Args:
-            kv_pairs (list): a list of key value pair strings. ['key=val', 'key2=val2']
-
-        Returns:
-            dict: A dictionary in the following format.
-
-            { 'pairs': [('key', 'val')], 'delete': ['key', 'key'] }
-
+        :param list[str] kv_pairs: a list of key value pair strings. ['key=val', 'key2=val2']
+        :return dict[str, str]:
         """
         parsed = {
             'pairs': [],
