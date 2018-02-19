@@ -1,3 +1,4 @@
+import linstor
 from linstor.proto.MsgCrtVlmDfn_pb2 import MsgCrtVlmDfn
 from linstor.proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
 from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
@@ -5,7 +6,7 @@ from linstor.proto.MsgModVlmDfn_pb2 import MsgModVlmDfn
 from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN, API_DEL_VLM_DFN, API_MOD_VLM_DFN
 from linstor.commcontroller import need_communication
 from linstor.commands import Commands, ResourceDefinitionCommands
-from linstor.utils import SizeCalc, approximate_size_string, namecheck, Table, Output
+from linstor.utils import SizeCalc, approximate_size_string, namecheck, Output
 from linstor.consts import RES_NAME, Color, ExitCode
 from linstor.sharedconsts import (
     FLAG_DELETE
@@ -164,7 +165,7 @@ class VolumeDefinitionCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args)
 
         if lstmsg:
-            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("ResourceName")
             tbl.add_column("VolumeNr")
             tbl.add_column("VolumeMinor")

@@ -1,11 +1,12 @@
 import sys
 import json
+import linstor
 from linstor.proto.MsgHeader_pb2 import MsgHeader
 from linstor.proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from linstor.proto.MsgControlCtrl_pb2 import MsgControlCtrl
 from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
 from linstor.proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
-from linstor.utils import Output, Table, LinstorError
+from linstor.utils import Output, LinstorError
 from linstor.protobuf_to_dict import protobuf_to_dict
 from linstor.commcontroller import ApiCallResponseError, need_communication
 from linstor.sharedconsts import (
@@ -340,7 +341,7 @@ class Commands(object):
             return None
 
         for prop_map in prop_list_map:
-            tbl = Table()
+            tbl = linstor.Table()
             tbl.add_column("Key")
             tbl.add_column("Value")
             for p in prop_map:

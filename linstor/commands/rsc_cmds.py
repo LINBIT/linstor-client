@@ -1,3 +1,4 @@
+import linstor
 from linstor.proto.MsgCrtRsc_pb2 import MsgCrtRsc
 from linstor.proto.MsgDelRsc_pb2 import MsgDelRsc
 from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
@@ -8,7 +9,7 @@ from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import (
     Commands, NodeCommands, StoragePoolDefinitionCommands, ResourceDefinitionCommands
 )
-from linstor.utils import namecheck, Table, Output
+from linstor.utils import namecheck, Output
 from linstor.consts import Color
 from linstor.sharedconsts import (
     API_CRT_RSC,
@@ -198,7 +199,7 @@ class ResourceCommands(Commands):
             rsc_dfns = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args).rsc_dfns
             rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
 
-            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("ResourceName")
             tbl.add_column("Node")
             tbl.add_column("Port")
@@ -238,7 +239,7 @@ class ResourceCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_RSC, MsgLstRsc(), args)  # type: MsgLstRsc
 
         if lstmsg:
-            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("Node")
             tbl.add_column("Resource")
             tbl.add_column("VolumeNr")

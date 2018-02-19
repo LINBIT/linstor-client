@@ -1,10 +1,11 @@
+import linstor
 from linstor.proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
 from linstor.proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from linstor.proto.MsgModRscDfn_pb2 import MsgModRscDfn
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import rangecheck, namecheck, Table, Output
+from linstor.utils import rangecheck, namecheck, Output
 from linstor.sharedconsts import (
     API_CRT_RSC_DFN,
     API_DEL_RSC_DFN,
@@ -127,7 +128,7 @@ class ResourceDefinitionCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args)
 
         if lstmsg:
-            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("ResourceName")
             tbl.add_column("Port")
             tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))

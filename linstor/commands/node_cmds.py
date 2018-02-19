@@ -1,3 +1,4 @@
+import linstor
 from linstor.proto.MsgCrtNode_pb2 import MsgCrtNode
 from linstor.proto.MsgDelNode_pb2 import MsgDelNode
 from linstor.proto.MsgLstNode_pb2 import MsgLstNode
@@ -7,7 +8,7 @@ from linstor.proto.MsgModNetInterface_pb2 import MsgModNetInterface
 from linstor.proto.MsgDelNetInterface_pb2 import MsgDelNetInterface
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import Output, Table, rangecheck, namecheck, ip_completer, LinstorError
+from linstor.utils import Output, rangecheck, namecheck, ip_completer, LinstorError
 from linstor.consts import NODE_NAME, Color, ExitCode
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
@@ -262,7 +263,7 @@ class NodeCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode(), args)
 
         if lstmsg:
-            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("Node")
             tbl.add_column("NodeType")
             tbl.add_column("IPs")
@@ -295,7 +296,7 @@ class NodeCommands(Commands):
         if lstres:
             node = NodeCommands.find_node(lstres, args.node_name)
             if node:
-                tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
                 tbl.add_column(node.name, color=Color.GREEN)
                 tbl.add_column("NetInterface")
                 tbl.add_column("IP")

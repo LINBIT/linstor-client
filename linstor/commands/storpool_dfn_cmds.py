@@ -1,10 +1,11 @@
+import linstor
 from linstor.proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
 from linstor.proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
 from linstor.proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
 from linstor.proto.MsgModStorPoolDfn_pb2 import MsgModStorPoolDfn
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands
-from linstor.utils import namecheck, Table
+from linstor.utils import namecheck
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL_DFN,
     API_DEL_STOR_POOL_DFN,
@@ -127,7 +128,7 @@ class StoragePoolDefinitionCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL_DFN, MsgLstStorPoolDfn(), args)
 
         if lstmsg:
-            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("StoragePool")
             for storpool_dfn in lstmsg.stor_pool_dfns:
                 tbl.add_row([

@@ -1,10 +1,11 @@
+import linstor
 from linstor.proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from linstor.proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
 from linstor.proto.MsgDelStorPool_pb2 import MsgDelStorPool
 from linstor.proto.MsgModStorPool_pb2 import MsgModStorPool
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import Commands, NodeCommands
-from linstor.utils import namecheck, Table
+from linstor.utils import namecheck
 from linstor.sharedconsts import (
     API_CRT_STOR_POOL,
     API_MOD_STOR_POOL,
@@ -176,7 +177,7 @@ class StoragePoolCommands(Commands):
         lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL, MsgLstStorPool(), args)
 
         if lstmsg:
-            tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("StoragePool")
             tbl.add_column("Node")
             tbl.add_column("Driver")
