@@ -152,6 +152,25 @@ class LinstorTestCase(unittest.TestCase):
                 sys.stderr.write(str(cmd_args) + " Result empty")
         return jout
 
+    def execute_with_text_output(self, cmd_args):
+        """
+        Execute the given cmd_args command and adds the machine readable flag.
+        Returns the parsed json output.
+        """
+        LinstorTestCase.add_controller_arg(cmd_args)
+        linstor_cli = linstor_client.LinStorCLI()
+        backupstd = sys.stdout
+
+        try:
+            sys.stdout = StringIO()
+            retcode = linstor_cli.parse_and_execute(["--no-utf8", "--no-color"] + cmd_args)
+            self.assertEqual(0, retcode)
+        finally:
+            stdval = sys.stdout.getvalue()
+            sys.stdout.close()
+            sys.stdout = backupstd
+        return stdval
+
     def execute_with_resp(self, cmd_args):
         d = self.execute_with_machine_output(cmd_args)
         self.assertIsNotNone(d, "No result returned")
