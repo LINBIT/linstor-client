@@ -161,7 +161,7 @@ class Table(object):
         co_sum = 0
 
         hdrnames = [h['name'] for h in self.header]
-        if self.groups:
+        if self.groups and self.table:
             group_bys = [hdrnames.index(g) for g in self.groups if g in hdrnames]
             for row in self.table:
                 for idx in group_bys:
