@@ -56,6 +56,7 @@ class StoragePoolDefinitionCommands(Commands):
             description='Prints a list of all storage pool definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpooldfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_lstorpooldfs.add_argument('-a', '--all', action="store_true", help='Show all storage pools (even internal)')
         p_lstorpooldfs.add_argument('-g', '--groupby', nargs='+',
                                     choices=storpooldfngroupby).completer = storpooldfn_group_completer
         p_lstorpooldfs.add_argument(
@@ -127,19 +128,17 @@ class StoragePoolDefinitionCommands(Commands):
     def list(cc, args):
         lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL_DFN, MsgLstStorPoolDfn(), args)
 
+        filter_internal = [linstor.consts.DFLTDISKLESSSTORPOOL]
+
         if lstmsg:
             tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("StoragePool")
             for storpool_dfn in lstmsg.stor_pool_dfns:
-                tbl.add_row([
-                    storpool_dfn.stor_pool_name
-                ])
+                if storpool_dfn.stor_pool_name not in filter_internal or args.all:
+                    tbl.add_row([
+                        storpool_dfn.stor_pool_name
+                    ])
             tbl.show()
-
-            # prntfrm = "{storpool:<20s} {uuid:<40s}"
-            # print(prntfrm.format(storpool="StorpoolDfn-name", uuid="UUID"))
-            # for storpool_dfn in lstmsg.stor_pool_dfns:
-            #     print(prntfrm.format(storpool=storpool_dfn.stor_pool_name, uuid=storpool_dfn.uuid))
 
         return None
 
