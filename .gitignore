@@ -11,6 +11,7 @@
 linstor/proto/*.py
 linstor/sharedconsts.py
 linstor/properties.py
+linstor/consts_githash.py
 
 # unittests ignores
 build/
