@@ -81,10 +81,6 @@ class ResourceCommands(Commands):
             'linstor. By default, the list is printed as a human readable table.')
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lreses.add_argument(
-            '-s', '--show',
-            nargs='+',
-            choices=resverbose).completer = res_verbose_completer
-        p_lreses.add_argument(
             '-g', '--groupby',
             nargs='+',
             choices=resgroupby).completer = res_group_completer
