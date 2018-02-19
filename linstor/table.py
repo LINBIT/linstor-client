@@ -47,10 +47,35 @@ def get_terminal_size():
 
 
 class TableHeader(object):
-    def __init__(self, name, color, alignment):
+    def __init__(self, name, color=None, alignment_color='<', alignment_text='<'):
+        """
+        Creates a new TableHeader object.
+
+        :param str name:
+        :param str color: color to use for this column
+        :param str alignment_color:
+        :param str alignment_text:
+        """
         self._name = name
         self._color = color
-        self._alignment = alignment
+        self._alignment_color = alignment_color
+        self._alignment_text = alignment_text
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def color(self):
+        return self._color
+
+    @property
+    def color_alignment(self):
+        return self._alignment_color
+
+    @property
+    def text_alignment(self):
+        return self._alignment_text
 
 
 class Table(object):
@@ -92,6 +117,14 @@ class Table(object):
             'just_col': just_col,
             'just_txt': just_txt})
 
+    def add_header(self, header):
+        """
+
+        :param TableHeader header:
+        :return:
+        """
+        return self.add_column(header.name, header.color, header.color_alignment, header.text_alignment)
+
     def add_row(self, row):
         self.got_row = True
         if not self.got_column:
@@ -125,6 +158,7 @@ class Table(object):
 
     def set_groupby(self, groups):
         if groups:
+            assert(isinstance(groups, list))
             self.groups = groups
 
     def show(self, machine_readable=False, overwrite=False):
