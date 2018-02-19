@@ -26,6 +26,12 @@ from linstor.consts import NODE_NAME, RES_NAME, STORPOOL_NAME
 
 
 class ResourceCommands(Commands):
+    _resource_headers = [
+        linstor.TableHeader("ResourceName"),
+        linstor.TableHeader("Node"),
+        linstor.TableHeader("Port"),
+        linstor.TableHeader("State", Color.DARKGREEN, alignment_text='>')
+    ]
 
     @staticmethod
     def setup_commands(parser):
@@ -69,9 +75,7 @@ class ResourceCommands(Commands):
                               help='Name of the node').completer = NodeCommands.completer
         p_rm_res.set_defaults(func=ResourceCommands.delete)
 
-        resverbose = ('Port',)
-        resgroupby = ('Name', 'Port', 'State')
-        res_verbose_completer = Commands.show_group_completer(resverbose, "show")
+        resgroupby = [x.name for x in ResourceCommands._resource_headers]
         res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
 
         p_lreses = parser.add_parser(
@@ -196,10 +200,10 @@ class ResourceCommands(Commands):
             rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
 
             tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-            tbl.add_column("ResourceName")
-            tbl.add_column("Node")
-            tbl.add_column("Port")
-            tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
+            for hdr in ResourceCommands._resource_headers:
+                tbl.add_header(hdr)
+
+            tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
 
             for rsc in lstmsg.resources:
                 rsc_dfn = rsc_dfn_map[rsc.name]
