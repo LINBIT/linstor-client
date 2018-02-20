@@ -1,2 +1,2 @@
-from table import Table, TableHeader
-import consts
+from .table import Table, TableHeader
+from . import consts
