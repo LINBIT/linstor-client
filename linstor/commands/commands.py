@@ -69,6 +69,8 @@ class Commands(object):
     SET_STORAGE_POOL_AUX_PROP = 'set-storage-pool-aux-prop'
     SET_VOLUME_DEF_AUX_PROP = 'set-volume-definition-aux-prop'
 
+    GEN_ZSH_COMPLETER = 'gen-zsh-completer'
+
     MainList = [
         CREATE_NODE,
         CREATE_RESOURCE,
@@ -121,7 +123,8 @@ class Commands(object):
     ]
     Hidden = [
         EXIT,
-        DMMIGRATE
+        DMMIGRATE,
+        GEN_ZSH_COMPLETER
     ]
 
     @classmethod

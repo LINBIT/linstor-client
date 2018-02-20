@@ -38,6 +38,7 @@ from linstor.commands import (
     NodeCommands,
     MigrateCommands,
     DrbdOptions,
+    ZshGenerator,
     Commands
 )
 
@@ -160,6 +161,14 @@ class LinStorCLI(object):
         # drbd options
         drbd_options = DrbdOptions()
         drbd_options.setup_commands(subp)
+
+        # zsh completer
+        zsh_generator = ZshGenerator(subp)
+        zsh_compl = subp.add_parser(
+            Commands.GEN_ZSH_COMPLETER,
+            description='Generate a zsh completion script'
+        )
+        zsh_compl.set_defaults(func=zsh_generator.cmd_completer)
 
         argcomplete.autocomplete(parser)
 

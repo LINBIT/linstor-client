@@ -7,3 +7,4 @@ from .rsc_cmds import ResourceCommands
 from .vlm_dfn_cmds import VolumeDefinitionCommands
 from .drbd_setup_cmds import DrbdOptions
 from .migrate_cmds import MigrateCommands
+from .zsh_completer import ZshGenerator
