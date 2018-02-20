@@ -89,10 +89,15 @@ class ResourceCommands(Commands):
             nargs='+',
             choices=resgroupby).completer = res_group_completer
         p_lreses.add_argument(
-            '-R', '--resources',
+            '-r', '--resources',
             nargs='+',
             type=namecheck(RES_NAME),
             help='Filter by list of resources').completer = ResourceCommands.completer
+        p_lreses.add_argument(
+            '-n', '--nodes',
+            nargs='+',
+            type=namecheck(NODE_NAME),
+            help='Filter by list of nodes').completer = NodeCommands.completer
         p_lreses.set_defaults(func=ResourceCommands.list)
 
         # list volumes
@@ -205,7 +210,16 @@ class ResourceCommands(Commands):
 
             tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
 
-            for rsc in lstmsg.resources:
+            filter_res = args.resources
+            filter_nodes = args.nodes
+
+            disp_list = lstmsg.resources
+            if filter_res:
+                disp_list = [rsc for rsc in disp_list if rsc.name in filter_res]
+            if filter_nodes:
+                disp_list = [rsc for rsc in disp_list if rsc.node_name in filter_nodes]
+
+            for rsc in disp_list:
                 rsc_dfn = rsc_dfn_map[rsc.name]
                 marked_delete = FLAG_DELETE in rsc.rsc_flags
                 # rsc_state = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
