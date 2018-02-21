@@ -41,7 +41,7 @@ class Commands(object):
     LIST_VOLUME_DEF = 'list-volume-definitions'
     LIST_VOLUME = 'list-volumes'
     LIST_NETINTERFACE = 'list-netinterfaces'
-    DRBD_OPTIONS = 'drbd-options'
+    # DRBD_OPTIONS = 'drbd-options'
     EXIT = 'exit'
     GET_NODE_PROPS = 'get-node-prop'
     GET_RESOURCE_DEF_PROPS = 'get-resource-definition-prop'
@@ -95,7 +95,7 @@ class Commands(object):
         LIST_VOLUME_DEF,
         LIST_VOLUME,
         LIST_NETINTERFACE,
-        DRBD_OPTIONS,
+        # DRBD_OPTIONS,
         GET_NODE_PROPS,
         GET_RESOURCE_DEF_PROPS,
         GET_RESOURCE_PROPS,

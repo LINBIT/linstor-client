@@ -159,8 +159,8 @@ class LinStorCLI(object):
         c_dmmigrate.set_defaults(func=MigrateCommands.cmd_dmmigrate)
 
         # drbd options
-        drbd_options = DrbdOptions()
-        drbd_options.setup_commands(subp)
+        #drbd_options = DrbdOptions()
+        #drbd_options.setup_commands(subp)
 
         # zsh completer
         zsh_generator = ZshGenerator(subp)
