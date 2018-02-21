@@ -267,18 +267,21 @@ class ResourceCommands(Commands):
                         vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr)
                     else:
                         vlm_state = None
-                    state = tbl.color_cell("unknown", Color.YELLOW)
-                    if vlm_state:
-                        state = "diskless" if not vlm_state.has_disk and not vlm_state.disk_failed else "ok"
-                        problems = []
+                    state = tbl.color_cell("Unknown", Color.YELLOW)
+                    if vlm_state and vlm_state.HasField("disk_state") and vlm_state.disk_state:
+                        state = vlm_state.disk_state
 
-                        if not vlm_state.is_present and vlm_state.has_disk:
-                            problems.append("not present")
-                        if vlm_state.disk_failed:
-                            problems.append("disk failed")
-
-                        if problems:
-                            state = tbl.color_cell(", ".join(problems), Color.RED)
+                        if state == 'DUnknown':
+                            state = tbl.color_cell("Unknown", Color.YELLOW)
+                        elif state == 'Diskless':
+                            if vlm_state.disk_failed:
+                                state = tbl.color_cell("DiskFailed", Color.RED)
+                        elif state in ['Inconsistent', 'Failed']:
+                            state = tbl.color_cell(state, Color.RED)
+                        elif state in ['UpToDate']:
+                            pass  # green text
+                        else:
+                            state = tbl.color_cell(state, Color.YELLOW)
                     tbl.add_row([
                         rsc.node_name,
                         rsc.name,
