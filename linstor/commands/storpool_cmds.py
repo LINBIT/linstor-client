@@ -82,7 +82,6 @@ class StoragePoolCommands(Commands):
             description='Prints a list of all storage pool known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lstorpool.add_argument('-a', '--all', action="store_true", help='Show all storage pools (even internal)')
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
                                  choices=storpoolgroupby).completer = storpool_group_completer
         p_lstorpool.add_argument('-R', '--storpool', nargs='+', type=namecheck(STORPOOL_NAME),
@@ -177,8 +176,6 @@ class StoragePoolCommands(Commands):
     def list(cc, args):
         lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL, MsgLstStorPool(), args)
 
-        filter_internal = [linstor.consts.DFLTDISKLESSSTORPOOL]
-
         if lstmsg:
             tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("StoragePool")
@@ -187,9 +184,6 @@ class StoragePoolCommands(Commands):
             tbl.add_column("PoolName")
             tbl.add_column("SupportsSnapshots")
             for storpool in lstmsg.stor_pools:
-                if storpool.stor_pool_name in filter_internal and not args.all:
-                    continue
-
                 driver_device_prop = [x for x in storpool.props
                                       if x.key == StoragePoolCommands.get_driver_key(storpool.driver)]
                 driver_device = driver_device_prop[0].value if driver_device_prop else ''

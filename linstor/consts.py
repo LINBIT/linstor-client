@@ -67,8 +67,6 @@ BOOL_FALSE = "false"
 
 KEY_LS_CONTROLLERS = 'LS_CONTROLLERS'
 
-DFLTDISKLESSSTORPOOL = 'DfltDisklessStorPool'
-
 
 class ExitCode(object):
     OK = 0
