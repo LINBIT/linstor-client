@@ -1,3 +1,32 @@
+linstor-client (0.1.3-1) experimental; urgency=medium
+
+  [ Roland Kammerer ]
+  * build: reset rpm release
+  * dm-migrate: add this hidden command
+
+  [ Rene Peinthor ]
+  * introduce a hidden command list
+  * fix storage-pool-definition completer
+  * update docstring for _send_msg and parse_key_value_pairs
+  * interactive: only show syntax help if it was a real argparse error
+  * move Table class into its own file
+  * remove --show argument from list-resource
+  * hide the dfltdisklessstorpool by default, can be shown by --all
+  * use same valid_inner_chars than controller
+  * ignore generated consts_githash.py file
+  * table: fix crash in empty tables with grouping
+  * Table can now be extended with TableHeader objects
+  * enable groupby argument for list-resource command
+  * add empty output tests for Table text output
+  * list-resource: filter by resource or node options
+  * fix incorrect python3 import
+  * add a hidden gen-zsh-completer command
+  * disable drbd-option commands they are currently not implementated
+  * improve vlm state display
+  * diskless storage pools will now be filtered on the controller
+
+ -- Roland Kammerer <roland.kammerer@linbit.com>  Thu, 22 Feb 2018 15:42:50 +0100
+
 linstor-client (0.1.2-2) experimental; urgency=medium
 
   [ Rene Peinthor ]
