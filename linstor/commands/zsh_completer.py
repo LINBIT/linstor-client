@@ -13,7 +13,7 @@ _header = """#compdef linstor_client.py linstor
 # Authors
 # -------
 #
-#  * Rene peinthor <rene.peinthor@linbit.com>
+#  * Rene Peinthor <rene.peinthor@linbit.com>
 #
 # ------------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ _linstor() {
 
   case $state in
     (args)
-      curcontext="${curcontext%:*:*}:play-cmd-$words[1]:"
+      curcontext="${curcontext%:*:*}:linstor-cmd-$words[1]:"
       case $line[1] in
 """
 
