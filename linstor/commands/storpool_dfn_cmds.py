@@ -66,7 +66,7 @@ class StoragePoolDefinitionCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             Commands.GET_STORAGE_POOL_DEF_PROPS,
-            aliases=['dspstorpoolprp'],
+            aliases=['dspstorpooldfnprp'],
             description="Prints all properties of the given storage pool definition.")
         p_sp.add_argument(
             'storage_pool_name',
