@@ -41,7 +41,7 @@ class TestListCommands(LinstorTestCase):
         self.assertIsNotNone(jout)
 
     def test_storage_pools_text(self):
-        text_out = self.execute_with_text_output(["list-storage-pool"])
+        text_out = self.execute_with_text_output(["list-storage-pools"])
         self.assertIn("StoragePool", text_out)
 
     def test_volume_definitions(self):

@@ -103,7 +103,7 @@ class TestCreateCommands(LinstorTestCase):
         self.assertTrue(storpooldfn.is_success())
         self.assertEqual(MASK_STOR_POOL_DFN | MASK_CRT | CREATED, storpooldfn.ret_code)
 
-        storpooldfns = self.execute_with_machine_output(['list-storage-pool-definition'])
+        storpooldfns = self.execute_with_machine_output(['list-storage-pool-definitions'])
         self.assertEqual(1, len(storpooldfns))
         self.assertIn('stor_pool_dfns', storpooldfns[0])
         storpooldfns = storpooldfns[0]['stor_pool_dfns']
@@ -157,7 +157,7 @@ class TestCreateCommands(LinstorTestCase):
         rsc_dfn = self.execute_with_single_resp(['create-resource-definition', 'rsc1'])
         self.assertTrue(rsc_dfn.is_success())
 
-        rsc_dfns = self.execute_with_machine_output(['list-resource-definition'])
+        rsc_dfns = self.execute_with_machine_output(['list-resource-definitions'])
         self.assertEqual(1, len(rsc_dfns))
         self.assertIn('rsc_dfns', rsc_dfns[0])
         rsc_dfns = rsc_dfns[0]['rsc_dfns']
@@ -165,7 +165,7 @@ class TestCreateCommands(LinstorTestCase):
         self.assertEqual(1, len(rsc1), "resource definition 'rsc1' not found")
 
     def assert_volume_def(self, rsc_name, vlmnr, minornr, size):
-        rscdfs = self.execute_with_machine_output(['list-volume-definition'])
+        rscdfs = self.execute_with_machine_output(['list-volume-definitions'])
         self.assertEqual(1, len(rscdfs))
         rscdfs = rscdfs[0]
         self.assertIn('rsc_dfns', rscdfs)
