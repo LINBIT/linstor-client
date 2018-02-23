@@ -78,8 +78,7 @@ class VolumeDefinitionCommands(Commands):
 
         p_lvols = parser.add_parser(
             Commands.LIST_VOLUME_DEF,
-            aliases=['list-volume-definition', 'dspvlmdfn', 'display-volume-definitions', 'volume-definitions',
-                     'dspvlmdfn'],
+            aliases=['dspvlmdfn'],
             description=' Prints a list of all volume definitions known to linstor. '
             'By default, the list is printed as a human readable table.')
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -92,7 +91,7 @@ class VolumeDefinitionCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             Commands.GET_VOLUME_DEF_PROPS,
-            aliases=['get-volume-definition-properties', 'dspvlmdfnprps'],
+            aliases=['dspvlmdfnprps'],
             description="Prints all properties of the given volume definition.")
         p_sp.add_argument(
             'resource_name',
@@ -107,7 +106,7 @@ class VolumeDefinitionCommands(Commands):
         # disabled until there are properties
         # p_setprop = parser.add_parser(
         #     Commands.SET_VOLUME_DEF_PROP,
-        #     aliases=['set-volume-definition-property', 'setvlmdfnprp'],
+        #     aliases=['setvlmdfnprp'],
         #     description='Sets properties for the given volume definition.')
         # p_setprop.add_argument(
         #     'resource_name',
@@ -122,7 +121,7 @@ class VolumeDefinitionCommands(Commands):
         # set aux properties
         p_setprop = parser.add_parser(
             Commands.SET_VOLUME_DEF_AUX_PROP,
-            aliases=['set-volume-definition-aux-property', 'setvlmdfnauxprp'],
+            aliases=['setvlmdfnauxprp'],
             description='Sets properties for the given volume definition.')
         p_setprop.add_argument(
             'resource_name',

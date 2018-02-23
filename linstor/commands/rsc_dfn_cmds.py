@@ -55,8 +55,7 @@ class ResourceDefinitionCommands(Commands):
 
         p_lrscdfs = parser.add_parser(
             Commands.LIST_RESOURCE_DEF,
-            aliases=['list-resource-definition', 'dsprscdfn', 'display-resource-definitions', 'resource-definitions',
-                     'dsprscdfn'],
+            aliases=['dsprscdfn'],
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -71,7 +70,7 @@ class ResourceDefinitionCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             Commands.GET_RESOURCE_DEF_PROPS,
-            aliases=['get-resource-definition-properties', 'dsprscdfnprp'],
+            aliases=['dsprscdfnprp'],
             description="Prints all properties of the given resource definitions.")
         p_sp.add_argument(
             'resource_name',
@@ -83,7 +82,7 @@ class ResourceDefinitionCommands(Commands):
         # disabled until there are properties
         # p_setprop = parser.add_parser(
         #     Commands.SET_RESOURCE_DEF_PROP,
-        #     aliases=['set-resource-definition-property', 'setrscdfnprp'],
+        #     aliases=['setrscdfnprp'],
         #     description='Sets properties for the given resource definition.')
         # p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
         # Commands.add_parser_keyvalue(p_setprop, 'resource-definition')
@@ -92,7 +91,7 @@ class ResourceDefinitionCommands(Commands):
         # set aux properties
         p_setauxprop = parser.add_parser(
             Commands.SET_RESOURCE_DEF_AUX_PROP,
-            aliases=['set-resource-definition-aux-property', 'setrscdfnauxprp'],
+            aliases=['setrscdfnauxprp'],
             description='Sets auxiliary properties for the given resource definition.')
         p_setauxprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
         Commands.add_parser_keyvalue(p_setauxprop)

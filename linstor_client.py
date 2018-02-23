@@ -131,13 +131,13 @@ class LinStorCLI(object):
 
         # controller - get props
         c_ctrl_props = subp.add_parser(Commands.GET_CONTROLLER_PROPS,
-                                       aliases=['get-controller-properties'],
+                                       aliases=['dspctrlprp'],
                                        description='Print current controller config properties.')
         c_ctrl_props.set_defaults(func=Commands.cmd_print_controller_props)
 
         #  controller - set props
         c_set_ctrl_props = subp.add_parser(Commands.SET_CONTROLLER_PROP,
-                                           aliases=['set-controller-property'],
+                                           aliases=['setctrlprp'],
                                            description='Set a controller config property.')
         Commands.add_parser_keyvalue(c_set_ctrl_props, "controller")
         c_set_ctrl_props.set_defaults(func=Commands.cmd_set_controller_props)
@@ -145,6 +145,7 @@ class LinStorCLI(object):
         # shutdown
         c_shutdown = subp.add_parser(
             Commands.SHUTDOWN,
+            aliases=['shtdwn'],
             description='Shutdown the linstor controller'
         )
         c_shutdown.set_defaults(func=Commands.cmd_shutdown)

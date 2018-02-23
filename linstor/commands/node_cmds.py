@@ -92,7 +92,7 @@ class NodeCommands(Commands):
         # create net interface
         p_create_netinterface = parser.add_parser(
             Commands.CREATE_NETINTERFACE,
-            aliases=['crtnetif', 'create-netif'],
+            aliases=['crtnetif'],
             description='Creates and adds a new netinterface to a given node. If port is specified this netinterface '
                         'is used as satellite port'
         )
@@ -112,7 +112,7 @@ class NodeCommands(Commands):
         # modify net interface
         p_mod_netif = parser.add_parser(
             Commands.MODIFY_NETINTERFACE,
-            aliases=['mfynetif', 'modify-netif'],
+            aliases=['mfynetif'],
             description='Change the ip listen address of a netinterface on the given node.'
         )
         p_mod_netif.add_argument('-p', '--port', type=rangecheck(1, 65535),
@@ -131,7 +131,7 @@ class NodeCommands(Commands):
         # delete net interface
         p_delete_netinterface = parser.add_parser(
             Commands.DELETE_NETINTERFACE,
-            aliases=['delnetif', 'delnetinterface'],
+            aliases=['delnetif'],
             description='Delete a netinterface from a node.'
         )
         p_delete_netinterface.add_argument(
@@ -153,7 +153,7 @@ class NodeCommands(Commands):
         nodes_group_completer = Commands.show_group_completer(nodesgroupby, "groupby")
         p_lnodes = parser.add_parser(
             Commands.LIST_NODE,
-            aliases=['list-node', 'ls-nodes', 'display-nodes', 'dspnode'],
+            aliases=['dspnode'],
             description='Prints a list of all cluster nodes known to linstor. '
             'By default, the list is printed as a human readable table.')
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -168,7 +168,7 @@ class NodeCommands(Commands):
         # list netinterface
         p_lnetif = parser.add_parser(
             Commands.LIST_NETINTERFACE,
-            aliases=['list-netinterface', 'ls-netinterface', 'ls-netif', 'display-netinterface', 'dspnetif'],
+            aliases=['dspnetif'],
             description='Prints a list of netinterfaces from a node.'
         )
         p_lnetif.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -181,7 +181,7 @@ class NodeCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             Commands.GET_NODE_PROPS,
-            aliases=['get-node-properties', 'dspnodeprp'],
+            aliases=['dspnodeprp'],
             description="Prints all properties of the given node.")
         p_sp.add_argument(
             'node_name',
@@ -192,7 +192,7 @@ class NodeCommands(Commands):
         # disabled until there are properties
         # p_setp = parser.add_parser(
         #     Commands.SET_NODE_PROP,
-        #     aliases=['set-node-property', 'setnodeprp'],
+        #     aliases=['setnodeprp'],
         #     description="Set a property on the given node."
         # )
         # p_setp.add_argument(
@@ -205,7 +205,7 @@ class NodeCommands(Commands):
         # set aux properties
         p_setauxp = parser.add_parser(
             Commands.SET_NODE_AUX_PROP,
-            aliases=['set-node-aux-property', 'setnodeauxprp'],
+            aliases=['setnodeauxprp'],
             description="Set a auxiliary property on the given node."
         )
         p_setauxp.add_argument(

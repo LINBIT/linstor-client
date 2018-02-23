@@ -78,7 +78,7 @@ class StoragePoolCommands(Commands):
 
         p_lstorpool = parser.add_parser(
             Commands.LIST_STORAGE_POOL,
-            aliases=['list-storage-pool', 'ls-storage-pool', 'display-storage-pools', 'dspstorpool'],
+            aliases=['dspstorpool'],
             description='Prints a list of all storage pool known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -91,7 +91,7 @@ class StoragePoolCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             Commands.GET_STORAGE_POOL_PROPS,
-            aliases=['get-storage-pool-properties', 'dspstorpoolprp'],
+            aliases=['dspstorpoolprp'],
             description="Prints all properties of the given storage pool.")
         p_sp.add_argument(
             'storage_pool_name',
@@ -105,7 +105,7 @@ class StoragePoolCommands(Commands):
         # set properties
         p_setprop = parser.add_parser(
             Commands.SET_STORAGE_POOL_PROP,
-            aliases=['set-storage-pool-property', 'setstorpoolprp'],
+            aliases=['setstorpoolprp'],
             description='Sets properties for the given storage pool on the given node.')
         p_setprop.add_argument(
             'name',
@@ -122,7 +122,7 @@ class StoragePoolCommands(Commands):
         # set aux properties
         p_setauxprop = parser.add_parser(
             Commands.SET_STORAGE_POOL_AUX_PROP,
-            aliases=['set-storage-pool-aux-property', 'setstorpoolauxprp'],
+            aliases=['setstorpoolauxprp'],
             description='Sets auxiliary properties for the given storage pool on the given node.')
         p_setauxprop.add_argument(
             'name',

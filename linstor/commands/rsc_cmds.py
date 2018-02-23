@@ -99,7 +99,7 @@ class ResourceCommands(Commands):
 
         p_lreses = parser.add_parser(
             Commands.LIST_RESOURCE,
-            aliases=['list-resource', 'ls-rsc', 'display-resources', 'dsprsc'],
+            aliases=['dsprsc'],
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -122,7 +122,7 @@ class ResourceCommands(Commands):
         # list volumes
         p_lvlms = parser.add_parser(
             Commands.LIST_VOLUME,
-            aliases=['list-volume', 'ls-vlm', 'display-volumes', 'dspvlm'],
+            aliases=['dspvlm'],
             description='Prints a list of all volumes.'
         )
         p_lvlms.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -132,7 +132,7 @@ class ResourceCommands(Commands):
         # show properties
         p_sp = parser.add_parser(
             Commands.GET_RESOURCE_PROPS,
-            aliases=['get-resource-properties', 'dsprscprp'],
+            aliases=['dsprscprp'],
             description="Prints all properties of the given resource.")
         p_sp.add_argument(
             'resource_name',
@@ -145,7 +145,7 @@ class ResourceCommands(Commands):
         # set properties
         p_setprop = parser.add_parser(
             Commands.SET_RESOURCE_PROP,
-            aliases=['set-resource-property', 'setrscprp'],
+            aliases=['setrscprp'],
             description='Sets properties for the given resource on the given node.')
         p_setprop.add_argument(
             'name',
@@ -162,7 +162,7 @@ class ResourceCommands(Commands):
         # set aux properties
         p_setauxprop = parser.add_parser(
             Commands.SET_RESOURCE_AUX_PROP,
-            aliases=['set-resource-aux-property', 'setrscauxprp'],
+            aliases=['setrscauxprp'],
             description='Sets auxiliary properties for the given resource on the given node.')
         p_setauxprop.add_argument(
             'name',
