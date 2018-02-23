@@ -5,14 +5,14 @@ from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
 from linstor.proto.MsgModRsc_pb2 import MsgModRsc
 from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from linstor.proto.LinStorMapEntry_pb2 import LinStorMapEntry
+from linstor.proto.MsgAutoPlaceRsc_pb2 import MsgAutoPlaceRsc
 from linstor.commcontroller import need_communication, completer_communication
 from linstor.commands import (
     Commands, NodeCommands, StoragePoolDefinitionCommands, ResourceDefinitionCommands
 )
-from linstor.utils import namecheck, Output
-from linstor.consts import Color
+from linstor.utils import namecheck, Output, LinstorError
+from linstor.consts import Color, ExitCode
 from linstor.sharedconsts import (
-    API_CRT_RSC,
     API_DEL_RSC,
     API_LST_RSC,
     API_LST_RSC_DFN,
@@ -21,6 +21,7 @@ from linstor.sharedconsts import (
     FLAG_DELETE,
     FLAG_DISKLESS
 )
+import linstor.sharedconsts as apiconsts
 
 from linstor.consts import NODE_NAME, RES_NAME, STORPOOL_NAME
 
@@ -35,6 +36,11 @@ class ResourceCommands(Commands):
 
     @staticmethod
     def setup_commands(parser):
+        """
+
+        :param argparse.ArgumentParser parser:
+        :return:
+        """
         # new-resource
         p_new_res = parser.add_parser(
             Commands.CREATE_RESOURCE,
@@ -48,12 +54,25 @@ class ResourceCommands(Commands):
             help="Storage pool name to use.").completer = StoragePoolDefinitionCommands.completer
         p_new_res.add_argument('-d', '--diskless', action="store_true", help='Should the resource be diskless')
         p_new_res.add_argument(
+            '--auto-place',
+            help='Auto place a resource to a specified number of nodes',
+            type=int
+        )
+        p_new_res.add_argument(
+            '--do-not-place-with',
+            type=namecheck(RES_NAME),
+            nargs='+',
+            help='Try to avoid nodes that already have a given resource deployed.'
+        ).completer = ResourceCommands.completer
+        p_new_res.add_argument(
             'resource_definition_name',
             type=namecheck(RES_NAME),
             help='Name of the resource definition').completer = ResourceDefinitionCommands.completer
-        p_new_res.add_argument('node_name',
-                               type=namecheck(NODE_NAME),
-                               help='Name of the node to deploy the resource').completer = NodeCommands.completer
+        p_new_res.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            nargs='?',
+            help='Name of the node to deploy the resource').completer = NodeCommands.completer
         p_new_res.set_defaults(func=ResourceCommands.create)
 
         # remove-resource
@@ -160,20 +179,38 @@ class ResourceCommands(Commands):
     @staticmethod
     @need_communication
     def create(cc, args):
-        p = MsgCrtRsc()
-        p.rsc.name = args.resource_definition_name
-        p.rsc.node_name = args.node_name
+        if args.auto_place:
+            # auto-place resource
+            api_call = apiconsts.API_AUTO_PLACE_RSC
+            p = MsgAutoPlaceRsc()
+            p.rsc_name = args.resource_definition_name
+            p.place_count = args.auto_place
 
-        if not args.diskless and args.storage_pool:
-            prop = LinStorMapEntry()
-            prop.key = KEY_STOR_POOL_NAME
-            prop.value = args.storage_pool
-            p.rsc.props.extend([prop])
+            if args.storage_pool:
+                p.storage_pool = args.storage_pool
+            if args.do_not_place_with:
+                p.not_place_with.extend(args.do_not_place_with)
+        else:
+            # normal create resource
+            # check that node is given
+            if not args.node_name:
+                raise LinstorError("create-resource: too few arguments: Node name missing.", ExitCode.ARGPARSE_ERROR)
 
-        if args.diskless:
-            p.rsc.rsc_flags.append(FLAG_DISKLESS)
+            api_call = apiconsts.API_CRT_RSC
+            p = MsgCrtRsc()
+            p.rsc.name = args.resource_definition_name
+            p.rsc.node_name = args.node_name
 
-        return Commands._send_msg(cc, API_CRT_RSC, p, args)
+            if not args.diskless and args.storage_pool:
+                prop = LinStorMapEntry()
+                prop.key = KEY_STOR_POOL_NAME
+                prop.value = args.storage_pool
+                p.rsc.props.extend([prop])
+
+            if args.diskless:
+                p.rsc.rsc_flags.append(FLAG_DISKLESS)
+
+        return Commands._send_msg(cc, api_call, p, args)
 
     @staticmethod
     @need_communication
