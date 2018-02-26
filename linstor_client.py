@@ -57,6 +57,8 @@ class LinStorCLI(object):
     linstor command line client
     """
 
+    interactive=False
+
     def __init__(self):
         self._all_commands = None
         self._colors = True
@@ -350,38 +352,44 @@ class LinStorCLI(object):
                 traceback.print_exc(file=sys.stdout)
 
         # main part of interactive mode:
+        if not LinStorCLI.interactive:
+            LinStorCLI.interactive = True
 
-        # try to load readline
-        # if loaded, raw_input makes use of it
-        if sys.version_info < (3,):
-            my_input = raw_input
-        else:
-            my_input = input
+            # try to load readline
+            # if loaded, raw_input makes use of it
+            if sys.version_info < (3,):
+                my_input = raw_input
+            else:
+                my_input = input
 
-        try:
-            import readline
-            # seems after importing readline it is not possible to output to sys.stderr
-            completer = argcomplete.CompletionFinder(self._parser)
-            readline.set_completer_delims("")
-            readline.set_completer(completer.rl_complete)
-            readline.parse_and_bind("tab: complete")
-        except ImportError:
-            pass
-
-        self.cmd_list(args)
-        while True:
             try:
-                sys.stdout.write("\n")
-                cmds = my_input('LINSTOR ==> ').strip()
+                import readline
+                # seems after importing readline it is not possible to output to sys.stderr
+                completer = argcomplete.CompletionFinder(self._parser)
+                readline.set_completer_delims("")
+                readline.set_completer(completer.rl_complete)
+                readline.parse_and_bind("tab: complete")
+            except ImportError:
+                pass
 
-                cmds = [cmd.strip() for cmd in cmds.split()]
-                if not cmds:
-                    self.cmd_list(args)
-                else:
-                    parsecatch(cmds)
-            except (EOFError, KeyboardInterrupt):  # raised by ctrl-d, ctrl-c
-                sys.stdout.write("\n")  # additional newline, makes shell prompt happy
-                return
+            self.cmd_list(args)
+            while True:
+                try:
+                    sys.stdout.write("\n")
+                    cmds = my_input('LINSTOR ==> ').strip()
+
+                    cmds = [cmd.strip() for cmd in cmds.split()]
+                    if not cmds:
+                        self.cmd_list(args)
+                    else:
+                        parsecatch(cmds)
+                except (EOFError, KeyboardInterrupt):  # raised by ctrl-d, ctrl-c
+                    sys.stdout.write("\n")  # additional newline, makes shell prompt happy
+                    break
+            LinStorCLI.interactive = False
+        else:
+            sys.stderr.write("The client is already running in interactive mode\n")
+
 
     def cmd_help(self, args):
         return self.parse_and_execute([args.command, "-h"])
