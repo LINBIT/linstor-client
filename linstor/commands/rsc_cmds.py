@@ -1,8 +1,10 @@
+import argparse
+
 import linstor
-from linstor.commands import Commands, ArgumentError
-from linstor.utils import namecheck, Output, LinstorClientError
-from linstor.consts import Color, ExitCode, NODE_NAME, RES_NAME, STORPOOL_NAME
 import linstor.sharedconsts as apiconsts
+from linstor.commands import Commands
+from linstor.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color, ExitCode
+from linstor.utils import Output, namecheck
 
 
 class ResourceCommands(Commands):
@@ -22,10 +24,18 @@ class ResourceCommands(Commands):
         :param argparse.ArgumentParser parser:
         :return:
         """
+
+        # Resource subcommands
+        res_parser = parser.add_parser(
+            Commands.RESOURCE,
+            aliases=["r"],
+            help="Resouce subcommands")
+        res_subp = res_parser.add_subparsers(title="resource commands")
+
         # new-resource
-        p_new_res = parser.add_parser(
-            Commands.CREATE_RESOURCE,
-            aliases=['crtrsc'],
+        p_new_res = res_subp.add_parser(
+            Commands.Subcommands.Create.LONG,
+            aliases=[Commands.Subcommands.Create.SHORT],
             description='Defines a DRBD resource for use with linstor. '
             'Unless a specific IP port-number is supplied, the port-number is '
             'automatically selected by the linstor controller on the current node. ')
@@ -67,9 +77,9 @@ class ResourceCommands(Commands):
         p_new_res.set_defaults(func=self.create)
 
         # remove-resource
-        p_rm_res = parser.add_parser(
-            Commands.DELETE_RESOURCE,
-            aliases=['delrsc'],
+        p_rm_res = res_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
             description=' Removes a resource and its associated resource definition '
             'from the linstor cluster. The resource is undeployed from all nodes '
             "and the resource entry is marked for removal from linstor's data "
@@ -88,9 +98,8 @@ class ResourceCommands(Commands):
         resgroupby = [x.name for x in ResourceCommands._resource_headers]
         res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
 
-        p_lreses = parser.add_parser(
-            Commands.LIST_RESOURCE,
-            aliases=['dsprsc'],
+        p_lreses = res_subp.add_parser(
+            'list', aliases=['l'],
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')

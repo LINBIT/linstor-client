@@ -23,6 +23,7 @@ class ArgumentError(Exception):
 
 
 class Commands(object):
+    RESOURCE = 'resource'
     CREATE_NODE = 'create-node'
     CREATE_RESOURCE = 'create-resource'
     CREATE_RESOURCE_DEF = 'create-resource-definition'
@@ -81,6 +82,7 @@ class Commands(object):
     GEN_ZSH_COMPLETER = 'gen-zsh-completer'
 
     MainList = [
+        RESOURCE,
         CREATE_NODE,
         CREATE_RESOURCE,
         CREATE_RESOURCE_DEF,
@@ -144,6 +146,21 @@ class Commands(object):
         self._linstor = None  # type: linstorapi.Linstor
         # _linstor_completer is just here as a cache for completer calls
         self._linstor_completer = None  # type: linstorapi.Linstor
+
+    class Subcommands(object):
+
+        class List(object):
+            LONG = "list"
+            SHORT = "l"
+
+        class Create(object):
+            LONG = "create"
+            SHORT = "c"
+
+
+        class Delete(object):
+            LONG = "remove"
+            SHORT = "r"
 
     @classmethod
     def handle_replies(cls, args, replies):
