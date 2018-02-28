@@ -99,7 +99,8 @@ class ResourceCommands(Commands):
         res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
 
         p_lreses = res_subp.add_parser(
-            'list', aliases=['l'],
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -120,9 +121,9 @@ class ResourceCommands(Commands):
         p_lreses.set_defaults(func=self.list)
 
         # list volumes
-        p_lvlms = parser.add_parser(
-            Commands.LIST_VOLUME,
-            aliases=['dspvlm'],
+        p_lvlms = res_subp.add_parser(
+            Commands.Subcommands.ListVolumes.LONG,
+            aliases=[Commands.Subcommands.ListVolumes.SHORT],
             description='Prints a list of all volumes.'
         )
         p_lvlms.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -141,9 +142,9 @@ class ResourceCommands(Commands):
         p_lvlms.set_defaults(func=self.list_volumes)
 
         # show properties
-        p_sp = parser.add_parser(
-            Commands.GET_RESOURCE_PROPS,
-            aliases=['dsprscprp'],
+        p_sp = res_subp.add_parser(
+            Commands.Subcommands.ListProperties.LONG,
+            aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given resource.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
@@ -155,9 +156,9 @@ class ResourceCommands(Commands):
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
-        p_setprop = parser.add_parser(
-            Commands.SET_RESOURCE_PROP,
-            aliases=['setrscprp'],
+        p_setprop = res_subp.add_parser(
+            Commands.Subcommands.SetProperties.LONG,
+            aliases=[Commands.Subcommands.SetProperties.SHORT],
             description='Sets properties for the given resource on the given node.')
         p_setprop.add_argument(
             'name',

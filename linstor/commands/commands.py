@@ -24,6 +24,7 @@ class ArgumentError(Exception):
 
 class Commands(object):
     RESOURCE = 'resource'
+    VOLUME = 'volume'
     CREATE_NODE = 'create-node'
     CREATE_RESOURCE = 'create-resource'
     CREATE_RESOURCE_DEF = 'create-resource-definition'
@@ -153,6 +154,14 @@ class Commands(object):
             LONG = "list"
             SHORT = "l"
 
+        class ListProperties(object):
+            LONG = "list-properties"
+            SHORT = "lp"
+
+        class ListVolumes(object):
+            LONG = "list-volumes"
+            SHORT = "lv"
+
         class Create(object):
             LONG = "create"
             SHORT = "c"
@@ -161,6 +170,14 @@ class Commands(object):
         class Delete(object):
             LONG = "remove"
             SHORT = "r"
+
+        class SetProperties(object):
+            LONG = "set-properties"
+            SHORT = "sp"
+
+        class SetAuxProperties(object):
+            LONG = "set-aux-properties"
+            SHORT = "sap"
 
     @classmethod
     def handle_replies(cls, args, replies):
