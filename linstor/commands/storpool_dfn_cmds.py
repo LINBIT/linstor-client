@@ -10,10 +10,18 @@ class StoragePoolDefinitionCommands(Commands):
         super(StoragePoolDefinitionCommands, self).__init__()
 
     def setup_commands(self, parser):
+
+        # Resource subcommands
+        spd_parser = parser.add_parser(
+            Commands.STORAGE_POOL_DEF,
+            aliases=["spd"],
+            help="Storage pool definition subcommands")
+        spd_subp = spd_parser.add_subparsers(title="Storage pool definition subcommands")
+
         # new-storpol definition
-        p_new_storpool_dfn = parser.add_parser(
-            Commands.CREATE_STORAGE_POOL_DEF,
-            aliases=['crtstorpooldfn'],
+        p_new_storpool_dfn = spd_subp.add_parser(
+            Commands.Subcommands.Create.LONG,
+            aliases=[Commands.Subcommands.Create.SHORT],
             description='Defines a Linstor storpool definition for use with linstor.')
         p_new_storpool_dfn.add_argument(
             'name',
@@ -23,9 +31,9 @@ class StoragePoolDefinitionCommands(Commands):
 
         # remove-storpool definition
         # TODO description
-        p_rm_storpool_dfn = parser.add_parser(
-            Commands.DELETE_STORAGE_POOL_DEF,
-            aliases=['delstorpooldfn'],
+        p_rm_storpool_dfn = spd_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
             description=' Removes a storage pool definition ')
         p_rm_storpool_dfn.add_argument('-q', '--quiet', action="store_true",
                                        help='Unless this option is used, linstor will issue a safety question '
@@ -40,9 +48,9 @@ class StoragePoolDefinitionCommands(Commands):
         storpooldfngroupby = ('Name')
         storpooldfn_group_completer = Commands.show_group_completer(storpooldfngroupby, "groupby")
 
-        p_lstorpooldfs = parser.add_parser(
-            Commands.LIST_STORAGE_POOL_DEF,
-            aliases=['dspstorpooldfn'],
+        p_lstorpooldfs = spd_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all storage pool definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpooldfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -55,9 +63,9 @@ class StoragePoolDefinitionCommands(Commands):
         p_lstorpooldfs.set_defaults(func=self.list)
 
         # show properties
-        p_sp = parser.add_parser(
-            Commands.GET_STORAGE_POOL_DEF_PROPS,
-            aliases=['dspstorpooldfnprp'],
+        p_sp = spd_subp.add_parser(
+            Commands.Subcommands.ListProperties.LONG,
+            aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given storage pool definition.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
@@ -68,8 +76,8 @@ class StoragePoolDefinitionCommands(Commands):
 
         # set properties
         p_setprop = parser.add_parser(
-            Commands.SET_STORAGE_POOL_DEF_PROP,
-            aliases=['setstorpooldfnprp'],
+            Commands.Subcommands.SetAuxProperties.LONG,
+            aliases=[Commands.Subcommands.SetAuxProperties.SHORT],
             description='Sets properties for the given storage pool definition.')
         p_setprop.add_argument(
             'name',
