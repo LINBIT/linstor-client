@@ -12,9 +12,17 @@ class ResourceDefinitionCommands(Commands):
         super(ResourceDefinitionCommands, self).__init__()
 
     def setup_commands(self, parser):
-        p_new_res_dfn = parser.add_parser(
-            Commands.CREATE_RESOURCE_DEF,
-            aliases=['crtrscdfn'],
+
+        # Resource subcommands
+        res_def_parser = parser.add_parser(
+            Commands.RESOURCE_DEF,
+            aliases=["rd"],
+            help="Resouce definition subcommands")
+        res_def_subp = res_def_parser.add_subparsers(title="resource definition subcommands")
+
+        p_new_res_dfn = res_def_subp.add_parser(
+            Commands.Subcommands.Create.LONG,
+            aliases=[Commands.Subcommands.Create.SHORT],
             description='Defines a Linstor resource definition for use with linstor.')
         p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
         # p_new_res_dfn.add_argument('-s', '--secret', type=str)
@@ -23,9 +31,9 @@ class ResourceDefinitionCommands(Commands):
 
         # remove-resource definition
         # TODO description
-        p_rm_res_dfn = parser.add_parser(
-            Commands.DELETE_RESOURCE_DEF,
-            aliases=['delrscdfn'],
+        p_rm_res_dfn = res_def_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
             description=" Removes a resource definition "
             "from the linstor cluster. The resource is undeployed from all nodes "
             "and the resource entry is marked for removal from linstor's data "
@@ -45,9 +53,9 @@ class ResourceDefinitionCommands(Commands):
         res_verbose_completer = Commands.show_group_completer(resverbose, "show")
         res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
 
-        p_lrscdfs = parser.add_parser(
-            Commands.LIST_RESOURCE_DEF,
-            aliases=['dsprscdfn'],
+        p_lrscdfs = res_def_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -60,9 +68,9 @@ class ResourceDefinitionCommands(Commands):
         p_lrscdfs.set_defaults(func=self.list)
 
         # show properties
-        p_sp = parser.add_parser(
-            Commands.GET_RESOURCE_DEF_PROPS,
-            aliases=['dsprscdfnprp'],
+        p_sp = res_def_subp.add_parser(
+            Commands.Subcommands.ListProperties.LONG,
+            aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given resource definitions.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
@@ -73,8 +81,8 @@ class ResourceDefinitionCommands(Commands):
 
         # set properties
         p_setprop = parser.add_parser(
-            Commands.SET_RESOURCE_DEF_PROP,
-            aliases=['setrscdfnprp'],
+            Commands.Subcommands.SetAuxProperties.LONG,
+            aliases=[Commands.Subcommands.SetAuxProperties.SHORT],
             description='Sets properties for the given resource definition.')
         p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
         Commands.add_parser_keyvalue(p_setprop, 'resource-definition')

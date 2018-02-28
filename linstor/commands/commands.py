@@ -24,6 +24,7 @@ class ArgumentError(Exception):
 
 class Commands(object):
     RESOURCE = 'resource'
+    RESOURCE_DEF = 'resource-definition'
     VOLUME = 'volume'
     NODE = 'node'
     CREATE_NODE = 'create-node'
