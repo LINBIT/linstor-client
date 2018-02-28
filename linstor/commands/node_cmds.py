@@ -22,10 +22,18 @@ class NodeCommands(Commands):
         super(NodeCommands, self).__init__()
 
     def setup_commands(self, parser):
+
+        # Node subcommands
+        node_parser = parser.add_parser(
+            Commands.NODE,
+            aliases=["n"],
+            help="Node subcommands")
+        node_subp = node_parser.add_subparsers(title="Node commands")
+
         # create node
-        p_new_node = parser.add_parser(
-            Commands.CREATE_NODE,
-            aliases=['crtnode'],
+        p_new_node = node_subp.add_parser(
+            Commands.Subcommands.Create.LONG,
+            aliases=[Commands.Subcommands.Create.SHORT],
             description='Creates a node entry for a node that participates in the '
             'linstor cluster.')
         p_new_node.add_argument('-p', '--port', type=rangecheck(1, 65535),
@@ -72,9 +80,9 @@ class NodeCommands(Commands):
         p_desc_node.set_defaults(func=self.describe)
 
         # remove-node
-        p_rm_node = parser.add_parser(
-            Commands.DELETE_NODE,
-            aliases=['delnode'],
+        p_rm_node = node_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
             description='Removes a node from the linstor cluster. '
             'All linstor resources that are still deployed on the specified '
             'node are marked for undeployment, and the node entry is marked for '
@@ -90,9 +98,9 @@ class NodeCommands(Commands):
         p_rm_node.set_defaults(func=self.delete)
 
         # create net interface
-        p_create_netinterface = parser.add_parser(
-            Commands.CREATE_NETINTERFACE,
-            aliases=['crtnetif'],
+        p_create_netinterface = node_subp.add_parser(
+            Commands.Subcommands.CreateNetInterface.LONG,
+            aliases=[Commands.Subcommands.CreateNetInterface.SHORT],
             description='Creates and adds a new netinterface to a given node. If port is specified this netinterface '
                         'is used as satellite port'
         )
@@ -116,9 +124,9 @@ class NodeCommands(Commands):
         p_create_netinterface.set_defaults(func=self.create_netif)
 
         # modify net interface
-        p_mod_netif = parser.add_parser(
-            Commands.MODIFY_NETINTERFACE,
-            aliases=['mfynetif'],
+        p_mod_netif = node_subp.add_parser(
+            Commands.Subcommands.ModifyNetInterface.LONG,
+            aliases=[Commands.Subcommands.ModifyNetInterface.SHORT],
             description='Change the ip listen address of a netinterface on the given node.'
         )
         p_mod_netif.add_argument('-p', '--port', type=rangecheck(1, 65535),
@@ -136,8 +144,8 @@ class NodeCommands(Commands):
 
         # delete net interface
         p_delete_netinterface = parser.add_parser(
-            Commands.DELETE_NETINTERFACE,
-            aliases=['delnetif'],
+            Commands.Subcommands.DeleteNetInterface.LONG,
+            aliases=[Commands.Subcommands.DeleteNetInterface.SHORT],
             description='Delete a netinterface from a node.'
         )
         p_delete_netinterface.add_argument(
@@ -157,9 +165,9 @@ class NodeCommands(Commands):
 
         nodes_verbose_completer = Commands.show_group_completer(nodesverbose, "show")
         nodes_group_completer = Commands.show_group_completer(nodesgroupby, "groupby")
-        p_lnodes = parser.add_parser(
-            Commands.LIST_NODE,
-            aliases=['dspnode'],
+        p_lnodes = node_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all cluster nodes known to linstor. '
             'By default, the list is printed as a human readable table.')
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -173,8 +181,8 @@ class NodeCommands(Commands):
 
         # list netinterface
         p_lnetif = parser.add_parser(
-            Commands.LIST_NETINTERFACE,
-            aliases=['dspnetif'],
+            Commands.Subcommands.ListNetInterface.LONG,
+            aliases=[Commands.Subcommands.ListNetInterface.SHORT],
             description='Prints a list of netinterfaces from a node.'
         )
         p_lnetif.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -185,9 +193,9 @@ class NodeCommands(Commands):
         p_lnetif.set_defaults(func=self.list_netinterfaces)
 
         # show properties
-        p_sp = parser.add_parser(
-            Commands.GET_NODE_PROPS,
-            aliases=['dspnodeprp'],
+        p_sp = node_subp.add_parser(
+            Commands.Subcommands.ListProperties.LONG,
+            aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given node.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
@@ -197,8 +205,8 @@ class NodeCommands(Commands):
 
         # set properties
         p_setp = parser.add_parser(
-            Commands.SET_NODE_PROP,
-            aliases=['setnodeprp'],
+            Commands.Subcommands.SetAuxProperties.LONG,
+            aliases=[Commands.Subcommands.SetAuxProperties.SHORT],
             description="Set a property on the given node."
         )
         p_setp.add_argument(

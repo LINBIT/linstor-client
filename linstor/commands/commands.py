@@ -25,6 +25,7 @@ class ArgumentError(Exception):
 class Commands(object):
     RESOURCE = 'resource'
     VOLUME = 'volume'
+    NODE = 'node'
     CREATE_NODE = 'create-node'
     CREATE_RESOURCE = 'create-resource'
     CREATE_RESOURCE_DEF = 'create-resource-definition'
@@ -166,6 +167,25 @@ class Commands(object):
             LONG = "create"
             SHORT = "c"
 
+        class CreateNetInterface(object):
+            LONG = "create-interface"
+            SHORT = "ci"
+
+        class ModifyNetInterface(object):
+            LONG = "modify-interface"
+            SHORT = "mi"
+
+        class DeleteNetInterface(object):
+            LONG = "remove-interface"
+            SHORT = "ri"
+
+        class ListNetInterface(object):
+            LONG = "list-interface"
+            SHORT = "li"
+
+        class CreateDef(object):
+            LONG = "create-definition"
+            SHORT = "cd"
 
         class Delete(object):
             LONG = "remove"
