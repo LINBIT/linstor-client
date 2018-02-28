@@ -23,6 +23,7 @@ class ArgumentError(Exception):
 
 
 class Commands(object):
+    STORAGE_POOL = 'storage-pool'
     RESOURCE = 'resource'
     RESOURCE_DEF = 'resource-definition'
     VOLUME = 'volume'

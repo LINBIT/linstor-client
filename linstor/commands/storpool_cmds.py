@@ -21,10 +21,18 @@ class StoragePoolCommands(Commands):
         super(StoragePoolCommands, self).__init__()
 
     def setup_commands(self, parser):
+
+        # Storage pool subcommands
+        sp_parser = parser.add_parser(
+            Commands.STORAGE_POOL,
+            aliases=["sp"],
+            help="Storage pool subcommands")
+        sp_subp = sp_parser.add_subparsers(title="Storage pool commands")
+
         # new-storpol
-        p_new_storpool = parser.add_parser(
-            Commands.CREATE_STORAGE_POOL,
-            aliases=['crtstorpool'],
+        p_new_storpool = sp_subp.add_parser(
+            Commands.Subcommands.Create.LONG,
+            aliases=[Commands.Subcommands.Create.SHORT],
             description='Defines a Linstor storage pool for use with Linstor.')
         p_new_storpool.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the new storage pool')
         p_new_storpool.add_argument(
@@ -44,9 +52,9 @@ class StoragePoolCommands(Commands):
 
         # remove-storpool
         # TODO description
-        p_rm_storpool = parser.add_parser(
-            Commands.DELETE_STORAGE_POOL,
-            aliases=['delstorpool'],
+        p_rm_storpool = sp_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
             description=' Removes a storage pool ')
         p_rm_storpool.add_argument(
             '-q', '--quiet',
@@ -65,9 +73,9 @@ class StoragePoolCommands(Commands):
         storpoolgroupby = [x.name for x in self._stor_pool_headers]
         storpool_group_completer = Commands.show_group_completer(storpoolgroupby, "groupby")
 
-        p_lstorpool = parser.add_parser(
-            Commands.LIST_STORAGE_POOL,
-            aliases=['dspstorpool'],
+        p_lstorpool = sp_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all storage pool known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -80,9 +88,9 @@ class StoragePoolCommands(Commands):
         p_lstorpool.set_defaults(func=self.list)
 
         # show properties
-        p_sp = parser.add_parser(
-            Commands.GET_STORAGE_POOL_PROPS,
-            aliases=['dspstorpoolprp'],
+        p_sp = sp_subp.add_parser(
+            Commands.Subcommands.ListProperties.LONG,
+            aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given storage pool.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
@@ -95,9 +103,9 @@ class StoragePoolCommands(Commands):
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
-        p_setprop = parser.add_parser(
-            Commands.SET_STORAGE_POOL_PROP,
-            aliases=['setstorpoolprp'],
+        p_setprop = sp_subp.add_parser(
+            Commands.Subcommands.SetProperties.LONG,
+            aliases=[Commands.Subcommands.SetProperties.SHORT],
             description='Sets properties for the given storage pool on the given node.')
         p_setprop.add_argument(
             'name',
