@@ -65,6 +65,11 @@ class ResourceCommands(Commands):
             help='Try to avoid nodes that already have a given resource deployed.'
         ).completer = ResourceCommands.completer
         p_new_res.add_argument(
+            '--do-not-place-with-regex',
+            type=str,
+            help='Try to avoid nodes that already have a resource deployed whos name is matching the given regular expression.'
+        )
+        p_new_res.add_argument(
             'resource_definition_name',
             type=namecheck(RES_NAME),
             help='Name of the resource definition').completer = ResourceDefinitionCommands.completer
@@ -189,7 +194,9 @@ class ResourceCommands(Commands):
             if args.storage_pool:
                 p.storage_pool = args.storage_pool
             if args.do_not_place_with:
-                p.not_place_with.extend(args.do_not_place_with)
+                p.not_place_with_rsc.extend(args.do_not_place_with)
+            if args.do_not_place_with_regex:
+                p.not_place_with_rsc_regex = args.do_not_place_with_regex
         else:
             # normal create resource
             # check that node is given
