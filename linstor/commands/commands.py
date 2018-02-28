@@ -23,61 +23,21 @@ class ArgumentError(Exception):
 
 
 class Commands(object):
-    STORAGE_POOL = 'storage-pool'
-    STORAGE_POOL_DEF = 'storage-pool-definition'
-    RESOURCE = 'resource'
-    RESOURCE_DEF = 'resource-definition'
-    VOLUME = 'volume'
-    VOLUME_DEF = 'volume-definition'
-    NODE = 'node'
-    CREATE_NODE = 'create-node'
-    CREATE_RESOURCE = 'create-resource'
-    CREATE_RESOURCE_DEF = 'create-resource-definition'
-    CREATE_STORAGE_POOL = 'create-storage-pool'
-    CREATE_STORAGE_POOL_DEF = 'create-storage-pool-definition'
-    CREATE_VOLUME_DEF = 'create-volume-definition'
-    CREATE_NETINTERFACE = 'create-netinterface'
-    MODIFY_NETINTERFACE = 'modify-netinterface'
-    DELETE_NODE = 'delete-node'
-    DELETE_RESOURCE = 'delete-resource'
-    DELETE_RESOURCE_DEF = 'delete-resource-definition'
-    DELETE_STORAGE_POOL = 'delete-storage-pool'
-    DELETE_STORAGE_POOL_DEF = 'delete-storage-pool-definition'
-    DELETE_VOLUME_DEF = 'delete-volume-definition'
-    DELETE_NETINTERFACE = 'delete-netinterface'
-    DESCRIBE_NODE = 'describe-node'
-    LIST_NODE = 'list-nodes'
-    LIST_RESOURCE_DEF = 'list-resource-definitions'
-    LIST_RESOURCE = 'list-resources'
-    LIST_STORAGE_POOL_DEF = 'list-storage-pool-definitions'
-    LIST_STORAGE_POOL = 'list-storage-pools'
-    LIST_VOLUME_DEF = 'list-volume-definitions'
-    LIST_VOLUME = 'list-volumes'
-    LIST_NETINTERFACE = 'list-netinterfaces'
+    DMMIGRATE = 'dm-migrate'
     DRBD_OPTIONS = 'drbd-options'
+    DRBD_PEER_OPTIONS = 'drbd-peer-options'
     DRBD_RESOURCE_OPTIONS = 'drbd-resource-options'
     DRBD_VOLUME_OPTIONS = 'drbd-volume-options'
-    DRBD_PEER_OPTIONS = 'drbd-peer-options'
     EXIT = 'exit'
-    GET_NODE_PROPS = 'list-node-properties'
-    GET_RESOURCE_DEF_PROPS = 'list-resource-definition-properties'
-    GET_RESOURCE_PROPS = 'list-resource-properties'
-    GET_STORAGE_POOL_DEF_PROPS = 'list-storage-pool-definition-properties'
-    GET_STORAGE_POOL_PROPS = 'list-storage-pool-properties'
-    GET_VOLUME_DEF_PROPS = 'list-volume-definition-properties'
+    GEN_ZSH_COMPLETER = 'gen-zsh-completer'
     GET_CONTROLLER_PROPS = 'list-controller-properties'
     CREATE_WATCH = 'create-watch'
     HELP = 'help'
     INTERACTIVE = 'interactive'
     LIST_COMMANDS = 'list-commands'
-    SHUTDOWN = 'shutdown'
-    DMMIGRATE = 'dm-migrate'
-    SET_NODE_PROP = 'set-node-property'
-    SET_RESOURCE_DEF_PROP = 'set-resource-definition-property'
-    SET_RESOURCE_PROP = 'set-resource-property'
-    SET_STORAGE_POOL_DEF_PROP = 'set-storage-pool-definition-property'
-    SET_STORAGE_POOL_PROP = 'set-storage-pool-property'
-    SET_VOLUME_DEF_PROP = 'set-volume-definition-property'
+    NODE = 'node'
+    RESOURCE = 'resource'
+    RESOURCE_DEF = 'resource-definition'
     SET_CONTROLLER_PROP = 'set-controller-property'
     CRYPT_ENTER_PASSPHRASE = 'crypt-enter-passphrase'
     CRYPT_CREATE_PASSPHRASE = 'crypt-create-passphrase'
@@ -86,64 +46,37 @@ class Commands(object):
     ERROR_REPORT = 'error-report'
 
     GEN_ZSH_COMPLETER = 'gen-zsh-completer'
+    SHUTDOWN = 'shutdown'
+    STORAGE_POOL = 'storage-pool'
+    STORAGE_POOL_DEF = 'storage-pool-definition'
+    VOLUME_DEF = 'volume-definition'
 
     MainList = [
-        RESOURCE,
-        CREATE_NODE,
-        CREATE_RESOURCE,
-        CREATE_RESOURCE_DEF,
-        CREATE_STORAGE_POOL,
-        CREATE_STORAGE_POOL_DEF,
-        CREATE_VOLUME_DEF,
-        CREATE_NETINTERFACE,
-        MODIFY_NETINTERFACE,
-        DELETE_NODE,
-        DELETE_RESOURCE,
-        DELETE_RESOURCE_DEF,
-        DELETE_STORAGE_POOL,
-        DELETE_STORAGE_POOL_DEF,
-        DELETE_VOLUME_DEF,
-        DELETE_NETINTERFACE,
-        DESCRIBE_NODE,
-        LIST_NODE,
-        LIST_RESOURCE_DEF,
-        LIST_RESOURCE,
-        LIST_STORAGE_POOL_DEF,
-        LIST_STORAGE_POOL,
-        LIST_VOLUME_DEF,
-        LIST_VOLUME,
-        LIST_NETINTERFACE,
+        GET_CONTROLLER_PROPS,
         DRBD_OPTIONS,
+        DRBD_PEER_OPTIONS,
         DRBD_RESOURCE_OPTIONS,
         DRBD_VOLUME_OPTIONS,
-        DRBD_PEER_OPTIONS,
-        GET_NODE_PROPS,
-        GET_RESOURCE_DEF_PROPS,
-        GET_RESOURCE_PROPS,
-        GET_STORAGE_POOL_DEF_PROPS,
-        GET_STORAGE_POOL_PROPS,
-        GET_VOLUME_DEF_PROPS,
-        GET_CONTROLLER_PROPS,
         HELP,
         INTERACTIVE,
         LIST_COMMANDS,
-        SHUTDOWN,
-        SET_NODE_PROP,
-        SET_RESOURCE_DEF_PROP,
-        SET_RESOURCE_PROP,
-        SET_STORAGE_POOL_DEF_PROP,
-        SET_STORAGE_POOL_PROP,
-        SET_VOLUME_DEF_PROP,
+        NODE,
+        RESOURCE,
+        RESOURCE_DEF,
         SET_CONTROLLER_PROP,
+        SHUTDOWN,
         CRYPT_ENTER_PASSPHRASE,
         CRYPT_CREATE_PASSPHRASE,
         CRYPT_MODIFY_PASSPHRASE,
         LIST_ERROR_REPORTS,
-        ERROR_REPORT
+        ERROR_REPORT,
+        STORAGE_POOL,
+        STORAGE_POOL_DEF,
+        VOLUME_DEF
     ]
     Hidden = [
-        EXIT,
         DMMIGRATE,
+        EXIT,
         GEN_ZSH_COMPLETER,
         CREATE_WATCH
     ]
