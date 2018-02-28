@@ -15,9 +15,16 @@ class VolumeDefinitionCommands(Commands):
         super(VolumeDefinitionCommands, self).__init__()
 
     def setup_commands(self, parser):
-        p_new_vol = parser.add_parser(
-            Commands.CREATE_VOLUME_DEF,
-            aliases=['crtvlmdfn'],
+        # Resource subcommands
+        vol_def_parser = parser.add_parser(
+            Commands.VOLUME_DEF,
+            aliases=["vd"],
+            help="Volume definition subcommands")
+        vol_def_subp = vol_def_parser.add_subparsers(title="Volume definition commands")
+
+        p_new_vol = vol_def_subp.add_parser(
+            Commands.Subcommands.Create.LONG,
+            aliases=[Commands.Subcommands.Create.SHORT],
             description='Defines a volume with a capacity of size for use with '
             'linstore. If the resource resname exists already, a new volume is '
             'added to that resource, otherwise the resource is created automatically '
@@ -43,9 +50,9 @@ class VolumeDefinitionCommands(Commands):
         p_new_vol.set_defaults(func=self.create)
 
         # remove-volume definition
-        p_rm_vol = parser.add_parser(
-            Commands.DELETE_VOLUME_DEF,
-            aliases=['delvlmdfn'],
+        p_rm_vol = vol_def_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
             description='Removes a volume definition from the linstor cluster, and removes '
             'the volume definition from the resource definition. The volume is '
             'undeployed from all nodes and the volume entry is marked for removal '
@@ -69,9 +76,9 @@ class VolumeDefinitionCommands(Commands):
         volgroupby = resgroupby + ('Vol_ID', 'Size', 'Minor')
         vol_group_completer = Commands.show_group_completer(volgroupby, 'groupby')
 
-        p_lvols = parser.add_parser(
-            Commands.LIST_VOLUME_DEF,
-            aliases=['dspvlmdfn'],
+        p_lvols = vol_def_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
             description=' Prints a list of all volume definitions known to linstor. '
             'By default, the list is printed as a human readable table.')
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -83,8 +90,8 @@ class VolumeDefinitionCommands(Commands):
 
         # show properties
         p_sp = parser.add_parser(
-            Commands.GET_VOLUME_DEF_PROPS,
-            aliases=['dspvlmdfnprp'],
+            Commands.Subcommands.ListProperties.LONG,
+            aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given volume definition.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
@@ -98,8 +105,8 @@ class VolumeDefinitionCommands(Commands):
 
         # set properties
         p_setprop = parser.add_parser(
-            Commands.SET_VOLUME_DEF_PROP,
-            aliases=['setvlmdfnprp'],
+            Commands.Subcommands.SetAuxProperties.LONG,
+            aliases=[Commands.Subcommands.SetAuxProperties.SHORT],
             description='Sets properties for the given volume definition.')
         p_setprop.add_argument(
             'resource_name',

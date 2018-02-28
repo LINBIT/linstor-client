@@ -26,6 +26,7 @@ class Commands(object):
     RESOURCE = 'resource'
     RESOURCE_DEF = 'resource-definition'
     VOLUME = 'volume'
+    VOLUME_DEF = 'volume-definition'
     NODE = 'node'
     CREATE_NODE = 'create-node'
     CREATE_RESOURCE = 'create-resource'
