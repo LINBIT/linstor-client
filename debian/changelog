@@ -1,3 +1,24 @@
+linstor-client (0.1.4-1) experimental; urgency=medium
+
+  [ Robert Altnoeder ]
+  * Changed interactive mode prompt to "LINSTOR ==> "
+  * Removed redundant aliases, made command names more consistent
+  * Fixed alias dspstorpoolprp -> dspstorpooldfnprp
+  * Prevent recursively entering interactive mode
+
+  [ Rene Peinthor ]
+  * add --auto-place option to the create-reasource command
+  * fix typos in the zsh completer
+  * unittests: fix after command renames
+  * add all proto Msg* to the proto __init__.py
+  * fix import paths for python3
+  * importing protobuf message doesn't work with older protobuf compilers
+
+  [ Gabor Hernadi ]
+  * Added not_place_with_rsc_regex argument
+
+ -- Roland Kammerer <roland.kammerer@linbit.com>  Tue, 06 Mar 2018 15:58:50 +0100
+
 linstor-client (0.1.3-1) experimental; urgency=medium
 
   [ Roland Kammerer ]
