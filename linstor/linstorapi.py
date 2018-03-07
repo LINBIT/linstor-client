@@ -29,6 +29,9 @@ from linstor.proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
 from linstor.proto.MsgModStorPool_pb2 import MsgModStorPool
 from linstor.proto.MsgDelStorPool_pb2 import MsgDelStorPool
 from linstor.proto.MsgLstStorPool_pb2 import MsgLstStorPool
+from linstor.proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
+from linstor.proto.MsgModRscDfn_pb2 import MsgModRscDfn
+from linstor.proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
 import linstor.sharedconsts as apiconsts
@@ -556,6 +559,29 @@ class Linstor(object):
     def storage_pool_list(self):
         replies = self._send_and_wait(apiconsts.API_LST_STOR_POOL)
         return replies[0] if replies else []
+
+    def resource_dfn_create(self, name, port=None):
+        msg = MsgCrtRscDfn()
+        msg.rsc_dfn.rsc_name = name
+        if port is not None:
+            msg.rsc_dfn.rsc_dfn_port = port
+        # if args.secret:
+        #     p.secret = args.secret
+        return self._send_and_wait(apiconsts.API_CRT_RSC_DFN, msg)
+
+    def resource_dfn_modify(self, name, property_dict, delete_props=None):
+        msg = MsgModRscDfn()
+        msg.rsc_name = name
+
+        msg = self._modify_props(msg, property_dict, delete_props)
+
+        return self._send_and_wait(apiconsts.API_MOD_RSC_DFN, msg)
+
+    def resource_dfn_delete(self, name):
+        msg = MsgDelRscDfn()
+        msg.rsc_name = name
+
+        return self._send_and_wait(apiconsts.API_DEL_RSC_DFN, msg)
 
     def resource_dfn_list(self):
         replies = self._send_and_wait(apiconsts.API_LST_RSC_DFN)

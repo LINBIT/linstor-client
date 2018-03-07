@@ -1,25 +1,20 @@
 import linstor
-from linstor.proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
-from linstor.proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from linstor.proto.MsgModRscDfn_pb2 import MsgModRscDfn
-from linstor.commcontroller import need_communication, completer_communication
+from linstor.commcontroller import completer_communication
 from linstor.commands import Commands
 from linstor.utils import rangecheck, namecheck, Output
 from linstor.sharedconsts import (
-    API_CRT_RSC_DFN,
-    API_DEL_RSC_DFN,
     API_LST_RSC_DFN,
-    API_MOD_RSC_DFN,
     FLAG_DELETE
 )
-from linstor.consts import RES_NAME, Color
+from linstor.consts import RES_NAME, Color, ExitCode
 
 
 class ResourceDefinitionCommands(Commands):
+    def __init__(self):
+        super(ResourceDefinitionCommands, self).__init__()
 
-    @staticmethod
-    def setup_commands(parser):
+    def setup_commands(self, parser):
         p_new_res_dfn = parser.add_parser(
             Commands.CREATE_RESOURCE_DEF,
             aliases=['crtrscdfn'],
@@ -27,7 +22,7 @@ class ResourceDefinitionCommands(Commands):
         p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
         # p_new_res_dfn.add_argument('-s', '--secret', type=str)
         p_new_res_dfn.add_argument('name', type=namecheck(RES_NAME), help='Name of the new resource definition')
-        p_new_res_dfn.set_defaults(func=ResourceDefinitionCommands.create)
+        p_new_res_dfn.set_defaults(func=self.create)
 
         # remove-resource definition
         # TODO description
@@ -46,7 +41,7 @@ class ResourceDefinitionCommands(Commands):
             'name',
             nargs="+",
             help='Name of the resource to delete').completer = ResourceDefinitionCommands.completer
-        p_rm_res_dfn.set_defaults(func=ResourceDefinitionCommands.delete)
+        p_rm_res_dfn.set_defaults(func=self.delete)
 
         resverbose = ('Port',)
         resgroupby = ('Name', 'Port', 'State')
@@ -65,7 +60,7 @@ class ResourceDefinitionCommands(Commands):
                                choices=resgroupby).completer = res_group_completer
         p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
                                help='Filter by list of resources').completer = ResourceDefinitionCommands.completer
-        p_lrscdfs.set_defaults(func=ResourceDefinitionCommands.list)
+        p_lrscdfs.set_defaults(func=self.list)
 
         # show properties
         p_sp = parser.add_parser(
@@ -76,7 +71,7 @@ class ResourceDefinitionCommands(Commands):
             'resource_name',
             help="Resource definition for which to print the properties"
         ).completer = ResourceDefinitionCommands.completer
-        p_sp.set_defaults(func=ResourceDefinitionCommands.print_props)
+        p_sp.set_defaults(func=self.print_props)
 
         # set properties
         # disabled until there are properties
@@ -95,63 +90,41 @@ class ResourceDefinitionCommands(Commands):
             description='Sets auxiliary properties for the given resource definition.')
         p_setauxprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
         Commands.add_parser_keyvalue(p_setauxprop)
-        p_setauxprop.set_defaults(func=ResourceDefinitionCommands.set_prop_aux)
+        p_setauxprop.set_defaults(func=self.set_prop_aux)
 
-    @staticmethod
-    @need_communication
-    def create(cc, args):
-        p = MsgCrtRscDfn()
-        p.rsc_dfn.rsc_name = args.name
-        if args.port:
-            p.rsc_dfn.rsc_dfn_port = args.port
-        # if args.secret:
-        #     p.secret = args.secret
+    def create(self, args):
+        replies = self._linstor.resource_dfn_create(args.name, args.port)
+        return self.handle_replies(args, replies)
 
-        return Commands._send_msg(cc, API_CRT_RSC_DFN, p, args)
+    def delete(self, args):
+        # execute delete storpooldfns and flatten result list
+        replies = [x for subx in args.name for x in self._linstor.resource_dfn_delete(subx)]
+        return self.handle_replies(args, replies)
 
-    @staticmethod
-    @need_communication
-    def delete(cc, args):
-        del_msgs = []
-        for rsc_name in args.name:
-            p = MsgDelRscDfn()
-            p.rsc_name = rsc_name
-
-            del_msgs.append(p)
-
-        return Commands._delete_and_output(cc, args, API_DEL_RSC_DFN, del_msgs)
-
-    @staticmethod
-    @need_communication
-    def list(cc, args):
-        lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args)
+    def list(self, args):
+        lstmsg = self._linstor.resource_dfn_list()
 
         if lstmsg:
-            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-            tbl.add_column("ResourceName")
-            tbl.add_column("Port")
-            tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
-            for rsc_dfn in lstmsg.rsc_dfns:
-                tbl.add_row([
-                    rsc_dfn.rsc_name,
-                    rsc_dfn.rsc_dfn_port,
-                    tbl.color_cell("DELETING", Color.RED)
-                    if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
-                ])
-            tbl.show()
+            if args.machine_readable:
+                self._print_machine_readable([lstmsg])
+            else:
+                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+                tbl.add_column("ResourceName")
+                tbl.add_column("Port")
+                tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
+                for rsc_dfn in lstmsg.rsc_dfns:
+                    tbl.add_row([
+                        rsc_dfn.rsc_name,
+                        rsc_dfn.rsc_dfn_port,
+                        tbl.color_cell("DELETING", Color.RED)
+                        if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
+                    ])
+                tbl.show()
 
-            # prntfrm = "{rsc:<20s} {port:<10s} {uuid:<40s}"
-            # print(prntfrm.format(rsc="Resource-name", port="Port", uuid="UUID"))
-            # for rsc_dfn in lstmsg.rsc_dfns:
-            #     print(prntfrm.format(rsc=rsc_dfn.rsc_name,
-            #           port=str(rsc_dfn.rsc_dfn_port), uuid=rsc_dfn.rsc_dfn_uuid))
+        return ExitCode.OK
 
-        return None
-
-    @staticmethod
-    @need_communication
-    def print_props(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_RSC_DFN, MsgLstRscDfn())
+    def print_props(self, args):
+        lstmsg = self._linstor.resource_dfn_list()
 
         result = []
         if lstmsg:
@@ -161,17 +134,12 @@ class ResourceDefinitionCommands(Commands):
                     break
 
         Commands._print_props(result, args.machine_readable)
-        return None
+        return ExitCode.OK
 
-    @staticmethod
-    @need_communication
-    def set_props(cc, args):
-        mmn = MsgModRscDfn()
-        mmn.rsc_name = args.name
-
-        Commands.fill_override_prop(mmn, args.key, args.value)
-
-        return Commands._send_msg(cc, API_MOD_RSC_DFN, mmn, args)
+    def set_props(self, args):
+        mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        replies = self._linstor.resource_dfn_modify(args.name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
+        return self.handle_replies(args, replies)
 
     @staticmethod
     @completer_communication
