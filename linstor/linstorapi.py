@@ -261,7 +261,10 @@ class LinstorNetClient(threading.Thread):
         exp_pkg_len = 0  # expected package length
 
         while self._socket:
-            rds, wds, eds = select.select([self._socket], [], [self._socket], 2)
+            try:
+                rds, wds, eds = select.select([self._socket], [], [self._socket], 2)
+            except (IOError, TypeError):
+                pass  # maybe check if socket is None, so we know it was closed on purpose
 
             self._logger.debug("select exit with:" + ",".join([str(rds), str(wds), str(eds)]))
             for sock in rds:
