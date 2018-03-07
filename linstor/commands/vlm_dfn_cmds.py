@@ -1,10 +1,4 @@
 import linstor
-from linstor.proto.MsgCrtVlmDfn_pb2 import MsgCrtVlmDfn
-from linstor.proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
-from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from linstor.proto.MsgModVlmDfn_pb2 import MsgModVlmDfn
-from linstor.sharedconsts import API_CRT_VLM_DFN, API_LST_RSC_DFN, API_DEL_VLM_DFN, API_MOD_VLM_DFN
-from linstor.commcontroller import need_communication
 from linstor.commands import Commands, ResourceDefinitionCommands
 from linstor.utils import SizeCalc, approximate_size_string, namecheck, Output
 from linstor.consts import RES_NAME, Color, ExitCode
@@ -17,9 +11,10 @@ import sys
 
 
 class VolumeDefinitionCommands(Commands):
+    def __init__(self):
+        super(VolumeDefinitionCommands, self).__init__()
 
-    @staticmethod
-    def setup_commands(parser):
+    def setup_commands(self, parser):
         p_new_vol = parser.add_parser(
             Commands.CREATE_VOLUME_DEF,
             aliases=['crtvlmdfn'],
@@ -47,7 +42,7 @@ class VolumeDefinitionCommands(Commands):
             'is the smallest natural number of Kibibytes that is large enough to '
             'accommodate a volume of the requested size in the specified size unit.'
         ).completer = VolumeDefinitionCommands.size_completer
-        p_new_vol.set_defaults(func=VolumeDefinitionCommands.create)
+        p_new_vol.set_defaults(func=self.create)
 
         # remove-volume definition
         p_rm_vol = parser.add_parser(
@@ -69,7 +64,7 @@ class VolumeDefinitionCommands(Commands):
             'volume_nr',
             type=int,
             help="Volume number to delete.")
-        p_rm_vol.set_defaults(func=VolumeDefinitionCommands.delete)
+        p_rm_vol.set_defaults(func=self.delete)
 
         # list volume definitions
         resgroupby = ()
@@ -86,7 +81,7 @@ class VolumeDefinitionCommands(Commands):
                              choices=volgroupby).completer = vol_group_completer
         p_lvols.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
                              help='Filter by list of resources').completer = ResourceDefinitionCommands.completer
-        p_lvols.set_defaults(func=VolumeDefinitionCommands.list)
+        p_lvols.set_defaults(func=self.list)
 
         # show properties
         p_sp = parser.add_parser(
@@ -100,7 +95,7 @@ class VolumeDefinitionCommands(Commands):
             'volume_nr',
             type=int,
             help="Volume number")
-        p_sp.set_defaults(func=VolumeDefinitionCommands.print_props)
+        p_sp.set_defaults(func=self.print_props)
 
         # set properties
         # disabled until there are properties
@@ -116,7 +111,7 @@ class VolumeDefinitionCommands(Commands):
         #     type=int,
         #     help="Volume number")
         # Commands.add_parser_keyvalue(p_setprop, "volume-definition")
-        # p_setprop.set_defaults(func=VolumeDefinitionCommands.set_props)
+        # p_setprop.set_defaults(func=self.set_props)
 
         # set aux properties
         p_setprop = parser.add_parser(
@@ -131,58 +126,47 @@ class VolumeDefinitionCommands(Commands):
             type=int,
             help="Volume number")
         Commands.add_parser_keyvalue(p_setprop)
-        p_setprop.set_defaults(func=VolumeDefinitionCommands.set_prop_aux)
+        p_setprop.set_defaults(func=self.set_prop_aux)
 
-    @staticmethod
-    @need_communication
-    def create(cc, args):
-        p = MsgCrtVlmDfn()
-        p.rsc_name = args.resource_name
+    def create(self, args):
+        replies = self._linstor.volume_dfn_create(
+            args.resource_name,
+            self._get_volume_size(args.size),
+            args.vlmnr,
+            args.minor
+        )
+        return self.handle_replies(args, replies)
 
-        vlmdf = p.vlm_dfns.add()
-        vlmdf.vlm_size = VolumeDefinitionCommands._get_volume_size(args.size)
-        if args.minor is not None:
-            vlmdf.vlm_minor = args.minor
+    def delete(self, args):
+        replies = self._linstor.volume_dfn_delete(args.resource_name, args.volume_nr)
+        return self.handle_replies(args, replies)
 
-        if args.vlmnr is not None:
-            vlmdf.vlm_nr = args.vlmnr
-
-        return Commands._send_msg(cc, API_CRT_VLM_DFN, p, args)
-
-    @staticmethod
-    @need_communication
-    def delete(cc, args):
-        p = MsgDelVlmDfn()
-        p.rsc_name = args.resource_name
-        p.vlm_nr = args.volume_nr
-
-        return Commands._delete_and_output(cc, args, API_DEL_VLM_DFN, [p])
-
-    @staticmethod
-    @need_communication
-    def list(cc, args):
-        lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args)
+    def list(self, args):
+        lstmsg = self._linstor.resource_dfn_list()
 
         if lstmsg:
-            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-            tbl.add_column("ResourceName")
-            tbl.add_column("VolumeNr")
-            tbl.add_column("VolumeMinor")
-            tbl.add_column("Size")
-            tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
-            for rsc_dfn in lstmsg.rsc_dfns:
-                for vlmdfn in rsc_dfn.vlm_dfns:
-                    tbl.add_row([
-                        rsc_dfn.rsc_name,
-                        vlmdfn.vlm_nr,
-                        vlmdfn.vlm_minor,
-                        approximate_size_string(vlmdfn.vlm_size),
-                        tbl.color_cell("DELETING", Color.RED)
-                            if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
-                    ])
-            tbl.show()
+            if args.machine_readable:
+                self._print_machine_readable([lstmsg])
+            else:
+                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+                tbl.add_column("ResourceName")
+                tbl.add_column("VolumeNr")
+                tbl.add_column("VolumeMinor")
+                tbl.add_column("Size")
+                tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
+                for rsc_dfn in lstmsg.rsc_dfns:
+                    for vlmdfn in rsc_dfn.vlm_dfns:
+                        tbl.add_row([
+                            rsc_dfn.rsc_name,
+                            vlmdfn.vlm_nr,
+                            vlmdfn.vlm_minor,
+                            approximate_size_string(vlmdfn.vlm_size),
+                            tbl.color_cell("DELETING", Color.RED)
+                                if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
+                        ])
+                tbl.show()
 
-        return None
+        return ExitCode.OK
 
     @classmethod
     def _get_volume_size(cls, size_str):
@@ -228,10 +212,8 @@ class VolumeDefinitionCommands(Commands):
 
         return [digits + u for u in p_units]
 
-    @staticmethod
-    @need_communication
-    def print_props(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_RSC_DFN, MsgLstRscDfn())
+    def print_props(self, args):
+        lstmsg = self._linstor.resource_dfn_list()
 
         result = []
         if lstmsg:
@@ -242,15 +224,14 @@ class VolumeDefinitionCommands(Commands):
                         break
 
         Commands._print_props(result, args.machine_readable)
-        return None
+        return ExitCode.OK
 
-    @staticmethod
-    @need_communication
-    def set_props(cc, args):
-        mmn = MsgModVlmDfn()
-        mmn.vlm_nr = args.volume_nr
-        mmn.rsc_name = args.resource_name
-
-        Commands.fill_override_prop(mmn, args.key, args.value)
-
-        return Commands._send_msg(cc, API_MOD_VLM_DFN, mmn, args)
+    def set_props(self, args):
+        mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        replies = self._linstor.volume_dfn_modify(
+            args.resource_name,
+            args.volume_nr,
+            mod_prop_dict['pairs'],
+            mod_prop_dict['delete']
+        )
+        return self.handle_replies(args, replies)

@@ -70,6 +70,7 @@ class LinStorCLI(object):
         self._storage_pool_dfn_commands = StoragePoolDefinitionCommands()
         self._storage_pool_commands = StoragePoolCommands()
         self._resource_dfn_commands = ResourceDefinitionCommands()
+        self._volume_dfn_commands = VolumeDefinitionCommands()
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
         self._linstorapi = None
@@ -136,7 +137,7 @@ class LinStorCLI(object):
         self._storage_pool_commands.setup_commands(subp)
 
         # add all volume definition commands
-        VolumeDefinitionCommands.setup_commands(subp)
+        self._volume_dfn_commands.setup_commands(subp)
 
         # controller - get props
         c_ctrl_props = subp.add_parser(Commands.GET_CONTROLLER_PROPS,
@@ -229,6 +230,7 @@ class LinStorCLI(object):
         self._storage_pool_dfn_commands._linstor = self._linstorapi
         self._storage_pool_commands._linstor = self._linstorapi
         self._resource_dfn_commands._linstor = self._linstorapi
+        self._volume_dfn_commands._linstor = self._linstorapi
         self._linstorapi.connect()
         return args.func(args)
 

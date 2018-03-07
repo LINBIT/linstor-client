@@ -33,6 +33,9 @@ from linstor.proto.MsgCrtRscDfn_pb2 import MsgCrtRscDfn
 from linstor.proto.MsgModRscDfn_pb2 import MsgModRscDfn
 from linstor.proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
+from linstor.proto.MsgCrtVlmDfn_pb2 import MsgCrtVlmDfn
+from linstor.proto.MsgModVlmDfn_pb2 import MsgModVlmDfn
+from linstor.proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
 from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
 import linstor.sharedconsts as apiconsts
 import linstor.utils as utils
@@ -586,6 +589,44 @@ class Linstor(object):
     def resource_dfn_list(self):
         replies = self._send_and_wait(apiconsts.API_LST_RSC_DFN)
         return replies[0] if replies else []
+
+    def volume_dfn_create(self, rsc_name, size, volume_nr=None, minor_nr=None):
+        """
+        Create a new volume definition on the controller.
+        :param str rsc_name: Name of the resource definition it is linked to.
+        :param int size: Size of the volume definition in kilo bytes.
+        :param int volume_nr:
+        :param int minor_nr:
+        :return: Replies of the api call.
+        """
+        msg = MsgCrtVlmDfn()
+        msg.rsc_name = rsc_name
+
+        vlmdf = msg.vlm_dfns.add()
+        vlmdf.vlm_size = size
+        if minor_nr is not None:
+            vlmdf.vlm_minor = minor_nr
+
+        if volume_nr is not None:
+            vlmdf.vlm_nr = volume_nr
+
+        return self._send_and_wait(apiconsts.API_CRT_VLM_DFN, msg)
+
+    def volume_dfn_modify(self, rsc_name, volume_nr, property_dict, delete_props=None):
+        msg = MsgModVlmDfn()
+        msg.rsc_name = rsc_name
+        msg.vlm_nr = volume_nr
+
+        msg = self._modify_props(msg, property_dict, delete_props)
+
+        return self._send_and_wait(apiconsts.API_MOD_VLM_DFN, msg)
+
+    def volume_dfn_delete(self, rsc_name, volume_nr):
+        msg = MsgDelVlmDfn()
+        msg.rsc_name = rsc_name
+        msg.vlm_nr = volume_nr
+
+        return self._send_and_wait(apiconsts.API_DEL_VLM_DFN, msg)
 
     def resource_list(self):
         replies = self._send_and_wait(apiconsts.API_LST_RSC)
