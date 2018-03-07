@@ -22,7 +22,7 @@ import os
 import glob
 import sys
 
-from distutils.core import setup, Command
+from setuptools import setup, Command
 
 
 def get_version():
@@ -198,6 +198,9 @@ setup(
         "linstor.protobuf_to_dict",
         "linstor.proto",
     ],
+    install_requires=[
+        "protobuf"
+    ],
     py_modules=["linstor_client"],
     scripts=["scripts/linstor"],
     data_files=gen_data_files(),
@@ -205,5 +208,5 @@ setup(
         "build_man": BuildManCommand,
         "versionup2date": CheckUpToDate
     },
-#    test_suite="tests.test_without_controller"
+    test_suite="tests.test_without_controller"
 )
