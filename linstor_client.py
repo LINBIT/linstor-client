@@ -29,6 +29,8 @@ except ImportError:
 # import locale
 import linstor.argparse.argparse as argparse
 import linstor.argcomplete as argcomplete
+import linstor.linstorapi as linstorapi
+from linstor.commcontroller import CommController
 from linstor.commands import (
     VolumeDefinitionCommands,
     StoragePoolDefinitionCommands,
@@ -64,8 +66,10 @@ class LinStorCLI(object):
         self._colors = True
         self._utf8 = True
 
+        self._node_commands = NodeCommands()
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
+        self._linstorapi = None
 
     def setup_parser(self):
         parser = argparse.ArgumentParser(prog="linstor")
@@ -114,7 +118,7 @@ class LinStorCLI(object):
         p_exit.set_defaults(func=self.cmd_exit)
 
         # add all node commands
-        NodeCommands.setup_commands(subp)
+        self._node_commands.setup_commands(subp)
 
         # new-resource definition
         ResourceDefinitionCommands.setup_commands(subp)
@@ -217,6 +221,9 @@ class LinStorCLI(object):
 
     def parse_and_execute(self, pargs):
         args = self.parse(pargs)
+        self._linstorapi = linstorapi.Linstor(CommController.controller_list(args.controllers)[0])
+        self._node_commands._linstor = self._linstorapi
+        self._linstorapi.connect()
         return args.func(args)
 
     @staticmethod

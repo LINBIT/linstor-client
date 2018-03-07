@@ -128,6 +128,20 @@ class Commands(object):
     ]
 
     @classmethod
+    def handle_replies(cls, args, replies):
+        if args and args.machine_readable:
+            Commands._print_machine_readable([r.proto_msg for r in replies])
+            return ExitCode.OK
+
+        rc = ExitCode.OK
+        for call_resp in replies:
+            current_rc = Output.handle_ret(call_resp.proto_msg, warn_as_error=args.warn_as_error, no_color=args.no_color)
+            if current_rc != ExitCode.OK:
+                rc = current_rc
+
+        return rc
+
+    @classmethod
     def _send_msg(cls, cc, api_call, msg, args=None):
         """
         Creates and sends a valid linstor message.
@@ -365,10 +379,9 @@ class Commands(object):
         prop = next((x for x in prop_map if x.key == key), None)
         return prop.value if prop else None
 
-    @classmethod
-    def set_prop_aux(cls, args):
+    def set_prop_aux(self, args):
         args.key = NAMESPC_AUXILIARY + '/' + args.key
-        return cls.set_props(args)
+        return self.set_props(args)
 
     @staticmethod
     def show_group_completer(lst, where):

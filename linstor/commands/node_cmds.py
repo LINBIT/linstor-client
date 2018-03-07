@@ -1,15 +1,10 @@
 import linstor
-from linstor.proto.MsgCrtNode_pb2 import MsgCrtNode
-from linstor.proto.MsgDelNode_pb2 import MsgDelNode
 from linstor.proto.MsgLstNode_pb2 import MsgLstNode
-from linstor.proto.MsgModNode_pb2 import MsgModNode
-from linstor.proto.MsgCrtNetInterface_pb2 import MsgCrtNetInterface
-from linstor.proto.MsgModNetInterface_pb2 import MsgModNetInterface
-from linstor.proto.MsgDelNetInterface_pb2 import MsgDelNetInterface
-from linstor.commcontroller import need_communication, completer_communication
+from linstor.commcontroller import completer_communication
 from linstor.commands import Commands
 from linstor.utils import Output, rangecheck, namecheck, ip_completer, LinstorError
 from linstor.consts import NODE_NAME, Color, ExitCode
+import linstor.linstorapi as linstorapi
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
@@ -21,20 +16,15 @@ from linstor.sharedconsts import (
     VAL_NODE_TYPE_AUX,
     VAL_NODE_TYPE_CMBD,
     VAL_NETIF_TYPE_IP,
-    API_CRT_NODE,
-    API_MOD_NODE,
-    API_DEL_NODE,
     API_LST_NODE,
-    API_CRT_NET_IF,
-    API_MOD_NET_IF,
-    API_DEL_NET_IF
 )
 
 
 class NodeCommands(Commands):
+    def __init__(self):
+        self._linstor = None  # type: linstorapi.Linstor
 
-    @staticmethod
-    def setup_commands(parser):
+    def setup_commands(self, parser):
         # create node
         p_new_node = parser.add_parser(
             Commands.CREATE_NODE,
@@ -69,7 +59,7 @@ class NodeCommands(Commands):
             type=namecheck(NODE_NAME))
         p_new_node.add_argument('ip',
                                 help='IP address of the new node').completer = ip_completer("name")
-        p_new_node.set_defaults(func=NodeCommands.create)
+        p_new_node.set_defaults(func=self.create)
 
         # remove-node
         p_rm_node = parser.add_parser(
@@ -87,7 +77,7 @@ class NodeCommands(Commands):
                                'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_node.add_argument('name',
                                help='Name of the node to remove').completer = NodeCommands.completer
-        p_rm_node.set_defaults(func=NodeCommands.delete)
+        p_rm_node.set_defaults(func=self.delete)
 
         # create net interface
         p_create_netinterface = parser.add_parser(
@@ -107,7 +97,7 @@ class NodeCommands(Commands):
         ).completer = NodeCommands.completer
         p_create_netinterface.add_argument("interface_name", help="Interface name")
         p_create_netinterface.add_argument('ip', help='New IP address for the network interface')
-        p_create_netinterface.set_defaults(func=NodeCommands.create_netif)
+        p_create_netinterface.set_defaults(func=self.create_netif)
 
         # modify net interface
         p_mod_netif = parser.add_parser(
@@ -126,7 +116,7 @@ class NodeCommands(Commands):
         ).completer = NodeCommands.completer
         p_mod_netif.add_argument("interface_name", help="Interface name to change")
         p_mod_netif.add_argument('ip', help='New IP address for the network interface')
-        p_mod_netif.set_defaults(func=NodeCommands.modify_netif)
+        p_mod_netif.set_defaults(func=self.modify_netif)
 
         # delete net interface
         p_delete_netinterface = parser.add_parser(
@@ -143,7 +133,7 @@ class NodeCommands(Commands):
             nargs='+',
             help="Interface name"
         ).completer = NodeCommands.completer_netif
-        p_delete_netinterface.set_defaults(func=NodeCommands.delete_netif)
+        p_delete_netinterface.set_defaults(func=self.delete_netif)
 
         # list nodes
         nodesverbose = ('Family', 'IP', 'Site')
@@ -163,7 +153,7 @@ class NodeCommands(Commands):
                               choices=nodesgroupby).completer = nodes_group_completer
         p_lnodes.add_argument('-N', '--nodes', nargs='+', type=namecheck(NODE_NAME),
                               help='Filter by list of nodes').completer = NodeCommands.completer
-        p_lnodes.set_defaults(func=NodeCommands.list)
+        p_lnodes.set_defaults(func=self.list)
 
         # list netinterface
         p_lnetif = parser.add_parser(
@@ -176,7 +166,7 @@ class NodeCommands(Commands):
             'node_name',
             help='Node name for which to print the net interfaces'
         ).completer = NodeCommands.completer
-        p_lnetif.set_defaults(func=NodeCommands.list_netinterfaces)
+        p_lnetif.set_defaults(func=self.list_netinterfaces)
 
         # show properties
         p_sp = parser.add_parser(
@@ -186,7 +176,7 @@ class NodeCommands(Commands):
         p_sp.add_argument(
             'node_name',
             help="Node for which to print the properties").completer = NodeCommands.completer
-        p_sp.set_defaults(func=NodeCommands.print_props)
+        p_sp.set_defaults(func=self.print_props)
 
         # set properties
         # disabled until there are properties
@@ -213,72 +203,48 @@ class NodeCommands(Commands):
             help="Node for which to set the property"
         ).completer = NodeCommands.completer
         Commands.add_parser_keyvalue(p_setauxp)
-        p_setauxp.set_defaults(func=NodeCommands.set_prop_aux)
+        p_setauxp.set_defaults(func=self.set_prop_aux)
 
-    @staticmethod
-    @need_communication
-    def create(cc, args):
-        p = MsgCrtNode()
+    def create(self, args):
+        replies = self._linstor.node_create(
+            args.name,
+            args.node_type,
+            args.ip,
+            args.communication_type,
+            args.port,
+            args.interface_name
+        )
 
-        p.node.name = args.name
-        p.node.type = args.node_type
+        return self.handle_replies(args, replies)
 
-        netif = p.node.net_interfaces.add()
-        netif.name = args.interface_name
-        netif.address = args.ip
+    def delete(self, args):
+        replies = self._linstor.node_delete(args.name)
 
-        port = args.port
-        if not port:
-            if args.communication_type == VAL_NETCOM_TYPE_PLAIN:
-                port = DFLT_CTRL_PORT_PLAIN if p.node.type == VAL_NODE_TYPE_CTRL else DFLT_STLT_PORT_PLAIN
-            elif args.communication_type == VAL_NETCOM_TYPE_SSL:
-                port = DFLT_CTRL_PORT_SSL
-            else:
-                Output.err("Communication type %s has no default port" % args.communication_type, args.no_color)
+        return self.handle_replies(args, replies)
 
-            netif.stlt_port = port
-            netif.stlt_encryption_type = args.communication_type
-
-        return Commands._send_msg(cc, API_CRT_NODE, p, args)
-
-    @staticmethod
-    @need_communication
-    def modify(cc, args):
-        pass
-
-    @staticmethod
-    @need_communication
-    def delete(cc, args):
-        del_msgs = []
-        p = MsgDelNode()
-        p.node_name = args.name
-
-        del_msgs.append(p)
-
-        return Commands._delete_and_output(cc, args, API_DEL_NODE, del_msgs)
-
-    @staticmethod
-    @need_communication
-    def list(cc, args):
-        lstmsg = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode(), args)
+    def list(self, args):
+        lstmsg = self._linstor.node_list()
 
         if lstmsg:
-            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-            tbl.add_column("Node")
-            tbl.add_column("NodeType")
-            tbl.add_column("IPs")
-            tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
-            for n in lstmsg.nodes:
-                ips = [if_.address for if_ in n.net_interfaces]
-                tbl.add_row([
-                    n.name,
-                    n.type,
-                    ",".join(ips),
-                    tbl.color_cell("ok", Color.DARKGREEN) if n.connected else tbl.color_cell("OFFLINE", Color.RED)
-                ])
-            tbl.show()
+            if args.machine_readable:
+                self._print_machine_readable([lstmsg])
+            else:
+                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+                tbl.add_column("Node")
+                tbl.add_column("NodeType")
+                tbl.add_column("IPs")
+                tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
+                for n in lstmsg.nodes:
+                    ips = [if_.address for if_ in n.net_interfaces]
+                    tbl.add_row([
+                        n.name,
+                        n.type,
+                        ",".join(ips),
+                        tbl.color_cell("ok", Color.DARKGREEN) if n.connected else tbl.color_cell("OFFLINE", Color.RED)
+                    ])
+                tbl.show()
 
-        return None
+        return ExitCode.OK
 
     @staticmethod
     def find_node(proto_node_list, node_name):
@@ -288,37 +254,34 @@ class NodeCommands(Commands):
                     return n
         return None
 
-    @staticmethod
-    @need_communication
-    def list_netinterfaces(cc, args):
-        lstres = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode(), args)
+    def list_netinterfaces(self, args):
+        lstnodes = self._linstor.node_list()
 
-        if lstres:
-            node = NodeCommands.find_node(lstres, args.node_name)
-            if node:
-                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-                tbl.add_column(node.name, color=Color.GREEN)
-                tbl.add_column("NetInterface")
-                tbl.add_column("IP")
-                #tbl.add_column("ForSatellite")
-                for netif in node.net_interfaces:
-                    tbl.add_row([
-                        "+",
-                        netif.name,
-                        netif.address,
-                        #"{p} {t}".format(p=netif.stlt_port, t=netif.stlt_encryption_type) if netif.stlt_port else ""
-                    ])
-                tbl.show()
+        if lstnodes:
+            if args.machine_readable:
+                self._print_machine_readable([lstnodes])
             else:
-                raise LinstorError("Node '{n}' not found on controller.".format(n=args.node_name),
-                                   ExitCode.OBJECT_NOT_FOUND)
+                node = NodeCommands.find_node(lstnodes, args.node_name)
+                if node:
+                    tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+                    tbl.add_column(node.name, color=Color.GREEN)
+                    tbl.add_column("NetInterface")
+                    tbl.add_column("IP")
+                    for netif in node.net_interfaces:
+                        tbl.add_row([
+                            "+",
+                            netif.name,
+                            netif.address
+                        ])
+                    tbl.show()
+                else:
+                    raise LinstorError("Node '{n}' not found on controller.".format(n=args.node_name),
+                                       ExitCode.OBJECT_NOT_FOUND)
 
-        return None
+        return ExitCode.OK
 
-    @staticmethod
-    @need_communication
-    def print_props(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_NODE, MsgLstNode())
+    def print_props(self, args):
+        lstmsg = self._linstor.node_list()
 
         result = []
         node = NodeCommands.find_node(lstmsg, args.node_name)
@@ -329,62 +292,39 @@ class NodeCommands(Commands):
                                ExitCode.OBJECT_NOT_FOUND)
 
         Commands._print_props(result, machine_readable=args.machine_readable)
-        return None
+        return ExitCode.OK
 
-    @staticmethod
-    @need_communication
-    def set_props(cc, args):
-        mmn = MsgModNode()
-        mmn.node_name = args.node_name
+    def set_props(self, args):
+        mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        replies = self._linstor.node_modify(args.node_name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
+        return self.handle_replies(args, replies)
 
-        Commands.fill_override_prop(mmn, args.key, args.value)
+    def create_netif(self, args):
+        replies = self._linstor.netinterface_create(
+            args.node_name,
+            args.interface_name,
+            args.ip,
+            args.port,
+            args.communication_type
+        )
 
-        return Commands._send_msg(cc, API_MOD_NODE, mmn, args)
+        return self.handle_replies(args, replies)
 
-    @staticmethod
-    @need_communication
-    def create_netif(cc, args):
-        p = MsgCrtNetInterface()
-        p.node_name = args.node_name
+    def modify_netif(self, args):
+        replies = self._linstor.netinterface_modify(
+            args.node_name,
+            args.interface_name,
+            args.ip,
+            args.port,
+            args.communication_type
+        )
 
-        p.net_if.name = args.interface_name
-        p.net_if.address = args.ip
+        return self.handle_replies(args, replies)
 
-        if args.port:
-            p.net_if.stlt_port = args.port
-            p.net_if.stlt_encryption_type = args.communication_type
-
-        return Commands._send_msg(cc, API_CRT_NET_IF, p, args)
-
-    @staticmethod
-    @need_communication
-    def modify_netif(cc, args):
-        p = MsgModNetInterface()
-
-        p.node_name = args.node_name
-
-        p.net_if.name = args.interface_name
-        p.net_if.address = args.ip
-
-        if args.port:
-            p.net_if.stlt_port = args.port
-            p.net_if.stlt_encryption_type = args.communication_type
-
-        return Commands._send_msg(cc, API_MOD_NET_IF, p, args)
-
-    @staticmethod
-    @need_communication
-    def delete_netif(cc, args):
-        del_msgs = []
-
-        for netif in args.interface_name:
-            p = MsgDelNetInterface()
-            p.node_name = args.node_name
-            p.net_if_name = netif
-
-            del_msgs.append(p)
-
-        return Commands._delete_and_output(cc, args, API_DEL_NET_IF, del_msgs)
+    def delete_netif(self, args):
+        # execute delete netinterfaces and flatten result list
+        replies = [x for subx in args.interface_name for x in self._linstor.netinterface_delete(args.node_name, subx)]
+        return self.handle_replies(args, replies)
 
     @staticmethod
     @completer_communication
