@@ -34,8 +34,12 @@ from linstor.proto.MsgModRscDfn_pb2 import MsgModRscDfn
 from linstor.proto.MsgDelRscDfn_pb2 import MsgDelRscDfn
 from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from linstor.proto.MsgCrtVlmDfn_pb2 import MsgCrtVlmDfn
+from linstor.proto.MsgAutoPlaceRsc_pb2 import MsgAutoPlaceRsc
 from linstor.proto.MsgModVlmDfn_pb2 import MsgModVlmDfn
 from linstor.proto.MsgDelVlmDfn_pb2 import MsgDelVlmDfn
+from linstor.proto.MsgCrtRsc_pb2 import MsgCrtRsc
+from linstor.proto.MsgModRsc_pb2 import MsgModRsc
+from linstor.proto.MsgDelRsc_pb2 import MsgDelRsc
 from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
 import linstor.sharedconsts as apiconsts
 import linstor.utils as utils
@@ -630,6 +634,69 @@ class Linstor(object):
         msg.vlm_nr = volume_nr
 
         return self._send_and_wait(apiconsts.API_DEL_VLM_DFN, msg)
+
+    def resource_create(self, node_name, rsc_name, diskless=False, storage_pool=None):
+        msg = MsgCrtRsc()
+        msg.rsc.name = rsc_name
+        msg.rsc.node_name = node_name
+
+        if not diskless and storage_pool:
+            prop = msg.rsc.props.add()
+            prop.key = apiconsts.KEY_STOR_POOL_NAME
+            prop.value = storage_pool
+            msg.rsc.props.extend([prop])
+
+        if diskless:
+            msg.rsc.rsc_flags.append(apiconsts.FLAG_DISKLESS)
+
+        return self._send_and_wait(apiconsts.API_CRT_RSC, msg)
+
+    def resource_auto_place(
+            self,
+            rsc_name,
+            place_count,
+            storage_pool=None,
+            do_not_place_with=None,
+            do_not_place_with_regex=None
+    ):
+        """
+        Auto places(deploys) a resource to the amount of place_count.
+
+        :param str rsc_name: Name of the resource definition to deploy
+        :param int place_count: Number of placements, on how many different nodes
+        :param str storage_pool: Storage pool to use
+        :param list[str] do_not_place_with: Do not place with resource names in this list
+        :param str do_not_place_with_regex: A regex string that rules out resources
+        :return: list of replies from the api call
+        """
+        msg = MsgAutoPlaceRsc()
+        msg.rsc_name = rsc_name
+        msg.place_count = place_count
+
+        if storage_pool:
+            msg.storage_pool = storage_pool
+        if do_not_place_with:
+            msg.not_place_with_rsc.extend(do_not_place_with)
+        if do_not_place_with_regex:
+            msg.not_place_with_rsc_regex = do_not_place_with_regex
+
+        return self._send_and_wait(apiconsts.API_AUTO_PLACE_RSC, msg)
+
+    def resource_modify(self, node_name, rsc_name, property_dict, delete_props=None):
+        msg = MsgModRsc()
+        msg.node_name = node_name
+        msg.rsc_name = rsc_name
+
+        msg = self._modify_props(msg, property_dict, delete_props)
+
+        return self._send_and_wait(apiconsts.API_MOD_RSC, msg)
+
+    def resource_delete(self, node_name, rsc_name):
+        msg = MsgDelRsc()
+        msg.node_name = node_name
+        msg.rsc_name = rsc_name
+
+        return self._send_and_wait(apiconsts.API_DEL_RSC, msg)
 
     def resource_list(self):
         replies = self._send_and_wait(apiconsts.API_LST_RSC)

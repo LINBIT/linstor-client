@@ -1,29 +1,12 @@
 import linstor
-from linstor.proto.MsgCrtRsc_pb2 import MsgCrtRsc
-from linstor.proto.MsgDelRsc_pb2 import MsgDelRsc
 from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
-from linstor.proto.MsgModRsc_pb2 import MsgModRsc
-from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from linstor.proto.LinStorMapEntry_pb2 import LinStorMapEntry
-from linstor.proto.MsgAutoPlaceRsc_pb2 import MsgAutoPlaceRsc
-from linstor.commcontroller import need_communication, completer_communication
+from linstor.commcontroller import completer_communication
 from linstor.commands import (
     Commands, NodeCommands, StoragePoolDefinitionCommands, ResourceDefinitionCommands
 )
 from linstor.utils import namecheck, Output, LinstorError
-from linstor.consts import Color, ExitCode
-from linstor.sharedconsts import (
-    API_DEL_RSC,
-    API_LST_RSC,
-    API_LST_RSC_DFN,
-    API_MOD_RSC,
-    KEY_STOR_POOL_NAME,
-    FLAG_DELETE,
-    FLAG_DISKLESS
-)
+from linstor.consts import Color, ExitCode, NODE_NAME, RES_NAME, STORPOOL_NAME
 import linstor.sharedconsts as apiconsts
-
-from linstor.consts import NODE_NAME, RES_NAME, STORPOOL_NAME
 
 
 class ResourceCommands(Commands):
@@ -34,8 +17,10 @@ class ResourceCommands(Commands):
         linstor.TableHeader("State", Color.DARKGREEN, alignment_text='>')
     ]
 
-    @staticmethod
-    def setup_commands(parser):
+    def __init__(self):
+        super(ResourceCommands, self).__init__()
+
+    def setup_commands(self, parser):
         """
 
         :param argparse.ArgumentParser parser:
@@ -78,7 +63,7 @@ class ResourceCommands(Commands):
             type=namecheck(NODE_NAME),
             nargs='?',
             help='Name of the node to deploy the resource').completer = NodeCommands.completer
-        p_new_res.set_defaults(func=ResourceCommands.create)
+        p_new_res.set_defaults(func=self.create)
 
         # remove-resource
         p_rm_res = parser.add_parser(
@@ -97,7 +82,7 @@ class ResourceCommands(Commands):
         p_rm_res.add_argument('node_name',
                               nargs="+",
                               help='Name of the node').completer = NodeCommands.completer
-        p_rm_res.set_defaults(func=ResourceCommands.delete)
+        p_rm_res.set_defaults(func=self.delete)
 
         resgroupby = [x.name for x in ResourceCommands._resource_headers]
         res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
@@ -122,7 +107,7 @@ class ResourceCommands(Commands):
             nargs='+',
             type=namecheck(NODE_NAME),
             help='Filter by list of nodes').completer = NodeCommands.completer
-        p_lreses.set_defaults(func=ResourceCommands.list)
+        p_lreses.set_defaults(func=self.list)
 
         # list volumes
         p_lvlms = parser.add_parser(
@@ -132,7 +117,7 @@ class ResourceCommands(Commands):
         )
         p_lvlms.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvlms.add_argument('resource', nargs='?')
-        p_lvlms.set_defaults(func=ResourceCommands.list_volumes)
+        p_lvlms.set_defaults(func=self.list_volumes)
 
         # show properties
         p_sp = parser.add_parser(
@@ -145,7 +130,7 @@ class ResourceCommands(Commands):
         p_sp.add_argument(
             'node_name',
             help="Node name where the resource is deployed.").completer = NodeCommands.completer
-        p_sp.set_defaults(func=ResourceCommands.print_props)
+        p_sp.set_defaults(func=self.print_props)
 
         # set properties
         p_setprop = parser.add_parser(
@@ -162,7 +147,7 @@ class ResourceCommands(Commands):
             type=namecheck(NODE_NAME),
             help='Node name where resource is deployed.').completer = NodeCommands.completer
         Commands.add_parser_keyvalue(p_setprop, "resource")
-        p_setprop.set_defaults(func=ResourceCommands.set_props)
+        p_setprop.set_defaults(func=self.set_props)
 
         # set aux properties
         p_setauxprop = parser.add_parser(
@@ -179,58 +164,36 @@ class ResourceCommands(Commands):
             type=namecheck(NODE_NAME),
             help='Node name where resource is deployed.').completer = NodeCommands.completer
         Commands.add_parser_keyvalue(p_setauxprop)
-        p_setauxprop.set_defaults(func=ResourceCommands.set_prop_aux)
+        p_setauxprop.set_defaults(func=self.set_prop_aux)
 
-    @staticmethod
-    @need_communication
-    def create(cc, args):
+    def create(self, args):
         if args.auto_place:
             # auto-place resource
-            api_call = apiconsts.API_AUTO_PLACE_RSC
-            p = MsgAutoPlaceRsc()
-            p.rsc_name = args.resource_definition_name
-            p.place_count = args.auto_place
-
-            if args.storage_pool:
-                p.storage_pool = args.storage_pool
-            if args.do_not_place_with:
-                p.not_place_with_rsc.extend(args.do_not_place_with)
-            if args.do_not_place_with_regex:
-                p.not_place_with_rsc_regex = args.do_not_place_with_regex
+            replies = self._linstor.resource_auto_place(
+                args.resource_definition_name,
+                args.auto_place,
+                args.do_not_place_with,
+                args.do_not_place_with_regex
+            )
         else:
             # normal create resource
             # check that node is given
             if not args.node_name:
                 raise LinstorError("create-resource: too few arguments: Node name missing.", ExitCode.ARGPARSE_ERROR)
 
-            api_call = apiconsts.API_CRT_RSC
-            p = MsgCrtRsc()
-            p.rsc.name = args.resource_definition_name
-            p.rsc.node_name = args.node_name
+            replies = self._linstor.resource_create(
+                args.node_name,
+                args.resource_definition_name,
+                args.diskless,
+                args.storage_pool
+            )
 
-            if not args.diskless and args.storage_pool:
-                prop = LinStorMapEntry()
-                prop.key = KEY_STOR_POOL_NAME
-                prop.value = args.storage_pool
-                p.rsc.props.extend([prop])
+        return self.handle_replies(args, replies)
 
-            if args.diskless:
-                p.rsc.rsc_flags.append(FLAG_DISKLESS)
-
-        return Commands._send_msg(cc, api_call, p, args)
-
-    @staticmethod
-    @need_communication
-    def delete(cc, args):
-        del_msgs = []
-        for node_name in args.node_name:
-            p = MsgDelRsc()
-            p.rsc_name = args.name
-            p.node_name = node_name
-
-            del_msgs.append(p)
-
-        return Commands._delete_and_output(cc, args, API_DEL_RSC, del_msgs)
+    def delete(self, args):
+        # execute delete storpooldfns and flatten result list
+        replies = [x for subx in args.node_name for x in self._linstor.resource_delete(subx, args.name)]
+        return self.handle_replies(args, replies)
 
     @staticmethod
     def find_rsc_state(rsc_states, rsc_name, node_name):
@@ -239,43 +202,44 @@ class ResourceCommands(Commands):
                 return rscst
         return None
 
-    @staticmethod
-    @need_communication
-    def list(cc, args):
-        lstmsg = Commands._get_list_message(cc, API_LST_RSC, MsgLstRsc(), args)
+    def list(self, args):
+        lstmsg = self._linstor.resource_list()
 
         if lstmsg:
-            rsc_dfns = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn(), args).rsc_dfns
-            rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
+            if args.machine_readable:
+                self._print_machine_readable([lstmsg])
+            else:
+                rsc_dfns = self._linstor.resource_dfn_list().rsc_dfns
+                rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
 
-            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-            for hdr in ResourceCommands._resource_headers:
-                tbl.add_header(hdr)
+                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+                for hdr in ResourceCommands._resource_headers:
+                    tbl.add_header(hdr)
 
-            tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
+                tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
 
-            filter_res = args.resources
-            filter_nodes = args.nodes
+                filter_res = args.resources
+                filter_nodes = args.nodes
 
-            disp_list = lstmsg.resources
-            if filter_res:
-                disp_list = [rsc for rsc in disp_list if rsc.name in filter_res]
-            if filter_nodes:
-                disp_list = [rsc for rsc in disp_list if rsc.node_name in filter_nodes]
+                disp_list = lstmsg.resources
+                if filter_res:
+                    disp_list = [rsc for rsc in disp_list if rsc.name in filter_res]
+                if filter_nodes:
+                    disp_list = [rsc for rsc in disp_list if rsc.node_name in filter_nodes]
 
-            for rsc in disp_list:
-                rsc_dfn = rsc_dfn_map[rsc.name]
-                marked_delete = FLAG_DELETE in rsc.rsc_flags
-                # rsc_state = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
-                tbl.add_row([
-                    rsc.name,
-                    rsc.node_name,
-                    rsc_dfn.rsc_dfn_port,
-                    tbl.color_cell("DELETING", Color.RED) if marked_delete else "ok"
-                ])
-            tbl.show()
+                for rsc in disp_list:
+                    rsc_dfn = rsc_dfn_map[rsc.name]
+                    marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
+                    # rsc_state = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
+                    tbl.add_row([
+                        rsc.name,
+                        rsc.node_name,
+                        rsc_dfn.rsc_dfn_port,
+                        tbl.color_cell("DELETING", Color.RED) if marked_delete else "ok"
+                    ])
+                tbl.show()
 
-        return None
+        return ExitCode.OK
 
     @staticmethod
     def get_resource_state(res_states, node_name, resource_name):
@@ -291,57 +255,56 @@ class ResourceCommands(Commands):
                 return volume_state
         return None
 
-    @staticmethod
-    @need_communication
-    def list_volumes(cc, args):
-        lstmsg = Commands._get_list_message(cc, API_LST_RSC, MsgLstRsc(), args)  # type: MsgLstRsc
+    def list_volumes(self, args):
+        lstmsg = self._linstor.resource_list()
 
         if lstmsg:
-            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-            tbl.add_column("Node")
-            tbl.add_column("Resource")
-            tbl.add_column("VolumeNr")
-            tbl.add_column("MinorNr")
-            tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
+            if args.machine_readable:
+                self._print_machine_readable([lstmsg])
+            else:
+                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+                tbl.add_column("Node")
+                tbl.add_column("Resource")
+                tbl.add_column("VolumeNr")
+                tbl.add_column("MinorNr")
+                tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
-            for rsc in lstmsg.resources:
-                rsc_state = ResourceCommands.get_resource_state(lstmsg.resource_states, rsc.node_name, rsc.name)
-                for vlm in rsc.vlms:
-                    if rsc_state:
-                        vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr)
-                    else:
-                        vlm_state = None
-                    state = tbl.color_cell("Unknown", Color.YELLOW)
-                    if vlm_state and vlm_state.HasField("disk_state") and vlm_state.disk_state:
-                        state = vlm_state.disk_state
-
-                        if state == 'DUnknown':
-                            state = tbl.color_cell("Unknown", Color.YELLOW)
-                        elif state == 'Diskless':
-                            if vlm_state.disk_failed:
-                                state = tbl.color_cell("DiskFailed", Color.RED)
-                        elif state in ['Inconsistent', 'Failed']:
-                            state = tbl.color_cell(state, Color.RED)
-                        elif state in ['UpToDate']:
-                            pass  # green text
+                for rsc in lstmsg.resources:
+                    rsc_state = ResourceCommands.get_resource_state(lstmsg.resource_states, rsc.node_name, rsc.name)
+                    for vlm in rsc.vlms:
+                        if rsc_state:
+                            vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr)
                         else:
-                            state = tbl.color_cell(state, Color.YELLOW)
-                    tbl.add_row([
-                        rsc.node_name,
-                        rsc.name,
-                        str(vlm.vlm_nr),
-                        str(vlm.vlm_minor_nr),
-                        state
-                    ])
+                            vlm_state = None
+                        state = tbl.color_cell("Unknown", Color.YELLOW)
+                        if vlm_state and vlm_state.HasField("disk_state") and vlm_state.disk_state:
+                            state = vlm_state.disk_state
 
-            tbl.show()
+                            if state == 'DUnknown':
+                                state = tbl.color_cell("Unknown", Color.YELLOW)
+                            elif state == 'Diskless':
+                                if vlm_state.disk_failed:
+                                    state = tbl.color_cell("DiskFailed", Color.RED)
+                            elif state in ['Inconsistent', 'Failed']:
+                                state = tbl.color_cell(state, Color.RED)
+                            elif state in ['UpToDate']:
+                                pass  # green text
+                            else:
+                                state = tbl.color_cell(state, Color.YELLOW)
+                        tbl.add_row([
+                            rsc.node_name,
+                            rsc.name,
+                            str(vlm.vlm_nr),
+                            str(vlm.vlm_minor_nr),
+                            state
+                        ])
 
-        return None
+                tbl.show()
 
-    @staticmethod
-    @need_communication
-    def print_props(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_RSC, MsgLstRsc())
+        return ExitCode.OK
+
+    def print_props(self, args):
+        lstmsg = self._linstor.resource_list()
 
         result = []
         if lstmsg:
@@ -351,24 +314,23 @@ class ResourceCommands(Commands):
                     break
 
         Commands._print_props(result, args.machine_readable)
-        return None
+        return ExitCode.OK
 
-    @staticmethod
-    @need_communication
-    def set_props(cc, args):
-        mmn = MsgModRsc()
-        mmn.node_name = args.node_name
-        mmn.rsc_name = args.name
-
-        Commands.fill_override_prop(mmn, args.key, args.value)
-
-        return Commands._send_msg(cc, API_MOD_RSC, mmn, args)
+    def set_props(self, args):
+        mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        replies = self._linstor.resource_modify(
+            args.node_name,
+            args.name,
+            mod_prop_dict['pairs'],
+            mod_prop_dict['delete']
+        )
+        return self.handle_replies(args, replies)
 
     @staticmethod
     @completer_communication
     def completer(cc, prefix, **kwargs):
         possible = set()
-        lstmsg = Commands._get_list_message(cc, API_LST_RSC, MsgLstRsc())
+        lstmsg = Commands._get_list_message(cc, apiconsts.API_LST_RSC, MsgLstRsc())
 
         if lstmsg:
             for rsc in lstmsg.resources:

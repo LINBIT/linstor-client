@@ -71,6 +71,7 @@ class LinStorCLI(object):
         self._storage_pool_commands = StoragePoolCommands()
         self._resource_dfn_commands = ResourceDefinitionCommands()
         self._volume_dfn_commands = VolumeDefinitionCommands()
+        self._resource_commands = ResourceCommands()
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
         self._linstorapi = None
@@ -128,7 +129,7 @@ class LinStorCLI(object):
         self._resource_dfn_commands.setup_commands(subp)
 
         # add all resource commands
-        ResourceCommands.setup_commands(subp)
+        self._resource_commands.setup_commands(subp)
 
         # add all storage pool definition commands
         self._storage_pool_dfn_commands.setup_commands(subp)
@@ -231,6 +232,7 @@ class LinStorCLI(object):
         self._storage_pool_commands._linstor = self._linstorapi
         self._resource_dfn_commands._linstor = self._linstorapi
         self._volume_dfn_commands._linstor = self._linstorapi
+        self._resource_commands._linstor = self._linstorapi
         self._linstorapi.connect()
         return args.func(args)
 
