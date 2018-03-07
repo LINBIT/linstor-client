@@ -21,6 +21,9 @@ from linstor.proto.MsgCrtNetInterface_pb2 import MsgCrtNetInterface
 from linstor.proto.MsgModNetInterface_pb2 import MsgModNetInterface
 from linstor.proto.MsgDelNetInterface_pb2 import MsgDelNetInterface
 from linstor.proto.MsgLstNode_pb2 import MsgLstNode
+from linstor.proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
+from linstor.proto.MsgModStorPoolDfn_pb2 import MsgModStorPoolDfn
+from linstor.proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
 from linstor.proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
 from linstor.proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
@@ -371,6 +374,22 @@ class Linstor(object):
     def __del__(self):
         self.disconnect()
 
+    @classmethod
+    def _modify_props(cls, msg, property_dict, delete_props=None):
+        for kv in property_dict:
+            lin_kv = msg.override_props.add()
+            lin_kv.key = kv[0]
+            lin_kv.value = kv[1]
+
+        if delete_props:
+            msg.delete_prop_keys.extend(delete_props)
+        return msg
+
+    def _send_and_wait(self, api_call, msg=None):
+        msg_id = self._linstor_client.send_msg(api_call, msg)
+        replies = self._linstor_client.wait_for_result(msg_id)
+        return replies
+
     def connect(self):
         self._linstor_client.connect(self._ctrl_host)
         self._linstor_client.daemon = True
@@ -412,33 +431,21 @@ class Linstor(object):
             netif.stlt_port = port
             netif.stlt_encryption_type = com_type
 
-        msg_id = self._linstor_client.send_msg(apiconsts.API_CRT_NODE, msg)
-        replies = self._linstor_client.wait_for_result(msg_id)
-        return replies
+        return self._send_and_wait(apiconsts.API_CRT_NODE, msg)
 
     def node_modify(self, node_name, property_dict, delete_props=None):
         msg = MsgModNode()
         msg.node_name = node_name
 
-        for kv in property_dict:
-            lin_kv = msg.override_props.add()
-            lin_kv.key = kv[0]
-            lin_kv.value = kv[1]
+        msg = self._modify_props(msg, property_dict, delete_props)
 
-        if delete_props:
-            msg.delete_prop_keys.extend(delete_props)
-
-        msg_id = self._linstor_client.send_msg(apiconsts.API_MOD_NODE, msg)
-        replies = self._linstor_client.wait_for_result(msg_id)
-        return replies
+        return self._send_and_wait(apiconsts.API_MOD_NODE, msg)
 
     def node_delete(self, node_name):
         msg = MsgDelNode()
         msg.node_name = node_name
 
-        msg_id = self._linstor_client.send_msg(apiconsts.API_DEL_NODE, msg)
-        replies = self._linstor_client.wait_for_result(msg_id)
-        return replies
+        return self._send_and_wait(apiconsts.API_DEL_NODE, msg)
 
     def netinterface_create(self, node_name, interface_name, ip, port=None, com_type=None):
         msg = MsgCrtNetInterface()
@@ -451,9 +458,7 @@ class Linstor(object):
             msg.net_if.stlt_port = port
             msg.net_if.stlt_encryption_type = com_type
 
-        msg_id = self._linstor_client.send_msg(apiconsts.API_CRT_NET_IF, msg)
-        replies = self._linstor_client.wait_for_result(msg_id)
-        return replies
+        return self._send_and_wait(apiconsts.API_CRT_NET_IF, msg)
 
     def netinterface_modify(self, node_name, interface_name, ip, port=None, com_type=None):
         msg = MsgModNetInterface()
@@ -466,42 +471,53 @@ class Linstor(object):
             msg.net_if.stlt_port = port
             msg.net_if.stlt_encryption_type = com_type
 
-        msg_id = self._linstor_client.send_msg(apiconsts.API_MOD_NET_IF, msg)
-        replies = self._linstor_client.wait_for_result(msg_id)
-        return replies
+        return self._send_and_wait(apiconsts.API_MOD_NET_IF, msg)
 
     def netinterface_delete(self, node_name, interface_name):
         msg = MsgDelNetInterface()
         msg.node_name = node_name
         msg.net_if_name = interface_name
 
-        msg_id = self._linstor_client.send_msg(apiconsts.API_DEL_NET_IF, msg)
-        replies = self._linstor_client.wait_for_result(msg_id)
-        return replies
+        return self._send_and_wait(apiconsts.API_DEL_NET_IF, msg)
 
     def node_list(self):
-        msg_id = self._linstor_client.send_msgs(apiconsts.API_LST_NODE)
-        replies = self._linstor_client.wait_for_result(msg_id)
+        replies = self._send_and_wait(apiconsts.API_LST_NODE)
         return replies[0] if replies else []
 
+    def storage_pool_dfn_create(self, name):
+        msg = MsgCrtStorPoolDfn()
+        msg.stor_pool_dfn.stor_pool_name = name
+
+        return self._send_and_wait(apiconsts.API_CRT_STOR_POOL_DFN, msg)
+
+    def storage_pool_dfn_modify(self, name, property_dict, delete_props=None):
+        msg = MsgModStorPoolDfn()
+        msg.stor_pool_name = name
+
+        msg = self._modify_props(msg, property_dict, delete_props)
+
+        return self._send_and_wait(apiconsts.API_MOD_STOR_POOL_DFN, msg)
+
+    def storage_pool_dfn_delete(self, name):
+        msg = MsgDelStorPoolDfn()
+        msg.stor_pool_name = name
+
+        return self._send_and_wait(apiconsts.API_DEL_STOR_POOL_DFN, msg)
+
     def storage_pool_dfn_list(self):
-        msg_id = self._linstor_client.send_msgs(apiconsts.API_LST_STOR_POOL_DFN)
-        replies = self._linstor_client.wait_for_result(msg_id)
+        replies = self._send_and_wait(apiconsts.API_LST_STOR_POOL_DFN)
         return replies[0] if replies else []
 
     def storage_pool_list(self):
-        msg_id = self._linstor_client.send_msgs(apiconsts.API_LST_STOR_POOL)
-        replies = self._linstor_client.wait_for_result(msg_id)
+        replies = self._send_and_wait(apiconsts.API_LST_STOR_POOL)
         return replies[0] if replies else []
 
     def resource_dfn_list(self):
-        msg_id = self._linstor_client.send_msgs(apiconsts.API_LST_RSC_DFN)
-        replies = self._linstor_client.wait_for_result(msg_id)
+        replies = self._send_and_wait(apiconsts.API_LST_RSC_DFN)
         return replies[0] if replies else []
 
     def resource_list(self):
-        msg_id = self._linstor_client.send_msgs(apiconsts.API_LST_RSC)
-        replies = self._linstor_client.wait_for_result(msg_id)
+        replies = self._send_and_wait(apiconsts.API_LST_RSC)
         return replies[0] if replies else []
 
 

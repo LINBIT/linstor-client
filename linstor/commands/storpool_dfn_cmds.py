@@ -1,24 +1,20 @@
 import linstor
-from linstor.proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
-from linstor.proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
 from linstor.proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
-from linstor.proto.MsgModStorPoolDfn_pb2 import MsgModStorPoolDfn
-from linstor.commcontroller import need_communication, completer_communication
+from linstor.commcontroller import completer_communication
 from linstor.commands import Commands
 from linstor.utils import namecheck
+from linstor.consts import ExitCode
 from linstor.sharedconsts import (
-    API_CRT_STOR_POOL_DFN,
-    API_DEL_STOR_POOL_DFN,
-    API_LST_STOR_POOL_DFN,
-    API_MOD_STOR_POOL_DFN
+    API_LST_STOR_POOL_DFN
 )
 from linstor.consts import STORPOOL_NAME
 
 
 class StoragePoolDefinitionCommands(Commands):
+    def __init__(self):
+        super(StoragePoolDefinitionCommands, self).__init__()
 
-    @staticmethod
-    def setup_commands(parser):
+    def setup_commands(self, parser):
         # new-storpol definition
         p_new_storpool_dfn = parser.add_parser(
             Commands.CREATE_STORAGE_POOL_DEF,
@@ -28,7 +24,7 @@ class StoragePoolDefinitionCommands(Commands):
             'name',
             type=namecheck(STORPOOL_NAME),
             help='Name of the new storpool definition')
-        p_new_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.create)
+        p_new_storpool_dfn.set_defaults(func=self.create)
 
         # remove-storpool definition
         # TODO description
@@ -43,7 +39,7 @@ class StoragePoolDefinitionCommands(Commands):
             'name',
             nargs="+",
             help='Name of the storage pool to delete').completer = StoragePoolDefinitionCommands.completer
-        p_rm_storpool_dfn.set_defaults(func=StoragePoolDefinitionCommands.delete)
+        p_rm_storpool_dfn.set_defaults(func=self.delete)
 
         # list storpool definitions
         storpooldfngroupby = ('Name')
@@ -61,7 +57,7 @@ class StoragePoolDefinitionCommands(Commands):
             '-R', '--storpool', nargs='+', type=namecheck(STORPOOL_NAME),
             help='Filter by list of storage pool'
         ).completer = StoragePoolDefinitionCommands.completer
-        p_lstorpooldfs.set_defaults(func=StoragePoolDefinitionCommands.list)
+        p_lstorpooldfs.set_defaults(func=self.list)
 
         # show properties
         p_sp = parser.add_parser(
@@ -72,7 +68,7 @@ class StoragePoolDefinitionCommands(Commands):
             'storage_pool_name',
             help="Storage pool definition for which to print the properties"
         ).completer = StoragePoolDefinitionCommands.completer
-        p_sp.set_defaults(func=StoragePoolDefinitionCommands.print_props)
+        p_sp.set_defaults(func=self.print_props)
 
         # set properties
         # disabled until there are properties
@@ -99,48 +95,36 @@ class StoragePoolDefinitionCommands(Commands):
             help='Name of the storage pool definition'
         ).competer = StoragePoolDefinitionCommands.completer
         Commands.add_parser_keyvalue(p_setauxprop)
-        p_setauxprop.set_defaults(func=StoragePoolDefinitionCommands.set_prop_aux)
+        p_setauxprop.set_defaults(func=self.set_prop_aux)
 
-    @staticmethod
-    @need_communication
-    def create(cc, args):
-        p = MsgCrtStorPoolDfn()
-        p.stor_pool_dfn.stor_pool_name = args.name
+    def create(self, args):
+        replies = self._linstor.storage_pool_dfn_create(args.name)
+        return self.handle_replies(args, replies)
 
-        return Commands._send_msg(cc, API_CRT_STOR_POOL_DFN, p, args)
+    def delete(self, args):
+        # execute delete storpooldfns and flatten result list
+        replies = [x for subx in args.name for x in self._linstor.storage_pool_dfn_delete(subx)]
+        return self.handle_replies(args, replies)
 
-    @staticmethod
-    @need_communication
-    def delete(cc, args):
-        del_msgs = []
-        for storpool_name in args.name:
-            p = MsgDelStorPoolDfn()
-            p.stor_pool_name = storpool_name
-
-            del_msgs.append(p)
-
-        return Commands._delete_and_output(cc, args, API_DEL_STOR_POOL_DFN, del_msgs)
-
-    @staticmethod
-    @need_communication
-    def list(cc, args):
-        lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL_DFN, MsgLstStorPoolDfn(), args)
+    def list(self, args):
+        lstmsg = self._linstor.storage_pool_dfn_list()
 
         if lstmsg:
-            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-            tbl.add_column("StoragePool")
-            for storpool_dfn in lstmsg.stor_pool_dfns:
-                tbl.add_row([
-                    storpool_dfn.stor_pool_name
-                ])
-            tbl.show()
+            if args.machine_readable:
+                self._print_machine_readable([lstmsg])
+            else:
+                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+                tbl.add_column("StoragePool")
+                for storpool_dfn in lstmsg.stor_pool_dfns:
+                    tbl.add_row([
+                        storpool_dfn.stor_pool_name
+                    ])
+                tbl.show()
 
-        return None
+        return ExitCode.OK
 
-    @staticmethod
-    @need_communication
-    def print_props(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_STOR_POOL_DFN, MsgLstStorPoolDfn())
+    def print_props(self, args):
+        lstmsg = self._linstor.storage_pool_dfn_list()
 
         result = []
         if lstmsg:
@@ -150,17 +134,12 @@ class StoragePoolDefinitionCommands(Commands):
                     break
 
         Commands._print_props(result, args.machine_readable)
-        return None
+        return ExitCode.OK
 
-    @staticmethod
-    @need_communication
-    def set_props(cc, args):
-        mmn = MsgModStorPoolDfn()
-        mmn.stor_pool_name = args.name
-
-        Commands.fill_override_prop(mmn, args.key, args.value)
-
-        return Commands._send_msg(cc, API_MOD_STOR_POOL_DFN, mmn, args)
+    def set_props(self, args):
+        mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        replies = self._linstor.storage_pool_dfn_modify(args.name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
+        return self.handle_replies(args, replies)
 
     @staticmethod
     @completer_communication

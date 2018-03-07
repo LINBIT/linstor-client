@@ -9,6 +9,7 @@ from linstor.proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
 from linstor.utils import Output, LinstorError
 from linstor.protobuf_to_dict import protobuf_to_dict
 from linstor.commcontroller import ApiCallResponseError, need_communication
+import linstor.linstorapi as linstorapi
 from linstor.sharedconsts import (
     API_REPLY, API_CMD_SHUTDOWN, API_CONTROL_CTRL, API_LST_CFG_VAL, API_SET_CFG_VAL,
     NAMESPC_AUXILIARY
@@ -126,6 +127,9 @@ class Commands(object):
         DMMIGRATE,
         GEN_ZSH_COMPLETER
     ]
+
+    def __init__(self):
+        self._linstor = None  # type: linstorapi.Linstor
 
     @classmethod
     def handle_replies(cls, args, replies):

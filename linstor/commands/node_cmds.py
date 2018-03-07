@@ -4,7 +4,6 @@ from linstor.commcontroller import completer_communication
 from linstor.commands import Commands
 from linstor.utils import Output, rangecheck, namecheck, ip_completer, LinstorError
 from linstor.consts import NODE_NAME, Color, ExitCode
-import linstor.linstorapi as linstorapi
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
@@ -22,7 +21,7 @@ from linstor.sharedconsts import (
 
 class NodeCommands(Commands):
     def __init__(self):
-        self._linstor = None  # type: linstorapi.Linstor
+        super(NodeCommands, self).__init__()
 
     def setup_commands(self, parser):
         # create node
