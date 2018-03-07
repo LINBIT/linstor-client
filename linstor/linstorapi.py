@@ -25,6 +25,9 @@ from linstor.proto.MsgCrtStorPoolDfn_pb2 import MsgCrtStorPoolDfn
 from linstor.proto.MsgModStorPoolDfn_pb2 import MsgModStorPoolDfn
 from linstor.proto.MsgDelStorPoolDfn_pb2 import MsgDelStorPoolDfn
 from linstor.proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
+from linstor.proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
+from linstor.proto.MsgModStorPool_pb2 import MsgModStorPool
+from linstor.proto.MsgDelStorPool_pb2 import MsgDelStorPool
 from linstor.proto.MsgLstStorPool_pb2 import MsgLstStorPool
 from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
 from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
@@ -366,6 +369,12 @@ class LinstorNetClient(threading.Thread):
 
 
 class Linstor(object):
+    _storage_pool_key_map = {
+        'Lvm': apiconsts.KEY_STOR_POOL_VOLUME_GROUP,
+        'LvmThin': apiconsts.KEY_STOR_POOL_THIN_POOL,
+        'Zfs': apiconsts.KEY_STOR_POOL_ZPOOL
+    }
+
     def __init__(self, ctrl_host):
         self._ctrl_host = ctrl_host
         self._linstor_client = LinstorNetClient()
@@ -507,6 +516,42 @@ class Linstor(object):
     def storage_pool_dfn_list(self):
         replies = self._send_and_wait(apiconsts.API_LST_STOR_POOL_DFN)
         return replies[0] if replies else []
+
+    @classmethod
+    def get_driver_key(cls, driver_name):
+        return apiconsts.NAMESPC_STORAGE_DRIVER + '/' + cls._storage_pool_key_map[driver_name[:-len('Driver')]]
+
+    def storage_pool_create(self, node_name, storage_pool_name, storage_driver, driver_pool_name):
+        msg = MsgCrtStorPool()
+        msg.stor_pool.stor_pool_name = storage_pool_name
+        msg.stor_pool.node_name = node_name
+
+        assert(storage_driver in self._storage_pool_key_map.keys())
+
+        msg.stor_pool.driver = '{driver}Driver'.format(driver=storage_driver)
+
+        # set driver device pool property
+        prop = msg.stor_pool.props.add()
+        prop.key = self.get_driver_key(msg.stor_pool.driver)
+        prop.value = driver_pool_name
+
+        return self._send_and_wait(apiconsts.API_CRT_STOR_POOL, msg)
+
+    def storage_pool_modify(self, node_name, storage_pool_name, property_dict, delete_props=None):
+        msg = MsgModStorPool()
+        msg.node_name = node_name
+        msg.stor_pool_name = storage_pool_name
+
+        msg = self._modify_props(msg, property_dict, delete_props)
+
+        return self._send_and_wait(apiconsts.API_MOD_STOR_POOL, msg)
+
+    def storage_pool_delete(self, node_name, storage_pool_name):
+        msg = MsgDelStorPool()
+        msg.node_name = node_name
+        msg.stor_pool_name = storage_pool_name
+
+        return self._send_and_wait(apiconsts.API_DEL_STOR_POOL, msg)
 
     def storage_pool_list(self):
         replies = self._send_and_wait(apiconsts.API_LST_STOR_POOL)

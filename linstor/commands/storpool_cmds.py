@@ -1,38 +1,20 @@
 import linstor
 from linstor.proto.MsgLstStorPool_pb2 import MsgLstStorPool
-from linstor.proto.MsgCrtStorPool_pb2 import MsgCrtStorPool
-from linstor.proto.MsgDelStorPool_pb2 import MsgDelStorPool
-from linstor.proto.MsgModStorPool_pb2 import MsgModStorPool
-from linstor.commcontroller import need_communication, completer_communication
+from linstor.commcontroller import completer_communication
 from linstor.commands import Commands, NodeCommands
 from linstor.utils import namecheck
 from linstor.sharedconsts import (
-    API_CRT_STOR_POOL,
-    API_MOD_STOR_POOL,
-    API_DEL_STOR_POOL,
     API_LST_STOR_POOL,
-    KEY_STOR_POOL_VOLUME_GROUP,
-    KEY_STOR_POOL_THIN_POOL,
-    KEY_STOR_POOL_ZPOOL,
-    KEY_STOR_POOL_SUPPORTS_SNAPSHOTS,
-    NAMESPC_STORAGE_DRIVER
+    KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
 )
-from linstor.consts import NODE_NAME, STORPOOL_NAME
+from linstor.consts import NODE_NAME, STORPOOL_NAME, ExitCode
 
 
 class StoragePoolCommands(Commands):
-    device_key_map = {
-        'Lvm': KEY_STOR_POOL_VOLUME_GROUP,
-        'LvmThin': KEY_STOR_POOL_THIN_POOL,
-        'Zfs': KEY_STOR_POOL_ZPOOL
-    }
+    def __init__(self):
+        super(StoragePoolCommands, self).__init__()
 
-    @classmethod
-    def get_driver_key(cls, driver_name):
-        return NAMESPC_STORAGE_DRIVER + '/' + StoragePoolCommands.device_key_map[driver_name[:-len('Driver')]]
-
-    @staticmethod
-    def setup_commands(parser):
+    def setup_commands(self, parser):
         # new-storpol
         p_new_storpool = parser.add_parser(
             Commands.CREATE_STORAGE_POOL,
@@ -51,7 +33,7 @@ class StoragePoolCommands(Commands):
             'driver_pool_name',
             type=namecheck(STORPOOL_NAME),  # TODO use STORPOOL_NAME check for now
             help='Volumegroup/Pool name of the driver e.g. drbdpool')
-        p_new_storpool.set_defaults(func=StoragePoolCommands.create)
+        p_new_storpool.set_defaults(func=self.create)
 
         # remove-storpool
         # TODO description
@@ -70,7 +52,7 @@ class StoragePoolCommands(Commands):
             'node_name',
             nargs="+",
             help='Name of the Node where the storage pool exists.').completer = NodeCommands.completer
-        p_rm_storpool.set_defaults(func=StoragePoolCommands.delete)
+        p_rm_storpool.set_defaults(func=self.delete)
 
         # list storpool
         storpoolgroupby = ('Name')
@@ -86,7 +68,7 @@ class StoragePoolCommands(Commands):
                                  choices=storpoolgroupby).completer = storpool_group_completer
         p_lstorpool.add_argument('-R', '--storpool', nargs='+', type=namecheck(STORPOOL_NAME),
                                  help='Filter by list of storage pool').completer = StoragePoolCommands.completer
-        p_lstorpool.set_defaults(func=StoragePoolCommands.list)
+        p_lstorpool.set_defaults(func=self.list)
 
         # show properties
         p_sp = parser.add_parser(
@@ -100,7 +82,7 @@ class StoragePoolCommands(Commands):
             'node_name',
             type=namecheck(NODE_NAME),
             help='Name of the node for the storage pool').completer = NodeCommands.completer
-        p_sp.set_defaults(func=StoragePoolCommands.print_props)
+        p_sp.set_defaults(func=self.print_props)
 
         # set properties
         p_setprop = parser.add_parser(
@@ -117,7 +99,7 @@ class StoragePoolCommands(Commands):
             type=namecheck(NODE_NAME),
             help='Name of the node for the storage pool').completer = NodeCommands.completer
         Commands.add_parser_keyvalue(p_setprop, 'storagepool')
-        p_setprop.set_defaults(func=StoragePoolCommands.set_props)
+        p_setprop.set_defaults(func=self.set_props)
 
         # set aux properties
         p_setauxprop = parser.add_parser(
@@ -134,78 +116,53 @@ class StoragePoolCommands(Commands):
             type=namecheck(NODE_NAME),
             help='Name of the node for the storage pool').completer = NodeCommands.completer
         Commands.add_parser_keyvalue(p_setauxprop)
-        p_setauxprop.set_defaults(func=StoragePoolCommands.set_prop_aux)
+        p_setauxprop.set_defaults(func=self.set_prop_aux)
 
-    @staticmethod
-    @need_communication
-    def create(cc, args):
-        p = MsgCrtStorPool()
-        p.stor_pool.stor_pool_name = args.name
-        p.stor_pool.node_name = args.node_name
-
+    def create(self, args):
         # construct correct driver name
-        if args.driver == 'lvmthin':
-            driver = 'LvmThin'
-        else:
-            driver = args.driver.title()
+        driver = 'LvmThin' if args.driver == 'lvmthin' else args.driver.title()
+        replies = self._linstor.storage_pool_create(args.node_name, args.name, driver, args.driver_pool_name)
+        return self.handle_replies(args, replies)
 
-        p.stor_pool.driver = '{driver}Driver'.format(driver=driver)
+    def delete(self, args):
+        # execute delete storpooldfns and flatten result list
+        replies = [x for subx in args.node_name for x in self._linstor.storage_pool_delete(subx, args.name)]
+        return self.handle_replies(args, replies)
 
-        # set driver device pool property
-        prop = p.stor_pool.props.add()
-        prop.key = StoragePoolCommands.get_driver_key(p.stor_pool.driver)
-        prop.value = args.driver_pool_name
-
-        return Commands._send_msg(cc, API_CRT_STOR_POOL, p, args)
-
-    @staticmethod
-    @need_communication
-    def delete(cc, args):
-        del_msgs = []
-        for node_name in args.node_name:
-            p = MsgDelStorPool()
-            p.stor_pool_name = args.name
-            p.node_name = node_name
-
-            del_msgs.append(p)
-
-        return Commands._delete_and_output(cc, args, API_DEL_STOR_POOL, del_msgs)
-
-    @staticmethod
-    @need_communication
-    def list(cc, args):
-        lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL, MsgLstStorPool(), args)
+    def list(self, args):
+        lstmsg = self._linstor.storage_pool_list()
 
         if lstmsg:
-            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-            tbl.add_column("StoragePool")
-            tbl.add_column("Node")
-            tbl.add_column("Driver")
-            tbl.add_column("PoolName")
-            tbl.add_column("SupportsSnapshots")
-            for storpool in lstmsg.stor_pools:
-                driver_device_prop = [x for x in storpool.props
-                                      if x.key == StoragePoolCommands.get_driver_key(storpool.driver)]
-                driver_device = driver_device_prop[0].value if driver_device_prop else ''
+            if args.machine_readable:
+                self._print_machine_readable([lstmsg])
+            else:
+                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+                tbl.add_column("StoragePool")
+                tbl.add_column("Node")
+                tbl.add_column("Driver")
+                tbl.add_column("PoolName")
+                tbl.add_column("SupportsSnapshots")
+                for storpool in lstmsg.stor_pools:
+                    driver_device_prop = [x for x in storpool.props
+                                          if x.key == self._linstor.get_driver_key(storpool.driver)]
+                    driver_device = driver_device_prop[0].value if driver_device_prop else ''
 
-                supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
-                supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
+                    supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
+                    supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
 
-                tbl.add_row([
-                    storpool.stor_pool_name,
-                    storpool.node_name,
-                    storpool.driver,
-                    driver_device,
-                    supports_snapshots
-                ])
-            tbl.show()
+                    tbl.add_row([
+                        storpool.stor_pool_name,
+                        storpool.node_name,
+                        storpool.driver,
+                        driver_device,
+                        supports_snapshots
+                    ])
+                tbl.show()
 
-        return None
+        return ExitCode.OK
 
-    @staticmethod
-    @need_communication
-    def print_props(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_STOR_POOL, MsgLstStorPool())
+    def print_props(self, args):
+        lstmsg = self._linstor.storage_pool_list()
 
         result = []
         if lstmsg:
@@ -215,18 +172,17 @@ class StoragePoolCommands(Commands):
                     break
 
         Commands._print_props(result, args.machine_readable)
-        return None
+        return ExitCode.OK
 
-    @staticmethod
-    @need_communication
-    def set_props(cc, args):
-        mmn = MsgModStorPool()
-        mmn.node_name = args.node_name
-        mmn.stor_pool_name = args.name
-
-        Commands.fill_override_prop(mmn, args.key, args.value)
-
-        return Commands._send_msg(cc, API_MOD_STOR_POOL, mmn, args)
+    def set_props(self, args):
+        mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        replies = self._linstor.storage_pool_modify(
+            args.node_name,
+            args.name,
+            mod_prop_dict['pairs'],
+            mod_prop_dict['delete']
+        )
+        return self.handle_replies(args, replies)
 
     @staticmethod
     @completer_communication
