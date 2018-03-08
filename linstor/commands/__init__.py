@@ -1,4 +1,4 @@
-from .commands import Commands
+from .commands import Commands, MiscCommands
 from .node_cmds import NodeCommands
 from .rsc_dfn_cmds import ResourceDefinitionCommands
 from .storpool_dfn_cmds import StoragePoolDefinitionCommands

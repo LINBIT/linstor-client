@@ -41,6 +41,7 @@ from linstor.commands import (
     MigrateCommands,
     DrbdOptions,
     ZshGenerator,
+    MiscCommands,
     Commands
 )
 
@@ -72,6 +73,7 @@ class LinStorCLI(object):
         self._resource_dfn_commands = ResourceDefinitionCommands()
         self._volume_dfn_commands = VolumeDefinitionCommands()
         self._resource_commands = ResourceCommands()
+        self._misc_commands = MiscCommands()
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
         self._linstorapi = None
@@ -144,14 +146,15 @@ class LinStorCLI(object):
         c_ctrl_props = subp.add_parser(Commands.GET_CONTROLLER_PROPS,
                                        aliases=['dspctrlprp'],
                                        description='Print current controller config properties.')
-        c_ctrl_props.set_defaults(func=Commands.cmd_print_controller_props)
+        c_ctrl_props.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        c_ctrl_props.set_defaults(func=self._misc_commands.cmd_print_controller_props)
 
         #  controller - set props
         c_set_ctrl_props = subp.add_parser(Commands.SET_CONTROLLER_PROP,
                                            aliases=['setctrlprp'],
                                            description='Set a controller config property.')
         Commands.add_parser_keyvalue(c_set_ctrl_props, "controller")
-        c_set_ctrl_props.set_defaults(func=Commands.cmd_set_controller_props)
+        c_set_ctrl_props.set_defaults(func=self._misc_commands.cmd_set_controller_props)
 
         # shutdown
         c_shutdown = subp.add_parser(
@@ -159,7 +162,7 @@ class LinStorCLI(object):
             aliases=['shtdwn'],
             description='Shutdown the linstor controller'
         )
-        c_shutdown.set_defaults(func=Commands.cmd_shutdown)
+        c_shutdown.set_defaults(func=self._misc_commands.cmd_shutdown)
 
         # dm-migrate
         c_dmmigrate = subp.add_parser(
@@ -233,6 +236,7 @@ class LinStorCLI(object):
         self._resource_dfn_commands._linstor = self._linstorapi
         self._volume_dfn_commands._linstor = self._linstorapi
         self._resource_commands._linstor = self._linstorapi
+        self._misc_commands._linstor = self._linstorapi
         self._linstorapi.connect()
         return args.func(args)
 

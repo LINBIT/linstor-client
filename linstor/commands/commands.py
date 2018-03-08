@@ -405,41 +405,26 @@ class Commands(object):
             return possible
         return completer
 
-    @staticmethod
-    @need_communication
-    def cmd_print_controller_props(cc, args):
-        lstmsg = Commands._request_list(cc, API_LST_CFG_VAL, MsgLstCtrlCfgProps())
 
+class MiscCommands(Commands):
+    def __init__(self):
+        super(MiscCommands, self).__init__()
+
+    def cmd_print_controller_props(self, args):
+        lstmsg = self._linstor.controller_props()
         result = []
         if lstmsg:
             result.append(lstmsg.props)
 
         Commands._print_props(result, args.machine_readable)
-        return None
+        return ExitCode.OK
 
-    @staticmethod
-    @need_communication
-    def cmd_set_controller_props(cc, args):
+    def cmd_set_controller_props(self, args):
         props = Commands.parse_key_value_pairs([args.key + '=' + args.value])
 
-        api_responses = []
-        for mod_prop in props['pairs']:
-            msccp = MsgSetCtrlCfgProp()
-            ns_pos = mod_prop[0].rfind('/')
-            msccp.key = mod_prop[0]
-            msccp.value = mod_prop[1]
-            if ns_pos >= 0:
-                msccp.namespace = msccp.key[:ns_pos]
-                msccp.key = msccp.key[ns_pos + 1:]
+        replies = [x for subx in props['pairs'] for x in self._linstor.controller_set_prop(subx[0], subx[1])]
+        return self.handle_replies(args, replies)
 
-            api_responses.append(Commands._send_msg_without_output(cc, API_SET_CFG_VAL, msccp))
-
-        return Commands._output_or_flatten(args, api_responses)
-
-    @staticmethod
-    @need_communication
-    def cmd_shutdown(cc, args):
-        mcc = MsgControlCtrl()
-        mcc.command = API_CMD_SHUTDOWN
-
-        return Commands._send_msg(cc, API_CONTROL_CTRL, mcc, args)
+    def cmd_shutdown(self, args):
+        replies = self._linstor.shutdown_controller()
+        return self.handle_replies(args, replies)

@@ -41,6 +41,9 @@ from linstor.proto.MsgCrtRsc_pb2 import MsgCrtRsc
 from linstor.proto.MsgModRsc_pb2 import MsgModRsc
 from linstor.proto.MsgDelRsc_pb2 import MsgDelRsc
 from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
+from linstor.proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
+from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
+from linstor.proto.MsgControlCtrl_pb2 import MsgControlCtrl
 import linstor.sharedconsts as apiconsts
 import linstor.utils as utils
 import linstor.consts as consts
@@ -301,7 +304,8 @@ class LinstorNetClient(threading.Thread):
                             apiconsts.API_LST_STOR_POOL: (MsgLstStorPool, None),
                             apiconsts.API_LST_NODE: (MsgLstNode, None),
                             apiconsts.API_LST_RSC_DFN: (MsgLstRscDfn, None),
-                            apiconsts.API_LST_RSC: (MsgLstRsc, None)
+                            apiconsts.API_LST_RSC: (MsgLstRsc, None),
+                            apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, None)
                         }
 
                         if hdr.api_call == apiconsts.API_VERSION:  # this shouldn't happen
@@ -701,6 +705,27 @@ class Linstor(object):
     def resource_list(self):
         replies = self._send_and_wait(apiconsts.API_LST_RSC)
         return replies[0] if replies else []
+
+    def controller_props(self):
+        replies = self._send_and_wait(apiconsts.API_LST_CFG_VAL)
+        return replies[0] if replies else []
+
+    def controller_set_prop(self, key, value):
+        msg = MsgSetCtrlCfgProp()
+        ns_pos = key.rfind('/')
+        msg.key = key
+        msg.value = value
+        if ns_pos >= 0:
+            msg.namespace = msg.key[:ns_pos]
+            msg.key = msg.key[ns_pos + 1:]
+
+        return self._send_and_wait(apiconsts.API_SET_CFG_VAL, msg)
+
+
+    def shutdown_controller(self):
+        msg = MsgControlCtrl()
+        msg.command = apiconsts.API_CMD_SHUTDOWN
+        return self._send_and_wait(apiconsts.API_CONTROL_CTRL, msg)
 
 
 if __name__ == "__main__":
