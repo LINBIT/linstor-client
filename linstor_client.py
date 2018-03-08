@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 """
     LINSTOR - management of distributed storage/DRBD9 resources
-    Copyright (C) 2013 - 2017  LINBIT HA-Solutions GmbH
+    Copyright (C) 2013 - 2018  LINBIT HA-Solutions GmbH
     Author: Robert Altnoeder, Roland Kammerer, Rene Peinthor
 
     This program is free software: you can redistribute it and/or modify
@@ -30,6 +30,7 @@ except ImportError:
 import linstor.argparse.argparse as argparse
 import linstor.argcomplete as argcomplete
 import linstor.linstorapi as linstorapi
+import linstor.utils as utils
 from linstor.commands import (
     VolumeDefinitionCommands,
     StoragePoolDefinitionCommands,
@@ -227,18 +228,34 @@ class LinStorCLI(object):
         return self._parser.parse_args(pargs)
 
     def parse_and_execute(self, pargs):
-        args = self.parse(pargs)
-        if self._linstorapi is None:
-            self._linstorapi = linstorapi.Linstor(Commands.controller_list(args.controllers)[0])
-            self._node_commands._linstor = self._linstorapi
-            self._storage_pool_dfn_commands._linstor = self._linstorapi
-            self._storage_pool_commands._linstor = self._linstorapi
-            self._resource_dfn_commands._linstor = self._linstorapi
-            self._volume_dfn_commands._linstor = self._linstorapi
-            self._resource_commands._linstor = self._linstorapi
-            self._misc_commands._linstor = self._linstorapi
-            self._linstorapi.connect()
-        return args.func(args)
+        rc = ExitCode.OK
+        try:
+            args = self.parse(pargs)
+
+            if self._linstorapi is None:
+                self._linstorapi = linstorapi.Linstor(Commands.controller_list(args.controllers)[0])
+                self._node_commands._linstor = self._linstorapi
+                self._storage_pool_dfn_commands._linstor = self._linstorapi
+                self._storage_pool_commands._linstor = self._linstorapi
+                self._resource_dfn_commands._linstor = self._linstorapi
+                self._volume_dfn_commands._linstor = self._linstorapi
+                self._resource_commands._linstor = self._linstorapi
+                self._misc_commands._linstor = self._linstorapi
+                self._linstorapi.connect()
+            rc = args.func(args)
+        except utils.LinstorClientError as lce:
+            sys.stderr.write(lce.message + '\n')
+            return lce.exit_code
+        except linstorapi.LinstorNetworkError as le:
+            sys.stderr.write(le.message + '\n')
+            for err in le.all_errors():
+                sys.stderr.write(' ' * 2 + err.message + '\n')
+            rc = ExitCode.CONNECTION_ERROR
+        except linstorapi.LinstorError as le:
+            sys.stderr.write(le.message + '\n')
+            rc = ExitCode.UNKNOWN_ERROR
+
+        return rc
 
     @staticmethod
     def parser_cmds(parser):
@@ -345,13 +362,14 @@ class LinStorCLI(object):
         # helper function
         def parsecatch(cmds_, stoprec=False):
             try:
-                self.parse_and_execute(cmds_)
+                rc = ExitCode.OK
+                rc = self.parse_and_execute(cmds_)
             except SystemExit as se:
                 if stoprec:
                     return
 
                 cmd = cmds_[0]
-                if cmd in ["exit", "quit"]:
+                if cmd in [Commands.EXIT, "quit"]:
                     sys.exit(ExitCode.OK)
                 elif cmd == "help":
                     if len(cmds_) == 1:
@@ -371,6 +389,9 @@ class LinStorCLI(object):
                     unknown(cmd)
             except BaseException:
                 traceback.print_exc(file=sys.stdout)
+
+            if rc == ExitCode.CONNECTION_ERROR:
+                sys.exit(rc)
 
         # main part of interactive mode:
         if not LinStorCLI.interactive:

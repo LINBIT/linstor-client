@@ -1,3 +1,22 @@
+"""
+    LINSTOR - management of distributed storage/DRBD9 resources
+    Copyright (C) 2013 - 2018 LINBIT HA-Solutions GmbH
+    Author: Rene Peinthor
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import struct
 import threading
 import logging
@@ -46,7 +65,6 @@ from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
 from linstor.proto.MsgControlCtrl_pb2 import MsgControlCtrl
 import linstor.sharedconsts as apiconsts
 import linstor.utils as utils
-import linstor.consts as consts
 
 
 logging.basicConfig(level=logging.WARNING)
@@ -68,14 +86,32 @@ class LinstorError(Exception):
     """
     Linstor basic error class with a message
     """
-    def __init__(self, msg):
+    def __init__(self, msg, more_errors=None):
         self._msg = msg
+        if more_errors is None:
+            more_errors = []
+        self._errors = more_errors
+
+    def all_errors(self):
+        return self._errors
+
+    @property
+    def message(self):
+        return self._msg
 
     def __str__(self):
         return "Error: {msg}".format(msg=self._msg)
 
     def __repr__(self):
         return "LinstorError('{msg}')".format(msg=self._msg)
+
+
+class LinstorNetworkError(LinstorError):
+    """
+    Linstor Error indicating an network/connection error.
+    """
+    def __init__(self, msg, more_errors=None):
+        super(LinstorNetworkError, self).__init__(msg, more_errors)
 
 
 class ApiCallResponse(object):
@@ -123,11 +159,13 @@ class LinstorNetClient(threading.Thread):
     def __init__(self, timeout=20):
         super(LinstorNetClient, self).__init__()
         self._socket = None  # type: socket.socket
+        self._host = None  # type: str
         self._timeout = timeout
         self._slock = threading.RLock()
         self._cv_sock = threading.Condition(self._slock)
         self._logger = logging.getLogger('LinstorNetClient')
         self._replies = {}
+        self._errors = []  # list of errors that happened in the select thread
         self._api_version = None
         self._cur_msg_id = AtomicInt(1)
 
@@ -164,6 +202,10 @@ class LinstorNetClient(threading.Thread):
         msg_resps = []
         msg_type = type_tuple[0]
         wrapper_type = type_tuple[1]
+
+        if msg_type is None:
+            return msg_resps
+
         for msg in data:
             resp = msg_type()
             resp.ParseFromString(msg)
@@ -220,6 +262,11 @@ class LinstorNetClient(threading.Thread):
         self._parse_api_version(msgs[1])
         return True
 
+    def fetch_errors(self):
+        errors = self._errors
+        self._errors = []
+        return errors
+
     def connect(self, server):
         """
         Connects to the given server.
@@ -250,11 +297,11 @@ class LinstorNetClient(threading.Thread):
 
             self._socket.setblocking(0)
             self._logger.debug("connected to " + server)
+            self._host = server
             return True
         except socket.error as err:
             self._socket = None
-            raise LinstorError("Error connecting: " + str(err))
-            #sys.stderr.write("{ip} -> {msg}\n".format(ip=server, msg=str(err)))
+            raise LinstorNetworkError("Error connecting to {hp}: {err}".format(hp=server, err=err))
 
     def disconnect(self):
         with self._slock:
@@ -268,18 +315,37 @@ class LinstorNetClient(threading.Thread):
         exp_pkg_len = 0  # expected package length
 
         while self._socket:
+            rds = []
+            wds = []
+            eds = []
             try:
                 rds, wds, eds = select.select([self._socket], [], [self._socket], 2)
             except (IOError, TypeError):
                 pass  # maybe check if socket is None, so we know it was closed on purpose
 
             self._logger.debug("select exit with:" + ",".join([str(rds), str(wds), str(eds)]))
+
+            if eds:
+                self._logger.debug("Socket exception on {hp}".format(hp=self._adrtuple2str(self._socket.getpeername())))
+                self._errors.append(LinstorNetworkError(
+                    "Socket exception on {hp}".format(hp=self._adrtuple2str(self._socket.getpeername()))))
+
             for sock in rds:
                 with self._slock:
                     if self._socket is None:  # socket was closed
                         break
 
                     read = self._socket.recv(4096)
+
+                    if len(read) == 0:
+                        self._logger.debug(
+                            "No data from {hp}, closing connectiong".format(
+                                hp=self._adrtuple2str(self._socket.getpeername())))
+                        self._socket.close()
+                        self._socket = None
+                        self._errors.append(
+                            LinstorNetworkError("Remote '{hp}' closed connection dropped.".format(hp=self._host)))
+
                     package += read
                     pkg_len = len(package)
                     self._logger.debug("pkg_len: " + str(pkg_len))
@@ -299,6 +365,7 @@ class LinstorNetClient(threading.Thread):
                         self._logger.debug(str(hdr))
 
                         reply_map = {
+                            apiconsts.API_PONG: (None, None),
                             apiconsts.API_REPLY: (MsgApiCallResponse, ApiCallResponse),
                             apiconsts.API_LST_STOR_POOL_DFN: (MsgLstStorPoolDfn, None),
                             apiconsts.API_LST_STOR_POOL: (MsgLstStorPool, None),
@@ -311,6 +378,9 @@ class LinstorNetClient(threading.Thread):
                         if hdr.api_call == apiconsts.API_VERSION:  # this shouldn't happen
                             self._parse_api_version(msgs[1])
                             assert False  # this should not be sent a second time
+                        elif hdr.api_call == apiconsts.API_PING:
+                            self.send_msg(apiconsts.API_PONG)
+
                         elif hdr.api_call in reply_map.keys():
                             # parse other message according to the reply_map and add them to the self._replies
                             replies = self._parse_proto_msgs(reply_map[hdr.api_call], msgs[1:])
@@ -368,10 +438,15 @@ class LinstorNetClient(threading.Thread):
         full_msg = h_type + h_payload_length + h_reserved + msg_serialized
 
         with self._slock:
+            if not self.connected:
+                raise LinstorNetworkError("Not connected to controller.", self.fetch_errors())
+
             msg_len = len(full_msg)
+            self._logger.debug("sending " + str(msg_len))
             sent = 0
             while sent < msg_len:
                 sent += self._socket.send(full_msg)
+            self._logger.debug("sent " + str(sent))
         return hdr_msg.msg_id
 
     def wait_for_result(self, msg_id):
@@ -383,7 +458,7 @@ class LinstorNetClient(threading.Thread):
         with self._cv_sock:
             while msg_id not in self._replies:
                 if not self.connected:
-                    return []
+                    return None
                 self._cv_sock.wait(1)
             return self._replies.pop(msg_id)
 
@@ -745,17 +820,30 @@ class Linstor(object):
         msg.command = apiconsts.API_CMD_SHUTDOWN
         return self._send_and_wait(apiconsts.API_CONTROL_CTRL, msg)
 
+    def ping(self):
+        """
+        Sends a ping message to the controller.
+        :return int: Message id used for this message
+        """
+        return self._linstor_client.send_msg(apiconsts.API_PING)
+
+    def wait_for_message(self, msg_id):
+        return self._linstor_client.wait_for_result(msg_id)
+
 
 if __name__ == "__main__":
     lin = Linstor("linstor://127.0.0.1")
     lin.connect()
+    id = lin.ping()
+    print(id)
+    lin.wait_for_message(id)
     #print(lin.node_create('testnode', apiconsts.VAL_NODE_TYPE_STLT, '10.0.0.1'))
-    for x in range(1, 20):
-        print(lin.node_create('testnode' + str(x), apiconsts.VAL_NODE_TYPE_STLT, '10.0.0.' + str(x)))
-
-    for x in range(1, 20):
-        print(lin.node_delete('testnode' + str(x)))
-    replies = lin.storage_pool_list()
-    print(replies)
+    # for x in range(1, 20):
+    #     print(lin.node_create('testnode' + str(x), apiconsts.VAL_NODE_TYPE_STLT, '10.0.0.' + str(x)))
+    #
+    # for x in range(1, 20):
+    #     print(lin.node_delete('testnode' + str(x)))
+    # replies = lin.storage_pool_list()
+    # print(replies)
     # print(lin.list_nodes())
     # print(lin.list_resources())
