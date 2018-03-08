@@ -1,6 +1,4 @@
 import linstor
-from linstor.proto.MsgLstNode_pb2 import MsgLstNode
-from linstor.commcontroller import completer_communication
 from linstor.commands import Commands
 from linstor.utils import Output, rangecheck, namecheck, ip_completer, LinstorError
 from linstor.consts import NODE_NAME, Color, ExitCode
@@ -14,8 +12,7 @@ from linstor.sharedconsts import (
     VAL_NODE_TYPE_CTRL,
     VAL_NODE_TYPE_AUX,
     VAL_NODE_TYPE_CMBD,
-    VAL_NETIF_TYPE_IP,
-    API_LST_NODE,
+    VAL_NETIF_TYPE_IP
 )
 
 
@@ -75,7 +72,7 @@ class NodeCommands(Commands):
                                help='Unless this option is used, linstor will issue a safety question '
                                'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_node.add_argument('name',
-                               help='Name of the node to remove').completer = NodeCommands.completer
+                               help='Name of the node to remove').completer = self.node_completer
         p_rm_node.set_defaults(func=self.delete)
 
         # create net interface
@@ -93,7 +90,7 @@ class NodeCommands(Commands):
         p_create_netinterface.add_argument(
             "node_name",
             help="Name of the node to add the net interface"
-        ).completer = NodeCommands.completer
+        ).completer = self.node_completer
         p_create_netinterface.add_argument("interface_name", help="Interface name")
         p_create_netinterface.add_argument('ip', help='New IP address for the network interface')
         p_create_netinterface.set_defaults(func=self.create_netif)
@@ -112,8 +109,8 @@ class NodeCommands(Commands):
         p_mod_netif.add_argument(
             "node_name",
             help="Name of the node"
-        ).completer = NodeCommands.completer
-        p_mod_netif.add_argument("interface_name", help="Interface name to change")
+        ).completer = self.node_completer
+        p_mod_netif.add_argument("interface_name", help="Interface name to change").completer = self.netif_completer
         p_mod_netif.add_argument('ip', help='New IP address for the network interface')
         p_mod_netif.set_defaults(func=self.modify_netif)
 
@@ -126,12 +123,12 @@ class NodeCommands(Commands):
         p_delete_netinterface.add_argument(
             "node_name",
             help="Name of the node to remove the net interface"
-        ).completer = NodeCommands.completer
+        ).completer = self.node_completer
         p_delete_netinterface.add_argument(
             "interface_name",
             nargs='+',
             help="Interface name"
-        ).completer = NodeCommands.completer_netif
+        ).completer = self.netif_completer
         p_delete_netinterface.set_defaults(func=self.delete_netif)
 
         # list nodes
@@ -151,7 +148,7 @@ class NodeCommands(Commands):
         p_lnodes.add_argument('-g', '--groupby', nargs='+',
                               choices=nodesgroupby).completer = nodes_group_completer
         p_lnodes.add_argument('-N', '--nodes', nargs='+', type=namecheck(NODE_NAME),
-                              help='Filter by list of nodes').completer = NodeCommands.completer
+                              help='Filter by list of nodes').completer = self.node_completer
         p_lnodes.set_defaults(func=self.list)
 
         # list netinterface
@@ -164,7 +161,7 @@ class NodeCommands(Commands):
         p_lnetif.add_argument(
             'node_name',
             help='Node name for which to print the net interfaces'
-        ).completer = NodeCommands.completer
+        ).completer = self.node_completer
         p_lnetif.set_defaults(func=self.list_netinterfaces)
 
         # show properties
@@ -175,7 +172,7 @@ class NodeCommands(Commands):
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'node_name',
-            help="Node for which to print the properties").completer = NodeCommands.completer
+            help="Node for which to print the properties").completer = self.node_completer
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
@@ -188,7 +185,7 @@ class NodeCommands(Commands):
         # p_setp.add_argument(
         #     'node_name',
         #     help="Node for which to set the property"
-        # ).completer = NodeCommands.completer
+        # ).completer = self.node_completer
         # Commands.add_parser_keyvalue(p_setp, "node")
         # p_setp.set_defaults(func=NodeCommands.set_props)
 
@@ -201,7 +198,7 @@ class NodeCommands(Commands):
         p_setauxp.add_argument(
             'node_name',
             help="Node for which to set the property"
-        ).completer = NodeCommands.completer
+        ).completer = self.node_completer
         Commands.add_parser_keyvalue(p_setauxp)
         p_setauxp.set_defaults(func=self.set_prop_aux)
 
@@ -245,14 +242,6 @@ class NodeCommands(Commands):
                 tbl.show()
 
         return ExitCode.OK
-
-    @staticmethod
-    def find_node(proto_node_list, node_name):
-        if proto_node_list:
-            for n in proto_node_list.nodes:
-                if n.name == node_name:
-                    return n
-        return None
 
     def list_netinterfaces(self, args):
         lstnodes = self._linstor.node_list()
@@ -325,34 +314,3 @@ class NodeCommands(Commands):
         # execute delete netinterfaces and flatten result list
         replies = [x for subx in args.interface_name for x in self._linstor.netinterface_delete(args.node_name, subx)]
         return self.handle_replies(args, replies)
-
-    @staticmethod
-    @completer_communication
-    def completer(cc, prefix, **kwargs):
-        possible = set()
-        lstmsg = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode())
-
-        if lstmsg:
-            for node in lstmsg.nodes:
-                possible.add(node.name)
-
-            if prefix:
-                return [node for node in possible if node.startswith(prefix)]
-
-        return possible
-
-    @staticmethod
-    @completer_communication
-    def completer_netif(cc, prefix, **kwargs):
-        possible = set()
-        lstmsg = Commands._get_list_message(cc, API_LST_NODE, MsgLstNode())
-
-        node = NodeCommands.find_node(lstmsg, kwargs['parsed_args'].node_name)
-        if node:
-            for netif in node.net_interfaces:
-                possible.add(netif.name)
-
-            if prefix:
-                return [netif for netif in possible if netif.startswith(prefix)]
-
-        return possible

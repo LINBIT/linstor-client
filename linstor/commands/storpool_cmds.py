@@ -1,10 +1,7 @@
 import linstor
-from linstor.proto.MsgLstStorPool_pb2 import MsgLstStorPool
-from linstor.commcontroller import completer_communication
-from linstor.commands import Commands, NodeCommands
+from linstor.commands import Commands
 from linstor.utils import namecheck
 from linstor.sharedconsts import (
-    API_LST_STOR_POOL,
     KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
 )
 from linstor.consts import NODE_NAME, STORPOOL_NAME, ExitCode
@@ -24,7 +21,7 @@ class StoragePoolCommands(Commands):
         p_new_storpool.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
-            help='Name of the node for the new storage pool').completer = NodeCommands.completer
+            help='Name of the node for the new storage pool').completer = self.node_completer
         p_new_storpool.add_argument(
             'driver',
             choices=StoragePoolCommands.driver_completer(""),
@@ -47,11 +44,11 @@ class StoragePoolCommands(Commands):
             help='Unless this option is used, linstor will issue a safety question '
             'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_storpool.add_argument('name',
-                                   help='Name of the storage pool to delete').completer = StoragePoolCommands.completer
+                                   help='Name of the storage pool to delete').completer = self.storage_pool_completer
         p_rm_storpool.add_argument(
             'node_name',
             nargs="+",
-            help='Name of the Node where the storage pool exists.').completer = NodeCommands.completer
+            help='Name of the Node where the storage pool exists.').completer = self.node_completer
         p_rm_storpool.set_defaults(func=self.delete)
 
         # list storpool
@@ -67,7 +64,7 @@ class StoragePoolCommands(Commands):
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
                                  choices=storpoolgroupby).completer = storpool_group_completer
         p_lstorpool.add_argument('-R', '--storpool', nargs='+', type=namecheck(STORPOOL_NAME),
-                                 help='Filter by list of storage pool').completer = StoragePoolCommands.completer
+                                 help='Filter by list of storage pool').completer = self.storage_pool_completer
         p_lstorpool.set_defaults(func=self.list)
 
         # show properties
@@ -78,11 +75,11 @@ class StoragePoolCommands(Commands):
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'storage_pool_name',
-            help="Storage pool for which to print the properties").completer = StoragePoolCommands.completer
+            help="Storage pool for which to print the properties").completer = self.storage_pool_completer
         p_sp.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
-            help='Name of the node for the storage pool').completer = NodeCommands.completer
+            help='Name of the node for the storage pool').completer = self.node_completer
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
@@ -94,11 +91,11 @@ class StoragePoolCommands(Commands):
             'name',
             type=namecheck(STORPOOL_NAME),
             help='Name of the storage pool'
-        ).completer = StoragePoolCommands.completer
+        ).completer = self.storage_pool_completer
         p_setprop.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
-            help='Name of the node for the storage pool').completer = NodeCommands.completer
+            help='Name of the node for the storage pool').completer = self.node_completer
         Commands.add_parser_keyvalue(p_setprop, 'storagepool')
         p_setprop.set_defaults(func=self.set_props)
 
@@ -111,11 +108,11 @@ class StoragePoolCommands(Commands):
             'name',
             type=namecheck(STORPOOL_NAME),
             help='Name of the storage pool'
-        ).completer = StoragePoolCommands.completer
+        ).completer = self.storage_pool_completer
         p_setauxprop.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
-            help='Name of the node for the storage pool').completer = NodeCommands.completer
+            help='Name of the node for the storage pool').completer = self.node_completer
         Commands.add_parser_keyvalue(p_setauxprop)
         p_setauxprop.set_defaults(func=self.set_prop_aux)
 
@@ -184,21 +181,6 @@ class StoragePoolCommands(Commands):
             mod_prop_dict['delete']
         )
         return self.handle_replies(args, replies)
-
-    @staticmethod
-    @completer_communication
-    def completer(cc, prefix, **kwargs):
-        possible = set()
-        lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL, MsgLstStorPool())
-
-        if lstmsg:
-            for storpool in lstmsg.stor_pools:
-                possible.add(storpool.stor_pool_name)
-
-            if prefix:
-                return [res for res in possible if res.startswith(prefix)]
-
-        return possible
 
     @staticmethod
     def driver_completer(prefix, **kwargs):

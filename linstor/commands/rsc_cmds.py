@@ -1,9 +1,5 @@
 import linstor
-from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
-from linstor.commcontroller import completer_communication
-from linstor.commands import (
-    Commands, NodeCommands, StoragePoolDefinitionCommands, ResourceDefinitionCommands
-)
+from linstor.commands import Commands
 from linstor.utils import namecheck, Output, LinstorError
 from linstor.consts import Color, ExitCode, NODE_NAME, RES_NAME, STORPOOL_NAME
 import linstor.sharedconsts as apiconsts
@@ -36,7 +32,7 @@ class ResourceCommands(Commands):
         p_new_res.add_argument(
             '-s', '--storage-pool',
             type=namecheck(STORPOOL_NAME),
-            help="Storage pool name to use.").completer = StoragePoolDefinitionCommands.completer
+            help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_res.add_argument('-d', '--diskless', action="store_true", help='Should the resource be diskless')
         p_new_res.add_argument(
             '--auto-place',
@@ -48,7 +44,7 @@ class ResourceCommands(Commands):
             type=namecheck(RES_NAME),
             nargs='+',
             help='Try to avoid nodes that already have a given resource deployed.'
-        ).completer = ResourceCommands.completer
+        ).completer = self.resource_completer
         p_new_res.add_argument(
             '--do-not-place-with-regex',
             type=str,
@@ -57,12 +53,12 @@ class ResourceCommands(Commands):
         p_new_res.add_argument(
             'resource_definition_name',
             type=namecheck(RES_NAME),
-            help='Name of the resource definition').completer = ResourceDefinitionCommands.completer
+            help='Name of the resource definition').completer = self.resource_dfn_completer
         p_new_res.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
             nargs='?',
-            help='Name of the node to deploy the resource').completer = NodeCommands.completer
+            help='Name of the node to deploy the resource').completer = self.node_completer
         p_new_res.set_defaults(func=self.create)
 
         # remove-resource
@@ -78,10 +74,10 @@ class ResourceCommands(Commands):
                               help='Unless this option is used, linstor will issue a safety question '
                               'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_res.add_argument('name',
-                              help='Name of the resource to delete').completer = ResourceCommands.completer
+                              help='Name of the resource to delete').completer = self.resource_completer
         p_rm_res.add_argument('node_name',
                               nargs="+",
-                              help='Name of the node').completer = NodeCommands.completer
+                              help='Name of the node').completer = self.node_completer
         p_rm_res.set_defaults(func=self.delete)
 
         resgroupby = [x.name for x in ResourceCommands._resource_headers]
@@ -101,12 +97,12 @@ class ResourceCommands(Commands):
             '-r', '--resources',
             nargs='+',
             type=namecheck(RES_NAME),
-            help='Filter by list of resources').completer = ResourceCommands.completer
+            help='Filter by list of resources').completer = self.resource_completer
         p_lreses.add_argument(
             '-n', '--nodes',
             nargs='+',
             type=namecheck(NODE_NAME),
-            help='Filter by list of nodes').completer = NodeCommands.completer
+            help='Filter by list of nodes').completer = self.node_completer
         p_lreses.set_defaults(func=self.list)
 
         # list volumes
@@ -127,10 +123,10 @@ class ResourceCommands(Commands):
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'resource_name',
-            help="Resource name").completer = ResourceCommands.completer
+            help="Resource name").completer = self.resource_completer
         p_sp.add_argument(
             'node_name',
-            help="Node name where the resource is deployed.").completer = NodeCommands.completer
+            help="Node name where the resource is deployed.").completer = self.node_completer
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
@@ -142,11 +138,11 @@ class ResourceCommands(Commands):
             'name',
             type=namecheck(RES_NAME),
             help='Name of the resource'
-        ).completer = ResourceCommands.completer
+        ).completer = self.resource_completer
         p_setprop.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
-            help='Node name where resource is deployed.').completer = NodeCommands.completer
+            help='Node name where resource is deployed.').completer = self.node_completer
         Commands.add_parser_keyvalue(p_setprop, "resource")
         p_setprop.set_defaults(func=self.set_props)
 
@@ -159,11 +155,11 @@ class ResourceCommands(Commands):
             'name',
             type=namecheck(RES_NAME),
             help='Name of the resource'
-        ).completer = ResourceCommands.completer
+        ).completer = self.resource_completer
         p_setauxprop.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
-            help='Node name where resource is deployed.').completer = NodeCommands.completer
+            help='Node name where resource is deployed.').completer = self.node_completer
         Commands.add_parser_keyvalue(p_setauxprop)
         p_setauxprop.set_defaults(func=self.set_prop_aux)
 
@@ -328,22 +324,6 @@ class ResourceCommands(Commands):
         return self.handle_replies(args, replies)
 
     @staticmethod
-    @completer_communication
-    def completer(cc, prefix, **kwargs):
-        possible = set()
-        lstmsg = Commands._get_list_message(cc, apiconsts.API_LST_RSC, MsgLstRsc())
-
-        if lstmsg:
-            for rsc in lstmsg.resources:
-                possible.add(rsc.name)
-
-            if prefix:
-                return [res for res in possible if res.startswith(prefix)]
-
-        return possible
-
-    @staticmethod
-    @completer_communication
-    def completer_volume(cc, prefix, **kwargs):
+    def completer_volume(prefix, **kwargs):
         possible = set()
         return possible

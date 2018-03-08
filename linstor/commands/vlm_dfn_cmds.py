@@ -1,5 +1,5 @@
 import linstor
-from linstor.commands import Commands, ResourceDefinitionCommands
+from linstor.commands import Commands
 from linstor.utils import SizeCalc, approximate_size_string, namecheck, Output
 from linstor.consts import RES_NAME, Color, ExitCode
 from linstor.sharedconsts import (
@@ -30,7 +30,7 @@ class VolumeDefinitionCommands(Commands):
         p_new_vol.add_argument('-s', '--site', default='',
                                help="only consider nodes from this site")
         p_new_vol.add_argument('resource_name', type=namecheck(RES_NAME),
-                               help='Name of an existing resource').completer = ResourceDefinitionCommands.completer
+                               help='Name of an existing resource').completer = self.resource_dfn_completer
         p_new_vol.add_argument(
             'size',
             help='Size of the volume in resource. '
@@ -59,7 +59,7 @@ class VolumeDefinitionCommands(Commands):
                               'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_vol.add_argument('resource_name',
                               help='Resource name of the volume definition'
-                              ).completer = ResourceDefinitionCommands.completer
+                              ).completer = self.resource_dfn_completer
         p_rm_vol.add_argument(
             'volume_nr',
             type=int,
@@ -80,7 +80,7 @@ class VolumeDefinitionCommands(Commands):
         p_lvols.add_argument('-g', '--groupby', nargs='+',
                              choices=volgroupby).completer = vol_group_completer
         p_lvols.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
-                             help='Filter by list of resources').completer = ResourceDefinitionCommands.completer
+                             help='Filter by list of resources').completer = self.resource_dfn_completer
         p_lvols.set_defaults(func=self.list)
 
         # show properties
@@ -91,7 +91,7 @@ class VolumeDefinitionCommands(Commands):
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'resource_name',
-            help="Resource name").completer = ResourceDefinitionCommands.completer
+            help="Resource name").completer = self.resource_dfn_completer
         p_sp.add_argument(
             'volume_nr',
             type=int,
@@ -121,7 +121,7 @@ class VolumeDefinitionCommands(Commands):
             description='Sets properties for the given volume definition.')
         p_setprop.add_argument(
             'resource_name',
-            help="Resource name").completer = ResourceDefinitionCommands.completer
+            help="Resource name").completer = self.resource_dfn_completer
         p_setprop.add_argument(
             'volume_nr',
             type=int,

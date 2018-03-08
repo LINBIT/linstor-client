@@ -1,17 +1,11 @@
-import sys
+import os
 import json
 import linstor
-from linstor.proto.MsgHeader_pb2 import MsgHeader
-from linstor.proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
 from linstor.utils import Output, LinstorError
 from linstor.protobuf_to_dict import protobuf_to_dict
-from linstor.commcontroller import ApiCallResponseError
 import linstor.linstorapi as linstorapi
-from linstor.sharedconsts import (
-    API_REPLY,
-    NAMESPC_AUXILIARY
-)
-from linstor.consts import ExitCode
+from linstor.sharedconsts import NAMESPC_AUXILIARY
+from linstor.consts import ExitCode, KEY_LS_CONTROLLERS
 from linstor.properties import properties
 
 
@@ -127,6 +121,8 @@ class Commands(object):
 
     def __init__(self):
         self._linstor = None  # type: linstorapi.Linstor
+        # _linstor_completer is just here as a cache for completer calls
+        self._linstor_completer = None  # type: linstorapi.Linstor
 
     @classmethod
     def handle_replies(cls, args, replies):
@@ -141,48 +137,6 @@ class Commands(object):
                 rc = current_rc
 
         return rc
-
-    @classmethod
-    def _request_list(cls, cc, api_call, lstMsg):
-        h = MsgHeader()
-
-        h.api_call = api_call
-        h.msg_id = 1
-
-        pbmsgs = cc.sendrec(h)
-
-        h = MsgHeader()
-        h.ParseFromString(pbmsgs[0])
-        if h.api_call != api_call:
-            if h.api_call == API_REPLY:
-                p = MsgApiCallResponse()
-                p.ParseFromString(pbmsgs[1])
-                return p
-            else:
-                cc.unexpected_reply(h)
-                return None
-
-        lstMsg.ParseFromString(pbmsgs[1])
-        return lstMsg
-
-    @classmethod
-    def _get_list_message(cls, cc, api_call, request_msg, args=None):
-        """
-        Sends the given api_call request to the controller connect cc.
-        Checks the result is the expected request_msg and returns it.
-        If a MsgApiCallResponse was received an exception is raised with it
-        that is handled by the @needs_communication wrapper.
-        Or if the machine_readable flag is set, it is printed and None is returned.
-        """
-        lstmsg = Commands._request_list(cc, api_call, request_msg)
-        if isinstance(lstmsg, MsgApiCallResponse):
-            raise ApiCallResponseError(lstmsg)
-
-        if args and args.machine_readable:
-            Commands._print_machine_readable([lstmsg])
-            return None
-
-        return lstmsg
 
     @classmethod
     def _print_machine_readable(cls, data):
@@ -299,6 +253,129 @@ class Commands(object):
 
             return possible
         return completer
+
+    @staticmethod
+    def controller_list(cmdl_args_controllers):
+        cenv = os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + cmdl_args_controllers
+
+        servers = []
+        # add linstor uri scheme
+        for hp in cenv.split(','):
+            if hp:
+                if '://' in hp:
+                    servers.append(hp)
+                else:
+                    servers.append("linstor://" + hp)
+        return servers
+
+    def get_linstorapi(self, **kwargs):
+        if self._linstor:
+            return self._linstor
+
+        if self._linstor_completer:
+            return self._linstor_completer
+
+        cliargs = kwargs['parsed_args']
+        servers = Commands.controller_list(cliargs.controllers)
+        if not servers:
+            return None
+
+        self._linstor_completer = linstorapi.Linstor(servers[0])
+        self._linstor_completer.connect()
+        return self._linstor_completer
+
+    def node_completer(self, prefix, **kwargs):
+        lapi = self.get_linstorapi(**kwargs)
+        possible = set()
+
+        lstmsg = lapi.node_list()
+        if lstmsg:
+            for node in lstmsg.nodes:
+                possible.add(node.name)
+
+            if prefix:
+                return [node for node in possible if node.startswith(prefix)]
+
+        return possible
+
+    @classmethod
+    def find_node(cls, proto_node_list, node_name):
+        if proto_node_list:
+            for n in proto_node_list.nodes:
+                if n.name == node_name:
+                    return n
+        return None
+
+    def netif_completer(self, prefix, **kwargs):
+        lapi = self.get_linstorapi(**kwargs)
+        possible = set()
+        lstmsg = lapi.node_list()
+
+        node = self.find_node(lstmsg, kwargs['parsed_args'].node_name)
+        if node:
+            for netif in node.net_interfaces:
+                possible.add(netif.name)
+
+            if prefix:
+                return [netif for netif in possible if netif.startswith(prefix)]
+
+        return possible
+
+    def storage_pool_dfn_completer(self, prefix, **kwargs):
+        lapi = self.get_linstorapi(**kwargs)
+        possible = set()
+        lstmsg = lapi.storage_pool_dfn_list()
+
+        if lstmsg:
+            for storpool_dfn in lstmsg.stor_pool_dfns:
+                possible.add(storpool_dfn.stor_pool_name)
+
+            if prefix:
+                return [res for res in possible if res.startswith(prefix)]
+
+        return possible
+
+    def storage_pool_completer(self, prefix, **kwargs):
+        lapi = self.get_linstorapi(**kwargs)
+        possible = set()
+        lstmsg = lapi.storage_pool_list()
+
+        if lstmsg:
+            for storpool in lstmsg.stor_pools:
+                possible.add(storpool.stor_pool_name)
+
+            if prefix:
+                return [res for res in possible if res.startswith(prefix)]
+
+        return possible
+
+    def resource_dfn_completer(self, prefix, **kwargs):
+        lapi = self.get_linstorapi(**kwargs)
+        possible = set()
+        lstmsg = lapi.resource_dfn_list()
+
+        if lstmsg:
+            for rsc_dfn in lstmsg.rsc_dfns:
+                possible.add(rsc_dfn.rsc_name)
+
+            if prefix:
+                return [res for res in possible if res.startswith(prefix)]
+
+        return possible
+
+    def resource_completer(self, prefix, **kwargs):
+        lapi = self.get_linstorapi(**kwargs)
+        possible = set()
+        lstmsg = lapi.resource_list()
+
+        if lstmsg:
+            for rsc in lstmsg.resources:
+                possible.add(rsc.name)
+
+            if prefix:
+                return [res for res in possible if res.startswith(prefix)]
+
+        return possible
 
 
 class MiscCommands(Commands):

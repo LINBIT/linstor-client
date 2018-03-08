@@ -1,12 +1,7 @@
 import linstor
-from linstor.proto.MsgLstStorPoolDfn_pb2 import MsgLstStorPoolDfn
-from linstor.commcontroller import completer_communication
 from linstor.commands import Commands
 from linstor.utils import namecheck
 from linstor.consts import ExitCode
-from linstor.sharedconsts import (
-    API_LST_STOR_POOL_DFN
-)
 from linstor.consts import STORPOOL_NAME
 
 
@@ -38,7 +33,7 @@ class StoragePoolDefinitionCommands(Commands):
         p_rm_storpool_dfn.add_argument(
             'name',
             nargs="+",
-            help='Name of the storage pool to delete').completer = StoragePoolDefinitionCommands.completer
+            help='Name of the storage pool to delete').completer = self.storage_pool_dfn_completer
         p_rm_storpool_dfn.set_defaults(func=self.delete)
 
         # list storpool definitions
@@ -56,7 +51,7 @@ class StoragePoolDefinitionCommands(Commands):
         p_lstorpooldfs.add_argument(
             '-R', '--storpool', nargs='+', type=namecheck(STORPOOL_NAME),
             help='Filter by list of storage pool'
-        ).completer = StoragePoolDefinitionCommands.completer
+        ).completer = self.storage_pool_dfn_completer
         p_lstorpooldfs.set_defaults(func=self.list)
 
         # show properties
@@ -68,7 +63,7 @@ class StoragePoolDefinitionCommands(Commands):
         p_sp.add_argument(
             'storage_pool_name',
             help="Storage pool definition for which to print the properties"
-        ).completer = StoragePoolDefinitionCommands.completer
+        ).completer = self.storage_pool_dfn_completer
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
@@ -94,7 +89,7 @@ class StoragePoolDefinitionCommands(Commands):
             'name',
             type=namecheck(STORPOOL_NAME),
             help='Name of the storage pool definition'
-        ).competer = StoragePoolDefinitionCommands.completer
+        ).competer = self.storage_pool_dfn_completer
         Commands.add_parser_keyvalue(p_setauxprop)
         p_setauxprop.set_defaults(func=self.set_prop_aux)
 
@@ -141,18 +136,3 @@ class StoragePoolDefinitionCommands(Commands):
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
         replies = self._linstor.storage_pool_dfn_modify(args.name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
         return self.handle_replies(args, replies)
-
-    @staticmethod
-    @completer_communication
-    def completer(cc, prefix, **kwargs):
-        possible = set()
-        lstmsg = Commands._get_list_message(cc, API_LST_STOR_POOL_DFN, MsgLstStorPoolDfn())
-
-        if lstmsg:
-            for storpool_dfn in lstmsg.stor_pool_dfns:
-                possible.add(storpool_dfn.stor_pool_name)
-
-            if prefix:
-                return [res for res in possible if res.startswith(prefix)]
-
-        return possible

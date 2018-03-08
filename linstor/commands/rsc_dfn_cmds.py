@@ -1,10 +1,7 @@
 import linstor
-from linstor.proto.MsgLstRscDfn_pb2 import MsgLstRscDfn
-from linstor.commcontroller import completer_communication
 from linstor.commands import Commands
 from linstor.utils import rangecheck, namecheck, Output
 from linstor.sharedconsts import (
-    API_LST_RSC_DFN,
     FLAG_DELETE
 )
 from linstor.consts import RES_NAME, Color, ExitCode
@@ -40,7 +37,7 @@ class ResourceDefinitionCommands(Commands):
         p_rm_res_dfn.add_argument(
             'name',
             nargs="+",
-            help='Name of the resource to delete').completer = ResourceDefinitionCommands.completer
+            help='Name of the resource to delete').completer = self.resource_dfn_completer
         p_rm_res_dfn.set_defaults(func=self.delete)
 
         resverbose = ('Port',)
@@ -59,7 +56,7 @@ class ResourceDefinitionCommands(Commands):
         p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
                                choices=resgroupby).completer = res_group_completer
         p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
-                               help='Filter by list of resources').completer = ResourceDefinitionCommands.completer
+                               help='Filter by list of resources').completer = self.resource_dfn_completer
         p_lrscdfs.set_defaults(func=self.list)
 
         # show properties
@@ -71,7 +68,7 @@ class ResourceDefinitionCommands(Commands):
         p_sp.add_argument(
             'resource_name',
             help="Resource definition for which to print the properties"
-        ).completer = ResourceDefinitionCommands.completer
+        ).completer = self.resource_dfn_completer
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
@@ -141,18 +138,3 @@ class ResourceDefinitionCommands(Commands):
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
         replies = self._linstor.resource_dfn_modify(args.name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
         return self.handle_replies(args, replies)
-
-    @staticmethod
-    @completer_communication
-    def completer(cc, prefix, **kwargs):
-        possible = set()
-        lstmsg = Commands._get_list_message(cc, API_LST_RSC_DFN, MsgLstRscDfn())
-
-        if lstmsg:
-            for rsc_dfn in lstmsg.rsc_dfns:
-                possible.add(rsc_dfn.rsc_name)
-
-            if prefix:
-                return [res for res in possible if res.startswith(prefix)]
-
-        return possible

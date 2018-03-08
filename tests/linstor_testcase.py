@@ -10,7 +10,7 @@ import os
 import tarfile
 import subprocess
 import zipfile
-from linstor.commcontroller import ApiCallResponse
+from linstor.linstorapi import ApiCallResponse
 
 
 controller_port = 63374 + sys.version_info[0]

@@ -54,7 +54,7 @@ class DrbdOptions(object):
         sp.add_argument(
             '--resource',
             type=namecheck(RES_NAME),
-            help='Name of the resource to modify').completer = ResourceCommands.completer
+            help='Name of the resource to modify')  # TODO .completer = ResourceCommands.completer
         sp.add_argument(
             '--volume',
             help='Name of the volume to modify').completer = ResourceCommands.completer_volume

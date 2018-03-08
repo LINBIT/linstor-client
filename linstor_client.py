@@ -30,7 +30,6 @@ except ImportError:
 import linstor.argparse.argparse as argparse
 import linstor.argcomplete as argcomplete
 import linstor.linstorapi as linstorapi
-from linstor.commcontroller import CommController
 from linstor.commands import (
     VolumeDefinitionCommands,
     StoragePoolDefinitionCommands,
@@ -60,7 +59,7 @@ class LinStorCLI(object):
     linstor command line client
     """
 
-    interactive=False
+    interactive = False
 
     def __init__(self):
         self._all_commands = None
@@ -229,15 +228,16 @@ class LinStorCLI(object):
 
     def parse_and_execute(self, pargs):
         args = self.parse(pargs)
-        self._linstorapi = linstorapi.Linstor(CommController.controller_list(args.controllers)[0])
-        self._node_commands._linstor = self._linstorapi
-        self._storage_pool_dfn_commands._linstor = self._linstorapi
-        self._storage_pool_commands._linstor = self._linstorapi
-        self._resource_dfn_commands._linstor = self._linstorapi
-        self._volume_dfn_commands._linstor = self._linstorapi
-        self._resource_commands._linstor = self._linstorapi
-        self._misc_commands._linstor = self._linstorapi
-        self._linstorapi.connect()
+        if self._linstorapi is None:
+            self._linstorapi = linstorapi.Linstor(Commands.controller_list(args.controllers)[0])
+            self._node_commands._linstor = self._linstorapi
+            self._storage_pool_dfn_commands._linstor = self._linstorapi
+            self._storage_pool_commands._linstor = self._linstorapi
+            self._resource_dfn_commands._linstor = self._linstorapi
+            self._volume_dfn_commands._linstor = self._linstorapi
+            self._resource_commands._linstor = self._linstorapi
+            self._misc_commands._linstor = self._linstorapi
+            self._linstorapi.connect()
         return args.func(args)
 
     @staticmethod
@@ -410,7 +410,6 @@ class LinStorCLI(object):
             LinStorCLI.interactive = False
         else:
             sys.stderr.write("The client is already running in interactive mode\n")
-
 
     def cmd_help(self, args):
         return self.parse_and_execute([args.command, "-h"])
