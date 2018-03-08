@@ -43,7 +43,8 @@ from linstor.consts import (
     STORPOOL_NAME_MINLEN,
     STORPOOL_NAME_VALID_CHARS,
     STORPOOL_NAME_VALID_INNER_CHARS,
-    Color
+    Color,
+    ExitCode
 )
 
 
@@ -54,17 +55,16 @@ class Output(object):
 
         rc = answer.ret_code
         ret = 0
-        category = ''
         message = answer.message_format
         cause = answer.cause_format
         correction = answer.correction_format
         details = answer.details_format
         if rc & MASK_ERROR == MASK_ERROR:
-            ret = 1
+            ret = ExitCode.API_ERROR
             category = Output.color_str('ERROR:\n', Color.RED, no_color)
         elif rc & MASK_WARN == MASK_WARN:
             if warn_as_error:  # otherwise keep at 0
-                ret = 1
+                ret = ExitCode.API_ERROR
             category = Output.color_str('WARNING:\n', Color.YELLOW, no_color)
         elif rc & MASK_INFO == MASK_INFO:
             category = 'INFO: '
@@ -555,7 +555,7 @@ class SizeCalc(object):
         return int(result)
 
 
-class LinstorError(Exception):
+class LinstorClientError(Exception):
     """
     Linstor exception with a message and exit code information
     """
@@ -566,6 +566,10 @@ class LinstorError(Exception):
     @property
     def exit_code(self):
         return self._exit_code
+
+    @property
+    def message(self):
+        return self._msg
 
     def __str__(self):
         return "Error: {msg}".format(msg=self._msg)

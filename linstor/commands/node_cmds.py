@@ -1,6 +1,6 @@
 import linstor
 from linstor.commands import Commands
-from linstor.utils import Output, rangecheck, namecheck, ip_completer, LinstorError
+from linstor.utils import Output, rangecheck, namecheck, ip_completer, LinstorClientError
 from linstor.consts import NODE_NAME, Color, ExitCode
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
@@ -264,8 +264,8 @@ class NodeCommands(Commands):
                         ])
                     tbl.show()
                 else:
-                    raise LinstorError("Node '{n}' not found on controller.".format(n=args.node_name),
-                                       ExitCode.OBJECT_NOT_FOUND)
+                    raise LinstorClientError("Node '{n}' not found on controller.".format(n=args.node_name),
+                                             ExitCode.OBJECT_NOT_FOUND)
 
         return ExitCode.OK
 
@@ -277,8 +277,8 @@ class NodeCommands(Commands):
         if node:
             result.append(node.props)
         else:
-            raise LinstorError("Node '{n}' not found on controller.".format(n=args.node_name),
-                               ExitCode.OBJECT_NOT_FOUND)
+            raise LinstorClientError("Node '{n}' not found on controller.".format(n=args.node_name),
+                                     ExitCode.OBJECT_NOT_FOUND)
 
         Commands._print_props(result, args)
         return ExitCode.OK

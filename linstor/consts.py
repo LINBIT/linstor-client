@@ -76,6 +76,7 @@ class ExitCode(object):
     CONNECTION_ERROR = 20
     CONNECTION_TIMEOUT = 21
     UNEXPECTED_REPLY = 22
+    API_ERROR = 10
 
 
 class Color(object):

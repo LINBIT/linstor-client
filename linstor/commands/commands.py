@@ -1,7 +1,7 @@
 import os
 import json
 import linstor
-from linstor.utils import Output, LinstorError
+from linstor.utils import Output, LinstorClientError
 from linstor.protobuf_to_dict import protobuf_to_dict
 import linstor.linstorapi as linstorapi
 from linstor.sharedconsts import NAMESPC_AUXILIARY
@@ -126,13 +126,17 @@ class Commands(object):
 
     @classmethod
     def handle_replies(cls, args, replies):
+        rc = ExitCode.OK
         if args and args.machine_readable:
             Commands._print_machine_readable([r.proto_msg for r in replies])
-            return ExitCode.OK
+            return rc
 
-        rc = ExitCode.OK
         for call_resp in replies:
-            current_rc = Output.handle_ret(call_resp.proto_msg, warn_as_error=args.warn_as_error, no_color=args.no_color)
+            current_rc = Output.handle_ret(
+                call_resp.proto_msg,
+                warn_as_error=args.warn_as_error,
+                no_color=args.no_color
+            )
             if current_rc != ExitCode.OK:
                 rc = current_rc
 
@@ -174,7 +178,7 @@ class Commands(object):
         }
         for kv in kv_pairs:
             if '=' not in kv:
-                raise LinstorError(
+                raise LinstorClientError(
                     "KeyValueParseError: Key value '{kv}' pair does not contain a '='".format(kv=kv),
                     ExitCode.ARGPARSE_ERROR
                 )
@@ -231,6 +235,9 @@ class Commands(object):
     @classmethod
     def get_allowed_prop_keys(cls, objname):
         return [x['key'] for x in cls.get_allowed_props(objname)]
+
+    def set_props(self, args):
+        raise NotImplementedError('abstract')
 
     def set_prop_aux(self, args):
         args.key = NAMESPC_AUXILIARY + '/' + args.key
