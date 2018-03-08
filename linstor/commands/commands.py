@@ -352,17 +352,17 @@ class Commands(object):
         )
 
     @classmethod
-    def _print_props(cls, prop_list_map, machine_readable):
+    def _print_props(cls, prop_list_map, args):
         """Print properties in machine or human readable format"""
 
-        if machine_readable:
+        if args.machine_readable:
             d = [[protobuf_to_dict(y) for y in x] for x in prop_list_map]
             s = json.dumps(d, indent=2)
             print(s)
             return None
 
         for prop_map in prop_list_map:
-            tbl = linstor.Table()
+            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("Key")
             tbl.add_column("Value")
             for p in prop_map:
@@ -416,7 +416,7 @@ class MiscCommands(Commands):
         if lstmsg:
             result.append(lstmsg.props)
 
-        Commands._print_props(result, args.machine_readable)
+        Commands._print_props(result, args)
         return ExitCode.OK
 
     def cmd_set_controller_props(self, args):

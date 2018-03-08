@@ -75,6 +75,7 @@ class StoragePoolCommands(Commands):
             Commands.GET_STORAGE_POOL_PROPS,
             aliases=['dspstorpoolprp'],
             description="Prints all properties of the given storage pool.")
+        p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'storage_pool_name',
             help="Storage pool for which to print the properties").completer = StoragePoolCommands.completer
@@ -171,7 +172,7 @@ class StoragePoolCommands(Commands):
                     result.append(stp.props)
                     break
 
-        Commands._print_props(result, args.machine_readable)
+        Commands._print_props(result, args)
         return ExitCode.OK
 
     def set_props(self, args):

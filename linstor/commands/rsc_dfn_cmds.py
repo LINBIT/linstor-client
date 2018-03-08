@@ -67,6 +67,7 @@ class ResourceDefinitionCommands(Commands):
             Commands.GET_RESOURCE_DEF_PROPS,
             aliases=['dsprscdfnprp'],
             description="Prints all properties of the given resource definitions.")
+        p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'resource_name',
             help="Resource definition for which to print the properties"
@@ -133,7 +134,7 @@ class ResourceDefinitionCommands(Commands):
                     result.append(rsc_dfn.rsc_dfn_props)
                     break
 
-        Commands._print_props(result, args.machine_readable)
+        Commands._print_props(result, args)
         return ExitCode.OK
 
     def set_props(self, args):

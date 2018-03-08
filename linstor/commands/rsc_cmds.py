@@ -124,6 +124,7 @@ class ResourceCommands(Commands):
             Commands.GET_RESOURCE_PROPS,
             aliases=['dsprscprp'],
             description="Prints all properties of the given resource.")
+        p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'resource_name',
             help="Resource name").completer = ResourceCommands.completer
@@ -313,7 +314,7 @@ class ResourceCommands(Commands):
                     result.append(rsc.props)
                     break
 
-        Commands._print_props(result, args.machine_readable)
+        Commands._print_props(result, args)
         return ExitCode.OK
 
     def set_props(self, args):

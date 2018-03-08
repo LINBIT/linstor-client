@@ -172,6 +172,7 @@ class NodeCommands(Commands):
             Commands.GET_NODE_PROPS,
             aliases=['dspnodeprp'],
             description="Prints all properties of the given node.")
+        p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'node_name',
             help="Node for which to print the properties").completer = NodeCommands.completer
@@ -290,7 +291,7 @@ class NodeCommands(Commands):
             raise LinstorError("Node '{n}' not found on controller.".format(n=args.node_name),
                                ExitCode.OBJECT_NOT_FOUND)
 
-        Commands._print_props(result, machine_readable=args.machine_readable)
+        Commands._print_props(result, args)
         return ExitCode.OK
 
     def set_props(self, args):

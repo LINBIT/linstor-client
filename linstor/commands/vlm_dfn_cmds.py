@@ -88,6 +88,7 @@ class VolumeDefinitionCommands(Commands):
             Commands.GET_VOLUME_DEF_PROPS,
             aliases=['dspvlmdfnprp'],
             description="Prints all properties of the given volume definition.")
+        p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'resource_name',
             help="Resource name").completer = ResourceDefinitionCommands.completer
@@ -223,7 +224,7 @@ class VolumeDefinitionCommands(Commands):
                         result.append(vlmdfn.vlm_props)
                         break
 
-        Commands._print_props(result, args.machine_readable)
+        Commands._print_props(result, args)
         return ExitCode.OK
 
     def set_props(self, args):
