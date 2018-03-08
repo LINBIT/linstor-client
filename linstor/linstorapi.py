@@ -387,6 +387,14 @@ class LinstorNetClient(threading.Thread):
                 self._cv_sock.wait(1)
             return self._replies.pop(msg_id)
 
+    @staticmethod
+    def _adrtuple2str(tuple):
+        ip = tuple[0]
+        port = tuple[1]
+        s = "[{ip}]".format(ip=ip) if ':' in ip else ip
+        s += ":" + str(port)
+        return s
+
 
 class Linstor(object):
     _storage_pool_key_map = {
@@ -401,6 +409,13 @@ class Linstor(object):
         self._logger = logging.getLogger('Linstor')
 
     def __del__(self):
+        self.disconnect()
+
+    def __enter__(self):
+        self.connect()  # raises exception if error
+        return self
+
+    def __exit__(self, type, value, traceback):
         self.disconnect()
 
     @classmethod
@@ -423,6 +438,7 @@ class Linstor(object):
         self._linstor_client.connect(self._ctrl_host)
         self._linstor_client.daemon = True
         self._linstor_client.start()
+        return True
 
     @property
     def connected(self):
@@ -723,7 +739,6 @@ class Linstor(object):
             msg.key = msg.key[ns_pos + 1:]
 
         return self._send_and_wait(apiconsts.API_SET_CFG_VAL, msg)
-
 
     def shutdown_controller(self):
         msg = MsgControlCtrl()
