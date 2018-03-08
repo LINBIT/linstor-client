@@ -1,11 +1,11 @@
 import unittest
-from linstor import utils
+import linstor.linstorapi as linstorapi
 
 
 class TestUtils(unittest.TestCase):
 
     def _check_host_port(self, host_str, excp_host, excp_port=None):
-        host, port = utils.parse_host(host_str)
+        host, port = linstorapi.LinstorNetClient.parse_host(host_str)
         self.assertEqual(host, excp_host)
         if excp_port is None:
             self.assertIsNone(port)
@@ -36,4 +36,4 @@ class TestUtils(unittest.TestCase):
         self._check_host_port("[2001:0db8:85a3:08d3::0370:7344]:8080", "2001:0db8:85a3:08d3::0370:7344", "8080")
 
         with self.assertRaises(ValueError):
-            utils.parse_host("[::1")
+            linstorapi.LinstorNetClient.parse_host("[::1")

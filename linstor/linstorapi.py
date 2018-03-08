@@ -64,7 +64,6 @@ from linstor.proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
 from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
 from linstor.proto.MsgControlCtrl_pb2 import MsgControlCtrl
 import linstor.sharedconsts as apiconsts
-import linstor.utils as utils
 
 
 logging.basicConfig(level=logging.WARNING)
@@ -171,6 +170,34 @@ class LinstorNetClient(threading.Thread):
 
     def __del__(self):
         self.disconnect()
+
+    @classmethod
+    def parse_host(cls, host_str):
+        """
+        Tries to parse an ipv4, ipv6 or host address.
+
+        Args:
+            host_str (str): host/ip string
+        Returns:
+          Tuple(str, str): a tuple with the ip/host and port
+        """
+        if not host_str:
+            return host_str, None
+
+        if host_str[0] == '[':
+            # ipv6 with port
+            brace_close_pos = host_str.rfind(']')
+            if brace_close_pos == -1:
+                raise ValueError("No closing brace found in '{s}'".format(s=host_str))
+
+            host_ipv6 = host_str[:brace_close_pos + 1].strip('[]')
+            port_ipv6 = host_str[brace_close_pos + 2:]
+            return host_ipv6, port_ipv6 if port_ipv6 else None
+
+        if host_str.count(':') == 1:
+            return host_str.split(':')
+
+        return host_str, None
 
     @classmethod
     def _split_proto_msgs(cls, payload):
@@ -282,7 +309,7 @@ class LinstorNetClient(threading.Thread):
             if not url.scheme.startswith('linstor'):
                 raise LinstorError("Unknown uri scheme '{sc}' in '{uri}'.".format(sc=url.scheme, uri=server))
 
-            host, port = utils.parse_host(url.netloc)
+            host, port = self.parse_host(url.netloc)
             if not port:
                 port = apiconsts.DFLT_CTRL_PORT_SSL if url.scheme == 'linstor+ssl' else apiconsts.DFLT_CTRL_PORT_PLAIN
             self._socket = socket.create_connection((host, port), timeout=self._timeout)
