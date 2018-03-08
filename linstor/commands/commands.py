@@ -3,15 +3,12 @@ import json
 import linstor
 from linstor.proto.MsgHeader_pb2 import MsgHeader
 from linstor.proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
-from linstor.proto.MsgControlCtrl_pb2 import MsgControlCtrl
-from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
-from linstor.proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
 from linstor.utils import Output, LinstorError
 from linstor.protobuf_to_dict import protobuf_to_dict
-from linstor.commcontroller import ApiCallResponseError, need_communication
+from linstor.commcontroller import ApiCallResponseError
 import linstor.linstorapi as linstorapi
 from linstor.sharedconsts import (
-    API_REPLY, API_CMD_SHUTDOWN, API_CONTROL_CTRL, API_LST_CFG_VAL, API_SET_CFG_VAL,
+    API_REPLY,
     NAMESPC_AUXILIARY
 )
 from linstor.consts import ExitCode
@@ -146,79 +143,6 @@ class Commands(object):
         return rc
 
     @classmethod
-    def _send_msg(cls, cc, api_call, msg, args=None):
-        """
-        Creates and sends a valid linstor message.
-        A header is created with the given api_call and the given payload message,
-        then the message is send and a reply message is expected and waited for.
-
-        :param linstor.commcontroller.CommController cc: CommController object for sending and retrieving
-        :param str api_call: Type of the api call.
-        :param msg: a finished protobuf message
-        :param args: argparse args object that decides if machine readable output is printed
-        :return: a list of received responses
-        """
-        h = MsgHeader()
-        h.api_call = api_call
-        h.msg_id = 1
-
-        responses = cc.send_and_expect_reply(h, msg)
-
-        if args and args.machine_readable:
-            Commands._print_machine_readable([r.proto_msg for r in responses])
-            return None
-
-        return responses
-
-    @classmethod
-    def _send_msg_without_output(cls, cc, api_call, msg):
-        """
-        Use this method if you call it multiple times and handle machine readable output later at once.
-        :param cc: CommunicationController to use
-        :param api_call: api call constant
-        :param msg: proto msg payload to send
-        :return: a list of ApiCallResponses
-        """
-        h = MsgHeader()
-        h.api_call = api_call
-        h.msg_id = 1
-
-        responses = cc.send_and_expect_reply(h, msg)
-
-        return responses
-
-    @classmethod
-    def _delete(cls, cc, api_call, del_msgs):
-        h = MsgHeader()
-        h.api_call = api_call
-        h.msg_id = 1
-
-        api_responses = []
-        for msg in del_msgs:
-            p = cc.send_and_expect_reply(h, msg)
-
-            # exit if delete wasn't successful?
-            api_responses.append(p)
-
-            h.msg_id += 1
-
-        return api_responses
-
-    @classmethod
-    def _output_or_flatten(cls, args, api_responses):
-        flat_responses = [x for subx in api_responses for x in subx]
-        if args and args.machine_readable:
-            Commands._print_machine_readable([x.proto_msg for x in flat_responses])
-            return None
-        return flat_responses
-
-    @classmethod
-    def _delete_and_output(cls, cc, args, api_call, del_msgs):
-        api_responses = Commands._delete(cc, api_call, del_msgs)  # type: List[List[linstor.commcontroller.ApiCallResponse]]
-
-        return Commands._output_or_flatten(args, api_responses)
-
-    @classmethod
     def _request_list(cls, cc, api_call, lstMsg):
         h = MsgHeader()
 
@@ -308,29 +232,6 @@ class Commands(object):
         return parsed
 
     @classmethod
-    def fill_override_prop(cls, msg, key, value):
-        """
-        Pack a key value pair into a list and call fill_override_props
-        :param msg:
-        :param key:
-        :param value:
-        :return:
-        """
-        return cls.fill_override_props(msg, [key + '=' + value])
-
-    @classmethod
-    def fill_override_props(cls, msg, kv_pairs):
-        """Fill override props and deletes in a modify protobuf message"""
-        mod_prop_dict = Commands.parse_key_value_pairs(kv_pairs)
-        msg.delete_prop_keys.extend(mod_prop_dict['delete'])
-        for kv in mod_prop_dict['pairs']:
-            lin_kv = msg.override_props.add()
-            lin_kv.key = kv[0]
-            lin_kv.value = kv[1]
-
-        return msg
-
-    @classmethod
     def add_parser_keyvalue(cls, parser, property_object=None):
         if property_object:
             props = Commands.get_allowed_props(property_object)
@@ -376,12 +277,6 @@ class Commands(object):
     @classmethod
     def get_allowed_prop_keys(cls, objname):
         return [x['key'] for x in cls.get_allowed_props(objname)]
-
-    @classmethod
-    def _get_prop(cls, prop_map, key):
-        """Finds a property in the given property map"""
-        prop = next((x for x in prop_map if x.key == key), None)
-        return prop.value if prop else None
 
     def set_prop_aux(self, args):
         args.key = NAMESPC_AUXILIARY + '/' + args.key
