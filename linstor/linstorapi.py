@@ -318,7 +318,10 @@ class LinstorNetClient(threading.Thread):
                                 self._replies[hdr.msg_id] = replies
                                 self._cv_sock.notifyAll()
                         else:
-                            self._logger.error("Unknown message reply: " + hdr.api_call)
+                            self._logger.error("Unknown linstor api message reply: " + hdr.api_call)
+                            self.disconnect()
+                            with self._cv_sock:
+                                self._cv_sock.notifyAll()
 
     @property
     def connected(self):
