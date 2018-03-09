@@ -73,6 +73,10 @@ logging.basicConfig(level=logging.WARNING)
 
 
 class AtomicInt(object):
+    """
+    This is a thread-safe integer type for incrementing, mostly reassembling modern atomic types,
+    but with the overhead of a lock.
+    """
     def __init__(self, init=0):
         self.val = init
         self.lock = threading.RLock()
@@ -117,6 +121,10 @@ class LinstorNetworkError(LinstorError):
 
 
 class ApiCallResponse(object):
+    """
+    This is a wrapper class for a proto MsgApiCallResponse.
+    It provides some additional methods for easier state checking of the ApiCallResponse.
+    """
     def __init__(self, proto_response):
         self._proto_msg = proto_response  # type: MsgApiCallResponse
 
@@ -207,7 +215,8 @@ class _LinstorNetClient(threading.Thread):
         """
         Splits a linstor payload into each raw proto buf message
         :param bytes payload: payload data
-        :return list: list of raw proto buf messages
+        :return: list of raw proto buf messages
+        :rtype: list
         """
         # split payload, just a list of pbs, the receiver has to deal with them
         pb_msgs = []
@@ -252,6 +261,13 @@ class _LinstorNetClient(threading.Thread):
         return msg
 
     def _parse_api_version(self, data):
+        """
+        Parses data as a MsgApiVersion and checks if we support the api version.
+
+        :param bytes data: byte data containing the MsgApiVersion message
+        :return: True if parsed correctly and version supported
+        :raises LinstorError: if the parsed api version is not supported
+        """
         msg = self._parse_proto_msg(MsgApiVersion, data)
         if self._api_version is None:
             self._api_version = msg.version
@@ -267,7 +283,8 @@ class _LinstorNetClient(threading.Thread):
     @classmethod
     def _parse_payload_length(cls, header):
         """
-        Parses the payload length from a linstor header
+        Parses the payload length from a linstor header.
+
         :param bytes header: 16 bytes header data
         :return: Length of the payload
         """
@@ -279,6 +296,7 @@ class _LinstorNetClient(threading.Thread):
     def _read_api_version_blocking(self):
         """
         Receives a api version message with blocking reads from the _socket and parses/checks it.
+
         :return: True
         """
         api_msg_data = self._socket.recv(self.IO_SIZE)
@@ -299,6 +317,14 @@ class _LinstorNetClient(threading.Thread):
         return True
 
     def fetch_errors(self):
+        """
+        Get all errors that are currently on this object, list will be cleared.
+        This error list will contain all errors that happened within the select thread.
+        Usually you want this list after your socket was closed unexpected.
+
+        :return: A list of LinstorErrors
+        :rtype: list[LinstorError]
+        """
         errors = self._errors
         self._errors = []
         return errors
@@ -307,6 +333,7 @@ class _LinstorNetClient(threading.Thread):
         """
         Connects to the given server.
         The url has to be given in the linstor uri scheme. either linstor:// or linstor+ssl://
+
         :param str server: uri to the server
         :return: True if connected, else raises an LinstorError
         :raise LinstorError: if connection fails.
@@ -340,13 +367,29 @@ class _LinstorNetClient(threading.Thread):
             raise LinstorNetworkError("Unable connecting to {hp}: {err}".format(hp=server, err=err))
 
     def disconnect(self):
+        """
+        Disconnects your current connection.
+
+        :return: True if socket was connected, else False
+        """
         with self._slock:
             if self._socket:
                 self._logger.debug("disconnecting")
                 self._socket.close()
                 self._socket = None
+                return True
+        return False
 
     def run(self):
+        """
+        Runs the main select loop that handles incomming messages, parses them and
+        puts them on the self._replies map.
+        Errors that happen within this thread will be collected on the self._errors list
+        and can be fetched with the fetch_errors() methods.
+
+        :return:
+        """
+        self._errors = []
         package = bytes()  # current package data
         exp_pkg_len = 0  # expected package length
 
@@ -431,23 +474,28 @@ class _LinstorNetClient(threading.Thread):
 
     @property
     def connected(self):
+        """Check if the socket is currently connected."""
         return self._socket is not None
 
     def send_msg(self, api_call_type, msg=None):
         """
         Sends a single or just a header message.
+
         :param str api_call_type: api call type that is set in the header message.
         :param msg: Message to be sent, if None only the header will be sent.
-        :return int: Message id of the message for wait_for_result()
+        :return: Message id of the message for wait_for_result()
+        :rtype: int
         """
         return self.send_msgs(api_call_type, [msg] if msg else None)
 
     def send_msgs(self, api_call_type, msgs=None):
         """
         Sends a list of message or just a header.
+
         :param str api_call_type: api call type that is set in the header message.
         :param list msgs: List of message to be sent, if None only the header will be sent.
-        :return int: Message id of the message for wait_for_result()
+        :return: Message id of the message for wait_for_result()
+        :rtype: int
         """
         hdr_msg = MsgHeader()
         hdr_msg.api_call = api_call_type
@@ -488,6 +536,7 @@ class _LinstorNetClient(threading.Thread):
     def wait_for_result(self, msg_id):
         """
         This method blocks and waits for an answer to the given msg_id.
+
         :param int msg_id:
         :return: A list with the replies.
         """
@@ -513,6 +562,13 @@ class Linstor(object):
         'LvmThin': apiconsts.KEY_STOR_POOL_THIN_POOL,
         'Zfs': apiconsts.KEY_STOR_POOL_ZPOOL
     }
+
+    _node_types = [
+        apiconsts.VAL_NODE_TYPE_CTRL,
+        apiconsts.VAL_NODE_TYPE_AUX,
+        apiconsts.VAL_NODE_TYPE_CMBD,
+        apiconsts.VAL_NODE_TYPE_STLT
+    ]
 
     def __init__(self, ctrl_host):
         self._ctrl_host = ctrl_host
@@ -546,6 +602,11 @@ class Linstor(object):
         return replies
 
     def connect(self):
+        """
+        Connects the internal linstor network client.
+
+        :return: True
+        """
         self._linstor_client.connect(self._ctrl_host)
         self._linstor_client.daemon = True
         self._linstor_client.start()
@@ -553,10 +614,20 @@ class Linstor(object):
 
     @property
     def connected(self):
+        """
+        Checks if the Linstor object is connect to a controller.
+
+        :return: True if connected, else False.
+        """
         return self._linstor_client.connected
 
     def disconnect(self):
-        self._linstor_client.disconnect()
+        """
+        Disconnects the current connection.
+
+        :return: True if the object was connected else False.
+        """
+        return self._linstor_client.disconnect()
 
     def node_create(
             self,
@@ -567,9 +638,25 @@ class Linstor(object):
             port=None,
             netif_name='default'
     ):
+        """
+        Creates a node on the controller.
+
+        :param str node_name: Name of the node.
+        :param str node_type: Node type of the new node
+        :param str ip: IP address to use for the nodes default netinterface.
+        :param str com_type: Communication type of the node.
+        :param int port: Port number of the node.
+        :param str netif_name: Netinterface name that is created.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgCrtNode()
 
         msg.node.name = node_name
+        if node_type not in self._node_types:
+            raise LinstorError(
+                "Unknown node type '{nt}'. Known types are: {kt}".format(nt=node_type, kt=", ".join(self._node_types))
+            )
         msg.node.type = node_type
         netif = msg.node.net_interfaces.add()
         netif.name = netif_name
@@ -590,6 +677,15 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_CRT_NODE, msg)
 
     def node_modify(self, node_name, property_dict, delete_props=None):
+        """
+        Modify the properties of a given node.
+
+        :param str node_name: Name of the node to modify.
+        :param dict[str, str] property_dict: Dict containing key, value pairs for new values.
+        :param list[str] delete_props: List of properties to delete
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgModNode()
         msg.node_name = node_name
 
@@ -598,12 +694,30 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_MOD_NODE, msg)
 
     def node_delete(self, node_name):
+        """
+        Deletes the given node on the controller.
+
+        :param str node_name: Node name to delete.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgDelNode()
         msg.node_name = node_name
 
         return self._send_and_wait(apiconsts.API_DEL_NODE, msg)
 
     def netinterface_create(self, node_name, interface_name, ip, port=None, com_type=None):
+        """
+        Create a netinterface for a given node.
+
+        :param str node_name: Name of the node to add the interface.
+        :param str interface_name: Name of the new interface.
+        :param str ip: IP address of the interface.
+        :param int port: Port of the interface
+        :param str com_type: Communication type to use on the interface.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgCrtNetInterface()
         msg.node_name = node_name
 
@@ -617,6 +731,17 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_CRT_NET_IF, msg)
 
     def netinterface_modify(self, node_name, interface_name, ip, port=None, com_type=None):
+        """
+        Modify a netinterface on the given node.
+
+        :param str node_name: Name of the node.
+        :param str interface_name: Name of the netinterface to modify.
+        :param str ip: New IP address of the netinterface
+        :param int port: New Port of the netinterface
+        :param str com_type: New communication type of the netinterface
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgModNetInterface()
 
         msg.node_name = node_name
@@ -630,6 +755,14 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_MOD_NET_IF, msg)
 
     def netinterface_delete(self, node_name, interface_name):
+        """
+        Deletes a netinterface on the given node.
+
+        :param str node_name: Name of the node.
+        :param str interface_name: Name of the netinterface to delete.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgDelNetInterface()
         msg.node_name = node_name
         msg.net_if_name = interface_name
@@ -637,16 +770,37 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_DEL_NET_IF, msg)
 
     def node_list(self):
+        """
+        Request a list of all nodes known to the controller.
+        :return: A MsgLstNode proto message containing all information.
+        :rtype: list
+        """
         replies = self._send_and_wait(apiconsts.API_LST_NODE)
         return replies[0] if replies else []
 
     def storage_pool_dfn_create(self, name):
+        """
+        Creates a new storage pool definition on the controller.
+
+        :param str name: Storage pool definition name.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgCrtStorPoolDfn()
         msg.stor_pool_dfn.stor_pool_name = name
 
         return self._send_and_wait(apiconsts.API_CRT_STOR_POOL_DFN, msg)
 
     def storage_pool_dfn_modify(self, name, property_dict, delete_props=None):
+        """
+        Modify properties of a given storage pool definition.
+
+        :param str name: Storage pool definition name to modify
+        :param dict[str, str] property_dict: Dict containing key, value pairs for new values.
+        :param list[str] delete_props: List of properties to delete
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgModStorPoolDfn()
         msg.stor_pool_name = name
 
@@ -655,25 +809,59 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_MOD_STOR_POOL_DFN, msg)
 
     def storage_pool_dfn_delete(self, name):
+        """
+        Delete a given storage pool definition.
+
+        :param str name: Storage pool definition name to delete.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgDelStorPoolDfn()
         msg.stor_pool_name = name
 
         return self._send_and_wait(apiconsts.API_DEL_STOR_POOL_DFN, msg)
 
     def storage_pool_dfn_list(self):
+        """
+        Request a list of all storage pool definitions known to the controller.
+
+        :return: A MsgLstStorPoolDfn proto message containing all information.
+        :rtype: list
+        """
         replies = self._send_and_wait(apiconsts.API_LST_STOR_POOL_DFN)
         return replies[0] if replies else []
 
     @classmethod
     def get_driver_key(cls, driver_name):
+        """
+        Returns the correct storage pool driver property key, for the given driver name
+
+        :param str driver_name: Driver name e.g. [LvmDriver, LvmThinDriver, ZfsDriver]
+        :return: The correct storage driver property key
+        :rtype: str
+        """
         return apiconsts.NAMESPC_STORAGE_DRIVER + '/' + cls._storage_pool_key_map[driver_name[:-len('Driver')]]
 
     def storage_pool_create(self, node_name, storage_pool_name, storage_driver, driver_pool_name):
+        """
+        Creates a new storage pool on the given node.
+        If there doesn't yet exist a storage pool definition the controller will implicitly create one.
+
+        :param str node_name: Node on which to create the storage pool.
+        :param str storage_pool_name: Name of the storage pool.
+        :param str storage_driver: Storage driver to use.
+        :param str driver_pool_name: Name of the pool the storage driver should use on the node.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgCrtStorPool()
         msg.stor_pool.stor_pool_name = storage_pool_name
         msg.stor_pool.node_name = node_name
 
-        assert(storage_driver in self._storage_pool_key_map.keys())
+        if storage_driver not in self._storage_pool_key_map.keys():
+            raise LinstorError("Unknown storage driver '{drv}', known drivers: {kd}".format(
+                drv=storage_driver, kd=", ".join(self._storage_pool_key_map.keys()))
+            )
 
         msg.stor_pool.driver = '{driver}Driver'.format(driver=storage_driver)
 
@@ -685,6 +873,16 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_CRT_STOR_POOL, msg)
 
     def storage_pool_modify(self, node_name, storage_pool_name, property_dict, delete_props=None):
+        """
+        Modify properties of a given storage pool on the given node.
+
+        :param str node_name: Node on which the storage pool resides.
+        :param str storage_pool_name: Name of the storage pool.
+        :param dict[str, str] property_dict: Dict containing key, value pairs for new values.
+        :param list[str] delete_props: List of properties to delete
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgModStorPool()
         msg.node_name = node_name
         msg.stor_pool_name = storage_pool_name
@@ -694,6 +892,14 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_MOD_STOR_POOL, msg)
 
     def storage_pool_delete(self, node_name, storage_pool_name):
+        """
+        Deletes a storage pool on the given node.
+
+        :param str node_name: Node on which the storage pool resides.
+        :param str storage_pool_name: Name of the storage pool.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgDelStorPool()
         msg.node_name = node_name
         msg.stor_pool_name = storage_pool_name
@@ -701,10 +907,24 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_DEL_STOR_POOL, msg)
 
     def storage_pool_list(self):
+        """
+        Request a list of all storage pool known to the controller.
+
+        :return: A MsgLstStorPool proto message containing all information.
+        :rtype: list
+        """
         replies = self._send_and_wait(apiconsts.API_LST_STOR_POOL)
         return replies[0] if replies else []
 
     def resource_dfn_create(self, name, port=None):
+        """
+        Creates a resource definition.
+
+        :param str name: Name of the new resource definition.
+        :param int port: Port the resource definition should use.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgCrtRscDfn()
         msg.rsc_dfn.rsc_name = name
         if port is not None:
@@ -714,6 +934,15 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_CRT_RSC_DFN, msg)
 
     def resource_dfn_modify(self, name, property_dict, delete_props=None):
+        """
+        Modify properties of the given resource definition.
+
+        :param str name: Name of the resource definition to modify.
+        :param dict[str, str] property_dict: Dict containing key, value pairs for new values.
+        :param list[str] delete_props: List of properties to delete
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgModRscDfn()
         msg.rsc_name = name
 
@@ -722,23 +951,38 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_MOD_RSC_DFN, msg)
 
     def resource_dfn_delete(self, name):
+        """
+        Delete a given resource definition.
+
+        :param str name: Resource definition name to delete.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgDelRscDfn()
         msg.rsc_name = name
 
         return self._send_and_wait(apiconsts.API_DEL_RSC_DFN, msg)
 
     def resource_dfn_list(self):
+        """
+        Request a list of all resource definitions known to the controller.
+
+        :return: A MsgLstRscDfn proto message containing all information.
+        :rtype: list
+        """
         replies = self._send_and_wait(apiconsts.API_LST_RSC_DFN)
         return replies[0] if replies else []
 
     def volume_dfn_create(self, rsc_name, size, volume_nr=None, minor_nr=None):
         """
         Create a new volume definition on the controller.
+
         :param str rsc_name: Name of the resource definition it is linked to.
         :param int size: Size of the volume definition in kilo bytes.
-        :param int volume_nr:
-        :param int minor_nr:
-        :return: Replies of the api call.
+        :param int volume_nr: Volume number to use.
+        :param int minor_nr: Minor number to use.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
         """
         msg = MsgCrtVlmDfn()
         msg.rsc_name = rsc_name
@@ -754,6 +998,16 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_CRT_VLM_DFN, msg)
 
     def volume_dfn_modify(self, rsc_name, volume_nr, property_dict, delete_props=None):
+        """
+        Modify properties of the given volume definition.
+
+        :param str rsc_name: Name of the resource definition.
+        :param int volume_nr: Volume number of the volume definition.
+        :param dict[str, str] property_dict: Dict containing key, value pairs for new values.
+        :param list[str] delete_props: List of properties to delete
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgModVlmDfn()
         msg.rsc_name = rsc_name
         msg.vlm_nr = volume_nr
@@ -763,6 +1017,14 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_MOD_VLM_DFN, msg)
 
     def volume_dfn_delete(self, rsc_name, volume_nr):
+        """
+        Delete a given volume definition.
+
+        :param str rsc_name: Resource definition name of the volume definition.
+        :param volume_nr: Volume number.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgDelVlmDfn()
         msg.rsc_name = rsc_name
         msg.vlm_nr = volume_nr
@@ -770,6 +1032,15 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_DEL_VLM_DFN, msg)
 
     def resource_create(self, node_name, rsc_name, diskless=False, storage_pool=None):
+        """
+        Creates a new resource on the given node.
+
+        :param str node_name:
+        :param str rsc_name:
+        :param bool diskless: Should the resource be diskless
+        :param storage_pool:
+        :return:
+        """
         msg = MsgCrtRsc()
         msg.rsc.name = rsc_name
         msg.rsc.node_name = node_name
@@ -801,7 +1072,8 @@ class Linstor(object):
         :param str storage_pool: Storage pool to use
         :param list[str] do_not_place_with: Do not place with resource names in this list
         :param str do_not_place_with_regex: A regex string that rules out resources
-        :return: list of replies from the api call
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
         """
         msg = MsgAutoPlaceRsc()
         msg.rsc_name = rsc_name
@@ -817,6 +1089,16 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_AUTO_PLACE_RSC, msg)
 
     def resource_modify(self, node_name, rsc_name, property_dict, delete_props=None):
+        """
+        Modify properties of a given resource.
+
+        :param str node_name: Node name where the resource is deployed.
+        :param str rsc_name: Name of the resource.
+        :param dict[str, str] property_dict: Dict containing key, value pairs for new values.
+        :param list[str] delete_props: List of properties to delete
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgModRsc()
         msg.node_name = node_name
         msg.rsc_name = rsc_name
@@ -826,6 +1108,14 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_MOD_RSC, msg)
 
     def resource_delete(self, node_name, rsc_name):
+        """
+        Deletes a given resource on the given node.
+
+        :param str node_name: Name of the node where the resource is deployed.
+        :param str rsc_name: Name of the resource.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgDelRsc()
         msg.node_name = node_name
         msg.rsc_name = rsc_name
@@ -833,14 +1123,34 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_DEL_RSC, msg)
 
     def resource_list(self):
+        """
+        Request a list of all resources known to the controller.
+
+        :return: A MsgLstRsc proto message containing all information.
+        :rtype: list
+        """
         replies = self._send_and_wait(apiconsts.API_LST_RSC)
         return replies[0] if replies else []
 
     def controller_props(self):
+        """
+        Request a list of all controller properties.
+
+        :return: A MsgLstCtrlCfgProps proto message containing all controller props.
+        :rtype: list
+        """
         replies = self._send_and_wait(apiconsts.API_LST_CFG_VAL)
         return replies[0] if replies else []
 
     def controller_set_prop(self, key, value):
+        """
+        Sets a property on the controller.
+
+        :param str key: Key of the property.
+        :param str value:  New Value of the property.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgSetCtrlCfgProp()
         ns_pos = key.rfind('/')
         msg.key = key
@@ -852,6 +1162,12 @@ class Linstor(object):
         return self._send_and_wait(apiconsts.API_SET_CFG_VAL, msg)
 
     def shutdown_controller(self):
+        """
+        Sends a shutdown command to the controller.
+
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg = MsgControlCtrl()
         msg.command = apiconsts.API_CMD_SHUTDOWN
         return self._send_and_wait(apiconsts.API_CONTROL_CTRL, msg)
@@ -859,11 +1175,20 @@ class Linstor(object):
     def ping(self):
         """
         Sends a ping message to the controller.
-        :return int: Message id used for this message
+
+        :return: Message id used for this message
+        :rtype: int
         """
         return self._linstor_client.send_msg(apiconsts.API_PING)
 
     def wait_for_message(self, msg_id):
+        """
+        Wait for a message from the controller.
+
+        :param int msg_id: Message id to wait for.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         return self._linstor_client.wait_for_result(msg_id)
 
 
@@ -873,12 +1198,13 @@ if __name__ == "__main__":
     id = lin.ping()
     print(id)
     lin.wait_for_message(id)
+
     #print(lin.node_create('testnode', apiconsts.VAL_NODE_TYPE_STLT, '10.0.0.1'))
-    # for x in range(1, 20):
-    #     print(lin.node_create('testnode' + str(x), apiconsts.VAL_NODE_TYPE_STLT, '10.0.0.' + str(x)))
-    #
-    # for x in range(1, 20):
-    #     print(lin.node_delete('testnode' + str(x)))
+    for x in range(1, 20):
+        print(lin.node_create('testnode' + str(x), apiconsts.VAL_NODE_TYPE_STLT, '10.0.0.' + str(x)))
+
+    for x in range(1, 20):
+        print(lin.node_delete('testnode' + str(x)))
     # replies = lin.storage_pool_list()
     # print(replies)
     # print(lin.list_nodes())
