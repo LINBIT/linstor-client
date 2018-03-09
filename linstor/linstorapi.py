@@ -382,7 +382,7 @@ class _LinstorNetClient(threading.Thread):
 
     def run(self):
         """
-        Runs the main select loop that handles incomming messages, parses them and
+        Runs the main select loop that handles incoming messages, parses them and
         puts them on the self._replies map.
         Errors that happen within this thread will be collected on the self._errors list
         and can be fetched with the fetch_errors() methods.
@@ -418,7 +418,7 @@ class _LinstorNetClient(threading.Thread):
 
                     if len(read) == 0:
                         self._logger.debug(
-                            "No data from {hp}, closing connectiong".format(
+                            "No data from {hp}, closing connection".format(
                                 hp=self._adrtuple2str(self._socket.getpeername())))
                         self._socket.close()
                         self._socket = None
@@ -571,6 +571,13 @@ class Linstor(object):
     ]
 
     def __init__(self, ctrl_host):
+        """
+        Constructs a Linstor api object.
+        The controller host address has to be specified as linstor url.
+        e.g: linstor://localhost linstor+ssl://localhost
+
+        :param str ctrl_host: Linstor uri to the controller e.g. linstor://192.168.0.1
+        """
         self._ctrl_host = ctrl_host
         self._linstor_client = _LinstorNetClient()
         self._logger = logging.getLogger('Linstor')
@@ -597,6 +604,14 @@ class Linstor(object):
         return msg
 
     def _send_and_wait(self, api_call, msg=None):
+        """
+        Helper function that sends a api call[+msg] and waits for the answer from the controller
+
+        :param str api_call: API call identifier
+        :param msg: Proto message to send
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
         msg_id = self._linstor_client.send_msg(api_call, msg)
         replies = self._linstor_client.wait_for_result(msg_id)
         return replies
