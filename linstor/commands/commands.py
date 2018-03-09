@@ -47,19 +47,13 @@ class Commands(object):
     LIST_COMMANDS = 'list-commands'
     SHUTDOWN = 'shutdown'
     DMMIGRATE = 'dm-migrate'
-    # SET_NODE_PROP = 'set-node-property'
-    # SET_RESOURCE_DEF_PROP = 'set-resource-definition-property'
+    SET_NODE_PROP = 'set-node-property'
+    SET_RESOURCE_DEF_PROP = 'set-resource-definition-property'
     SET_RESOURCE_PROP = 'set-resource-property'
-    # SET_STORAGE_POOL_DEF_PROP = 'set-storage-pool-definition-property'
+    SET_STORAGE_POOL_DEF_PROP = 'set-storage-pool-definition-property'
     SET_STORAGE_POOL_PROP = 'set-storage-pool-property'
-    # SET_VOLUME_DEF_PROP = 'set-volume-definition-property'
+    SET_VOLUME_DEF_PROP = 'set-volume-definition-property'
     SET_CONTROLLER_PROP = 'set-controller-property'
-    SET_NODE_AUX_PROP = 'set-node-aux-property'
-    SET_RESOURCE_DEF_AUX_PROP = 'set-resource-definition-aux-property'
-    SET_RESOURCE_AUX_PROP = 'set-resource-aux-property'
-    SET_STORAGE_POOL_DEF_AUX_PROP = 'set-storage-pool-definition-aux-property'
-    SET_STORAGE_POOL_AUX_PROP = 'set-storage-pool-aux-property'
-    SET_VOLUME_DEF_AUX_PROP = 'set-volume-definition-aux-property'
 
     GEN_ZSH_COMPLETER = 'gen-zsh-completer'
 
@@ -99,19 +93,13 @@ class Commands(object):
         INTERACTIVE,
         LIST_COMMANDS,
         SHUTDOWN,
-        # SET_NODE_PROP,
-        # SET_RESOURCE_DEF_PROP,
+        SET_NODE_PROP,
+        SET_RESOURCE_DEF_PROP,
         SET_RESOURCE_PROP,
-        # SET_STORAGE_POOL_DEF_PROP,
+        SET_STORAGE_POOL_DEF_PROP,
         SET_STORAGE_POOL_PROP,
-        # SET_VOLUME_DEF_PROP,
-        SET_CONTROLLER_PROP,
-        SET_NODE_AUX_PROP,
-        SET_RESOURCE_DEF_AUX_PROP,
-        SET_RESOURCE_AUX_PROP,
-        SET_STORAGE_POOL_DEF_AUX_PROP,
-        SET_STORAGE_POOL_AUX_PROP,
-        SET_VOLUME_DEF_AUX_PROP
+        SET_VOLUME_DEF_PROP,
+        SET_CONTROLLER_PROP
     ]
     Hidden = [
         EXIT,
@@ -191,13 +179,13 @@ class Commands(object):
 
     @classmethod
     def add_parser_keyvalue(cls, parser, property_object=None):
+        parser.add_argument('--aux', action="store_true", help="Property is an auxiliary user property.")
         if property_object:
             props = Commands.get_allowed_props(property_object)
             parser.add_argument(
                 'key',
-                choices=Commands.get_allowed_prop_keys(property_object),
                 help='; '.join([x['key'] + ': ' + x['info'] for x in props if 'info' in x])
-            )
+            ).completer = Commands.get_allowed_prop_keys(property_object)
         else:
             parser.add_argument(
                 'key',
@@ -239,9 +227,11 @@ class Commands(object):
     def set_props(self, args):
         raise NotImplementedError('abstract')
 
-    def set_prop_aux(self, args):
-        args.key = NAMESPC_AUXILIARY + '/' + args.key
-        return self.set_props(args)
+    @classmethod
+    def _attach_aux_prop(cls, args):
+        if args.aux:
+            args.key = NAMESPC_AUXILIARY + '/' + args.key
+        return args
 
     @staticmethod
     def show_group_completer(lst, where):

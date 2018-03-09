@@ -99,23 +99,6 @@ class StoragePoolCommands(Commands):
         Commands.add_parser_keyvalue(p_setprop, 'storagepool')
         p_setprop.set_defaults(func=self.set_props)
 
-        # set aux properties
-        p_setauxprop = parser.add_parser(
-            Commands.SET_STORAGE_POOL_AUX_PROP,
-            aliases=['setstorpoolauxprp'],
-            description='Sets auxiliary properties for the given storage pool on the given node.')
-        p_setauxprop.add_argument(
-            'name',
-            type=namecheck(STORPOOL_NAME),
-            help='Name of the storage pool'
-        ).completer = self.storage_pool_completer
-        p_setauxprop.add_argument(
-            'node_name',
-            type=namecheck(NODE_NAME),
-            help='Name of the node for the storage pool').completer = self.node_completer
-        Commands.add_parser_keyvalue(p_setauxprop)
-        p_setauxprop.set_defaults(func=self.set_prop_aux)
-
     def create(self, args):
         # construct correct driver name
         driver = 'LvmThin' if args.driver == 'lvmthin' else args.driver.title()
@@ -173,6 +156,7 @@ class StoragePoolCommands(Commands):
         return ExitCode.OK
 
     def set_props(self, args):
+        args = self._attach_aux_prop(args)
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
         replies = self._linstor.storage_pool_modify(
             args.node_name,

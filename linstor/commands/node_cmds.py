@@ -176,31 +176,17 @@ class NodeCommands(Commands):
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
-        # disabled until there are properties
-        # p_setp = parser.add_parser(
-        #     Commands.SET_NODE_PROP,
-        #     aliases=['setnodeprp'],
-        #     description="Set a property on the given node."
-        # )
-        # p_setp.add_argument(
-        #     'node_name',
-        #     help="Node for which to set the property"
-        # ).completer = self.node_completer
-        # Commands.add_parser_keyvalue(p_setp, "node")
-        # p_setp.set_defaults(func=NodeCommands.set_props)
-
-        # set aux properties
-        p_setauxp = parser.add_parser(
-            Commands.SET_NODE_AUX_PROP,
-            aliases=['setnodeauxprp'],
-            description="Set a auxiliary property on the given node."
+        p_setp = parser.add_parser(
+            Commands.SET_NODE_PROP,
+            aliases=['setnodeprp'],
+            description="Set a property on the given node."
         )
-        p_setauxp.add_argument(
+        p_setp.add_argument(
             'node_name',
             help="Node for which to set the property"
         ).completer = self.node_completer
-        Commands.add_parser_keyvalue(p_setauxp)
-        p_setauxp.set_defaults(func=self.set_prop_aux)
+        Commands.add_parser_keyvalue(p_setp, "node")
+        p_setp.set_defaults(func=self.set_props)
 
     def create(self, args):
         replies = self._linstor.node_create(
@@ -284,6 +270,7 @@ class NodeCommands(Commands):
         return ExitCode.OK
 
     def set_props(self, args):
+        args = self._attach_aux_prop(args)
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
         replies = self._linstor.node_modify(args.node_name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
         return self.handle_replies(args, replies)

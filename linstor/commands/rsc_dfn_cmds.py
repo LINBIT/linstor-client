@@ -72,23 +72,13 @@ class ResourceDefinitionCommands(Commands):
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
-        # disabled until there are properties
-        # p_setprop = parser.add_parser(
-        #     Commands.SET_RESOURCE_DEF_PROP,
-        #     aliases=['setrscdfnprp'],
-        #     description='Sets properties for the given resource definition.')
-        # p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
-        # Commands.add_parser_keyvalue(p_setprop, 'resource-definition')
-        # p_setprop.set_defaults(func=ResourceDefinitionCommands.set_props)
-
-        # set aux properties
-        p_setauxprop = parser.add_parser(
-            Commands.SET_RESOURCE_DEF_AUX_PROP,
-            aliases=['setrscdfnauxprp'],
-            description='Sets auxiliary properties for the given resource definition.')
-        p_setauxprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
-        Commands.add_parser_keyvalue(p_setauxprop)
-        p_setauxprop.set_defaults(func=self.set_prop_aux)
+        p_setprop = parser.add_parser(
+            Commands.SET_RESOURCE_DEF_PROP,
+            aliases=['setrscdfnprp'],
+            description='Sets properties for the given resource definition.')
+        p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
+        Commands.add_parser_keyvalue(p_setprop, 'resource-definition')
+        p_setprop.set_defaults(func=self.set_props)
 
     def create(self, args):
         replies = self._linstor.resource_dfn_create(args.name, args.port)
@@ -135,6 +125,7 @@ class ResourceDefinitionCommands(Commands):
         return ExitCode.OK
 
     def set_props(self, args):
+        args = self._attach_aux_prop(args)
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
         replies = self._linstor.resource_dfn_modify(args.name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
         return self.handle_replies(args, replies)

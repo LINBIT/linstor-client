@@ -47,7 +47,7 @@ class TestProperties(LinstorTestCase):
 
         # start prop tests
         node_resp = self.execute_with_single_resp(
-            ['set-node-aux-property', 'node1', 'test_prop', 'val']
+            ['set-node-property', 'node1', '--aux', 'test_prop', 'val']
         )
         self.assertTrue(node_resp.is_success())
 
@@ -59,7 +59,7 @@ class TestProperties(LinstorTestCase):
         self.check_prop(prop, NAMESPC_AUXILIARY + '/test_prop', 'val')
 
         node_resp = self.execute_with_single_resp(
-            ['set-node-aux-property', 'node1', 'another_prop', 'value with spaces']
+            ['set-node-property', 'node1', '--aux', 'another_prop', 'value with spaces']
         )
         self.assertTrue(node_resp.is_success())
 
@@ -75,7 +75,7 @@ class TestProperties(LinstorTestCase):
 
         # storage pool definition props
         storage_resp = self.execute_with_single_resp(
-            ['set-storage-pool-definition-aux-property', 'DfltStorPool', 'stor', 'lvmcomplex']
+            ['set-storage-pool-definition-property', 'DfltStorPool', '--aux', 'stor', 'lvmcomplex']
         )
         self.assertTrue(storage_resp.is_success())
 
@@ -95,7 +95,7 @@ class TestProperties(LinstorTestCase):
         self.check_prop(prop, NAMESPC_STORAGE_DRIVER + '/LvmVg', 'lvmpool')
 
         storage_resp = self.execute_with_resp(
-            ['set-storage-pool-aux-property', 'storage', 'node1', 'stor', 'lvmcomplex']
+            ['set-storage-pool-property', 'storage', 'node1', '--aux', 'stor', 'lvmcomplex']
         )
         self.assertEqual(2, len(storage_resp))
         self.assertTrue(storage_resp[0].is_success())
@@ -112,7 +112,7 @@ class TestProperties(LinstorTestCase):
 
         # resource definition
         resourcedef_resp = self.execute_with_resp(
-            ['set-resource-definition-aux-property', 'rsc1', 'user', 'alexa']
+            ['set-resource-definition-property', 'rsc1', '--aux', 'user', 'alexa']
         )
         self.assertEqual(2, len(resourcedef_resp))
         self.assertTrue(resourcedef_resp[0].is_success())
@@ -126,7 +126,7 @@ class TestProperties(LinstorTestCase):
 
         # volume definition
         volumedef_resp = self.execute_with_resp(
-            ['set-volume-definition-aux-property', 'rsc1', '0', 'volumespec', 'cascading']
+            ['set-volume-definition-property', 'rsc1', '0', '--aux', 'volumespec', 'cascading']
         )
         self.assertEqual(2, len(volumedef_resp))
         self.assertTrue(storage_resp[0].is_success())
@@ -147,7 +147,7 @@ class TestProperties(LinstorTestCase):
         self.check_prop(prop, KEY_STOR_POOL_NAME, 'storage')
 
         storage_resp = self.execute_with_resp(
-            ['set-resource-aux-property', 'rsc1', 'node1', 'NIC', '10.0.0.1']
+            ['set-resource-property', 'rsc1', 'node1', '--aux', 'NIC', '10.0.0.1']
         )
         self.assertEqual(2, len(storage_resp))
         self.assertTrue(storage_resp[0].is_warning())

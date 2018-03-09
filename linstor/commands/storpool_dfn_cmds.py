@@ -67,31 +67,17 @@ class StoragePoolDefinitionCommands(Commands):
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
-        # disabled until there are properties
-        # p_setprop = parser.add_parser(
-        #     Commands.SET_STORAGE_POOL_DEF_PROP,
-        #     aliases=['setstorpooldfnprp'],
-        #     description='Sets properties for the given storage pool definition.')
-        # p_setprop.add_argument(
-        #     'name',
-        #     type=namecheck(STORPOOL_NAME),
-        #     help='Name of the storage pool definition'
-        # ).competer = StoragePoolDefinitionCommands.completer
-        # Commands.add_parser_keyvalue(p_setprop, "storagepool-definition")
-        # p_setprop.set_defaults(func=StoragePoolDefinitionCommands.set_props)
-
-        # set properties
-        p_setauxprop = parser.add_parser(
-            Commands.SET_STORAGE_POOL_DEF_AUX_PROP,
-            aliases=['setstorpooldfnauxprp'],
-            description='Sets auxiliary properties for the given storage pool definition.')
-        p_setauxprop.add_argument(
+        p_setprop = parser.add_parser(
+            Commands.SET_STORAGE_POOL_DEF_PROP,
+            aliases=['setstorpooldfnprp'],
+            description='Sets properties for the given storage pool definition.')
+        p_setprop.add_argument(
             'name',
             type=namecheck(STORPOOL_NAME),
             help='Name of the storage pool definition'
         ).competer = self.storage_pool_dfn_completer
-        Commands.add_parser_keyvalue(p_setauxprop)
-        p_setauxprop.set_defaults(func=self.set_prop_aux)
+        Commands.add_parser_keyvalue(p_setprop, "storagepool-definition")
+        p_setprop.set_defaults(func=self.set_props)
 
     def create(self, args):
         replies = self._linstor.storage_pool_dfn_create(args.name)
@@ -133,6 +119,7 @@ class StoragePoolDefinitionCommands(Commands):
         return ExitCode.OK
 
     def set_props(self, args):
+        args = self._attach_aux_prop(args)
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
         replies = self._linstor.storage_pool_dfn_modify(args.name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
         return self.handle_replies(args, replies)
