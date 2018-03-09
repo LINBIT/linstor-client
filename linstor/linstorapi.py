@@ -155,11 +155,11 @@ class ApiCallResponse(object):
         return "ApiCallResponse({retcode}, {msg})".format(retcode=self.ret_code, msg=self.proto_msg.message_format)
 
 
-class LinstorNetClient(threading.Thread):
+class _LinstorNetClient(threading.Thread):
     IO_SIZE = 4096
 
     def __init__(self, timeout=20):
-        super(LinstorNetClient, self).__init__()
+        super(_LinstorNetClient, self).__init__()
         self._socket = None  # type: socket.socket
         self._host = None  # type: str
         self._timeout = timeout
@@ -516,7 +516,7 @@ class Linstor(object):
 
     def __init__(self, ctrl_host):
         self._ctrl_host = ctrl_host
-        self._linstor_client = LinstorNetClient()
+        self._linstor_client = _LinstorNetClient()
         self._logger = logging.getLogger('Linstor')
 
     def __del__(self):
