@@ -23,9 +23,6 @@ Global constants for linstor
 
 VERSION = "0.1.4"
 
-API_VERSION = 1
-API_VERSION_MIN = 1
-
 try:
     from linstor.consts_githash import GITHASH
 except:

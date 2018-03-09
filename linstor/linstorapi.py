@@ -65,6 +65,9 @@ from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
 from linstor.proto.MsgControlCtrl_pb2 import MsgControlCtrl
 import linstor.sharedconsts as apiconsts
 
+API_VERSION = 1
+API_VERSION_MIN = 1
+
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -252,8 +255,14 @@ class LinstorNetClient(threading.Thread):
         msg = self._parse_proto_msg(MsgApiVersion, data)
         if self._api_version is None:
             self._api_version = msg.version
+            if API_VERSION_MIN > msg.version or msg.version > API_VERSION:
+                raise LinstorError("Client API version '{v}' is incompatible with controller version '{r}'.\n".format(
+                        v=API_VERSION,
+                        r=msg.version)
+                )
         else:
             self._logger.warning("API version message already received.")
+        return True
 
     @classmethod
     def _parse_payload_length(cls, header):
