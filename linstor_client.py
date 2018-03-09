@@ -247,12 +247,12 @@ class LinStorCLI(object):
             sys.stderr.write(lce.message + '\n')
             return lce.exit_code
         except linstorapi.LinstorNetworkError as le:
-            sys.stderr.write(le.message + '\n')
+            sys.stderr.write("Error: " + le.message + '\n')
             for err in le.all_errors():
                 sys.stderr.write(' ' * 2 + err.message + '\n')
             rc = ExitCode.CONNECTION_ERROR
         except linstorapi.LinstorError as le:
-            sys.stderr.write(le.message + '\n')
+            sys.stderr.write("Error: " + le.message + '\n')
             rc = ExitCode.UNKNOWN_ERROR
 
         return rc
@@ -361,8 +361,8 @@ class LinStorCLI(object):
 
         # helper function
         def parsecatch(cmds_, stoprec=False):
+            rc = ExitCode.OK
             try:
-                rc = ExitCode.OK
                 rc = self.parse_and_execute(cmds_)
             except SystemExit as se:
                 if stoprec:

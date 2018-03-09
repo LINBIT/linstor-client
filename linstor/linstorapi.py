@@ -337,7 +337,7 @@ class LinstorNetClient(threading.Thread):
             return True
         except socket.error as err:
             self._socket = None
-            raise LinstorNetworkError("Error connecting to {hp}: {err}".format(hp=server, err=err))
+            raise LinstorNetworkError("Unable connecting to {hp}: {err}".format(hp=server, err=err))
 
     def disconnect(self):
         with self._slock:
