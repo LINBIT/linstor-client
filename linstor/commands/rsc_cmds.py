@@ -152,6 +152,7 @@ class ResourceCommands(Commands):
             replies = self._linstor.resource_auto_place(
                 args.resource_definition_name,
                 args.auto_place,
+                args.storage_pool,
                 args.do_not_place_with,
                 args.do_not_place_with_regex
             )
