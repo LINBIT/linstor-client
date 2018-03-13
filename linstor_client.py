@@ -178,12 +178,12 @@ class LinStorCLI(object):
         #drbd_options.setup_commands(subp)
 
         # zsh completer
-        zsh_generator = ZshGenerator(subp)
+        self._zsh_generator = ZshGenerator(subp)
         zsh_compl = subp.add_parser(
             Commands.GEN_ZSH_COMPLETER,
             description='Generate a zsh completion script'
         )
-        zsh_compl.set_defaults(func=zsh_generator.cmd_completer)
+        zsh_compl.set_defaults(func=self._zsh_generator.cmd_completer)
 
         argcomplete.autocomplete(parser)
 
@@ -232,7 +232,10 @@ class LinStorCLI(object):
         try:
             args = self.parse(pargs)
 
-            if self._linstorapi is None:
+            local_only_cmds = [self.cmd_list, MigrateCommands.cmd_dmmigrate, self._zsh_generator.cmd_completer]
+
+            # only connect if not already connected or a local only command was executed
+            if self._linstorapi is None and args.func not in local_only_cmds:
                 self._linstorapi = linstorapi.Linstor(Commands.controller_list(args.controllers)[0])
                 self._node_commands._linstor = self._linstorapi
                 self._storage_pool_dfn_commands._linstor = self._linstorapi
