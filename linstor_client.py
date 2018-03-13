@@ -64,8 +64,6 @@ class LinStorCLI(object):
 
     def __init__(self):
         self._all_commands = None
-        self._colors = True
-        self._utf8 = True
 
         self._node_commands = NodeCommands()
         self._storage_pool_dfn_commands = StoragePoolDefinitionCommands()
@@ -74,6 +72,7 @@ class LinStorCLI(object):
         self._volume_dfn_commands = VolumeDefinitionCommands()
         self._resource_commands = ResourceCommands()
         self._misc_commands = MiscCommands()
+        self._zsh_generator = None
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
         self._linstorapi = None
@@ -84,7 +83,7 @@ class LinStorCLI(object):
                             version='%(prog)s ' + VERSION + '; ' + GITHASH)
         parser.add_argument('--no-color', action="store_true",
                             help='Do not use colors in output. Useful for old terminals/scripting.')
-        parser.add_argument('--no-utf8', action="store_true",
+        parser.add_argument('--no-utf8', action="store_true", default=not sys.stdout.isatty(),
                             help='Do not use utf-8 characters in output (i.e., tables).')
         parser.add_argument('--warn-as-error', action="store_true",
                             help='Treat WARN return code as error (i.e., return code > 0).')
