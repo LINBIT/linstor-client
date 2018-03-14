@@ -73,7 +73,7 @@ class LinstorTestCase(unittest.TestCase):
         controller_bin = os.path.join(linstor_bin, "Controller")
         print("executing: " + controller_bin)
         cls.controller = subprocess.Popen(
-            [controller_bin, "--memory-database=derby;" + str(controller_port) + ";127.0.0.1"],
+            [controller_bin, "--memory-database=h2;" + str(controller_port) + ";127.0.0.1"],
             cwd=install_path,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
