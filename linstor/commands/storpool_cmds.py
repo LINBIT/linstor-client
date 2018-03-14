@@ -52,7 +52,7 @@ class StoragePoolCommands(Commands):
         p_rm_storpool.set_defaults(func=self.delete)
 
         # list storpool
-        storpoolgroupby = ('Name')
+        storpoolgroupby = ('Name',)
         storpool_group_completer = Commands.show_group_completer(storpoolgroupby, "groupby")
 
         p_lstorpool = parser.add_parser(
