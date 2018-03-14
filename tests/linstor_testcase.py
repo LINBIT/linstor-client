@@ -15,12 +15,12 @@ from linstor.linstorapi import ApiCallResponse
 
 controller_port = 63374 + sys.version_info[0]
 
-update_port_sql = """
-UPDATE PROPS_CONTAINERS SET PROP_VALUE='{port}'
-    WHERE PROPS_INSTANCE='CTRLCFG' AND PROP_KEY='netcom/PlainConnector/port';
-UPDATE PROPS_CONTAINERS SET PROP_VALUE='127.0.0.1'
-    WHERE PROPS_INSTANCE='CTRLCFG' AND PROP_KEY='netcom/PlainConnector/bindaddress';
-""".format(port=controller_port)
+# update_port_sql = """
+# UPDATE PROPS_CONTAINERS SET PROP_VALUE='{port}'
+#     WHERE PROPS_INSTANCE='CTRLCFG' AND PROP_KEY='netcom/PlainConnector/port';
+# UPDATE PROPS_CONTAINERS SET PROP_VALUE='127.0.0.1'
+#     WHERE PROPS_INSTANCE='CTRLCFG' AND PROP_KEY='netcom/PlainConnector/bindaddress';
+# """.format(port=controller_port)
 
 
 class LinstorTestCase(unittest.TestCase):
@@ -57,15 +57,15 @@ class LinstorTestCase(unittest.TestCase):
             linstor_file_name = tar.getnames()[0]  # on jenkins the tar and folder within is named workspace-1.0
 
         # get sql init script
-        execute_init_sql_path = os.path.join(install_path, 'init.sql')
-        linjar_filename = os.path.join(install_path, linstor_file_name, 'lib', linstor_file_name + '.jar')
-        with zipfile.ZipFile(linjar_filename, 'r') as linjar:
-            with linjar.open('resource/drbd-init-derby.sql', 'r') as sqlfile:
-                with open(execute_init_sql_path, 'wt') as init_sql_file:
-                    for line in sqlfile:
-                        init_sql_file.write(line.decode())
-                    # patch init sql file to start controller on different port
-                    init_sql_file.write(update_port_sql)
+        # execute_init_sql_path = os.path.join(install_path, 'init.sql')
+        # linjar_filename = os.path.join(install_path, linstor_file_name, 'lib', linstor_file_name + '.jar')
+        # with zipfile.ZipFile(linjar_filename, 'r') as linjar:
+        #     with linjar.open('resource/drbd-init-derby.sql', 'r') as sqlfile:
+        #         with open(execute_init_sql_path, 'wt') as init_sql_file:
+        #             for line in sqlfile:
+        #                 init_sql_file.write(line.decode())
+        #             # patch init sql file to start controller on different port
+        #             init_sql_file.write(update_port_sql)
 
         linstor_bin = os.path.join(install_path, linstor_file_name, 'bin')
 
@@ -73,7 +73,7 @@ class LinstorTestCase(unittest.TestCase):
         controller_bin = os.path.join(linstor_bin, "Controller")
         print("executing: " + controller_bin)
         cls.controller = subprocess.Popen(
-            [controller_bin, "--memory_database", execute_init_sql_path],
+            [controller_bin, "--memory-database=derby;" + str(controller_port) + ";127.0.0.1"],
             cwd=install_path,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
