@@ -790,8 +790,7 @@ class Linstor(object):
         :return: A MsgLstNode proto message containing all information.
         :rtype: list
         """
-        replies = self._send_and_wait(apiconsts.API_LST_NODE)
-        return replies[0] if replies else []
+        return self._send_and_wait(apiconsts.API_LST_NODE)
 
     def storage_pool_dfn_create(self, name):
         """
@@ -843,8 +842,7 @@ class Linstor(object):
         :return: A MsgLstStorPoolDfn proto message containing all information.
         :rtype: list
         """
-        replies = self._send_and_wait(apiconsts.API_LST_STOR_POOL_DFN)
-        return replies[0] if replies else []
+        return self._send_and_wait(apiconsts.API_LST_STOR_POOL_DFN)
 
     @classmethod
     def get_driver_key(cls, driver_name):
@@ -928,8 +926,7 @@ class Linstor(object):
         :return: A MsgLstStorPool proto message containing all information.
         :rtype: list
         """
-        replies = self._send_and_wait(apiconsts.API_LST_STOR_POOL)
-        return replies[0] if replies else []
+        return self._send_and_wait(apiconsts.API_LST_STOR_POOL)
 
     def resource_dfn_create(self, name, port=None):
         """
@@ -985,8 +982,7 @@ class Linstor(object):
         :return: A MsgLstRscDfn proto message containing all information.
         :rtype: list
         """
-        replies = self._send_and_wait(apiconsts.API_LST_RSC_DFN)
-        return replies[0] if replies else []
+        return self._send_and_wait(apiconsts.API_LST_RSC_DFN)
 
     def volume_dfn_create(self, rsc_name, size, volume_nr=None, minor_nr=None):
         """
@@ -1144,8 +1140,7 @@ class Linstor(object):
         :return: A MsgLstRsc proto message containing all information.
         :rtype: list
         """
-        replies = self._send_and_wait(apiconsts.API_LST_RSC)
-        return replies[0] if replies else []
+        return self._send_and_wait(apiconsts.API_LST_RSC)
 
     def controller_props(self):
         """

@@ -131,6 +131,34 @@ class Commands(object):
         return rc
 
     @classmethod
+    def check_for_api_replies(cls, replies):
+        return isinstance(replies[0], linstor.linstorapi.ApiCallResponse)
+
+    @classmethod
+    def output_list(cls, args, replies, output_func):
+        if replies:
+            if cls.check_for_api_replies(replies):
+                return cls.handle_replies(args, replies)
+
+            if args.machine_readable:
+                cls._print_machine_readable(replies)
+            else:
+                output_func(args, replies[0])
+
+        return ExitCode.OK
+
+    @classmethod
+    def output_props_list(cls, args, lstmsg, prop_show_func):
+        if cls.check_for_api_replies(lstmsg):
+            return cls.handle_replies(args, lstmsg)
+        lstmsg = lstmsg[0]
+
+        result = prop_show_func(args, lstmsg)
+
+        Commands._print_props(result, args)
+        return ExitCode.OK
+
+    @classmethod
     def _print_machine_readable(cls, data):
         """
         serializes the given protobuf data and prints to stdout.

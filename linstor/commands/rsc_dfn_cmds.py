@@ -89,40 +89,40 @@ class ResourceDefinitionCommands(Commands):
         replies = [x for subx in args.name for x in self._linstor.resource_dfn_delete(subx)]
         return self.handle_replies(args, replies)
 
+    @classmethod
+    def show(cls, args, lstmsg):
+        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl.add_column("ResourceName")
+        tbl.add_column("Port")
+        tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
+        for rsc_dfn in lstmsg.rsc_dfns:
+            tbl.add_row([
+                rsc_dfn.rsc_name,
+                rsc_dfn.rsc_dfn_port,
+                tbl.color_cell("DELETING", Color.RED)
+                if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
+            ])
+        tbl.show()
+
     def list(self, args):
         lstmsg = self._linstor.resource_dfn_list()
 
-        if lstmsg:
-            if args.machine_readable:
-                self._print_machine_readable([lstmsg])
-            else:
-                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-                tbl.add_column("ResourceName")
-                tbl.add_column("Port")
-                tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
-                for rsc_dfn in lstmsg.rsc_dfns:
-                    tbl.add_row([
-                        rsc_dfn.rsc_name,
-                        rsc_dfn.rsc_dfn_port,
-                        tbl.color_cell("DELETING", Color.RED)
-                        if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
-                    ])
-                tbl.show()
+        return self.output_list(args, lstmsg, self.show)
 
-        return ExitCode.OK
-
-    def print_props(self, args):
-        lstmsg = self._linstor.resource_dfn_list()
-
+    @classmethod
+    def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
             for rsc_dfn in lstmsg.rsc_dfns:
                 if rsc_dfn.rsc_name == args.resource_name:
                     result.append(rsc_dfn.rsc_dfn_props)
                     break
+        return result
 
-        Commands._print_props(result, args)
-        return ExitCode.OK
+    def print_props(self, args):
+        lstmsg = self._linstor.resource_dfn_list()
+
+        return self.output_props_list(args, lstmsg, self._props_list)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)

@@ -183,44 +183,44 @@ class ResourceCommands(Commands):
                 return rscst
         return None
 
+    def show(self, args, lstmsg):
+        rsc_dfns = self._linstor.resource_dfn_list()
+        if isinstance(rsc_dfns[0], linstor.linstorapi.ApiCallResponse):
+            return self.handle_replies(args, rsc_dfns)
+        rsc_dfns = rsc_dfns[0].rsc_dfns
+
+        rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
+
+        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        for hdr in ResourceCommands._resource_headers:
+            tbl.add_header(hdr)
+
+        tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
+
+        filter_res = args.resources
+        filter_nodes = args.nodes
+
+        disp_list = lstmsg.resources
+        if filter_res:
+            disp_list = [rsc for rsc in disp_list if rsc.name in filter_res]
+        if filter_nodes:
+            disp_list = [rsc for rsc in disp_list if rsc.node_name in filter_nodes]
+
+        for rsc in disp_list:
+            rsc_dfn = rsc_dfn_map[rsc.name]
+            marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
+            # rsc_state = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
+            tbl.add_row([
+                rsc.name,
+                rsc.node_name,
+                rsc_dfn.rsc_dfn_port,
+                tbl.color_cell("DELETING", Color.RED) if marked_delete else "ok"
+            ])
+        tbl.show()
+
     def list(self, args):
         lstmsg = self._linstor.resource_list()
-
-        if lstmsg:
-            if args.machine_readable:
-                self._print_machine_readable([lstmsg])
-            else:
-                rsc_dfns = self._linstor.resource_dfn_list().rsc_dfns
-                rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
-
-                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-                for hdr in ResourceCommands._resource_headers:
-                    tbl.add_header(hdr)
-
-                tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
-
-                filter_res = args.resources
-                filter_nodes = args.nodes
-
-                disp_list = lstmsg.resources
-                if filter_res:
-                    disp_list = [rsc for rsc in disp_list if rsc.name in filter_res]
-                if filter_nodes:
-                    disp_list = [rsc for rsc in disp_list if rsc.node_name in filter_nodes]
-
-                for rsc in disp_list:
-                    rsc_dfn = rsc_dfn_map[rsc.name]
-                    marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
-                    # rsc_state = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
-                    tbl.add_row([
-                        rsc.name,
-                        rsc.node_name,
-                        rsc_dfn.rsc_dfn_port,
-                        tbl.color_cell("DELETING", Color.RED) if marked_delete else "ok"
-                    ])
-                tbl.show()
-
-        return ExitCode.OK
+        return self.output_list(args, lstmsg, self.show)
 
     @staticmethod
     def get_resource_state(res_states, node_name, resource_name):
@@ -236,66 +236,66 @@ class ResourceCommands(Commands):
                 return volume_state
         return None
 
+    @classmethod
+    def show_volumes(cls, args, lstmsg):
+        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl.add_column("Node")
+        tbl.add_column("Resource")
+        tbl.add_column("VolumeNr")
+        tbl.add_column("MinorNr")
+        tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
+
+        for rsc in lstmsg.resources:
+            rsc_state = ResourceCommands.get_resource_state(lstmsg.resource_states, rsc.node_name, rsc.name)
+            for vlm in rsc.vlms:
+                if rsc_state:
+                    vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr)
+                else:
+                    vlm_state = None
+                state = tbl.color_cell("Unknown", Color.YELLOW)
+                if vlm_state and vlm_state.HasField("disk_state") and vlm_state.disk_state:
+                    state = vlm_state.disk_state
+
+                    if state == 'DUnknown':
+                        state = tbl.color_cell("Unknown", Color.YELLOW)
+                    elif state == 'Diskless':
+                        if vlm_state.disk_failed:
+                            state = tbl.color_cell("DiskFailed", Color.RED)
+                    elif state in ['Inconsistent', 'Failed']:
+                        state = tbl.color_cell(state, Color.RED)
+                    elif state in ['UpToDate']:
+                        pass  # green text
+                    else:
+                        state = tbl.color_cell(state, Color.YELLOW)
+                tbl.add_row([
+                    rsc.node_name,
+                    rsc.name,
+                    str(vlm.vlm_nr),
+                    str(vlm.vlm_minor_nr),
+                    state
+                ])
+
+        tbl.show()
+
     def list_volumes(self, args):
         lstmsg = self._linstor.resource_list()
 
-        if lstmsg:
-            if args.machine_readable:
-                self._print_machine_readable([lstmsg])
-            else:
-                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-                tbl.add_column("Node")
-                tbl.add_column("Resource")
-                tbl.add_column("VolumeNr")
-                tbl.add_column("MinorNr")
-                tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
+        return self.output_list(args, lstmsg, self.show_volumes)
 
-                for rsc in lstmsg.resources:
-                    rsc_state = ResourceCommands.get_resource_state(lstmsg.resource_states, rsc.node_name, rsc.name)
-                    for vlm in rsc.vlms:
-                        if rsc_state:
-                            vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr)
-                        else:
-                            vlm_state = None
-                        state = tbl.color_cell("Unknown", Color.YELLOW)
-                        if vlm_state and vlm_state.HasField("disk_state") and vlm_state.disk_state:
-                            state = vlm_state.disk_state
-
-                            if state == 'DUnknown':
-                                state = tbl.color_cell("Unknown", Color.YELLOW)
-                            elif state == 'Diskless':
-                                if vlm_state.disk_failed:
-                                    state = tbl.color_cell("DiskFailed", Color.RED)
-                            elif state in ['Inconsistent', 'Failed']:
-                                state = tbl.color_cell(state, Color.RED)
-                            elif state in ['UpToDate']:
-                                pass  # green text
-                            else:
-                                state = tbl.color_cell(state, Color.YELLOW)
-                        tbl.add_row([
-                            rsc.node_name,
-                            rsc.name,
-                            str(vlm.vlm_nr),
-                            str(vlm.vlm_minor_nr),
-                            state
-                        ])
-
-                tbl.show()
-
-        return ExitCode.OK
-
-    def print_props(self, args):
-        lstmsg = self._linstor.resource_list()
-
+    @classmethod
+    def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
             for rsc in lstmsg.resources:
                 if rsc.name == args.resource_name and rsc.node_name == args.node_name:
                     result.append(rsc.props)
                     break
+        return result
 
-        Commands._print_props(result, args)
-        return ExitCode.OK
+    def print_props(self, args):
+        lstmsg = self._linstor.resource_list()
+
+        return self.output_props_list(args, lstmsg, self._props_list)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)

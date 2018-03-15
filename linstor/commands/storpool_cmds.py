@@ -110,50 +110,49 @@ class StoragePoolCommands(Commands):
         replies = [x for subx in args.node_name for x in self._linstor.storage_pool_delete(subx, args.name)]
         return self.handle_replies(args, replies)
 
+    def show(self, args, lstmsg):
+        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl.add_column("StoragePool")
+        tbl.add_column("Node")
+        tbl.add_column("Driver")
+        tbl.add_column("PoolName")
+        tbl.add_column("SupportsSnapshots")
+        for storpool in lstmsg.stor_pools:
+            driver_device_prop = [x for x in storpool.props
+                                  if x.key == self._linstor.get_driver_key(storpool.driver)]
+            driver_device = driver_device_prop[0].value if driver_device_prop else ''
+
+            supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
+            supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
+
+            tbl.add_row([
+                storpool.stor_pool_name,
+                storpool.node_name,
+                storpool.driver,
+                driver_device,
+                supports_snapshots
+            ])
+        tbl.show()
+
     def list(self, args):
         lstmsg = self._linstor.storage_pool_list()
 
-        if lstmsg:
-            if args.machine_readable:
-                self._print_machine_readable([lstmsg])
-            else:
-                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-                tbl.add_column("StoragePool")
-                tbl.add_column("Node")
-                tbl.add_column("Driver")
-                tbl.add_column("PoolName")
-                tbl.add_column("SupportsSnapshots")
-                for storpool in lstmsg.stor_pools:
-                    driver_device_prop = [x for x in storpool.props
-                                          if x.key == self._linstor.get_driver_key(storpool.driver)]
-                    driver_device = driver_device_prop[0].value if driver_device_prop else ''
+        return self.output_list(args, lstmsg, self.show)
 
-                    supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
-                    supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
-
-                    tbl.add_row([
-                        storpool.stor_pool_name,
-                        storpool.node_name,
-                        storpool.driver,
-                        driver_device,
-                        supports_snapshots
-                    ])
-                tbl.show()
-
-        return ExitCode.OK
-
-    def print_props(self, args):
-        lstmsg = self._linstor.storage_pool_list()
-
+    @classmethod
+    def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
             for stp in lstmsg.stor_pools:
                 if stp.stor_pool_name == args.storage_pool_name and stp.node_name == args.node_name:
                     result.append(stp.props)
                     break
+        return result
 
-        Commands._print_props(result, args)
-        return ExitCode.OK
+    def print_props(self, args):
+        lstmsg = self._linstor.storage_pool_list()
+
+        return self.output_props_list(args, lstmsg, self._props_list)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)

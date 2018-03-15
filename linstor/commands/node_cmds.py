@@ -205,59 +205,54 @@ class NodeCommands(Commands):
 
         return self.handle_replies(args, replies)
 
+    @classmethod
+    def show_nodes(cls, args, lstmsg):
+        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl.add_column("Node")
+        tbl.add_column("NodeType")
+        tbl.add_column("IPs")
+        tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
+        for n in lstmsg.nodes:
+            ips = [if_.address for if_ in n.net_interfaces]
+            tbl.add_row([
+                n.name,
+                n.type,
+                ",".join(ips),
+                tbl.color_cell("ok", Color.DARKGREEN) if n.connected else tbl.color_cell("OFFLINE", Color.RED)
+            ])
+        tbl.show()
+
     def list(self, args):
         lstmsg = self._linstor.node_list()
 
-        if lstmsg:
-            if args.machine_readable:
-                self._print_machine_readable([lstmsg])
-            else:
-                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-                tbl.add_column("Node")
-                tbl.add_column("NodeType")
-                tbl.add_column("IPs")
-                tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
-                for n in lstmsg.nodes:
-                    ips = [if_.address for if_ in n.net_interfaces]
-                    tbl.add_row([
-                        n.name,
-                        n.type,
-                        ",".join(ips),
-                        tbl.color_cell("ok", Color.DARKGREEN) if n.connected else tbl.color_cell("OFFLINE", Color.RED)
-                    ])
-                tbl.show()
+        return self.output_list(args, lstmsg, self.show_nodes)
 
-        return ExitCode.OK
+    @classmethod
+    def show_netinterfaces(cls, args, lstnodes):
+        node = NodeCommands.find_node(lstnodes, args.node_name)
+        if node:
+            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl.add_column(node.name, color=Color.GREEN)
+            tbl.add_column("NetInterface")
+            tbl.add_column("IP")
+            for netif in node.net_interfaces:
+                tbl.add_row([
+                    "+",
+                    netif.name,
+                    netif.address
+                ])
+            tbl.show()
+        else:
+            raise LinstorClientError("Node '{n}' not found on controller.".format(n=args.node_name),
+                                     ExitCode.OBJECT_NOT_FOUND)
 
     def list_netinterfaces(self, args):
         lstnodes = self._linstor.node_list()
 
-        if lstnodes:
-            if args.machine_readable:
-                self._print_machine_readable([lstnodes])
-            else:
-                node = NodeCommands.find_node(lstnodes, args.node_name)
-                if node:
-                    tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-                    tbl.add_column(node.name, color=Color.GREEN)
-                    tbl.add_column("NetInterface")
-                    tbl.add_column("IP")
-                    for netif in node.net_interfaces:
-                        tbl.add_row([
-                            "+",
-                            netif.name,
-                            netif.address
-                        ])
-                    tbl.show()
-                else:
-                    raise LinstorClientError("Node '{n}' not found on controller.".format(n=args.node_name),
-                                             ExitCode.OBJECT_NOT_FOUND)
+        return self.output_list(args, lstnodes, self.show_netinterfaces)
 
-        return ExitCode.OK
-
-    def print_props(self, args):
-        lstmsg = self._linstor.node_list()
-
+    @classmethod
+    def _props_list(cls, args, lstmsg):
         result = []
         node = NodeCommands.find_node(lstmsg, args.node_name)
         if node:
@@ -266,8 +261,12 @@ class NodeCommands(Commands):
             raise LinstorClientError("Node '{n}' not found on controller.".format(n=args.node_name),
                                      ExitCode.OBJECT_NOT_FOUND)
 
-        Commands._print_props(result, args)
-        return ExitCode.OK
+        return result
+
+    def print_props(self, args):
+        lstmsg = self._linstor.node_list()
+
+        return self.output_props_list(args, lstmsg, self._props_list)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)

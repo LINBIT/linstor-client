@@ -88,35 +88,35 @@ class StoragePoolDefinitionCommands(Commands):
         replies = [x for subx in args.name for x in self._linstor.storage_pool_dfn_delete(subx)]
         return self.handle_replies(args, replies)
 
+    @classmethod
+    def show(cls, args, lstmsg):
+        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl.add_column("StoragePool")
+        for storpool_dfn in lstmsg.stor_pool_dfns:
+            tbl.add_row([
+                storpool_dfn.stor_pool_name
+            ])
+        tbl.show()
+
     def list(self, args):
         lstmsg = self._linstor.storage_pool_dfn_list()
 
-        if lstmsg:
-            if args.machine_readable:
-                self._print_machine_readable([lstmsg])
-            else:
-                tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-                tbl.add_column("StoragePool")
-                for storpool_dfn in lstmsg.stor_pool_dfns:
-                    tbl.add_row([
-                        storpool_dfn.stor_pool_name
-                    ])
-                tbl.show()
+        return self.output_list(args, lstmsg, self.show)
 
-        return ExitCode.OK
-
-    def print_props(self, args):
-        lstmsg = self._linstor.storage_pool_dfn_list()
-
+    @classmethod
+    def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
             for storpool_dfn in lstmsg.stor_pool_dfns:
                 if storpool_dfn.stor_pool_name == args.storage_pool_name:
                     result.append(storpool_dfn.props)
                     break
+        return result
 
-        Commands._print_props(result, args)
-        return ExitCode.OK
+    def print_props(self, args):
+        lstmsg = self._linstor.storage_pool_dfn_list()
+
+        return self.output_props_list(args, lstmsg, self._props_list)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)
