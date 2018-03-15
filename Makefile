@@ -41,7 +41,7 @@ release: up2date clean doc xml
 
 debrelease:
 	echo 'recursive-include debian *' >> MANIFEST.in
-	dh_clean
+	dh_clean || true
 	make release
 	git checkout MANIFEST.in
 
