@@ -5,3 +5,4 @@ packager = LINSTOR Team <drbd-user@lists.linbit.com>
 vendor = LINBIT HA-Solutions GmbH
 requires =
   protobuf-python
+  python-setuptools
