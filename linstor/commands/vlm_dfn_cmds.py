@@ -26,9 +26,7 @@ class VolumeDefinitionCommands(Commands):
             'linstor server.')
         p_new_vol.add_argument('-n', '--vlmnr', type=int)
         p_new_vol.add_argument('-m', '--minor', type=int)
-        p_new_vol.add_argument('-d', '--deploy', type=int)
-        p_new_vol.add_argument('-s', '--site', default='',
-                               help="only consider nodes from this site")
+        p_new_vol.add_argument('--encrypt', action="store_true", help="Encrypt created volumes using cryptsetup.")
         p_new_vol.add_argument('resource_name', type=namecheck(RES_NAME),
                                help='Name of an existing resource').completer = self.resource_dfn_completer
         p_new_vol.add_argument(
@@ -118,7 +116,8 @@ class VolumeDefinitionCommands(Commands):
             args.resource_name,
             self._get_volume_size(args.size),
             args.vlmnr,
-            args.minor
+            args.minor,
+            args.encrypt
         )
         return self.handle_replies(args, replies)
 
