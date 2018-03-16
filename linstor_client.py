@@ -362,14 +362,11 @@ class LinStorCLI(object):
             self.cmd_list(args)
 
         # helper function
-        def parsecatch(cmds_, stoprec=False):
+        def parsecatch(cmds_):
             rc = ExitCode.OK
             try:
                 rc = self.parse_and_execute(cmds_)
             except SystemExit as se:
-                if stoprec:
-                    return
-
                 cmd = cmds_[0]
                 if cmd in [Commands.EXIT, "quit"]:
                     sys.exit(ExitCode.OK)
@@ -385,8 +382,7 @@ class LinStorCLI(object):
                     if '-h' in cmds_ or '--help' in cmds:
                         return
                     if se.code == ExitCode.ARGPARSE_ERROR:
-                        sys.stdout.write("\nIncorrect syntax. Use the command as follows:\n")
-                        parsecatch(["help", cmd], stoprec=True)
+                        sys.stdout.write("\nIncorrect syntax. Use 'help {cmd}' for more information:\n".format(cmd=cmd))
                 else:
                     unknown(cmd)
             except BaseException:
