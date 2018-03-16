@@ -75,7 +75,6 @@ class LinstorTestCase(unittest.TestCase):
         cls.controller = subprocess.Popen(
             [controller_bin, "--memory-database=h2;" + str(controller_port) + ";127.0.0.1"],
             cwd=install_path,
-            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
@@ -100,7 +99,6 @@ class LinstorTestCase(unittest.TestCase):
         sys.stdout.write(cls.controller.stderr.read().decode())
         cls.controller.stderr.close()
         cls.controller.stdout.close()
-        cls.controller.stdin.close()
         sys.stdout.write("Controller terminated.\n")
         sys.stdout.flush()
 
