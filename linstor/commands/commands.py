@@ -325,6 +325,13 @@ class Commands(object):
 
     @classmethod
     def find_node(cls, proto_node_list, node_name):
+        """
+        Searches the node list for a given node name.
+
+        :param proto_node_list: a node list proto object
+        :param node_name: name of the node to find
+        :return: The found node proto object or None if not found
+        """
         if proto_node_list:
             for n in proto_node_list.nodes:
                 if n.name == node_name:
