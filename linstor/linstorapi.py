@@ -1149,8 +1149,7 @@ class Linstor(object):
         :return: A MsgLstCtrlCfgProps proto message containing all controller props.
         :rtype: list
         """
-        replies = self._send_and_wait(apiconsts.API_LST_CFG_VAL)
-        return replies[0] if replies else []
+        return self._send_and_wait(apiconsts.API_LST_CFG_VAL)
 
     def controller_set_prop(self, key, value):
         """

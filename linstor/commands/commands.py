@@ -407,14 +407,17 @@ class MiscCommands(Commands):
     def __init__(self):
         super(MiscCommands, self).__init__()
 
-    def cmd_print_controller_props(self, args):
-        lstmsg = self._linstor.controller_props()
+    @classmethod
+    def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
             result.append(lstmsg.props)
+        return result
 
-        Commands._print_props(result, args)
-        return ExitCode.OK
+    def cmd_print_controller_props(self, args):
+        lstmsg = self._linstor.controller_props()
+
+        return self.output_props_list(args, lstmsg, self._props_list)
 
     def cmd_set_controller_props(self, args):
         props = Commands.parse_key_value_pairs([args.key + '=' + args.value])
