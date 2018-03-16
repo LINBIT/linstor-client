@@ -313,7 +313,7 @@ class Commands(object):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
 
-        lstmsg = lapi.node_list()
+        lstmsg = lapi.node_list()[0]
         if lstmsg:
             for node in lstmsg.nodes:
                 possible.add(node.name)
@@ -334,7 +334,7 @@ class Commands(object):
     def netif_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
-        lstmsg = lapi.node_list()
+        lstmsg = lapi.node_list()[0]
 
         node = self.find_node(lstmsg, kwargs['parsed_args'].node_name)
         if node:
@@ -349,7 +349,7 @@ class Commands(object):
     def storage_pool_dfn_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
-        lstmsg = lapi.storage_pool_dfn_list()
+        lstmsg = lapi.storage_pool_dfn_list()[0]
 
         if lstmsg:
             for storpool_dfn in lstmsg.stor_pool_dfns:
@@ -363,7 +363,7 @@ class Commands(object):
     def storage_pool_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
-        lstmsg = lapi.storage_pool_list()
+        lstmsg = lapi.storage_pool_list()[0]
 
         if lstmsg:
             for storpool in lstmsg.stor_pools:
@@ -377,7 +377,7 @@ class Commands(object):
     def resource_dfn_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
-        lstmsg = lapi.resource_dfn_list()
+        lstmsg = lapi.resource_dfn_list()[0]
 
         if lstmsg:
             for rsc_dfn in lstmsg.rsc_dfns:
@@ -391,7 +391,7 @@ class Commands(object):
     def resource_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
-        lstmsg = lapi.resource_list()
+        lstmsg = lapi.resource_list()[0]
 
         if lstmsg:
             for rsc in lstmsg.resources:
