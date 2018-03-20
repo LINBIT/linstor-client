@@ -57,7 +57,7 @@ class ResourceCommands(Commands):
         p_new_res.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
-            nargs='?',
+            nargs='*',
             help='Name of the node to deploy the resource').completer = self.node_completer
         p_new_res.set_defaults(func=self.create)
 
@@ -162,12 +162,14 @@ class ResourceCommands(Commands):
             if not args.node_name:
                 raise LinstorClientError("create-resource: too few arguments: Node name missing.", ExitCode.ARGPARSE_ERROR)
 
-            replies = self._linstor.resource_create(
-                args.node_name,
-                args.resource_definition_name,
-                args.diskless,
-                args.storage_pool
-            )
+            replies = []
+            for node_name in args.node_name:
+                replies += self._linstor.resource_create(
+                    node_name,
+                    args.resource_definition_name,
+                    args.diskless,
+                    args.storage_pool
+                )
 
         return self.handle_replies(args, replies)
 
