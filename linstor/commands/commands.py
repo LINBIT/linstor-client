@@ -9,6 +9,15 @@ from linstor.consts import ExitCode, KEY_LS_CONTROLLERS
 from linstor.properties import properties
 
 
+class ArgumentError(Exception):
+    def __init__(self, msg):
+        self._msg = msg
+
+    @property
+    def message(self):
+        return self._msg
+
+
 class Commands(object):
     CREATE_NODE = 'create-node'
     CREATE_RESOURCE = 'create-resource'

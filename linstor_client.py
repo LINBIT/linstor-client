@@ -42,7 +42,8 @@ from linstor.commands import (
     DrbdOptions,
     ZshGenerator,
     MiscCommands,
-    Commands
+    Commands,
+    ArgumentError
 )
 
 from linstor.consts import (
@@ -245,6 +246,13 @@ class LinStorCLI(object):
                 self._misc_commands._linstor = self._linstorapi
                 self._linstorapi.connect()
             rc = args.func(args)
+        except ArgumentError as ae:
+            sys.stderr.write(ae.message + '\n')
+            try:
+                self.parse(pargs + ['-h'])
+            except SystemExit:
+                pass
+            return ExitCode.ARGPARSE_ERROR
         except utils.LinstorClientError as lce:
             sys.stderr.write(lce.message + '\n')
             return lce.exit_code
