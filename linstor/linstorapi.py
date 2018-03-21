@@ -560,7 +560,8 @@ class Linstor(object):
     _storage_pool_key_map = {
         'Lvm': apiconsts.KEY_STOR_POOL_VOLUME_GROUP,
         'LvmThin': apiconsts.KEY_STOR_POOL_THIN_POOL,
-        'Zfs': apiconsts.KEY_STOR_POOL_ZPOOL
+        'Zfs': apiconsts.KEY_STOR_POOL_ZPOOL,
+        'Diskless': None
     }
 
     _node_types = [
@@ -879,9 +880,16 @@ class Linstor(object):
         msg.stor_pool.driver = '{driver}Driver'.format(driver=storage_driver)
 
         # set driver device pool property
-        prop = msg.stor_pool.props.add()
-        prop.key = self.get_driver_key(msg.stor_pool.driver)
-        prop.value = driver_pool_name
+        if msg.stor_pool.driver not in ['DisklessDriver']:
+            if not driver_pool_name:
+                raise LinstorError(
+                    "Driver '{d}' needs an existing driver pool name.".format(
+                        d=storage_driver
+                    )
+                )
+            prop = msg.stor_pool.props.add()
+            prop.key = self.get_driver_key(msg.stor_pool.driver)
+            prop.value = driver_pool_name
 
         return self._send_and_wait(apiconsts.API_CRT_STOR_POOL, msg)
 

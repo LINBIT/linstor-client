@@ -1,5 +1,5 @@
 import linstor
-from linstor.commands import Commands
+from linstor.commands import Commands, ArgumentError
 from linstor.utils import namecheck
 from linstor.sharedconsts import (
     KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
@@ -29,6 +29,7 @@ class StoragePoolCommands(Commands):
         p_new_storpool.add_argument(
             'driver_pool_name',
             type=namecheck(STORPOOL_NAME),  # TODO use STORPOOL_NAME check for now
+            nargs='?',
             help='Volumegroup/Pool name of the driver e.g. drbdpool')
         p_new_storpool.set_defaults(func=self.create)
 
@@ -102,7 +103,10 @@ class StoragePoolCommands(Commands):
     def create(self, args):
         # construct correct driver name
         driver = 'LvmThin' if args.driver == 'lvmthin' else args.driver.title()
-        replies = self._linstor.storage_pool_create(args.node_name, args.name, driver, args.driver_pool_name)
+        try:
+            replies = self._linstor.storage_pool_create(args.node_name, args.name, driver, args.driver_pool_name)
+        except linstor.linstorapi.LinstorError as e:
+            raise ArgumentError(e.message)
         return self.handle_replies(args, replies)
 
     def delete(self, args):
@@ -167,7 +171,7 @@ class StoragePoolCommands(Commands):
 
     @staticmethod
     def driver_completer(prefix, **kwargs):
-        possible = ["lvm", "lvmthin", "zfs"]
+        possible = ["lvm", "lvmthin", "zfs", "diskless"]
 
         if prefix:
             return [e for e in possible if e.startswith(prefix)]
