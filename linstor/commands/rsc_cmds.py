@@ -1,5 +1,5 @@
 import linstor
-from linstor.commands import Commands
+from linstor.commands import Commands, ArgumentError
 from linstor.utils import namecheck, Output, LinstorClientError
 from linstor.consts import Color, ExitCode, NODE_NAME, RES_NAME, STORPOOL_NAME
 import linstor.sharedconsts as apiconsts
@@ -160,7 +160,7 @@ class ResourceCommands(Commands):
             # normal create resource
             # check that node is given
             if not args.node_name:
-                raise LinstorClientError("create-resource: too few arguments: Node name missing.", ExitCode.ARGPARSE_ERROR)
+                raise ArgumentError("create-resource: too few arguments: Node name missing.")
 
             replies = []
             for node_name in args.node_name:
