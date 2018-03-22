@@ -8,6 +8,15 @@ from linstor.consts import NODE_NAME, STORPOOL_NAME
 
 
 class StoragePoolCommands(Commands):
+    _stor_pool_headers = [
+        linstor.TableHeader("StoragePool"),
+        linstor.TableHeader("Node"),
+        linstor.TableHeader("Driver"),
+        linstor.TableHeader("PoolName"),
+        linstor.TableHeader("Free", alignment_text='>'),
+        linstor.TableHeader("SupportsSnapshots")
+    ]
+
     def __init__(self):
         super(StoragePoolCommands, self).__init__()
 
@@ -53,7 +62,7 @@ class StoragePoolCommands(Commands):
         p_rm_storpool.set_defaults(func=self.delete)
 
         # list storpool
-        storpoolgroupby = ('Name',)
+        storpoolgroupby = [x.name for x in self._stor_pool_headers]
         storpool_group_completer = Commands.show_group_completer(storpoolgroupby, "groupby")
 
         p_lstorpool = parser.add_parser(
@@ -64,8 +73,10 @@ class StoragePoolCommands(Commands):
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
                                  choices=storpoolgroupby).completer = storpool_group_completer
-        p_lstorpool.add_argument('-R', '--storpool', nargs='+', type=namecheck(STORPOOL_NAME),
-                                 help='Filter by list of storage pool').completer = self.storage_pool_completer
+        p_lstorpool.add_argument('-s', '--storpools', nargs='+', type=namecheck(STORPOOL_NAME),
+                                 help='Filter by list of storage pools').completer = self.storage_pool_completer
+        p_lstorpool.add_argument('-n', '--nodes', nargs='+', type=namecheck(NODE_NAME),
+                                 help='Filter by list of nodes').completer = self.node_completer
         p_lstorpool.set_defaults(func=self.list)
 
         # show properties
@@ -116,13 +127,22 @@ class StoragePoolCommands(Commands):
 
     def show(self, args, lstmsg):
         tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        tbl.add_column("StoragePool")
-        tbl.add_column("Node")
-        tbl.add_column("Driver")
-        tbl.add_column("PoolName")
-        tbl.add_column("Free")
-        tbl.add_column("SupportsSnapshots")
-        for storpool in lstmsg.stor_pools:
+        for hdr in self._stor_pool_headers:
+            tbl.add_header(hdr)
+
+        tbl.set_groupby(args.groupby if args.groupby else [self._stor_pool_headers[0].name])
+
+        disp_list = lstmsg.stor_pools
+
+        # filter
+        filter_storpools = args.storpools
+        filter_nodes = args.nodes
+        if filter_storpools:
+            disp_list = [sp for sp in disp_list if sp.stor_pool_name in filter_storpools]
+        if filter_nodes:
+            disp_list = [sp for sp in disp_list if sp.node_name in filter_nodes]
+
+        for storpool in disp_list:
             driver_device_prop = [x for x in storpool.props
                                   if x.key == self._linstor.get_driver_key(storpool.driver)]
             driver_device = driver_device_prop[0].value if driver_device_prop else ''
