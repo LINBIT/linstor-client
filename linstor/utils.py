@@ -392,42 +392,6 @@ def filter_allowed(to_filter, allowed):
     return to_filter
 
 
-def approximate_size_string(size_kiB):
-    """
-    Produce human readable size information as a string
-    """
-    units = []
-    units.append("kiB")
-    units.append("MiB")
-    units.append("GiB")
-    units.append("TiB")
-    units.append("PiB")
-    max_index = len(units)
-
-    index = 0
-    counter = 1
-    magnitude = 1 << 10
-    while counter < max_index:
-        if size_kiB >= magnitude:
-            index = counter
-        else:
-            break
-        magnitude = magnitude << 10
-        counter += 1
-    magnitude = magnitude >> 10
-
-    size_str = None
-    if size_kiB % magnitude != 0:
-        size_unit = float(size_kiB) / magnitude
-        size_loc = locale.format('%3.2f', size_unit, grouping=True)
-        size_str = "%s %s" % (size_loc, units[index])
-    else:
-        size_unit = size_kiB / magnitude
-        size_str = "%d %s" % (size_unit, units[index])
-
-    return size_str
-
-
 class SizeCalc(object):
 
     """
@@ -525,6 +489,42 @@ class SizeCalc(object):
         else:
             result = byte_sz / div_out
         return int(result)
+
+    @classmethod
+    def approximate_size_string(cls, size_kib):
+        """
+        Produce human readable size information as a string
+        """
+        units = []
+        units.append("kiB")
+        units.append("MiB")
+        units.append("GiB")
+        units.append("TiB")
+        units.append("PiB")
+        max_index = len(units)
+
+        index = 0
+        counter = 1
+        magnitude = 1 << 10
+        while counter < max_index:
+            if size_kib >= magnitude:
+                index = counter
+            else:
+                break
+            magnitude = magnitude << 10
+            counter += 1
+        magnitude = magnitude >> 10
+
+        size_str = None
+        if size_kib % magnitude != 0:
+            size_unit = float(size_kib) / magnitude
+            size_loc = locale.format('%3.2f', size_unit, grouping=True)
+            size_str = "%s %s" % (size_loc, units[index])
+        else:
+            size_unit = size_kib / magnitude
+            size_str = "%d %s" % (size_unit, units[index])
+
+        return size_str
 
 
 class LinstorClientError(Exception):

@@ -1,10 +1,10 @@
 import linstor
 from linstor.commands import Commands, ArgumentError
-from linstor.utils import namecheck
+from linstor.utils import namecheck, SizeCalc
 from linstor.sharedconsts import (
     KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
 )
-from linstor.consts import NODE_NAME, STORPOOL_NAME, ExitCode
+from linstor.consts import NODE_NAME, STORPOOL_NAME
 
 
 class StoragePoolCommands(Commands):
@@ -120,6 +120,7 @@ class StoragePoolCommands(Commands):
         tbl.add_column("Node")
         tbl.add_column("Driver")
         tbl.add_column("PoolName")
+        tbl.add_column("Free")
         tbl.add_column("SupportsSnapshots")
         for storpool in lstmsg.stor_pools:
             driver_device_prop = [x for x in storpool.props
@@ -129,11 +130,16 @@ class StoragePoolCommands(Commands):
             supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
             supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
 
+            freespace = ""
+            if storpool.HasField("free_space"):
+                freespace = SizeCalc.approximate_size_string(storpool.free_space.free_space)
+
             tbl.add_row([
                 storpool.stor_pool_name,
                 storpool.node_name,
                 storpool.driver,
                 driver_device,
+                freespace,
                 supports_snapshots
             ])
         tbl.show()

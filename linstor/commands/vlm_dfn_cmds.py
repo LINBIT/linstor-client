@@ -1,6 +1,6 @@
 import linstor
 from linstor.commands import Commands
-from linstor.utils import SizeCalc, approximate_size_string, namecheck, Output
+from linstor.utils import SizeCalc, namecheck, Output
 from linstor.consts import RES_NAME, Color, ExitCode
 from linstor.sharedconsts import (
     FLAG_DELETE
@@ -140,7 +140,7 @@ class VolumeDefinitionCommands(Commands):
                     rsc_dfn.rsc_name,
                     vlmdfn.vlm_nr,
                     vlmdfn.vlm_minor,
-                    approximate_size_string(vlmdfn.vlm_size),
+                    SizeCalc.approximate_size_string(vlmdfn.vlm_size),
                     tbl.color_cell("DELETING", Color.RED)
                     if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
                 ])
