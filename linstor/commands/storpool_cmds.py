@@ -132,17 +132,7 @@ class StoragePoolCommands(Commands):
 
         tbl.set_groupby(args.groupby if args.groupby else [self._stor_pool_headers[0].name])
 
-        disp_list = lstmsg.stor_pools
-
-        # filter
-        filter_storpools = args.storpools
-        filter_nodes = args.nodes
-        if filter_storpools:
-            disp_list = [sp for sp in disp_list if sp.stor_pool_name in filter_storpools]
-        if filter_nodes:
-            disp_list = [sp for sp in disp_list if sp.node_name in filter_nodes]
-
-        for storpool in disp_list:
+        for storpool in lstmsg.stor_pools:
             driver_device_prop = [x for x in storpool.props
                                   if x.key == self._linstor.get_driver_key(storpool.driver)]
             driver_device = driver_device_prop[0].value if driver_device_prop else ''
@@ -165,7 +155,7 @@ class StoragePoolCommands(Commands):
         tbl.show()
 
     def list(self, args):
-        lstmsg = self._linstor.storage_pool_list()
+        lstmsg = self._linstor.storage_pool_list(args.nodes, args.storpools)
 
         return self.output_list(args, lstmsg, self.show)
 

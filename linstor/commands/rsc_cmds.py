@@ -112,7 +112,18 @@ class ResourceCommands(Commands):
             description='Prints a list of all volumes.'
         )
         p_lvlms.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lvlms.add_argument('resource', nargs='?')
+        p_lvlms.add_argument(
+            '-n', '--nodes',
+            nargs='+',
+            type=namecheck(NODE_NAME),
+            help='Filter by list of nodes').completer = self.node_completer
+        p_lvlms.add_argument('-s', '--storpools', nargs='+', type=namecheck(STORPOOL_NAME),
+                             help='Filter by list of storage pools').completer = self.storage_pool_completer
+        p_lvlms.add_argument(
+            '-r', '--resources',
+            nargs='+',
+            type=namecheck(RES_NAME),
+            help='Filter by list of resources').completer = self.resource_completer
         p_lvlms.set_defaults(func=self.list_volumes)
 
         # show properties
@@ -199,16 +210,7 @@ class ResourceCommands(Commands):
 
         tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
 
-        filter_res = args.resources
-        filter_nodes = args.nodes
-
-        disp_list = lstmsg.resources
-        if filter_res:
-            disp_list = [rsc for rsc in disp_list if rsc.name in filter_res]
-        if filter_nodes:
-            disp_list = [rsc for rsc in disp_list if rsc.node_name in filter_nodes]
-
-        for rsc in disp_list:
+        for rsc in lstmsg.resources:
             rsc_dfn = rsc_dfn_map[rsc.name]
             marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
             # rsc_state = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
@@ -221,7 +223,7 @@ class ResourceCommands(Commands):
         tbl.show()
 
     def list(self, args):
-        lstmsg = self._linstor.resource_list()
+        lstmsg = self._linstor.resource_list(filter_by_nodes=args.nodes, filter_by_resources=args.resources)
         return self.output_list(args, lstmsg, self.show)
 
     @staticmethod
@@ -243,6 +245,7 @@ class ResourceCommands(Commands):
         tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("Node")
         tbl.add_column("Resource")
+        tbl.add_column("StoragePool")
         tbl.add_column("VolumeNr")
         tbl.add_column("MinorNr")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
@@ -272,6 +275,7 @@ class ResourceCommands(Commands):
                 tbl.add_row([
                     rsc.node_name,
                     rsc.name,
+                    vlm.stor_pool_name,
                     str(vlm.vlm_nr),
                     str(vlm.vlm_minor_nr),
                     state
@@ -280,7 +284,7 @@ class ResourceCommands(Commands):
         tbl.show()
 
     def list_volumes(self, args):
-        lstmsg = self._linstor.resource_list()
+        lstmsg = self._linstor.volume_list(args.nodes, args.storpools, args.resources)
 
         return self.output_list(args, lstmsg, self.show_volumes)
 

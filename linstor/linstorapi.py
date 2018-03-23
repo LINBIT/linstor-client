@@ -63,6 +63,7 @@ from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
 from linstor.proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
 from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
 from linstor.proto.MsgControlCtrl_pb2 import MsgControlCtrl
+from linstor.proto.Filter_pb2 import Filter
 import linstor.sharedconsts as apiconsts
 
 API_VERSION = 1
@@ -451,6 +452,7 @@ class _LinstorNetClient(threading.Thread):
                             apiconsts.API_LST_NODE: (MsgLstNode, None),
                             apiconsts.API_LST_RSC_DFN: (MsgLstRscDfn, None),
                             apiconsts.API_LST_RSC: (MsgLstRsc, None),
+                            apiconsts.API_LST_VLM: (MsgLstRsc, None),
                             apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, None)
                         }
 
@@ -927,14 +929,21 @@ class Linstor(object):
 
         return self._send_and_wait(apiconsts.API_DEL_STOR_POOL, msg)
 
-    def storage_pool_list(self):
+    def storage_pool_list(self, filter_by_nodes=None, filter_by_stor_pools=None):
         """
         Request a list of all storage pool known to the controller.
 
+        :param list[str] filter_by_nodes: Filter storage pools by nodes.
+        :param list[str] filter_by_stor_pools: Filter storage pools by storage pool names.
         :return: A MsgLstStorPool proto message containing all information.
         :rtype: list
         """
-        return self._send_and_wait(apiconsts.API_LST_STOR_POOL)
+        f = Filter()
+        if filter_by_nodes:
+            f.node_names.extend(filter_by_nodes)
+        if filter_by_stor_pools:
+            f.stor_pool_names.extend(filter_by_stor_pools)
+        return self._send_and_wait(apiconsts.API_LST_STOR_POOL, f)
 
     def resource_dfn_create(self, name, port=None):
         """
@@ -1141,14 +1150,40 @@ class Linstor(object):
 
         return self._send_and_wait(apiconsts.API_DEL_RSC, msg)
 
-    def resource_list(self):
+    def resource_list(self, filter_by_nodes=None, filter_by_resources=None):
         """
         Request a list of all resources known to the controller.
 
+        :param list[str] filter_by_nodes: filter resources by nodes
+        :param list[str] filter_by_resources: filter resources by resource names
         :return: A MsgLstRsc proto message containing all information.
         :rtype: list
         """
-        return self._send_and_wait(apiconsts.API_LST_RSC)
+        f = Filter()
+        if filter_by_nodes:
+            f.node_names.extend(filter_by_nodes)
+        if filter_by_resources:
+            f.resource_names.extend(filter_by_resources)
+        return self._send_and_wait(apiconsts.API_LST_RSC, f)
+
+    def volume_list(self, filter_by_nodes=None, filter_by_stor_pools=None, filter_by_resources=None):
+        """
+        Request a list of all volumes known to the controller.
+
+        :param list[str] filter_by_nodes: filter resources by nodes
+        :param list[str] filter_by_stor_pools: filter resources by storage pool names
+        :param list[str] filter_by_resources: filter resources by resource names
+        :return: A MsgLstRsc proto message containing all information.
+        :rtype: list
+        """
+        f = Filter()
+        if filter_by_nodes:
+            f.node_names.extend(filter_by_nodes)
+        if filter_by_stor_pools:
+            f.stor_pool_names.extend(filter_by_stor_pools)
+        if filter_by_resources:
+            f.resource_names.extend(filter_by_resources)
+        return self._send_and_wait(apiconsts.API_LST_VLM, f)
 
     def controller_props(self):
         """
