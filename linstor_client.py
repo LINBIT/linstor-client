@@ -142,27 +142,8 @@ class LinStorCLI(object):
         # add all volume definition commands
         self._volume_dfn_commands.setup_commands(subp)
 
-        # controller - get props
-        c_ctrl_props = subp.add_parser(Commands.GET_CONTROLLER_PROPS,
-                                       aliases=['dspctrlprp'],
-                                       description='Print current controller config properties.')
-        c_ctrl_props.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        c_ctrl_props.set_defaults(func=self._misc_commands.cmd_print_controller_props)
-
-        #  controller - set props
-        c_set_ctrl_props = subp.add_parser(Commands.SET_CONTROLLER_PROP,
-                                           aliases=['setctrlprp'],
-                                           description='Set a controller config property.')
-        Commands.add_parser_keyvalue(c_set_ctrl_props, "controller")
-        c_set_ctrl_props.set_defaults(func=self._misc_commands.cmd_set_controller_props)
-
-        # shutdown
-        c_shutdown = subp.add_parser(
-            Commands.SHUTDOWN,
-            aliases=['shtdwn'],
-            description='Shutdown the linstor controller'
-        )
-        c_shutdown.set_defaults(func=self._misc_commands.cmd_shutdown)
+        # misc commands
+        self._misc_commands.setup_commands(subp)
 
         # dm-migrate
         c_dmmigrate = subp.add_parser(

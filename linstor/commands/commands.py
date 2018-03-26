@@ -426,6 +426,29 @@ class MiscCommands(Commands):
     def __init__(self):
         super(MiscCommands, self).__init__()
 
+    def setup_commands(self, parser):
+        # controller - get props
+        c_ctrl_props = parser.add_parser(Commands.GET_CONTROLLER_PROPS,
+                                       aliases=['dspctrlprp'],
+                                       description='Print current controller config properties.')
+        c_ctrl_props.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        c_ctrl_props.set_defaults(func=self.cmd_print_controller_props)
+
+        #  controller - set props
+        c_set_ctrl_props = parser.add_parser(Commands.SET_CONTROLLER_PROP,
+                                           aliases=['setctrlprp'],
+                                           description='Set a controller config property.')
+        Commands.add_parser_keyvalue(c_set_ctrl_props, "controller")
+        c_set_ctrl_props.set_defaults(func=self.cmd_set_controller_props)
+
+        # shutdown
+        c_shutdown = parser.add_parser(
+            Commands.SHUTDOWN,
+            aliases=['shtdwn'],
+            description='Shutdown the linstor controller'
+        )
+        c_shutdown.set_defaults(func=self.cmd_shutdown)
+
     @classmethod
     def _props_list(cls, args, lstmsg):
         result = []
