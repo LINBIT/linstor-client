@@ -9,7 +9,6 @@ import json
 import os
 import tarfile
 import subprocess
-import zipfile
 from linstor.linstorapi import ApiCallResponse
 
 
@@ -73,7 +72,7 @@ class LinstorTestCase(unittest.TestCase):
         controller_bin = os.path.join(linstor_bin, "Controller")
         print("executing: " + controller_bin)
         cls.controller = subprocess.Popen(
-            [controller_bin, "--memory-database=h2;" + str(controller_port) + ";127.0.0.1"],
+            [controller_bin, "--memory-database=h2;" + str(controller_port) + ";" + cls.host()],
             cwd=install_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
@@ -103,11 +102,20 @@ class LinstorTestCase(unittest.TestCase):
         sys.stdout.flush()
 
     @classmethod
+    def host(cls):
+        return '127.0.0.1'
+
+    @classmethod
+    def port(cls):
+        return controller_port
+
+    @classmethod
     def add_controller_arg(cls, cmd_args):
         cmd_args.insert(0, '--controllers')
-        cmd_args.insert(1, '127.0.0.1:' + str(controller_port))
+        cmd_args.insert(1, cls.host() + ':' + str(cls.port()))
 
-    def execute(self, cmd_args):
+    @classmethod
+    def execute(cls, cmd_args):
         LinstorTestCase.add_controller_arg(cmd_args)
         linstor_cli = linstor_client.LinStorCLI()
 
@@ -116,7 +124,8 @@ class LinstorTestCase(unittest.TestCase):
         except SystemExit as e:
             return e.code
 
-    def parse_args(self, cmd_args):
+    @classmethod
+    def parse_args(cls, cmd_args):
         LinstorTestCase.add_controller_arg(cmd_args)
         linstor_cli = linstor_client.LinStorCLI()
 
@@ -179,8 +188,66 @@ class LinstorTestCase(unittest.TestCase):
         self.assertEqual(len(responses), 1, "Zero or more than 1 api call responses")
         return responses[0]
 
-    def assertHasProp(self, props, key, val):
+    @classmethod
+    def assertHasProp(cls, props, key, val):
         for prop in props:
             if prop['key'] == key and prop['value'] == val:
                 return True
         raise AssertionError("Prop {prop} with value {val} not in container.".format(prop=key, val=val))
+
+
+class LinstorTestCaseWithData(LinstorTestCase):
+
+    @classmethod
+    def assert_execute(cls, cmd):
+        r = cls.execute(cmd)
+        if r != 0:
+            cls.controller.terminate()
+            raise AssertionError("No clean exit({e}) from command: {cmd}".format(e=r, cmd=" ".join(cmd)))
+        return True
+
+    @classmethod
+    def setUpClass(cls):
+        super(LinstorTestCaseWithData, cls).setUpClass()
+
+        cls.assert_execute(['create-node', 'fakehost1', '1.0.0.1'])
+        cls.assert_execute(['create-node', 'fakehost2', '1.0.0.2'])
+        cls.assert_execute(['create-node', 'fakehost3', '1.0.0.3'])
+        cls.assert_execute(['create-node', 'fakemachine', '1.0.0.4'])
+
+        cls.assert_execute(['create-netinterface', 'fakehost1', 'fastnet', '10.0.0.1'])
+
+        cls.assert_execute(['create-storage-pool', 'DfltStorPool', 'fakehost1', 'lvm', 'mylvmpool'])
+        cls.assert_execute(['create-storage-pool', 'DfltStorPool', 'fakehost2', 'lvm', 'mylvmpool'])
+        cls.assert_execute(['create-storage-pool', 'DfltStorPool', 'fakehost3', 'lvm', 'mylvmpool'])
+
+        cls.assert_execute(['create-storage-pool', 'thinpool', 'fakehost1', 'lvmthin', 'mythinpool'])
+        cls.assert_execute(['create-storage-pool', 'thinpool', 'fakehost2', 'lvmthin', 'mythinpool'])
+
+        cls.assert_execute(['create-storage-pool', 'zfsubuntu', 'fakehost1', 'zfs', 'zfsstorage'])
+        cls.assert_execute(['create-storage-pool', 'zfsubuntu', 'fakehost2', 'zfs', 'zfsstorage'])
+
+        cls.assert_execute(['create-resource-definition', 'rsc1'])
+        cls.assert_execute(['create-volume-definition', 'rsc1', '128Mib'])
+
+        cls.assert_execute(['create-resource', 'rsc1', 'fakehost1'])
+        cls.assert_execute(['create-resource', 'rsc1', 'fakehost2'])
+        cls.assert_execute(['create-resource', '-d', 'rsc1', 'fakehost3'])
+
+        cls.assert_execute(['create-resource-definition', 'rsc-zfs'])
+        cls.assert_execute(['create-volume-definition', 'rsc-zfs', '128Mib'])
+
+        cls.assert_execute(['create-resource', 'rsc-zfs', 'fakehost1', '-s', 'zfsubuntu'])
+        cls.assert_execute(['create-resource', 'rsc-zfs', 'fakehost2', '-s', 'zfsubuntu'])
+
+        cls.assert_execute(['create-resource-definition', 'rsc_thin'])
+        cls.assert_execute(['create-volume-definition', 'rsc_thin', '128Mib'])
+        cls.assert_execute(['create-volume-definition', 'rsc_thin', '64Mib'])
+
+        cls.assert_execute(['create-resource', 'rsc_thin', 'fakehost1', '-s', 'thinpool'])
+        cls.assert_execute(['create-resource', 'rsc_thin', 'fakehost2', '-s', 'thinpool'])
+
+    def get_list(self, field, response):
+        self.assertEqual(1, len(response))
+        self.assertIn(field, response[0])
+        return response[0][field]
