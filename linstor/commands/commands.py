@@ -309,8 +309,11 @@ class Commands(object):
         if self._linstor_completer:
             return self._linstor_completer
 
-        cliargs = kwargs['parsed_args']
-        servers = Commands.controller_list(cliargs.controllers)
+        # TODO also read config overrides
+        servers = ['linstor://localhost']
+        if 'parsed_args' in kwargs:
+            cliargs = kwargs['parsed_args']
+            servers = Commands.controller_list(cliargs.controllers)
         if not servers:
             return None
 
