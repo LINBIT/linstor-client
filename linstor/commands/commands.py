@@ -1,5 +1,6 @@
 import os
 import json
+import getpass
 import linstor
 from linstor.utils import Output, LinstorClientError
 from linstor.protobuf_to_dict import protobuf_to_dict
@@ -63,6 +64,9 @@ class Commands(object):
     SET_STORAGE_POOL_PROP = 'set-storage-pool-property'
     SET_VOLUME_DEF_PROP = 'set-volume-definition-property'
     SET_CONTROLLER_PROP = 'set-controller-property'
+    CRYPT_ENTER_PASSPHRASE = 'crypt-enter-passphrase'
+    CRYPT_CREATE_PASSPHRASE = 'crypt-create-passphrase'
+    CRYPT_MODIFY_PASSPHRASE = 'crypt-modify-passphrase'
 
     GEN_ZSH_COMPLETER = 'gen-zsh-completer'
 
@@ -108,7 +112,10 @@ class Commands(object):
         SET_STORAGE_POOL_DEF_PROP,
         SET_STORAGE_POOL_PROP,
         SET_VOLUME_DEF_PROP,
-        SET_CONTROLLER_PROP
+        SET_CONTROLLER_PROP,
+        CRYPT_ENTER_PASSPHRASE,
+        CRYPT_CREATE_PASSPHRASE,
+        CRYPT_MODIFY_PASSPHRASE
     ]
     Hidden = [
         EXIT,
@@ -449,6 +456,41 @@ class MiscCommands(Commands):
         )
         c_shutdown.set_defaults(func=self.cmd_shutdown)
 
+        # crypt
+        c_crypt_enter_passphr = parser.add_parser(
+            Commands.CRYPT_ENTER_PASSPHRASE,
+            description='Enter the crypt passphrase.'
+        )
+        c_crypt_enter_passphr.add_argument(
+            "-p", "--passphrase",
+            help='Master passphrase to unlock.'
+        )
+        c_crypt_enter_passphr.set_defaults(func=self.cmd_crypt_enter_passphrase)
+
+        c_crypt_create_passphr = parser.add_parser(
+            Commands.CRYPT_CREATE_PASSPHRASE,
+            description='Create a new crypt passphrase.'
+        )
+        c_crypt_create_passphr.add_argument(
+            "-p", "--passphrase",
+            help="Passphrase used for encryption."
+        )
+        c_crypt_create_passphr.set_defaults(func=self.cmd_crypt_create_passphrase)
+
+        c_crypt_modify_passphr = parser.add_parser(
+            Commands.CRYPT_MODIFY_PASSPHRASE,
+            description='Change the current passphrase.'
+        )
+        c_crypt_modify_passphr.add_argument(
+            "--old-passphrase",
+            help="Old passphrase used for encryption."
+        )
+        c_crypt_modify_passphr.add_argument(
+            "--new-passphrase",
+            help="New passphrase used for encryption."
+        )
+        c_crypt_modify_passphr.set_defaults(func=self.cmd_crypt_modify_passphrase)
+
     @classmethod
     def _props_list(cls, args, lstmsg):
         result = []
@@ -469,4 +511,38 @@ class MiscCommands(Commands):
 
     def cmd_shutdown(self, args):
         replies = self._linstor.shutdown_controller()
+        return self.handle_replies(args, replies)
+
+    def cmd_crypt_enter_passphrase(self, args):
+        if args.passphrase:
+            passphrase = args.passphrase
+        else:
+            # read from keyboard
+            passphrase = getpass.getpass("Passphrase: ")
+        replies = self._linstor.crypt_enter_passphrase(passphrase)
+        return self.handle_replies(args, replies)
+
+    def cmd_crypt_create_passphrase(self, args):
+        if args.passphrase:
+            passphrase = args.passphrase
+        else:
+            # read from keyboard
+            passphrase = getpass.getpass("Passphrase: ")
+        replies = self._linstor.crypt_create_passphrase(passphrase)
+        return self.handle_replies(args, replies)
+
+    def cmd_crypt_modify_passphrase(self, args):
+        if args.old_passphrase:
+            old_passphrase = args.old_passphrase
+        else:
+            # read from keyboard
+            old_passphrase = getpass.getpass("Old passphrase: ")
+
+        if args.new_passphrase:
+            new_passphrase = args.new_passphrase
+        else:
+            # read from keyboard
+            new_passphrase = getpass.getpass("New passphrase: ")
+
+        replies = self._linstor.crypt_modify_passphrase(old_passphrase, new_passphrase)
         return self.handle_replies(args, replies)

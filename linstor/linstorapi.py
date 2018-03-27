@@ -63,6 +63,9 @@ from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
 from linstor.proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
 from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
 from linstor.proto.MsgControlCtrl_pb2 import MsgControlCtrl
+from linstor.proto.MsgEnterCryptPassphrase_pb2 import MsgEnterCryptPassphrase
+from linstor.proto.MsgCrtCryptPassphrase_pb2 import MsgCrtCryptPassphrase
+from linstor.proto.MsgModCryptPassphrase_pb2 import MsgModCryptPassphrase
 from linstor.proto.Filter_pb2 import Filter
 import linstor.sharedconsts as apiconsts
 
@@ -1227,6 +1230,44 @@ class Linstor(object):
         msg = MsgControlCtrl()
         msg.command = apiconsts.API_CMD_SHUTDOWN
         return self._send_and_wait(apiconsts.API_CONTROL_CTRL, msg)
+
+    def crypt_create_passphrase(self, passphrase):
+        """
+        Create a new crypt passphrase on the controller.
+
+        :param passphrase: New passphrase.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
+        msg = MsgCrtCryptPassphrase()
+        msg.passphrase = passphrase
+        return self._send_and_wait(apiconsts.API_CRT_CRYPT_PASS, msg)
+
+    def crypt_enter_passphrase(self, passphrase):
+        """
+        Send the master passphrase to unlock crypted volumes.
+
+        :param passphrase: Passphrase to send to the controller.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
+        msg = MsgEnterCryptPassphrase()
+        msg.passphrase = passphrase
+        return self._send_and_wait(apiconsts.API_ENTER_CRYPT_PASS, msg)
+
+    def crypt_modify_passphrase(self, old_passphrase, new_passphrase):
+        """
+        Modify the current crypt passphrase.
+
+        :param old_passphrase: Old passphrase, need for decrypt current volumes.
+        :param new_passphrase: New passphrase.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
+        msg = MsgModCryptPassphrase()
+        msg.old_passphrase = old_passphrase
+        msg.new_passphrase = new_passphrase
+        return self._send_and_wait(apiconsts.API_MOD_CRYPT_PASS, msg)
 
     def ping(self):
         """
