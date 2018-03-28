@@ -1,3 +1,63 @@
+linstor-client (0.1.5-1) experimental; urgency=medium
+
+  [ Robert Altnoeder ]
+  * Fixed: dspvlmdfnprps -> dspvlmdfnprp
+
+  [ Rene Peinthor ]
+  * first implementation of the LinstorClient class
+  * replace NodeCommands api access with LinstorClient class
+  * add storage pool definition commands to api
+  * add storage pool commands to api
+  * add resource definition commands to api
+  * add volume definition commands to api
+  * fix errors for closed sockets
+  * add resource commands to api
+  * add shutdown and controller property command to linstorapi
+  * disconnect if an unknown api message was recieved
+  * properties didn't initializes the Table class correclty
+  * cleanup remove unused code
+  * move completer functions into Commands class and remove commcontroller [...]
+  * add __enter__ __exit__ methods to linstorapi and some helpers
+  * use consts.ExitCode
+  * improve error handling and reporting
+  * move parse_host function into LinstorNetClient
+  * Add checks for app version
+  * add "Error: " to linstor errors on output
+  * make LinstorNetClient privatish
+  * Fully document all Linstor() methods
+  * fix typos and add more docstrings
+  * merge set-aux-property commands into set-property commands
+  * fix create-resource --auto-place with a specific storage-pool
+  * fix: offline commands will work again
+  * default utf8 mode now depends if stdout is a tty
+  * unittests: use new in memory database options
+  * unittests: use h2 for tests
+  * list message commands now correctly handle error replies
+  * unittest: linstor Controller doesn't need an open stdin anymore
+  * list-controller-properties will handle apicallreply now correctly
+  * fix positional argparse completers
+  * add docstring for Commands.find_node
+  * interactive: decrease the wall of text on incorrectly entered commands
+  * create-resource: allow to specify more than 1 node
+  * introduce an ArgumentError that will output help for the current command
+  * allow creation of diskless storage pools
+  * show usage if create-resource command failed
+  * list-storage-pools: list free space of storage pools
+  * list-storage-pools: add filter and groupby arguments
+  * list message are now filtered on the controller
+  * unittest: add tests for filtered list commands
+  * unittest: add tests for object completers
+  * move setup of misc commands to MiscCommands
+  * add volume definition crypt support
+  * crypt: add create, enter and modify passphrase commands
+
+  [ Roland Kammerer ]
+  * list-storage-pools: do not split "Name"
+  * build: add python-setuptools build dep
+  * build: do not assume dh_clean
+
+ -- Roland Kammerer <roland.kammerer@linbit.com>  Wed, 28 Mar 2018 16:15:12 +0200
+
 linstor-client (0.1.4-1) experimental; urgency=medium
 
   [ Robert Altnoeder ]

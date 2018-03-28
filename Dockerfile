@@ -1,7 +1,7 @@
 FROM ubuntu:xenial as builder
 MAINTAINER Roland Kammerer <roland.kammerer@linbit.com>
 
-ENV LINSTOR_CLI_VERSION 0.1.4
+ENV LINSTOR_CLI_VERSION 0.1.5
 ENV LINSTOR_CLI_PKGNAME linstor-client
 ENV LINSTOR_TAR_BALL ${LINSTOR_CLI_PKGNAME}-${LINSTOR_CLI_VERSION}.tar.gz
 
@@ -10,7 +10,7 @@ RUN useradd -m -g makepkg makepkg
 
 RUN apt-get update -y
 
-RUN apt-get install -y bash-completion debhelper devscripts docbook-xsl help2man protobuf-compiler python-all python-protobuf xsltproc
+RUN apt-get install -y bash-completion debhelper devscripts docbook-xsl help2man protobuf-compiler python-setuptools python-all python-protobuf xsltproc
 COPY /dist/${LINSTOR_TAR_BALL} /tmp/
 
 USER makepkg
