@@ -35,6 +35,7 @@ class Commands(object):
     DELETE_STORAGE_POOL_DEF = 'delete-storage-pool-definition'
     DELETE_VOLUME_DEF = 'delete-volume-definition'
     DELETE_NETINTERFACE = 'delete-netinterface'
+    DESCRIBE_NODE = 'describe-node'
     LIST_NODE = 'list-nodes'
     LIST_RESOURCE_DEF = 'list-resource-definitions'
     LIST_RESOURCE = 'list-resources'
@@ -86,6 +87,7 @@ class Commands(object):
         DELETE_STORAGE_POOL_DEF,
         DELETE_VOLUME_DEF,
         DELETE_NETINTERFACE,
+        DESCRIBE_NODE,
         LIST_NODE,
         LIST_RESOURCE_DEF,
         LIST_RESOURCE,

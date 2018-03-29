@@ -1,7 +1,8 @@
 import linstor
 from linstor.commands import Commands
-from linstor.utils import Output, rangecheck, namecheck, ip_completer, LinstorClientError
+from linstor.utils import Output, rangecheck, SizeCalc, namecheck, ip_completer, LinstorClientError
 from linstor.consts import NODE_NAME, Color, ExitCode
+from linstor.commands.tree import TreeNode
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
@@ -15,8 +16,15 @@ from linstor.sharedconsts import (
     VAL_NETIF_TYPE_IP
 )
 
+import sys
+
 
 class NodeCommands(Commands):
+    NODE_LEVEL = 0
+    STORAGE_POOL_LEVEL = 1
+    RESOURCE_LEVEL = 2
+    VOLUME_LEVEL = 3
+
     def __init__(self):
         super(NodeCommands, self).__init__()
 
@@ -56,6 +64,16 @@ class NodeCommands(Commands):
         p_new_node.add_argument('ip',
                                 help='IP address of the new node').completer = ip_completer("name")
         p_new_node.set_defaults(func=self.create)
+
+        #describe-node
+        p_desc_node = parser.add_parser(
+            Commands.DESCRIBE_NODE,
+            aliases=['descnode'],
+            description='describe a node (or all nodes), list storage pools, resources and volumes under this node, '
+            'in this order')
+        p_desc_node.add_argument('name', nargs='?',
+                                help='Name of the node to be described. With no name, all nodes are described').completer = self.node_completer
+        p_desc_node.set_defaults(func=self.describe)
 
         # remove-node
         p_rm_node = parser.add_parser(
@@ -226,6 +244,114 @@ class NodeCommands(Commands):
         lstmsg = self._linstor.node_list()
 
         return self.output_list(args, lstmsg, self.show_nodes)
+
+    # describe the details of a node
+    # It will contruct a 4 level tree and print it. 
+    # The four levels are: node, storage pool, resource, and volume
+
+    def describe(self, args=None):
+
+        node_map = dict()
+        volume_def_map = dict()
+
+        node_list = self._linstor.node_list()
+        exit_code = self.check_list_sanity(args, node_list)
+        if exit_code != ExitCode.OK:
+            return exit_code
+
+        self.construct_node(node_map, node_list)
+
+        stpl_lstmsg = self._linstor.storage_pool_list()
+        exit_code=self.check_list_sanity(args, stpl_lstmsg)
+        if exit_code != ExitCode.OK:
+            return exit_code
+
+        self.construct_storpool(node_map, stpl_lstmsg)
+
+        rsc_dfn_msg = self._linstor.resource_dfn_list()
+        exit_code = self.check_list_sanity(args, rsc_dfn_msg)
+        if exit_code != ExitCode.OK:
+            return exit_code
+
+        self.get_volume_size(rsc_dfn_msg, volume_def_map)
+
+        rsc_lstmsg = self._linstor.resource_list()
+        exit_code = self.check_list_sanity(args, rsc_lstmsg)
+        if exit_code != ExitCode.OK:
+            return exit_code
+
+        self.construct_rsc(node_map, rsc_lstmsg, volume_def_map)
+
+        self.construct_end_reached_bitmap(node_map)
+
+        if args.name != None:
+            if args.name in node_map:
+                node = node_map[args.name]
+                print(' ')
+                node.print_node()
+            else:
+                sys.stderr.write('%s: no such node\n' %(args.name))
+
+        else:
+            for node_name_key in node_map:
+                node = node_map[node_name_key]
+                print(' ')
+                node.print_node()
+
+    def check_list_sanity(self, args, list):
+        if list:
+            if self.check_for_api_replies(list):
+                return self.handle_replies(args, list)
+        return ExitCode.OK
+
+    def get_volume_size(self, rsc_dfn_msg, volume_def_map):
+
+        for rsc_dfn in rsc_dfn_msg[0].rsc_dfns:
+            for vlmdfn in rsc_dfn.vlm_dfns:
+                volume_def_map[vlmdfn.vlm_minor] = vlmdfn.vlm_size
+
+
+    # each node has a bit map on wether the previous levels of nodes are the last nodes, 
+    # this bitmap is needed for properly drawing the tree
+    def construct_end_reached_bitmap(self, node_map):
+        for node_name_key in node_map:
+            node = node_map[node_name_key]
+            node.build_end_reached_bitmap([])
+
+    def construct_volume(self, rsc_node, rsc, volume_def_map):
+        for vlm in rsc.vlms:
+            volume_node = TreeNode('volume' + str(vlm.vlm_nr), '', self.VOLUME_LEVEL, [], [])
+            volume_node.set_description ('minor number: ' + str(vlm.vlm_minor_nr))
+            volume_node.add_description(', size: '
+                    + str(SizeCalc.approximate_size_string(volume_def_map[vlm.vlm_minor_nr])))
+            rsc_node.add_child(volume_node)
+
+    def find_storpool_name(self, prop_map):
+        for p in prop_map:
+            if p.key == 'StorPoolName':
+                return p.value
+        return None
+
+    def construct_rsc(self, node_map, rsc_lstmsg, volume_map):
+        for rsc in rsc_lstmsg[0].resources:
+            rsc_node = TreeNode(rsc.name, '', self.RESOURCE_LEVEL, [], [])
+            rsc_node.set_description('resource')
+            storpool_name = self.find_storpool_name(rsc.props)
+            storpool_node = node_map[rsc.node_name].find_child(storpool_name)
+            storpool_node.add_child(rsc_node)
+            self.construct_volume(rsc_node, rsc, volume_map)
+
+    def construct_storpool(self, node_map, stpl_lstmsg):
+        for storpool in stpl_lstmsg[0].stor_pools:
+            storpool_node = TreeNode (storpool.stor_pool_name, '', self.STORAGE_POOL_LEVEL , [], [])
+            storpool_node.set_description ('storage pool')
+            node_map[storpool.node_name].add_child(storpool_node)
+
+    def construct_node(self, node_map, node_list):
+        for n in node_list[0].nodes:
+            root_node = TreeNode (n.name, '', self.NODE_LEVEL, [], [])
+            root_node.set_description ('node')
+            node_map[n.name] = root_node
 
     @classmethod
     def show_netinterfaces(cls, args, lstnodes):
