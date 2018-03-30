@@ -20,10 +20,6 @@ import sys
 
 
 class NodeCommands(Commands):
-    NODE_LEVEL = 0
-    STORAGE_POOL_LEVEL = 1
-    RESOURCE_LEVEL = 2
-    VOLUME_LEVEL = 3
 
     def __init__(self):
         super(NodeCommands, self).__init__()
@@ -282,8 +278,6 @@ class NodeCommands(Commands):
 
         self.construct_rsc(node_map, rsc_lstmsg, volume_def_map)
 
-        self.construct_end_reached_bitmap(node_map)
-
         if args.name != None:
             if args.name in node_map:
                 node = node_map[args.name]
@@ -293,9 +287,10 @@ class NodeCommands(Commands):
                 sys.stderr.write('%s: no such node\n' %(args.name))
 
         else:
-            for node_name_key in node_map:
+            for index, node_name_key in enumerate(node_map):
+                if index:
+                    print("")
                 node = node_map[node_name_key]
-                print(' ')
                 node.print_node()
 
     def check_list_sanity(self, args, list):
@@ -310,17 +305,9 @@ class NodeCommands(Commands):
             for vlmdfn in rsc_dfn.vlm_dfns:
                 volume_def_map[vlmdfn.vlm_minor] = vlmdfn.vlm_size
 
-
-    # each node has a bit map on wether the previous levels of nodes are the last nodes, 
-    # this bitmap is needed for properly drawing the tree
-    def construct_end_reached_bitmap(self, node_map):
-        for node_name_key in node_map:
-            node = node_map[node_name_key]
-            node.build_end_reached_bitmap([])
-
     def construct_volume(self, rsc_node, rsc, volume_def_map):
         for vlm in rsc.vlms:
-            volume_node = TreeNode('volume' + str(vlm.vlm_nr), '', self.VOLUME_LEVEL, [], [])
+            volume_node = TreeNode('volume' + str(vlm.vlm_nr), '')
             volume_node.set_description ('minor number: ' + str(vlm.vlm_minor_nr))
             volume_node.add_description(', size: '
                     + str(SizeCalc.approximate_size_string(volume_def_map[vlm.vlm_minor_nr])))
@@ -334,7 +321,7 @@ class NodeCommands(Commands):
 
     def construct_rsc(self, node_map, rsc_lstmsg, volume_map):
         for rsc in rsc_lstmsg[0].resources:
-            rsc_node = TreeNode(rsc.name, '', self.RESOURCE_LEVEL, [], [])
+            rsc_node = TreeNode(rsc.name, '')
             rsc_node.set_description('resource')
             storpool_name = self.find_storpool_name(rsc.props)
             storpool_node = node_map[rsc.node_name].find_child(storpool_name)
@@ -343,13 +330,13 @@ class NodeCommands(Commands):
 
     def construct_storpool(self, node_map, stpl_lstmsg):
         for storpool in stpl_lstmsg[0].stor_pools:
-            storpool_node = TreeNode (storpool.stor_pool_name, '', self.STORAGE_POOL_LEVEL , [], [])
+            storpool_node = TreeNode (storpool.stor_pool_name, '')
             storpool_node.set_description ('storage pool')
             node_map[storpool.node_name].add_child(storpool_node)
 
     def construct_node(self, node_map, node_list):
         for n in node_list[0].nodes:
-            root_node = TreeNode (n.name, '', self.NODE_LEVEL, [], [])
+            root_node = TreeNode (n.name, '')
             root_node.set_description ('node')
             node_map[n.name] = root_node
 
