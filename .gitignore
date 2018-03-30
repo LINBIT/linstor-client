@@ -5,6 +5,13 @@
 # ignore "compiled" python
 *.pyc
 
+# make generated files
+man-pages/
+dist/
+linstor_client.egg-info/
+build
+MANIFEST
+
 # ignore generated protobuf messages and shared consts
 # these can be generated in the linstor-common with:
 # make python
@@ -16,3 +23,4 @@ linstor/consts_githash.py
 # unittests ignores
 build/
 test-reports/
+.cache/
