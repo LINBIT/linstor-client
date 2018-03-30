@@ -24,6 +24,8 @@ import socket
 import select
 import ssl
 from collections import deque
+from datetime import datetime
+import time
 from google.protobuf.internal import encoder
 from google.protobuf.internal import decoder
 
@@ -72,6 +74,8 @@ from linstor.proto.MsgEnterCryptPassphrase_pb2 import MsgEnterCryptPassphrase
 from linstor.proto.MsgCrtCryptPassphrase_pb2 import MsgCrtCryptPassphrase
 from linstor.proto.MsgModCryptPassphrase_pb2 import MsgModCryptPassphrase
 from linstor.proto.MsgModRscConn_pb2 import MsgModRscConn
+from linstor.proto.MsgReqErrorReport_pb2 import MsgReqErrorReport
+from linstor.proto.MsgErrorReport_pb2 import MsgErrorReport
 from linstor.proto.Filter_pb2 import Filter
 from linstor.proto.eventdata.EventVlmDiskState_pb2 import EventVlmDiskState
 from linstor.proto.eventdata.EventRscState_pb2 import EventRscState
@@ -180,6 +184,28 @@ class ApiCallResponse(ProtoMessageResponse):
         return "ApiCallResponse({retcode}, {msg})".format(retcode=self.ret_code, msg=self.proto_msg.message_format)
 
 
+class ErrorReport(ProtoMessageResponse):
+    def __init__(self, protobuf):
+        super(ErrorReport, self).__init__(protobuf)
+
+    @property
+    def datetime(self):
+        dt = datetime.fromtimestamp(self._proto_msg.error_time / 1000)
+        return dt.replace(microsecond=(self._proto_msg.error_time % 1000) * 1000)
+
+    @property
+    def id(self):
+        return self._proto_msg.filename[len("ErrorReport-"):-len(".log")]
+
+    @property
+    def text(self):
+        return self._proto_msg.text
+
+    @property
+    def node_names(self):
+        return self._proto_msg.node_names
+
+
 class _LinstorNetClient(threading.Thread):
     IO_SIZE = 4096
     HDR_LEN = 16
@@ -193,7 +219,8 @@ class _LinstorNetClient(threading.Thread):
         apiconsts.API_LST_RSC_DFN: (MsgLstRscDfn, ProtoMessageResponse),
         apiconsts.API_LST_RSC: (MsgLstRsc, ProtoMessageResponse),
         apiconsts.API_LST_VLM: (MsgLstRsc, ProtoMessageResponse),
-        apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, ProtoMessageResponse)
+        apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, ProtoMessageResponse),
+        apiconsts.API_LST_ERROR_REPORTS: (MsgErrorReport, ErrorReport)
     }
 
     def __init__(self, timeout=20):
@@ -1413,6 +1440,30 @@ class Linstor(object):
         msg.node_2_name = node_b
         msg = self._modify_props(msg, property_dict, delete_props)
         return self._send_and_wait(apiconsts.API_MOD_RSC_CONN, msg)
+
+    def error_report_list(self, nodes=None, with_content=False, since=None, to=None, ids=None):
+        """
+        Retrieves an error report list from the controller.
+
+        :param list[str] nodes: Nodes to filter, if None all
+        :param bool with_content: If true the full log content will be retrieved
+        :param datetime since: Start datetime from when to include, if None all
+        :param datetime to: Until datetime to include error reports, if None all
+        :param list[str] ids: Ids there string starts with to include, if None all
+        :return: A list containing ErrorReport from the controller.
+        :rtype: list[ErrorReport]
+        """
+        msg = MsgReqErrorReport()
+        for node in nodes if nodes else []:
+            msg.node_names.extend([node])
+        msg.with_content = with_content
+        if since:
+            msg.since = int(time.mktime(since.timetuple()) * 1000)
+        if to:
+            msg.to = int(time.mktime(to.timetuple()) * 1000)
+        if ids:
+            msg.ids.extend(ids)
+        return self._send_and_wait(apiconsts.API_REQ_ERROR_REPORTS, msg)
 
     def ping(self):
         """

@@ -107,6 +107,17 @@ class TestListFilters(LinstorTestCaseWithData):
         self.assertEqual(len(resources),
                          len([x for x in resources if x['name'] == 'rsc1']))
 
+    def test_list_error_reports(self):
+        error_reports = self.execute_with_machine_output(["list-error-reports"])
+        self.assertGreater(len(error_reports), 0)
+
+        report = error_reports[0]
+        report_id = report["filename"][len("ErrorReport-"):-len(".log")]
+        error_reports = self.execute_with_machine_output(["error-report", report_id])
+        self.assertEqual(1, len(error_reports))
+        error_report = error_reports[0]
+        self.assertGreater(len(error_report['text']), 0)
+
 
 class _FakeArgs(object):
     def __init__(self, addr):

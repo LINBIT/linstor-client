@@ -2,6 +2,8 @@ import os
 import json
 import getpass
 import linstor
+import re
+from datetime import datetime, timedelta
 from linstor.utils import Output, LinstorClientError
 from linstor.protobuf_to_dict import protobuf_to_dict
 import linstor.linstorapi as linstorapi
@@ -72,6 +74,8 @@ class Commands(object):
     CRYPT_ENTER_PASSPHRASE = 'crypt-enter-passphrase'
     CRYPT_CREATE_PASSPHRASE = 'crypt-create-passphrase'
     CRYPT_MODIFY_PASSPHRASE = 'crypt-modify-passphrase'
+    LIST_ERROR_REPORTS = 'list-error-reports'
+    ERROR_REPORT = 'error-report'
 
     GEN_ZSH_COMPLETER = 'gen-zsh-completer'
 
@@ -124,7 +128,9 @@ class Commands(object):
         SET_CONTROLLER_PROP,
         CRYPT_ENTER_PASSPHRASE,
         CRYPT_CREATE_PASSPHRASE,
-        CRYPT_MODIFY_PASSPHRASE
+        CRYPT_MODIFY_PASSPHRASE,
+        LIST_ERROR_REPORTS,
+        ERROR_REPORT
     ]
     Hidden = [
         EXIT,
@@ -161,7 +167,7 @@ class Commands(object):
         return isinstance(replies[0], linstor.linstorapi.ApiCallResponse)
 
     @classmethod
-    def output_list(cls, args, replies, output_func):
+    def output_list(cls, args, replies, output_func, single_item=True):
         if replies:
             if cls.check_for_api_replies(replies):
                 return cls.handle_replies(args, replies)
@@ -169,7 +175,7 @@ class Commands(object):
             if args.machine_readable:
                 cls._print_machine_readable(replies)
             else:
-                output_func(args, replies[0].proto_msg)
+                output_func(args, replies[0].proto_msg if single_item else replies)
 
         return ExitCode.OK
 
@@ -517,6 +523,33 @@ class MiscCommands(Commands):
         )
         c_crypt_modify_passphr.set_defaults(func=self.cmd_crypt_modify_passphrase)
 
+        c_list_error_reports = parser.add_parser(
+            Commands.LIST_ERROR_REPORTS,
+            description='List error reports.'
+        )
+        c_list_error_reports.add_argument('-s', '--since', help='Show errors since n days. e.g. "3days"')
+        c_list_error_reports.add_argument('-t', '--to', help='Show errors to specified date. Format YYYY-MM-DD.')
+        c_list_error_reports.add_argument(
+            '-n',
+            '--nodes',
+            help='Only show error reports from these nodes.',
+            nargs='+'
+        )
+        c_list_error_reports.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        c_list_error_reports.add_argument(
+            '--report-id',
+            nargs='+',
+            help="Restrict to id's that begin with the given ones."
+        )
+        c_list_error_reports.set_defaults(func=self.cmd_list_error_reports)
+
+        c_error_report = parser.add_parser(
+            Commands.ERROR_REPORT,
+            description='Output content of an error report.'
+        )
+        c_error_report.add_argument("report_id", nargs='+')
+        c_error_report.set_defaults(func=self.cmd_error_report)
+
     @classmethod
     def _props_list(cls, args, lstmsg):
         result = []
@@ -604,3 +637,52 @@ class MiscCommands(Commands):
 
         replies = self._linstor.crypt_modify_passphrase(old_passphrase, new_passphrase)
         return self.handle_replies(args, replies)
+
+    def show_error_report_list(self, args, lstmsg):
+        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl.add_header(linstor.TableHeader("Nr.", alignment_text=">"))
+        tbl.add_header(linstor.TableHeader("Id"))
+        tbl.add_header(linstor.TableHeader("Datetime"))
+        tbl.add_header(linstor.TableHeader("Node"))
+
+        i = 1
+        for error in lstmsg:
+            tbl.add_row([
+                str(i),
+                error.id,
+                str(error.datetime)[:19],
+                error.node_names
+            ])
+            i += 1
+        tbl.show()
+
+    def cmd_list_error_reports(self, args):
+        since = args.since
+        since_dt = None
+        if since:
+            m = re.match(r'(\d+)\W*d', since)
+            if m:
+                since_dt = datetime.now()
+                since_dt -= timedelta(days=int(m.group(1)))
+            else:
+                raise LinstorClientError(
+                    "Unable to parse since string: '{s_str}'. Use 'NUMdays'".format(s_str=since),
+                    ExitCode.ARGPARSE_ERROR
+                )
+
+        to_dt = None
+        if args.to:
+            to_dt = datetime.strptime(args.to, '%Y-%m-%d')
+            to_dt = to_dt.replace(hour=23, minute=59, second=59)
+
+        lstmsg = self._linstor.error_report_list(nodes=args.nodes, since=since_dt, to=to_dt, ids=args.report_id)
+        return self.output_list(args, lstmsg, self.show_error_report_list, single_item=False)
+
+    def show_error_report(self, args, lstmsg):
+
+        for error in lstmsg:
+            print(error.text)
+
+    def cmd_error_report(self, args):
+        lstmsg = self._linstor.error_report_list(with_content=True, ids=args.report_id)
+        return self.output_list(args, lstmsg, self.show_error_report, single_item=False)
