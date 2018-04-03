@@ -83,7 +83,9 @@ class ZshGenerator(object):
         argparse_cmd = self._parser._name_parser_map[cmd]
         for action in argparse_cmd._actions:
             if action.option_strings:
-                opt_data = ['--' + action.dest, action.help if action.help else ' ']
+                # get longest option string
+                optstr = sorted(action.option_strings, key=len, reverse=True)[0]
+                opt_data = [optstr, action.help.replace("'", "''") if action.help else ' ']
                 if action.choices:
                     opt_data.append("(" + " ".join(action.choices) + ")")
                 opts.append("'" + ':'.join(opt_data) + "'")
