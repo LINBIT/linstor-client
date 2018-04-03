@@ -1,5 +1,4 @@
 FROM ubuntu:xenial as builder
-MAINTAINER Roland Kammerer <roland.kammerer@linbit.com>
 
 ENV LINSTOR_CLI_VERSION 0.1.5
 ENV LINSTOR_CLI_PKGNAME linstor-client
@@ -21,6 +20,7 @@ RUN cd ${HOME} && \
 		 make deb
 
 FROM ubuntu:xenial
+MAINTAINER Roland Kammerer <roland.kammerer@linbit.com>
 COPY --from=builder /home/makepkg/*.deb /tmp
 RUN apt-get update -y && apt-get install -y python-natsort python-protobuf && dpkg -i /tmp/*.deb && rm /tmp/*.deb && apt-get clean -y
 
