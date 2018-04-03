@@ -19,10 +19,34 @@ class TreeNode:
         self.description = description
         self.child_list = []
 
-    def print_node(self):
-        self.print_node_in_tree("", "", "")
+        self.dtbl = {
+            'utf8': {
+                'svb': u'   │',    # space and verticl bar
+                'spc': u'    ',    # space
+                'pnc': u'   ├───', # pre node characters
+                'plnc': u'   └───' # pre last node characters
+            },
+            'ascii': {
+                'svb': '   |',
+                'spc': '    ',
+                'pnc': '   |---',
+                'plnc': '   +---'
+            }
+        }
 
-    def print_node_in_tree(self, connector, element_marker, child_prefix):
+    def print_node(self, no_utf8):
+
+        enc = 'ascii'
+        try:
+            import locale
+            if (locale.getdefaultlocale()[1].lower() == 'utf-8') and (not no_utf8):
+                enc = 'utf8'
+        except:
+            pass
+
+        self.print_node_in_tree("", "", "", enc)
+
+    def print_node_in_tree(self, connector, element_marker, child_prefix, enc):
         if connector:
             print(connector)
 
@@ -30,16 +54,18 @@ class TreeNode:
 
         for child_node in self.child_list[:-1]:
             child_node.print_node_in_tree(
-                child_prefix + self.SPACE_AND_VBAR,
-                child_prefix + self.PRE_NODE_CHARS,
-                child_prefix + self.SPACE_AND_VBAR
+                child_prefix + self.dtbl[enc]['svb'],
+                child_prefix + self.dtbl[enc]['pnc'],
+                child_prefix + self.dtbl[enc]['svb'],
+                enc
             )
 
         for child_node in self.child_list[-1:]:
             child_node.print_node_in_tree(
-                child_prefix + self.SPACE_AND_VBAR,
-                child_prefix + self.PRE_LAST_NODE_CHARS,
-                child_prefix + self.SPACE
+                child_prefix + self.dtbl[enc]['svb'],
+                child_prefix + self.dtbl[enc]['plnc'],
+                child_prefix + self.dtbl[enc]['spc'],
+                enc
             )
 
     def add_child(self, child):

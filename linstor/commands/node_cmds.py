@@ -282,7 +282,7 @@ class NodeCommands(Commands):
             if args.name in node_map:
                 node = node_map[args.name]
                 print(' ')
-                node.print_node()
+                node.print_node(args.no_utf8)
             else:
                 sys.stderr.write('%s: no such node\n' %(args.name))
 
@@ -291,7 +291,7 @@ class NodeCommands(Commands):
                 if index:
                     print("")
                 node = node_map[node_name_key]
-                node.print_node()
+                node.print_node(args.no_utf8)
 
     def check_list_sanity(self, args, list):
         if list:
