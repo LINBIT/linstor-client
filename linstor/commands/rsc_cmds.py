@@ -200,7 +200,7 @@ class ResourceCommands(Commands):
         rsc_dfns = self._linstor.resource_dfn_list()
         if isinstance(rsc_dfns[0], linstor.linstorapi.ApiCallResponse):
             return self.handle_replies(args, rsc_dfns)
-        rsc_dfns = rsc_dfns[0].rsc_dfns
+        rsc_dfns = rsc_dfns[0].proto_msg.rsc_dfns
 
         rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
 

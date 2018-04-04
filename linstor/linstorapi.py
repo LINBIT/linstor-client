@@ -124,13 +124,22 @@ class LinstorNetworkError(LinstorError):
         super(LinstorNetworkError, self).__init__(msg, more_errors)
 
 
-class ApiCallResponse(object):
+class ProtoMessageResponse(object):
+    def __init__(self, proto_response):
+        self._proto_msg = proto_response
+
+    @property
+    def proto_msg(self):
+        return self._proto_msg
+
+
+class ApiCallResponse(ProtoMessageResponse):
     """
     This is a wrapper class for a proto MsgApiCallResponse.
     It provides some additional methods for easier state checking of the ApiCallResponse.
     """
     def __init__(self, proto_response):
-        self._proto_msg = proto_response  # type: MsgApiCallResponse
+        super(ApiCallResponse, self).__init__(proto_response)
 
     @classmethod
     def from_json(cls, json_data):
@@ -158,10 +167,6 @@ class ApiCallResponse(object):
     @property
     def ret_code(self):
         return self._proto_msg.ret_code
-
-    @property
-    def proto_msg(self):
-        return self._proto_msg
 
     def __repr__(self):
         return "ApiCallResponse({retcode}, {msg})".format(retcode=self.ret_code, msg=self.proto_msg.message_format)
@@ -450,13 +455,13 @@ class _LinstorNetClient(threading.Thread):
                         reply_map = {
                             apiconsts.API_PONG: (None, None),
                             apiconsts.API_REPLY: (MsgApiCallResponse, ApiCallResponse),
-                            apiconsts.API_LST_STOR_POOL_DFN: (MsgLstStorPoolDfn, None),
-                            apiconsts.API_LST_STOR_POOL: (MsgLstStorPool, None),
-                            apiconsts.API_LST_NODE: (MsgLstNode, None),
-                            apiconsts.API_LST_RSC_DFN: (MsgLstRscDfn, None),
-                            apiconsts.API_LST_RSC: (MsgLstRsc, None),
-                            apiconsts.API_LST_VLM: (MsgLstRsc, None),
-                            apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, None)
+                            apiconsts.API_LST_STOR_POOL_DFN: (MsgLstStorPoolDfn, ProtoMessageResponse),
+                            apiconsts.API_LST_STOR_POOL: (MsgLstStorPool, ProtoMessageResponse),
+                            apiconsts.API_LST_NODE: (MsgLstNode, ProtoMessageResponse),
+                            apiconsts.API_LST_RSC_DFN: (MsgLstRscDfn, ProtoMessageResponse),
+                            apiconsts.API_LST_RSC: (MsgLstRsc, ProtoMessageResponse),
+                            apiconsts.API_LST_VLM: (MsgLstRsc, ProtoMessageResponse),
+                            apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, ProtoMessageResponse)
                         }
 
                         if hdr.api_call == apiconsts.API_VERSION:  # this shouldn't happen
@@ -794,7 +799,7 @@ class Linstor(object):
         """
         Request a list of all nodes known to the controller.
         :return: A MsgLstNode proto message containing all information.
-        :rtype: list
+        :rtype: list[ProtoMessageResponse]
         """
         return self._send_and_wait(apiconsts.API_LST_NODE)
 
@@ -846,7 +851,7 @@ class Linstor(object):
         Request a list of all storage pool definitions known to the controller.
 
         :return: A MsgLstStorPoolDfn proto message containing all information.
-        :rtype: list
+        :rtype: list[ProtoMessageResponse]
         """
         return self._send_and_wait(apiconsts.API_LST_STOR_POOL_DFN)
 
@@ -939,7 +944,7 @@ class Linstor(object):
         :param list[str] filter_by_nodes: Filter storage pools by nodes.
         :param list[str] filter_by_stor_pools: Filter storage pools by storage pool names.
         :return: A MsgLstStorPool proto message containing all information.
-        :rtype: list
+        :rtype: list[ProtoMessageResponse]
         """
         f = Filter()
         if filter_by_nodes:
@@ -1000,7 +1005,7 @@ class Linstor(object):
         Request a list of all resource definitions known to the controller.
 
         :return: A MsgLstRscDfn proto message containing all information.
-        :rtype: list
+        :rtype: list[ProtoMessageResponse]
         """
         return self._send_and_wait(apiconsts.API_LST_RSC_DFN)
 
@@ -1164,7 +1169,7 @@ class Linstor(object):
         :param list[str] filter_by_nodes: filter resources by nodes
         :param list[str] filter_by_resources: filter resources by resource names
         :return: A MsgLstRsc proto message containing all information.
-        :rtype: list
+        :rtype: list[ProtoMessageResponse]
         """
         f = Filter()
         if filter_by_nodes:
@@ -1181,7 +1186,7 @@ class Linstor(object):
         :param list[str] filter_by_stor_pools: filter resources by storage pool names
         :param list[str] filter_by_resources: filter resources by resource names
         :return: A MsgLstRsc proto message containing all information.
-        :rtype: list
+        :rtype: list[ProtoMessageResponse]
         """
         f = Filter()
         if filter_by_nodes:

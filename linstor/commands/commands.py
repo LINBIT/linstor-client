@@ -132,7 +132,7 @@ class Commands(object):
     def handle_replies(cls, args, replies):
         rc = ExitCode.OK
         if args and args.machine_readable:
-            Commands._print_machine_readable([r.proto_msg for r in replies])
+            Commands._print_machine_readable(replies)
             return rc
 
         for call_resp in replies:
@@ -159,7 +159,7 @@ class Commands(object):
             if args.machine_readable:
                 cls._print_machine_readable(replies)
             else:
-                output_func(args, replies[0])
+                output_func(args, replies[0].proto_msg)
 
         return ExitCode.OK
 
@@ -169,7 +169,7 @@ class Commands(object):
             return cls.handle_replies(args, lstmsg)
         lstmsg = lstmsg[0]
 
-        result = prop_show_func(args, lstmsg)
+        result = prop_show_func(args, lstmsg.proto_msg)
 
         Commands._print_props(result, args)
         return ExitCode.OK
@@ -180,7 +180,7 @@ class Commands(object):
         serializes the given protobuf data and prints to stdout.
         """
         assert(isinstance(data, list))
-        d = [protobuf_to_dict(x) for x in data]
+        d = [protobuf_to_dict(x.proto_msg) for x in data]
         s = json.dumps(d, indent=2)
 
         # try:
@@ -334,7 +334,7 @@ class Commands(object):
 
         lstmsg = lapi.node_list()[0]
         if lstmsg:
-            for node in lstmsg.nodes:
+            for node in lstmsg.proto_msg.nodes:
                 possible.add(node.name)
 
             if prefix:
@@ -362,7 +362,7 @@ class Commands(object):
         possible = set()
         lstmsg = lapi.node_list()[0]
 
-        node = self.find_node(lstmsg, kwargs['parsed_args'].node_name)
+        node = self.find_node(lstmsg.proto_msg, kwargs['parsed_args'].node_name)
         if node:
             for netif in node.net_interfaces:
                 possible.add(netif.name)
@@ -378,7 +378,7 @@ class Commands(object):
         lstmsg = lapi.storage_pool_dfn_list()[0]
 
         if lstmsg:
-            for storpool_dfn in lstmsg.stor_pool_dfns:
+            for storpool_dfn in lstmsg.proto_msg.stor_pool_dfns:
                 possible.add(storpool_dfn.stor_pool_name)
 
             if prefix:
@@ -392,7 +392,7 @@ class Commands(object):
         lstmsg = lapi.storage_pool_list()[0]
 
         if lstmsg:
-            for storpool in lstmsg.stor_pools:
+            for storpool in lstmsg.proto_msg.stor_pools:
                 possible.add(storpool.stor_pool_name)
 
             if prefix:
@@ -406,7 +406,7 @@ class Commands(object):
         lstmsg = lapi.resource_dfn_list()[0]
 
         if lstmsg:
-            for rsc_dfn in lstmsg.rsc_dfns:
+            for rsc_dfn in lstmsg.proto_msg.rsc_dfns:
                 possible.add(rsc_dfn.rsc_name)
 
             if prefix:
@@ -420,7 +420,7 @@ class Commands(object):
         lstmsg = lapi.resource_list()[0]
 
         if lstmsg:
-            for rsc in lstmsg.resources:
+            for rsc in lstmsg.proto_msg.resources:
                 possible.add(rsc.name)
 
             if prefix:
