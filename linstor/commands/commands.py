@@ -39,12 +39,9 @@ class Commands(object):
     RESOURCE = 'resource'
     RESOURCE_DEF = 'resource-definition'
     SET_CONTROLLER_PROP = 'set-controller-property'
-    CRYPT_ENTER_PASSPHRASE = 'crypt-enter-passphrase'
-    CRYPT_CREATE_PASSPHRASE = 'crypt-create-passphrase'
-    CRYPT_MODIFY_PASSPHRASE = 'crypt-modify-passphrase'
+    CRYPT = 'encryption'
     LIST_ERROR_REPORTS = 'list-error-reports'
     ERROR_REPORT = 'error-report'
-
     GEN_ZSH_COMPLETER = 'gen-zsh-completer'
     SHUTDOWN = 'shutdown'
     STORAGE_POOL = 'storage-pool'
@@ -52,6 +49,7 @@ class Commands(object):
     VOLUME_DEF = 'volume-definition'
 
     MainList = [
+        CRYPT,
         GET_CONTROLLER_PROPS,
         DRBD_OPTIONS,
         DRBD_PEER_OPTIONS,
@@ -65,9 +63,6 @@ class Commands(object):
         RESOURCE_DEF,
         SET_CONTROLLER_PROP,
         SHUTDOWN,
-        CRYPT_ENTER_PASSPHRASE,
-        CRYPT_CREATE_PASSPHRASE,
-        CRYPT_MODIFY_PASSPHRASE,
         LIST_ERROR_REPORTS,
         ERROR_REPORT,
         STORAGE_POOL,
@@ -135,6 +130,18 @@ class Commands(object):
         class SetAuxProperties(object):
             LONG = "set-aux-properties"
             SHORT = "sap"
+
+        class EnterPassphrase(object):
+            LONG = "enter-passphrase"
+            SHORT = "ep"
+
+        class CreatePassphrase(object):
+            LONG = "create-passphrase"
+            SHORT = "cp"
+
+        class ModifyPassphrase(object):
+            LONG = "modify-passphrase"
+            SHORT = "mp"
 
     @classmethod
     def handle_replies(cls, args, replies):
@@ -483,6 +490,17 @@ class MiscCommands(Commands):
         # crypt
         c_crypt_enter_passphr = parser.add_parser(
             Commands.CRYPT_ENTER_PASSPHRASE,
+
+        # Enryption subcommands
+        cyrpt_parser = parser.add_parser(
+            Commands.CRYPT,
+            aliases=["e"],
+            help="Encryption subcommands")
+        crypt_subp = cyrpt_parser.add_subparsers(title="Encryption commands")
+
+        c_crypt_enter_passphr = crypt_subp.add_parser(
+            Commands.Subcommands.EnterPassphrase.LONG,
+            aliases=[Commands.Subcommands.EnterPassphrase.SHORT],
             description='Enter the crypt passphrase.'
         )
         c_crypt_enter_passphr.add_argument(
@@ -491,8 +509,9 @@ class MiscCommands(Commands):
         )
         c_crypt_enter_passphr.set_defaults(func=self.cmd_crypt_enter_passphrase)
 
-        c_crypt_create_passphr = parser.add_parser(
-            Commands.CRYPT_CREATE_PASSPHRASE,
+        c_crypt_create_passphr = crypt_subp.add_parser(
+            Commands.Subcommands.CreatePassphrase.LONG,
+            aliases=[Commands.Subcommands.CreatePassphrase.SHORT],
             description='Create a new crypt passphrase.'
         )
         c_crypt_create_passphr.add_argument(
@@ -501,8 +520,9 @@ class MiscCommands(Commands):
         )
         c_crypt_create_passphr.set_defaults(func=self.cmd_crypt_create_passphrase)
 
-        c_crypt_modify_passphr = parser.add_parser(
-            Commands.CRYPT_MODIFY_PASSPHRASE,
+        c_crypt_modify_passphr = crypt_subp.add_parser(
+            Commands.Subcommands.ModifyPassphrase.LONG,
+            aliases=[Commands.Subcommands.ModifyPassphrase.SHORT],
             description='Change the current passphrase.'
         )
         c_crypt_modify_passphr.add_argument(
