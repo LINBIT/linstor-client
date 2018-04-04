@@ -5,6 +5,7 @@ override GITHEAD := $(shell test -e .git && $(GIT) rev-parse HEAD)
 
 U := $(shell $(PYTHON) ./setup.py versionup2date >/dev/null 2>&1; echo $$?;)
 TESTS = $(wildcard unit-tests/*_test.py)
+DOCKERREGISTRY = drbd.io
 
 all: doc
 	$(PYTHON) setup.py build
@@ -44,6 +45,10 @@ debrelease:
 	dh_clean || true
 	make release
 	git checkout MANIFEST.in
+
+dockerimage: debrelease
+	docker build -t $(DOCKERREGISTRY)/linstor-client .
+	@echo && echo "Did you run distclean?"
 
 .PHONY: gensrc
 gensrc:
