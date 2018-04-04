@@ -23,6 +23,8 @@ class ArgumentError(Exception):
 
 
 class Commands(object):
+    CONTROLLER = 'controller'
+    CRYPT = 'encryption'
     DMMIGRATE = 'dm-migrate'
     DRBD_OPTIONS = 'drbd-options'
     DRBD_PEER_OPTIONS = 'drbd-peer-options'
@@ -30,7 +32,6 @@ class Commands(object):
     DRBD_VOLUME_OPTIONS = 'drbd-volume-options'
     EXIT = 'exit'
     GEN_ZSH_COMPLETER = 'gen-zsh-completer'
-    GET_CONTROLLER_PROPS = 'list-controller-properties'
     CREATE_WATCH = 'create-watch'
     HELP = 'help'
     INTERACTIVE = 'interactive'
@@ -38,19 +39,15 @@ class Commands(object):
     NODE = 'node'
     RESOURCE = 'resource'
     RESOURCE_DEF = 'resource-definition'
-    SET_CONTROLLER_PROP = 'set-controller-property'
-    CRYPT = 'encryption'
     LIST_ERROR_REPORTS = 'list-error-reports'
     ERROR_REPORT = 'error-report'
-    GEN_ZSH_COMPLETER = 'gen-zsh-completer'
-    SHUTDOWN = 'shutdown'
     STORAGE_POOL = 'storage-pool'
     STORAGE_POOL_DEF = 'storage-pool-definition'
     VOLUME_DEF = 'volume-definition'
 
     MainList = [
+        CONTROLLER,
         CRYPT,
-        GET_CONTROLLER_PROPS,
         DRBD_OPTIONS,
         DRBD_PEER_OPTIONS,
         DRBD_RESOURCE_OPTIONS,
@@ -61,8 +58,6 @@ class Commands(object):
         NODE,
         RESOURCE,
         RESOURCE_DEF,
-        SET_CONTROLLER_PROP,
-        SHUTDOWN,
         LIST_ERROR_REPORTS,
         ERROR_REPORT,
         STORAGE_POOL,
@@ -142,6 +137,10 @@ class Commands(object):
         class ModifyPassphrase(object):
             LONG = "modify-passphrase"
             SHORT = "mp"
+
+        class Shutdown(object):
+            LONG = "shutdown"
+            SHORT = "off"
 
     @classmethod
     def handle_replies(cls, args, replies):
@@ -454,24 +453,33 @@ class MiscCommands(Commands):
         super(MiscCommands, self).__init__()
 
     def setup_commands(self, parser):
-        # controller - get props
-        c_ctrl_props = parser.add_parser(Commands.GET_CONTROLLER_PROPS,
-                                       aliases=['dspctrlprp'],
-                                       description='Print current controller config properties.')
+        # Controller commands
+        con_parser = parser.add_parser(
+            Commands.CONTROLLER,
+            aliases=["c"],
+            help="Controller subcommands")
+        con_subp = con_parser.add_subparsers(title="Controller commands")
+
+        # Controller - get props
+        c_ctrl_props = con_subp.add_parser(
+            Commands.Subcommands.ListProperties.LONG,
+            aliases=[Commands.Subcommands.ListProperties.SHORT],
+            description='Print current controller config properties.')
         c_ctrl_props.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         c_ctrl_props.set_defaults(func=self.cmd_print_controller_props)
 
         #  controller - set props
-        c_set_ctrl_props = parser.add_parser(Commands.SET_CONTROLLER_PROP,
-                                           aliases=['setctrlprp'],
-                                           description='Set a controller config property.')
+        c_set_ctrl_props = con_subp.add_parser(
+            Commands.Subcommands.SetProperties.LONG,
+            aliases=[Commands.Subcommands.SetProperties.SHORT],
+            description='Set a controller config property.')
         Commands.add_parser_keyvalue(c_set_ctrl_props, "controller")
         c_set_ctrl_props.set_defaults(func=self.cmd_set_controller_props)
 
-        # shutdown
-        c_shutdown = parser.add_parser(
-            Commands.SHUTDOWN,
-            aliases=['shtdwn'],
+        # Controller - shutdown
+        c_shutdown = con_subp.add_parser(
+            Commands.Subcommands.Shutdown.LONG,
+            aliases=[Commands.Subcommands.Shutdown.SHORT],
             description='Shutdown the linstor controller'
         )
         c_shutdown.set_defaults(func=self.cmd_shutdown)
