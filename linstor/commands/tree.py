@@ -1,11 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
+
 class TreeNode:
-    SPACE_AND_VBAR = u'   │'
-    SPACE = u'    '
-    PRE_NODE_CHARS = u'   ├───'
-    PRE_LAST_NODE_CHARS = u'   └───'
+    DTBL = {
+        'utf8': {
+            'svb': u'   │',    # space and vertical bar
+            'spc': u'    ',    # space
+            'pnc': u'   ├───',  # pre node characters
+            'plnc': u'   └───'  # pre last node characters
+        },
+        'ascii': {
+            'svb': '   |',
+            'spc': '    ',
+            'pnc': '   |---',
+            'plnc': '   +---'
+        }
+    }
 
     def __init__(self, name, description):
         """
@@ -19,21 +30,6 @@ class TreeNode:
         self.description = description
         self.child_list = []
 
-        self.dtbl = {
-            'utf8': {
-                'svb': u'   │',    # space and verticl bar
-                'spc': u'    ',    # space
-                'pnc': u'   ├───', # pre node characters
-                'plnc': u'   └───' # pre last node characters
-            },
-            'ascii': {
-                'svb': '   |',
-                'spc': '    ',
-                'pnc': '   |---',
-                'plnc': '   +---'
-            }
-        }
-
     def print_node(self, no_utf8):
 
         enc = 'ascii'
@@ -41,7 +37,7 @@ class TreeNode:
             import locale
             if (locale.getdefaultlocale()[1].lower() == 'utf-8') and (not no_utf8):
                 enc = 'utf8'
-        except:
+        except ImportError:
             pass
 
         self.print_node_in_tree("", "", "", enc)
@@ -54,17 +50,17 @@ class TreeNode:
 
         for child_node in self.child_list[:-1]:
             child_node.print_node_in_tree(
-                child_prefix + self.dtbl[enc]['svb'],
-                child_prefix + self.dtbl[enc]['pnc'],
-                child_prefix + self.dtbl[enc]['svb'],
+                child_prefix + self.DTBL[enc]['svb'],
+                child_prefix + self.DTBL[enc]['pnc'],
+                child_prefix + self.DTBL[enc]['svb'],
                 enc
             )
 
         for child_node in self.child_list[-1:]:
             child_node.print_node_in_tree(
-                child_prefix + self.dtbl[enc]['svb'],
-                child_prefix + self.dtbl[enc]['plnc'],
-                child_prefix + self.dtbl[enc]['spc'],
+                child_prefix + self.DTBL[enc]['svb'],
+                child_prefix + self.DTBL[enc]['plnc'],
+                child_prefix + self.DTBL[enc]['spc'],
                 enc
             )
 
@@ -77,8 +73,8 @@ class TreeNode:
                 return child
         return None
 
-    def set_description (self, description):
+    def set_description(self, description):
         self.description = description
 
-    def add_description (self, description):
+    def add_description(self, description):
         self.description += description

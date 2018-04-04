@@ -241,11 +241,15 @@ class NodeCommands(Commands):
 
         return self.output_list(args, lstmsg, self.show_nodes)
 
-    # describe the details of a node
-    # It will contruct a 4 level tree and print it. 
-    # The four levels are: node, storage pool, resource, and volume
-
     def describe(self, args=None):
+        """
+        describe the details of a node
+        It will construct a 4 level tree and print it.
+        The four levels are: node, storage pool, resource, and volume
+
+        :param args:
+        :return:
+        """
 
         node_map = dict()
         volume_def_map = dict()
@@ -258,7 +262,7 @@ class NodeCommands(Commands):
         self.construct_node(node_map, node_list)
 
         stpl_lstmsg = self._linstor.storage_pool_list()
-        exit_code=self.check_list_sanity(args, stpl_lstmsg)
+        exit_code = self.check_list_sanity(args, stpl_lstmsg)
         if exit_code != ExitCode.OK:
             return exit_code
 
@@ -278,10 +282,9 @@ class NodeCommands(Commands):
 
         self.construct_rsc(node_map, rsc_lstmsg, volume_def_map)
 
-        if args.name != None:
+        if args.name:
             if args.name in node_map:
                 node = node_map[args.name]
-                print(' ')
                 node.print_node(args.no_utf8)
             else:
                 sys.stderr.write('%s: no such node\n' %(args.name))
@@ -293,10 +296,10 @@ class NodeCommands(Commands):
                 node = node_map[node_name_key]
                 node.print_node(args.no_utf8)
 
-    def check_list_sanity(self, args, list):
-        if list:
-            if self.check_for_api_replies(list):
-                return self.handle_replies(args, list)
+    def check_list_sanity(self, args, _list):
+        if _list:
+            if self.check_for_api_replies(_list):
+                return self.handle_replies(args, _list)
         return ExitCode.OK
 
     def get_volume_size(self, rsc_dfn_msg, volume_def_map):
@@ -308,9 +311,10 @@ class NodeCommands(Commands):
     def construct_volume(self, rsc_node, rsc, volume_def_map):
         for vlm in rsc.vlms:
             volume_node = TreeNode('volume' + str(vlm.vlm_nr), '')
-            volume_node.set_description ('minor number: ' + str(vlm.vlm_minor_nr))
-            volume_node.add_description(', size: '
-                    + str(SizeCalc.approximate_size_string(volume_def_map[vlm.vlm_minor_nr])))
+            volume_node.set_description('minor number: ' + str(vlm.vlm_minor_nr))
+            volume_node.add_description(
+                ', size: ' + str(SizeCalc.approximate_size_string(volume_def_map[vlm.vlm_minor_nr]))
+            )
             rsc_node.add_child(volume_node)
 
     def find_storpool_name(self, prop_map):
@@ -330,14 +334,14 @@ class NodeCommands(Commands):
 
     def construct_storpool(self, node_map, stpl_lstmsg):
         for storpool in stpl_lstmsg[0].stor_pools:
-            storpool_node = TreeNode (storpool.stor_pool_name, '')
-            storpool_node.set_description ('storage pool')
+            storpool_node = TreeNode(storpool.stor_pool_name, '')
+            storpool_node.set_description('storage pool')
             node_map[storpool.node_name].add_child(storpool_node)
 
     def construct_node(self, node_map, node_list):
         for n in node_list[0].nodes:
-            root_node = TreeNode (n.name, '')
-            root_node.set_description ('node')
+            root_node = TreeNode(n.name, '')
+            root_node.set_description('node')
             node_map[n.name] = root_node
 
     @classmethod
