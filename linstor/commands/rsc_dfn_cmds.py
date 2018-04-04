@@ -80,7 +80,7 @@ class ResourceDefinitionCommands(Commands):
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
-        p_setprop = parser.add_parser(
+        p_setprop = res_def_subp.add_parser(
             Commands.Subcommands.SetAuxProperties.LONG,
             aliases=[Commands.Subcommands.SetAuxProperties.SHORT],
             description='Sets properties for the given resource definition.')

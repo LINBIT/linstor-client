@@ -143,7 +143,7 @@ class NodeCommands(Commands):
         p_mod_netif.set_defaults(func=self.modify_netif)
 
         # delete net interface
-        p_delete_netinterface = parser.add_parser(
+        p_delete_netinterface = node_subp.add_parser(
             Commands.Subcommands.DeleteNetInterface.LONG,
             aliases=[Commands.Subcommands.DeleteNetInterface.SHORT],
             description='Delete a netinterface from a node.'
@@ -180,7 +180,7 @@ class NodeCommands(Commands):
         p_lnodes.set_defaults(func=self.list)
 
         # list netinterface
-        p_lnetif = parser.add_parser(
+        p_lnetif = node_subp.add_parser(
             Commands.Subcommands.ListNetInterface.LONG,
             aliases=[Commands.Subcommands.ListNetInterface.SHORT],
             description='Prints a list of netinterfaces from a node.'
@@ -204,7 +204,7 @@ class NodeCommands(Commands):
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
-        p_setp = parser.add_parser(
+        p_setp = node_subp.add_parser(
             Commands.Subcommands.SetAuxProperties.LONG,
             aliases=[Commands.Subcommands.SetAuxProperties.SHORT],
             description="Set a property on the given node."

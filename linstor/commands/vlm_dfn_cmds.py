@@ -89,7 +89,7 @@ class VolumeDefinitionCommands(Commands):
         p_lvols.set_defaults(func=self.list)
 
         # show properties
-        p_sp = parser.add_parser(
+        p_sp = vol_def_subp.add_parser(
             Commands.Subcommands.ListProperties.LONG,
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given volume definition.")
@@ -104,7 +104,7 @@ class VolumeDefinitionCommands(Commands):
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
-        p_setprop = parser.add_parser(
+        p_setprop = vol_def_subp.add_parser(
             Commands.Subcommands.SetAuxProperties.LONG,
             aliases=[Commands.Subcommands.SetAuxProperties.SHORT],
             description='Sets properties for the given volume definition.')
