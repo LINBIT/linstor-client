@@ -20,6 +20,8 @@ import sys
 
 
 class NodeCommands(Commands):
+    DISKLESS_STORAGE_POOL = 'DfltDisklessStorPool'
+    DISKLESS_RESOURCE_NAME = 'diskless resource'
 
     def __init__(self):
         super(NodeCommands, self).__init__()
@@ -251,6 +253,10 @@ class NodeCommands(Commands):
         :return:
         """
 
+        if (args.machine_readable):
+            sys.stderr.write('This command does not support machine-readable\n')
+            return ExitCode.OPTION_NOT_SUPPORTED
+
         node_map = dict()
         volume_def_map = dict()
 
@@ -285,16 +291,17 @@ class NodeCommands(Commands):
         if args.name:
             if args.name in node_map:
                 node = node_map[args.name]
-                node.print_node(args.no_utf8)
+                node.print_node(args.no_utf8, args.no_color)
             else:
                 sys.stderr.write('%s: no such node\n' %(args.name))
+                return ExitCode.OBJECT_NOT_FOUND
 
         else:
             for index, node_name_key in enumerate(node_map):
                 if index:
                     print("")
                 node = node_map[node_name_key]
-                node.print_node(args.no_utf8)
+                node.print_node(args.no_utf8, args.no_color)
 
     def check_list_sanity(self, args, _list):
         if _list:
@@ -328,8 +335,18 @@ class NodeCommands(Commands):
             rsc_node = TreeNode(rsc.name, '')
             rsc_node.set_description('resource')
             storpool_name = self.find_storpool_name(rsc.props)
-            storpool_node = node_map[rsc.node_name].find_child(storpool_name)
-            storpool_node.add_child(rsc_node)
+            if (storpool_name==self.DISKLESS_STORAGE_POOL):
+                storpool_node = node_map[rsc.node_name].find_child(self.DISKLESS_RESOURCE_NAME)
+                if (storpool_node == None):
+                    storpool_node = TreeNode(self.DISKLESS_RESOURCE_NAME, '')
+                    storpool_node.set_description('resources may reside on other nodes')
+                    node_map[rsc.node_name].add_child(storpool_node)
+                    storpool_node.add_child(rsc_node)
+                else:
+                    storpool_node.add_child(rsc_node)
+            else:
+                storpool_node = node_map[rsc.node_name].find_child(storpool_name)
+                storpool_node.add_child(rsc_node)
             self.construct_volume(rsc_node, rsc, volume_map)
 
     def construct_storpool(self, node_map, stpl_lstmsg):

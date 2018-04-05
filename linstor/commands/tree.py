@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+from linstor.consts import Color
 
 
 class TreeNode:
@@ -18,6 +19,21 @@ class TreeNode:
         }
     }
 
+    NODE = 0
+    STORAGE_POOL = 1
+    RESOURCE = 2
+    VOLUME = 3
+
+    WITH_COLOR = 0
+    NO_COLOR = 3
+
+    COLORTBL = {
+        NODE:Color.RED,
+        STORAGE_POOL:Color.WHITE,
+        RESOURCE:Color.BLUE,
+        VOLUME:Color.NONE
+    }
+
     def __init__(self, name, description):
         """
         Creates a new TreeNode object
@@ -30,7 +46,7 @@ class TreeNode:
         self.description = description
         self.child_list = []
 
-    def print_node(self, no_utf8):
+    def print_node(self, no_utf8, no_color):
 
         enc = 'ascii'
         try:
@@ -40,20 +56,28 @@ class TreeNode:
         except ImportError:
             pass
 
-        self.print_node_in_tree("", "", "", enc)
+        if no_color:
+            self.print_node_in_tree("", "", "", enc, self.NO_COLOR)
+        else:
+            self.print_node_in_tree("", "", "", enc, self.WITH_COLOR)
+          
 
-    def print_node_in_tree(self, connector, element_marker, child_prefix, enc):
+    def print_node_in_tree(self, connector, element_marker, child_prefix, enc, level):
         if connector:
             print(connector)
 
-        print(element_marker + self.name + ' (' + self.description + ')')
+        print(element_marker + self.COLORTBL[level] + self.name + Color.NONE + ' (' + self.description + ')')
+ 
+        if level < self.VOLUME:
+            level += 1
 
         for child_node in self.child_list[:-1]:
             child_node.print_node_in_tree(
                 child_prefix + self.DTBL[enc]['svb'],
                 child_prefix + self.DTBL[enc]['pnc'],
                 child_prefix + self.DTBL[enc]['svb'],
-                enc
+                enc,
+                level
             )
 
         for child_node in self.child_list[-1:]:
@@ -61,7 +85,8 @@ class TreeNode:
                 child_prefix + self.DTBL[enc]['svb'],
                 child_prefix + self.DTBL[enc]['plnc'],
                 child_prefix + self.DTBL[enc]['spc'],
-                enc
+                enc,
+                level
             )
 
     def add_child(self, child):
