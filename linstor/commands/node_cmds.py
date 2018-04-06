@@ -1,3 +1,4 @@
+import collections
 import linstor
 from linstor.commands import Commands
 from linstor.utils import Output, rangecheck, SizeCalc, namecheck, ip_completer, LinstorClientError
@@ -253,7 +254,7 @@ class NodeCommands(Commands):
         :return:
         """
 
-        if (args.machine_readable):
+        if args.machine_readable:
             sys.stderr.write('This command does not support machine-readable\n')
             return ExitCode.OPTION_NOT_SUPPORTED
 
@@ -293,7 +294,7 @@ class NodeCommands(Commands):
                 node = node_map[args.name]
                 node.print_node(args.no_utf8, args.no_color)
             else:
-                sys.stderr.write('%s: no such node\n' %(args.name))
+                sys.stderr.write('%s: no such node\n' % args.name)
                 return ExitCode.OBJECT_NOT_FOUND
 
         else:
@@ -315,39 +316,37 @@ class NodeCommands(Commands):
             for vlmdfn in rsc_dfn.vlm_dfns:
                 volume_def_map[vlmdfn.vlm_minor] = vlmdfn.vlm_size
 
-    def construct_volume(self, rsc_node, rsc, volume_def_map):
-        for vlm in rsc.vlms:
-            volume_node = TreeNode('volume' + str(vlm.vlm_nr), '')
-            volume_node.set_description('minor number: ' + str(vlm.vlm_minor_nr))
-            volume_node.add_description(
-                ', size: ' + str(SizeCalc.approximate_size_string(volume_def_map[vlm.vlm_minor_nr]))
-            )
-            rsc_node.add_child(volume_node)
-
-    def find_storpool_name(self, prop_map):
-        for p in prop_map:
-            if p.key == 'StorPoolName':
-                return p.value
-        return None
+    def make_volume_node(self, vlm, volume_def_map):
+        volume_node = TreeNode('volume' + str(vlm.vlm_nr), '')
+        volume_node.set_description('minor number: ' + str(vlm.vlm_minor_nr))
+        volume_node.add_description(
+            ', size: ' + str(SizeCalc.approximate_size_string(volume_def_map[vlm.vlm_minor_nr]))
+        )
+        return volume_node
 
     def construct_rsc(self, node_map, rsc_lstmsg, volume_map):
         for rsc in rsc_lstmsg[0].resources:
-            rsc_node = TreeNode(rsc.name, '')
-            rsc_node.set_description('resource')
-            storpool_name = self.find_storpool_name(rsc.props)
-            if (storpool_name==self.DISKLESS_STORAGE_POOL):
-                storpool_node = node_map[rsc.node_name].find_child(self.DISKLESS_RESOURCE_NAME)
-                if (storpool_node == None):
-                    storpool_node = TreeNode(self.DISKLESS_RESOURCE_NAME, '')
-                    storpool_node.set_description('resources may reside on other nodes')
-                    node_map[rsc.node_name].add_child(storpool_node)
-                    storpool_node.add_child(rsc_node)
+            vlm_by_storpool = collections.defaultdict(list)
+            for vlm in rsc.vlms:
+                vlm_by_storpool[vlm.stor_pool_name].append(vlm)
+
+            for (storpool_name, vlms) in vlm_by_storpool.items():
+                rsc_node = TreeNode(rsc.name, '')
+                rsc_node.set_description('resource')
+
+                if storpool_name == self.DISKLESS_STORAGE_POOL:
+                    storpool_node = node_map[rsc.node_name].find_child(self.DISKLESS_RESOURCE_NAME)
+                    if storpool_node:
+                        storpool_node = TreeNode(self.DISKLESS_RESOURCE_NAME, '')
+                        storpool_node.set_description('resources may reside on other nodes')
+                        node_map[rsc.node_name].add_child(storpool_node)
                 else:
-                    storpool_node.add_child(rsc_node)
-            else:
-                storpool_node = node_map[rsc.node_name].find_child(storpool_name)
+                    storpool_node = node_map[rsc.node_name].find_child(storpool_name)
+
+                for vlm in vlms:
+                    rsc_node.add_child(self.make_volume_node(vlm, volume_map))
+
                 storpool_node.add_child(rsc_node)
-            self.construct_volume(rsc_node, rsc, volume_map)
 
     def construct_storpool(self, node_map, stpl_lstmsg):
         for storpool in stpl_lstmsg[0].stor_pools:
