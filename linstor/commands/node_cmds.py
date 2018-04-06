@@ -1,3 +1,4 @@
+import argparse
 import collections
 import sys
 
@@ -27,8 +28,25 @@ class NodeCommands(Commands):
         node_parser = parser.add_parser(
             Commands.NODE,
             aliases=["n"],
+            formatter_class=argparse.RawTextHelpFormatter,
             help="Node subcommands")
-        node_subp = node_parser.add_subparsers(title="Node commands")
+
+        node_subp = node_parser.add_subparsers(
+            title="Node commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(
+                [
+                    Commands.Subcommands.Create,
+                    Commands.Subcommands.List,
+                    Commands.Subcommands.Delete,
+                    Commands.Subcommands.Describe,
+                    Commands.Subcommands.CreateNetInterface,
+                    Commands.Subcommands.ListNetInterface,
+                    Commands.Subcommands.ModifyNetInterface,
+                    Commands.Subcommands.DeleteNetInterface,
+                    Commands.Subcommands.SetAuxProperties,
+                    Commands.Subcommands.ListProperties,
+                ]))
 
         # create node
         p_new_node = node_subp.add_parser(
