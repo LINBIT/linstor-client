@@ -146,6 +146,21 @@ class Commands(object):
             LONG = "describe"
             SHORT = "d"
 
+        @staticmethod
+        def generate_desc(subcommands):
+            """
+            Generates help output based on subcommands.
+
+            :param Commands.Subcommands subcommands: a list of subcommands to
+                generate help text for
+            :return a string of help output to be assigned to add_subparser
+                description keyword argument
+            """
+
+            return "\n".join([
+                " - {} ({})".format(sub.LONG, sub.SHORT)
+                for sub in subcommands])
+
     @classmethod
     def handle_replies(cls, args, replies):
         rc = ExitCode.OK
