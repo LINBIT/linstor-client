@@ -317,7 +317,7 @@ class NodeCommands(Commands):
                 volume_def_map[vlmdfn.vlm_minor] = vlmdfn.vlm_size
 
     def make_volume_node(self, vlm, volume_def_map):
-        volume_node = TreeNode('volume' + str(vlm.vlm_nr), '')
+        volume_node = TreeNode('volume' + str(vlm.vlm_nr), '', Color.DARKGREEN)
         volume_node.set_description('minor number: ' + str(vlm.vlm_minor_nr))
         volume_node.add_description(
             ', size: ' + str(SizeCalc.approximate_size_string(volume_def_map[vlm.vlm_minor_nr]))
@@ -331,13 +331,13 @@ class NodeCommands(Commands):
                 vlm_by_storpool[vlm.stor_pool_name].append(vlm)
 
             for (storpool_name, vlms) in vlm_by_storpool.items():
-                rsc_node = TreeNode(rsc.name, '')
+                rsc_node = TreeNode(rsc.name, '', Color.BLUE)
                 rsc_node.set_description('resource')
 
                 if storpool_name == self.DISKLESS_STORAGE_POOL:
                     storpool_node = node_map[rsc.node_name].find_child(self.DISKLESS_RESOURCE_NAME)
-                    if storpool_node:
-                        storpool_node = TreeNode(self.DISKLESS_RESOURCE_NAME, '')
+                    if not storpool_node:
+                        storpool_node = TreeNode(self.DISKLESS_RESOURCE_NAME, '', Color.PINK)
                         storpool_node.set_description('resources may reside on other nodes')
                         node_map[rsc.node_name].add_child(storpool_node)
                 else:
@@ -350,13 +350,13 @@ class NodeCommands(Commands):
 
     def construct_storpool(self, node_map, stpl_lstmsg):
         for storpool in stpl_lstmsg[0].stor_pools:
-            storpool_node = TreeNode(storpool.stor_pool_name, '')
+            storpool_node = TreeNode(storpool.stor_pool_name, '', Color.PINK)
             storpool_node.set_description('storage pool')
             node_map[storpool.node_name].add_child(storpool_node)
 
     def construct_node(self, node_map, node_list):
         for n in node_list[0].nodes:
-            root_node = TreeNode(n.name, '')
+            root_node = TreeNode(n.name, '', Color.RED)
             root_node.set_description('node')
             node_map[n.name] = root_node
 

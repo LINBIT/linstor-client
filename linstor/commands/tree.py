@@ -3,90 +3,79 @@ from __future__ import print_function
 from linstor.consts import Color
 
 
-class TreeNode:
-    DTBL = {
+class TreeFormatter:
+    TREE_DRAWING_TABLE = {
         'utf8': {
-            'svb': u'   │',    # space and vertical bar
-            'spc': u'    ',    # space
-            'pnc': u'   ├───',  # pre node characters
-            'plnc': u'   └───'  # pre last node characters
+            'connector_continue': u'   │',
+            'connector_end': u'    ',
+            'child_marker_continue': u'   ├───',
+            'child_marker_end': u'   └───'
         },
         'ascii': {
-            'svb': '   |',
-            'spc': '    ',
-            'pnc': '   |---',
-            'plnc': '   +---'
+            'connector_continue': '   |',
+            'connector_end': '    ',
+            'child_marker_continue': '   |---',
+            'child_marker_end': '   +---'
         }
     }
 
-    NODE = 0
-    STORAGE_POOL = 1
-    RESOURCE = 2
-    VOLUME = 3
+    def __init__(self, no_utf8, no_color):
+        enc = 'ascii'
+        try:
+            import locale
+            if (locale.getdefaultlocale()[1].lower() == 'utf-8') and not no_utf8:
+                enc = 'utf8'
+        except ImportError:
+            pass
 
-    WITH_COLOR = 0
-    NO_COLOR = 3
+        self.tree_drawing_strings = TreeFormatter.TREE_DRAWING_TABLE[enc]
+        self.no_color = no_color
 
-    COLORTBL = {
-        NODE:Color.RED,
-        STORAGE_POOL:Color.WHITE,
-        RESOURCE:Color.BLUE,
-        VOLUME:Color.NONE
-    }
+    def apply_color(self, text, color):
+        return text if self.no_color else color + text + Color.NONE
 
-    def __init__(self, name, description):
+    def get_drawing_string(self, key):
+        return self.tree_drawing_strings[key]
+
+
+class TreeNode:
+    def __init__(self, name, description, color):
         """
         Creates a new TreeNode object
 
         :param str name: name of the node
         :param str description: description of the node
+        :param color: color for the node name
         """
 
         self.name = name
         self.description = description
+        self.color = color
         self.child_list = []
 
     def print_node(self, no_utf8, no_color):
+        self.print_node_in_tree("", "", "", TreeFormatter(no_utf8, no_color))
 
-        enc = 'ascii'
-        try:
-            import locale
-            if (locale.getdefaultlocale()[1].lower() == 'utf-8') and (not no_utf8):
-                enc = 'utf8'
-        except ImportError:
-            pass
-
-        if no_color:
-            self.print_node_in_tree("", "", "", enc, self.NO_COLOR)
-        else:
-            self.print_node_in_tree("", "", "", enc, self.WITH_COLOR)
-          
-
-    def print_node_in_tree(self, connector, element_marker, child_prefix, enc, level):
+    def print_node_in_tree(self, connector, element_marker, child_prefix, formatter):
         if connector:
             print(connector)
 
-        print(element_marker + self.COLORTBL[level] + self.name + Color.NONE + ' (' + self.description + ')')
- 
-        if level < self.VOLUME:
-            level += 1
+        print(element_marker + formatter.apply_color(self.name, self.color) + ' (' + self.description + ')')
 
         for child_node in self.child_list[:-1]:
             child_node.print_node_in_tree(
-                child_prefix + self.DTBL[enc]['svb'],
-                child_prefix + self.DTBL[enc]['pnc'],
-                child_prefix + self.DTBL[enc]['svb'],
-                enc,
-                level
+                child_prefix + formatter.get_drawing_string('connector_continue'),
+                child_prefix + formatter.get_drawing_string('child_marker_continue'),
+                child_prefix + formatter.get_drawing_string('connector_continue'),
+                formatter
             )
 
         for child_node in self.child_list[-1:]:
             child_node.print_node_in_tree(
-                child_prefix + self.DTBL[enc]['svb'],
-                child_prefix + self.DTBL[enc]['plnc'],
-                child_prefix + self.DTBL[enc]['spc'],
-                enc,
-                level
+                child_prefix + formatter.get_drawing_string('connector_continue'),
+                child_prefix + formatter.get_drawing_string('child_marker_end'),
+                child_prefix + formatter.get_drawing_string('connector_end'),
+                formatter
             )
 
     def add_child(self, child):
