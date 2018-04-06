@@ -142,6 +142,10 @@ class Commands(object):
             LONG = "shutdown"
             SHORT = "off"
 
+        class Describe(object):
+            LONG = "describe"
+            SHORT = "d"
+
     @classmethod
     def handle_replies(cls, args, replies):
         rc = ExitCode.OK

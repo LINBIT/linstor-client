@@ -66,10 +66,10 @@ class NodeCommands(Commands):
                                 help='IP address of the new node').completer = ip_completer("name")
         p_new_node.set_defaults(func=self.create)
 
-        # describe-node
-        p_desc_node = parser.add_parser(
-            Commands.DESCRIBE_NODE,
-            aliases=['descnode'],
+        #describe-node
+        p_desc_node = node_subp.add_parser(
+            Commands.Subcommands.Describe.LONG,
+            aliases=[Commands.Subcommands.Describe.SHORT],
             description='describe a node (or all nodes), list storage pools, resources and volumes under this node, '
             'in this order')
         p_desc_node.add_argument(
