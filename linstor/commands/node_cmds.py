@@ -261,33 +261,33 @@ class NodeCommands(Commands):
         node_map = dict()
         volume_def_map = dict()
 
-        node_list = self._linstor.node_list()
-        exit_code = self.check_list_sanity(args, node_list)
+        node_list_replies = self._linstor.node_list()
+        exit_code = self.check_list_sanity(args, node_list_replies)
         if exit_code != ExitCode.OK:
             return exit_code
 
-        self.construct_node(node_map, node_list)
+        self.construct_node(node_map, node_list_replies[0].proto_msg)
 
-        stpl_lstmsg = self._linstor.storage_pool_list()
-        exit_code = self.check_list_sanity(args, stpl_lstmsg)
+        storage_pool_list_replies = self._linstor.storage_pool_list()
+        exit_code = self.check_list_sanity(args, storage_pool_list_replies)
         if exit_code != ExitCode.OK:
             return exit_code
 
-        self.construct_storpool(node_map, stpl_lstmsg)
+        self.construct_storpool(node_map, storage_pool_list_replies[0].proto_msg)
 
-        rsc_dfn_msg = self._linstor.resource_dfn_list()
-        exit_code = self.check_list_sanity(args, rsc_dfn_msg)
+        rsc_dfn_list_replies = self._linstor.resource_dfn_list()
+        exit_code = self.check_list_sanity(args, rsc_dfn_list_replies)
         if exit_code != ExitCode.OK:
             return exit_code
 
-        self.get_volume_size(rsc_dfn_msg, volume_def_map)
+        self.get_volume_size(rsc_dfn_list_replies[0].proto_msg, volume_def_map)
 
-        rsc_lstmsg = self._linstor.resource_list()
-        exit_code = self.check_list_sanity(args, rsc_lstmsg)
+        rsc_list_replies = self._linstor.resource_list()
+        exit_code = self.check_list_sanity(args, rsc_list_replies)
         if exit_code != ExitCode.OK:
             return exit_code
 
-        self.construct_rsc(node_map, rsc_lstmsg, volume_def_map)
+        self.construct_rsc(node_map, rsc_list_replies[0].proto_msg, volume_def_map)
 
         if args.name:
             if args.name in node_map:
@@ -304,15 +304,14 @@ class NodeCommands(Commands):
                 node = node_map[node_name_key]
                 node.print_node(args.no_utf8, args.no_color)
 
-    def check_list_sanity(self, args, _list):
-        if _list:
-            if self.check_for_api_replies(_list):
-                return self.handle_replies(args, _list)
+    def check_list_sanity(self, args, replies):
+        if replies:
+            if self.check_for_api_replies(replies):
+                return self.handle_replies(args, replies)
         return ExitCode.OK
 
-    def get_volume_size(self, rsc_dfn_msg, volume_def_map):
-
-        for rsc_dfn in rsc_dfn_msg[0].rsc_dfns:
+    def get_volume_size(self, rsc_dfn_list, volume_def_map):
+        for rsc_dfn in rsc_dfn_list.rsc_dfns:
             for vlmdfn in rsc_dfn.vlm_dfns:
                 volume_def_map[vlmdfn.vlm_minor] = vlmdfn.vlm_size
 
@@ -324,8 +323,8 @@ class NodeCommands(Commands):
         )
         return volume_node
 
-    def construct_rsc(self, node_map, rsc_lstmsg, volume_map):
-        for rsc in rsc_lstmsg[0].resources:
+    def construct_rsc(self, node_map, rsc_list, volume_map):
+        for rsc in rsc_list.resources:
             vlm_by_storpool = collections.defaultdict(list)
             for vlm in rsc.vlms:
                 vlm_by_storpool[vlm.stor_pool_name].append(vlm)
@@ -348,14 +347,14 @@ class NodeCommands(Commands):
 
                 storpool_node.add_child(rsc_node)
 
-    def construct_storpool(self, node_map, stpl_lstmsg):
-        for storpool in stpl_lstmsg[0].stor_pools:
+    def construct_storpool(self, node_map, storage_pool_list):
+        for storpool in storage_pool_list.stor_pools:
             storpool_node = TreeNode(storpool.stor_pool_name, '', Color.PINK)
             storpool_node.set_description('storage pool')
             node_map[storpool.node_name].add_child(storpool_node)
 
     def construct_node(self, node_map, node_list):
-        for n in node_list[0].nodes:
+        for n in node_list.nodes:
             root_node = TreeNode(n.name, '', Color.RED)
             root_node.set_description('node')
             node_map[n.name] = root_node
