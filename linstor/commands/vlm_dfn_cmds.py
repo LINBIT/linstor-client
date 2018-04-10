@@ -1,3 +1,5 @@
+import argparse
+
 import linstor
 from linstor.commands import Commands
 from linstor.utils import SizeCalc, namecheck, Output
@@ -19,8 +21,20 @@ class VolumeDefinitionCommands(Commands):
         vol_def_parser = parser.add_parser(
             Commands.VOLUME_DEF,
             aliases=["vd"],
+            formatter_class=argparse.RawTextHelpFormatter,
             help="Volume definition subcommands")
-        vol_def_subp = vol_def_parser.add_subparsers(title="Volume definition commands")
+
+        vol_def_subp = vol_def_parser.add_subparsers(
+            title="Volume definition commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(
+                [
+                    Commands.Subcommands.Create,
+                    Commands.Subcommands.List,
+                    Commands.Subcommands.Delete,
+                    Commands.Subcommands.SetAuxProperties,
+                    Commands.Subcommands.ListProperties,
+                ]))
 
         p_new_vol = vol_def_subp.add_parser(
             Commands.Subcommands.Create.LONG,
