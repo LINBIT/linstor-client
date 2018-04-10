@@ -1,3 +1,4 @@
+import argparse
 import linstor
 from linstor.commands import Commands
 from linstor.utils import namecheck
@@ -15,8 +16,19 @@ class StoragePoolDefinitionCommands(Commands):
         spd_parser = parser.add_parser(
             Commands.STORAGE_POOL_DEF,
             aliases=["spd"],
+            formatter_class=argparse.RawTextHelpFormatter,
             help="Storage pool definition subcommands")
-        spd_subp = spd_parser.add_subparsers(title="Storage pool definition subcommands")
+        spd_subp = spd_parser.add_subparsers(
+            title="Storage pool definition subcommands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(
+                [
+                    Commands.Subcommands.Create,
+                    Commands.Subcommands.List,
+                    Commands.Subcommands.Delete,
+                    Commands.Subcommands.SetAuxProperties,
+                    Commands.Subcommands.ListProperties,
+                ]))
 
         # new-storpol definition
         p_new_storpool_dfn = spd_subp.add_parser(
@@ -75,7 +87,7 @@ class StoragePoolDefinitionCommands(Commands):
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
-        p_setprop = parser.add_parser(
+        p_setprop = spd_subp.add_parser(
             Commands.Subcommands.SetAuxProperties.LONG,
             aliases=[Commands.Subcommands.SetAuxProperties.SHORT],
             description='Sets properties for the given storage pool definition.')
