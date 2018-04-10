@@ -1,3 +1,4 @@
+import argparse
 import os
 import json
 import getpass
@@ -476,8 +477,18 @@ class MiscCommands(Commands):
         con_parser = parser.add_parser(
             Commands.CONTROLLER,
             aliases=["c"],
+            formatter_class=argparse.RawTextHelpFormatter,
             help="Controller subcommands")
-        con_subp = con_parser.add_subparsers(title="Controller commands")
+
+        con_subp = con_parser.add_subparsers(
+            title="Controller commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(
+                [
+                    Commands.Subcommands.SetProperties,
+                    Commands.Subcommands.ListProperties,
+                    Commands.Subcommands.Shutdown,
+                ]))
 
         # Controller - get props
         c_ctrl_props = con_subp.add_parser(
@@ -514,16 +525,22 @@ class MiscCommands(Commands):
         c_create_watch.add_argument('--volume-number', type=int, help='Volume number')
         c_create_watch.set_defaults(func=self.cmd_create_watch)
 
-        # crypt
-        c_crypt_enter_passphr = parser.add_parser(
-            Commands.CRYPT_ENTER_PASSPHRASE,
-
         # Enryption subcommands
-        cyrpt_parser = parser.add_parser(
+        crypt_parser = parser.add_parser(
             Commands.CRYPT,
             aliases=["e"],
+            formatter_class=argparse.RawTextHelpFormatter,
             help="Encryption subcommands")
-        crypt_subp = cyrpt_parser.add_subparsers(title="Encryption commands")
+
+        crypt_subp = crypt_parser.add_subparsers(
+            title="Encryption commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(
+                [
+                    Commands.Subcommands.EnterPassphrase,
+                    Commands.Subcommands.CreatePassphrase,
+                    Commands.Subcommands.ModifyPassphrase,
+                ]))
 
         c_crypt_enter_passphr = crypt_subp.add_parser(
             Commands.Subcommands.EnterPassphrase.LONG,
