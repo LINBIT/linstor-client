@@ -1,7 +1,12 @@
 import collections
+import sys
+
 import linstor
+
 from linstor.commands import Commands
-from linstor.utils import Output, rangecheck, SizeCalc, namecheck, ip_completer, LinstorClientError
+from linstor.utils import (
+    Output, rangecheck, SizeCalc, namecheck, ip_completer,
+    LinstorClientError)
 from linstor.consts import NODE_NAME, Color, ExitCode
 from linstor.tree import TreeNode
 from linstor.sharedconsts import (
@@ -16,8 +21,6 @@ from linstor.sharedconsts import (
     VAL_NODE_TYPE_CMBD,
     VAL_NETIF_TYPE_IP
 )
-
-import sys
 
 
 class NodeCommands(Commands):
