@@ -29,8 +29,20 @@ class ResourceCommands(Commands):
         res_parser = parser.add_parser(
             Commands.RESOURCE,
             aliases=["r"],
+            formatter_class=argparse.RawTextHelpFormatter,
             help="Resouce subcommands")
-        res_subp = res_parser.add_subparsers(title="resource commands")
+        res_subp = res_parser.add_subparsers(
+            title="resource commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(
+                [
+                    Commands.Subcommands.Create,
+                    Commands.Subcommands.List,
+                    Commands.Subcommands.ListVolumes,
+                    Commands.Subcommands.Delete,
+                    Commands.Subcommands.SetProperties,
+                    Commands.Subcommands.ListProperties,
+                ]))
 
         # new-resource
         p_new_res = res_subp.add_parser(
