@@ -1,4 +1,6 @@
+import argparse
 import linstor
+
 from linstor.commands import Commands
 from linstor.utils import rangecheck, namecheck, Output
 from linstor.sharedconsts import (
@@ -17,8 +19,20 @@ class ResourceDefinitionCommands(Commands):
         res_def_parser = parser.add_parser(
             Commands.RESOURCE_DEF,
             aliases=["rd"],
+            formatter_class=argparse.RawTextHelpFormatter,
             help="Resouce definition subcommands")
-        res_def_subp = res_def_parser.add_subparsers(title="resource definition subcommands")
+
+        res_def_subp = res_def_parser.add_subparsers(
+            title="resource definition subcommands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(
+                [
+                    Commands.Subcommands.Create,
+                    Commands.Subcommands.List,
+                    Commands.Subcommands.Delete,
+                    Commands.Subcommands.SetAuxProperties,
+                    Commands.Subcommands.ListProperties,
+                ]))
 
         p_new_res_dfn = res_def_subp.add_parser(
             Commands.Subcommands.Create.LONG,
