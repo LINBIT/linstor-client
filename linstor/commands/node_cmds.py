@@ -2,25 +2,16 @@ import collections
 import sys
 
 import linstor
-
 from linstor.commands import Commands
-from linstor.utils import (
-    Output, rangecheck, SizeCalc, namecheck, ip_completer,
-    LinstorClientError)
-from linstor.consts import NODE_NAME, Color, ExitCode
 from linstor.tree import TreeNode
-from linstor.sharedconsts import (
-    DFLT_STLT_PORT_PLAIN,
-    DFLT_CTRL_PORT_PLAIN,
-    DFLT_CTRL_PORT_SSL,
-    VAL_NETCOM_TYPE_PLAIN,
-    VAL_NETCOM_TYPE_SSL,
-    VAL_NODE_TYPE_STLT,
-    VAL_NODE_TYPE_CTRL,
-    VAL_NODE_TYPE_AUX,
-    VAL_NODE_TYPE_CMBD,
-    VAL_NETIF_TYPE_IP
-)
+from linstor.consts import NODE_NAME, Color, ExitCode
+from linstor.sharedconsts import (DFLT_CTRL_PORT_PLAIN, DFLT_CTRL_PORT_SSL,
+                                  DFLT_STLT_PORT_PLAIN, VAL_NETCOM_TYPE_PLAIN,
+                                  VAL_NETCOM_TYPE_SSL, VAL_NETIF_TYPE_IP,
+                                  VAL_NODE_TYPE_AUX, VAL_NODE_TYPE_CMBD,
+                                  VAL_NODE_TYPE_CTRL, VAL_NODE_TYPE_STLT)
+from linstor.utils import (LinstorClientError, Output, SizeCalc, ip_completer,
+                           namecheck, rangecheck)
 
 
 class NodeCommands(Commands):
