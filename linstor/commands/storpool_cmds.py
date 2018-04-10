@@ -1,3 +1,5 @@
+import argparse
+
 import linstor
 from linstor.commands import Commands, ArgumentError
 from linstor.utils import namecheck, SizeCalc
@@ -26,8 +28,19 @@ class StoragePoolCommands(Commands):
         sp_parser = parser.add_parser(
             Commands.STORAGE_POOL,
             aliases=["sp"],
+            formatter_class=argparse.RawTextHelpFormatter,
             help="Storage pool subcommands")
-        sp_subp = sp_parser.add_subparsers(title="Storage pool commands")
+        sp_subp = sp_parser.add_subparsers(
+            title="Storage pool commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(
+                [
+                    Commands.Subcommands.Create,
+                    Commands.Subcommands.List,
+                    Commands.Subcommands.Delete,
+                    Commands.Subcommands.SetProperties,
+                    Commands.Subcommands.ListProperties,
+                ]))
 
         # new-storpol
         p_new_storpool = sp_subp.add_parser(
