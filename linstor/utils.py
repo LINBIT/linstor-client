@@ -352,7 +352,8 @@ def filter_new_args(unsetprefix, args):
     new = dict()
     reserved_keys = [
         "func", "optsobj", "common", "command",
-        "controllers", "warn_as_error", "no_utf8", "no_color"
+        "controllers", "warn_as_error", "no_utf8", "no_color",
+        "machine_readable", "disable_config", "timeout"
     ]
     for k, v in args.__dict__.iteritems():
         if v is not None and k not in reserved_keys:

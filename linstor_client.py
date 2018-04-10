@@ -73,6 +73,7 @@ class LinStorCLI(object):
         self._volume_dfn_commands = VolumeDefinitionCommands()
         self._resource_commands = ResourceCommands()
         self._misc_commands = MiscCommands()
+        self._drbdopt_commands = DrbdOptions()
         self._zsh_generator = None
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
@@ -155,8 +156,8 @@ class LinStorCLI(object):
         c_dmmigrate.set_defaults(func=MigrateCommands.cmd_dmmigrate)
 
         # drbd options
-        #drbd_options = DrbdOptions()
-        #drbd_options.setup_commands(subp)
+        self._drbdopt_commands = DrbdOptions()
+        self._drbdopt_commands.setup_commands(subp)
 
         # zsh completer
         self._zsh_generator = ZshGenerator(subp)
@@ -225,6 +226,7 @@ class LinStorCLI(object):
                 self._volume_dfn_commands._linstor = self._linstorapi
                 self._resource_commands._linstor = self._linstorapi
                 self._misc_commands._linstor = self._linstorapi
+                self._drbdopt_commands._linstor = self._linstorapi
                 self._linstorapi.connect()
             rc = args.func(args)
         except ArgumentError as ae:

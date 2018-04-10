@@ -44,7 +44,9 @@ class Commands(object):
     LIST_VOLUME_DEF = 'list-volume-definitions'
     LIST_VOLUME = 'list-volumes'
     LIST_NETINTERFACE = 'list-netinterfaces'
-    # DRBD_OPTIONS = 'drbd-options'
+    DRBD_OPTIONS = 'drbd-options'
+    DRBD_RESOURCE_OPTIONS = 'drbd-resource-options'
+    DRBD_VOLUME_OPTIONS = 'drbd-volume-options'
     EXIT = 'exit'
     GET_NODE_PROPS = 'list-node-properties'
     GET_RESOURCE_DEF_PROPS = 'list-resource-definition-properties'
@@ -96,7 +98,9 @@ class Commands(object):
         LIST_VOLUME_DEF,
         LIST_VOLUME,
         LIST_NETINTERFACE,
-        # DRBD_OPTIONS,
+        DRBD_OPTIONS,
+        DRBD_RESOURCE_OPTIONS,
+        DRBD_VOLUME_OPTIONS,
         GET_NODE_PROPS,
         GET_RESOURCE_DEF_PROPS,
         GET_RESOURCE_PROPS,
@@ -206,10 +210,8 @@ class Commands(object):
         :param list[str] kv_pairs: a list of key value pair strings. ['key=val', 'key2=val2']
         :return dict[str, str]:
         """
-        parsed = {
-            'pairs': [],
-            'delete': []
-        }
+        pairs = {}
+        delete = []
         for kv in kv_pairs:
             if '=' not in kv:
                 raise LinstorClientError(
@@ -218,10 +220,13 @@ class Commands(object):
                 )
             key, value = kv.split('=', 1)
             if value:
-                parsed['pairs'].append((key, value))
+                pairs[key] = value
             else:
-                parsed['delete'].append(key)
-        return parsed
+                delete.append(key)
+        return {
+            'pairs': pairs,
+            'delete': delete
+        }
 
     @classmethod
     def add_parser_keyvalue(cls, parser, property_object=None):

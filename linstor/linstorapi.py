@@ -606,10 +606,10 @@ class Linstor(object):
 
     @classmethod
     def _modify_props(cls, msg, property_dict, delete_props=None):
-        for kv in property_dict:
+        for key, val in property_dict.items():
             lin_kv = msg.override_props.add()
-            lin_kv.key = kv[0]
-            lin_kv.value = kv[1]
+            lin_kv.key = key
+            lin_kv.value = val
 
         if delete_props:
             msg.delete_prop_keys.extend(delete_props)

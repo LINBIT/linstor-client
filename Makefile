@@ -32,9 +32,7 @@ endif
 linstor/drbdsetup_options.py:
 	linstor-common/gendrbdoptions.py python $@
 
-xml: linstor/drbdsetup_options.py
-
-release: up2date clean doc xml
+release: up2date clean doc
 	$(PYTHON) setup.py sdist
 	git checkout linstor/drbdsetup_options.py
 	@echo && echo "Did you run distclean?"

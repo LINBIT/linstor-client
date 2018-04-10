@@ -19,6 +19,7 @@ linstor/proto/*.py
 linstor/sharedconsts.py
 linstor/properties.py
 linstor/consts_githash.py
+linstor/drbdsetup_options.py
 
 # unittests ignores
 build/
