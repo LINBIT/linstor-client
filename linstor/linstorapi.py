@@ -62,6 +62,7 @@ from linstor.proto.MsgDelRsc_pb2 import MsgDelRsc
 from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
 from linstor.proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
 from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
+from linstor.proto.MsgDelCtrlCfgProp_pb2 import MsgDelCtrlCfgProp
 from linstor.proto.MsgControlCtrl_pb2 import MsgControlCtrl
 from linstor.proto.MsgEnterCryptPassphrase_pb2 import MsgEnterCryptPassphrase
 from linstor.proto.MsgCrtCryptPassphrase_pb2 import MsgCrtCryptPassphrase
@@ -1206,6 +1207,17 @@ class Linstor(object):
         """
         return self._send_and_wait(apiconsts.API_LST_CFG_VAL)
 
+    @classmethod
+    def _split_prop_key(cls, fkey):
+        key = fkey
+        namespace = None
+        ns_pos = key.rfind('/')
+        if ns_pos >= 0:
+            namespace = key[:ns_pos]
+            key = key[ns_pos + 1:]
+
+        return key, namespace
+
     def controller_set_prop(self, key, value):
         """
         Sets a property on the controller.
@@ -1216,14 +1228,23 @@ class Linstor(object):
         :rtype: list[ApiCallResponse]
         """
         msg = MsgSetCtrlCfgProp()
-        ns_pos = key.rfind('/')
-        msg.key = key
         msg.value = value
-        if ns_pos >= 0:
-            msg.namespace = msg.key[:ns_pos]
-            msg.key = msg.key[ns_pos + 1:]
+        msg.key, msg.namespace = self._split_prop_key(key)
 
         return self._send_and_wait(apiconsts.API_SET_CFG_VAL, msg)
+
+    def controller_del_prop(self, key):
+        """
+        Deletes a property on the controller.
+
+        :param key: Key of the property.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
+        msg = MsgDelCtrlCfgProp()
+        msg.key, msg.namespace = self._split_prop_key(key)
+
+        return self._send_and_wait(apiconsts.API_DEL_CFG_VAL, msg)
 
     def shutdown_controller(self):
         """
