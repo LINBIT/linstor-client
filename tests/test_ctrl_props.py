@@ -54,7 +54,7 @@ class TestProperties(LinstorTestCase):
         node_props = self.execute_with_machine_output(['list-node-properties', 'node1'])
         self.assertEqual(1, len(node_props))
         node_props = node_props[0]
-        self.assertEqual(1, len(node_props))
+        self.assertEqual(2, len(node_props))
         prop = self.find_prop(node_props, NAMESPC_AUXILIARY + '/test_prop')
         self.check_prop(prop, NAMESPC_AUXILIARY + '/test_prop', 'val')
 
@@ -66,7 +66,7 @@ class TestProperties(LinstorTestCase):
         node_props = self.execute_with_machine_output(['list-node-properties', 'node1'])
         self.assertEqual(1, len(node_props))
         node_props = node_props[0]
-        self.assertEqual(2, len(node_props))
+        self.assertEqual(3, len(node_props))
         prop = self.find_prop(node_props, NAMESPC_AUXILIARY + '/test_prop')
         self.check_prop(prop, NAMESPC_AUXILIARY + '/test_prop', 'val')
 
