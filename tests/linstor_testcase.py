@@ -179,6 +179,12 @@ class LinstorTestCase(unittest.TestCase):
         return stdval
 
     def execute_with_resp(self, cmd_args):
+        """
+
+        :param cmd_args:
+        :return:
+        :rtype: list[ApiCallResponse]
+        """
         d = self.execute_with_machine_output(cmd_args)
         self.assertIsNotNone(d, "No result returned")
         return [ApiCallResponse.from_json(x) for x in d]
@@ -194,6 +200,25 @@ class LinstorTestCase(unittest.TestCase):
             if prop['key'] == key and prop['value'] == val:
                 return True
         raise AssertionError("Prop {prop} with value {val} not in container.".format(prop=key, val=val))
+
+    def find_prop(self, props, key):
+        for prop in props:
+            self.assertIn('key', prop)
+            if key == prop['key']:
+                return prop
+
+        self.assertTrue(False, "Property '{key}' not found.".format(key=key))
+
+    def check_prop(self, prop, key, value):
+        self.assertEqual(2, len(prop.keys()))
+        self.assertIn('key', prop)
+        self.assertIn('value', prop)
+        self.assertEqual(key, prop['key'])
+        self.assertEqual(value, prop['value'])
+
+    def find_and_check_prop(self, props, key, value):
+        prop = self.find_prop(props, key)
+        self.check_prop(prop, key, value)
 
 
 class LinstorTestCaseWithData(LinstorTestCase):

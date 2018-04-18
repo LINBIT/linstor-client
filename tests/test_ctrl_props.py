@@ -4,21 +4,6 @@ from linstor.sharedconsts import *
 
 class TestProperties(LinstorTestCase):
 
-    def find_prop(self, props, key):
-        for prop in props:
-            self.assertIn('key', prop)
-            if key == prop['key']:
-                return prop
-
-        self.assertTrue(False, "Property '{key}' not found.".format(key=key))
-
-    def check_prop(self, prop, key, value):
-        self.assertEqual(2, len(prop.keys()))
-        self.assertIn('key', prop)
-        self.assertIn('value', prop)
-        self.assertEqual(key, prop['key'])
-        self.assertEqual(value, prop['value'])
-
     def test_set_properties(self):
         # create all object kinds
         cnode_resp = self.execute_with_single_resp(['create-node', 'node1', '192.168.100.1'])

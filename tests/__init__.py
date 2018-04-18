@@ -1,12 +1,14 @@
 import unittest
 from . import test_utils
-from . import test_ctrl_list_commands, test_ctrl_nodes, test_ctrl_usecases, test_utils, test_ctrl_props
+from . import test_ctrl_list_commands, test_ctrl_nodes, test_ctrl_usecases
+from . import test_utils, test_ctrl_props, test_drbd_options
 
 _controller_tests = [
     "tests.test_ctrl_list_commands",
     "tests.test_ctrl_nodes",
     "tests.test_ctrl_usecases",
-    "tests.test_ctrl_props"
+    "tests.test_ctrl_props",
+    "tests.test_drbd_options"
 ]
 
 _std_tests = [
