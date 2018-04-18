@@ -92,3 +92,13 @@ class TreeNode:
 
     def add_description(self, description):
         self.description += description
+
+    def to_data(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'children': [x.to_data() for x in self.child_list]
+        }
+
+    def __repr__(self):
+        return "TreeNode({n}, {d})".format(n=self.name, d=self.description)

@@ -1,6 +1,5 @@
 import unittest
-from .linstor_testcase import LinstorTestCase
-from linstor.commands import NodeCommands
+from .linstor_testcase import LinstorTestCase, LinstorTestCaseWithData
 import linstor.sharedconsts as apiconsts
 
 
@@ -77,6 +76,20 @@ class TestNodeCommands(LinstorTestCase):
         self.assertEqual(apiconsts.MASK_NET_IF | apiconsts.MASK_DEL | apiconsts.DELETED, netif.ret_code)
 
         self.assert_netinterfaces('nodenetif', [("default", '195.0.0.1')])
+
+
+class TestDescribe(LinstorTestCaseWithData):
+    def test_describe_node(self):
+        nodes = self.execute_with_machine_output(['describe-node'])
+        self.assertEqual(4, len(nodes))
+
+        nodes = self.execute_with_machine_output(['describe-node', 'fakehost1'])
+        self.assertEqual(1, len(nodes))
+
+        nodes = self.execute_with_machine_output(['describe-node', 'asdofk'])
+        self.assertFalse(nodes)
+
+        self.assertNotEqual(0, self.execute(['describe-node', 'daskl']))
 
 
 if __name__ == '__main__':

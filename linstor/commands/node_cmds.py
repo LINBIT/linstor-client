@@ -39,17 +39,17 @@ class NodeCommands(Commands):
         ntype_def = VAL_NODE_TYPE_STLT
         p_new_node.add_argument('--node-type', choices=(VAL_NODE_TYPE_CTRL, VAL_NODE_TYPE_AUX,
                                                         VAL_NODE_TYPE_CMBD, VAL_NODE_TYPE_STLT),
-                                default=VAL_NODE_TYPE_STLT, help='Node type (default: %s)' % (ntype_def))
+                                default=VAL_NODE_TYPE_STLT, help='Node type (default: %s)' % ntype_def)
         ctype_def = VAL_NETCOM_TYPE_PLAIN
         p_new_node.add_argument('--communication-type', choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
                                 default=ctype_def,
-                                help='Communication type (default: %s)' % (ctype_def))
+                                help='Communication type (default: %s)' % ctype_def)
         itype_def = VAL_NETIF_TYPE_IP
         p_new_node.add_argument('--interface-type', choices=(VAL_NETIF_TYPE_IP,), default=itype_def,
-                                help='Interface type (default: %s)' % (itype_def))
+                                help='Interface type (default: %s)' % itype_def)
         iname_def = 'default'
         p_new_node.add_argument('--interface-name', default=iname_def,
-                                help='Interface name (default: %s)' % (iname_def))
+                                help='Interface name (default: %s)' % iname_def)
         p_new_node.add_argument(
             'name',
             help='Name of the new node, must match the nodes hostname',
@@ -58,14 +58,17 @@ class NodeCommands(Commands):
                                 help='IP address of the new node').completer = ip_completer("name")
         p_new_node.set_defaults(func=self.create)
 
-        #describe-node
+        # describe-node
         p_desc_node = parser.add_parser(
             Commands.DESCRIBE_NODE,
             aliases=['descnode'],
             description='describe a node (or all nodes), list storage pools, resources and volumes under this node, '
             'in this order')
-        p_desc_node.add_argument('name', nargs='?',
-                                help='Name of the node to be described. With no name, all nodes are described').completer = self.node_completer
+        p_desc_node.add_argument(
+            'name',
+            nargs='?',
+            help='Name of the node to be described. With no name, all nodes are described'
+        ).completer = self.node_completer
         p_desc_node.set_defaults(func=self.describe)
 
         # remove-node
@@ -93,11 +96,17 @@ class NodeCommands(Commands):
             description='Creates and adds a new netinterface to a given node. If port is specified this netinterface '
                         'is used as satellite port'
         )
-        p_create_netinterface.add_argument('-p', '--port', type=rangecheck(1, 65535),
-                                help='Port to use for satellite connections')
-        p_create_netinterface.add_argument('--communication-type', choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
-                                default=ctype_def,
-                                help='Communication type (default: %s)' % ctype_def)
+        p_create_netinterface.add_argument(
+            '-p', '--port',
+            type=rangecheck(1, 65535),
+            help='Port to use for satellite connections'
+        )
+        p_create_netinterface.add_argument(
+            '--communication-type',
+            choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
+            default=ctype_def,
+            help='Communication type (default: %s)' % ctype_def
+        )
         p_create_netinterface.add_argument(
             "node_name",
             help="Name of the node to add the net interface"
@@ -248,66 +257,67 @@ class NodeCommands(Commands):
         :return:
         """
 
-        if args.machine_readable:
-            sys.stderr.write('This command does not support machine-readable\n')
-            return ExitCode.OPTION_NOT_SUPPORTED
+        try:
+            node_list_replies = self._linstor.node_list()
+            self.check_list_sanity(args, node_list_replies)
+            node_map = self.construct_node(node_list_replies[0].proto_msg)
 
-        node_map = dict()
-        volume_def_map = dict()
+            storage_pool_list_replies = self._linstor.storage_pool_list()
+            self.check_list_sanity(args, storage_pool_list_replies)
+            self.construct_storpool(node_map, storage_pool_list_replies[0].proto_msg)
 
-        node_list_replies = self._linstor.node_list()
-        exit_code = self.check_list_sanity(args, node_list_replies)
-        if exit_code != ExitCode.OK:
-            return exit_code
+            rsc_dfn_list_replies = self._linstor.resource_dfn_list()
+            self.check_list_sanity(args, rsc_dfn_list_replies)
+            volume_def_map = self.get_volume_size(rsc_dfn_list_replies[0].proto_msg)
 
-        self.construct_node(node_map, node_list_replies[0].proto_msg)
+            rsc_list_replies = self._linstor.resource_list()
+            self.check_list_sanity(args, rsc_list_replies)
+            self.construct_rsc(node_map, rsc_list_replies[0].proto_msg, volume_def_map)
 
-        storage_pool_list_replies = self._linstor.storage_pool_list()
-        exit_code = self.check_list_sanity(args, storage_pool_list_replies)
-        if exit_code != ExitCode.OK:
-            return exit_code
+            outputted = False
+            machine_data = []
+            for node_name_key in sorted(node_map.keys()):
+                if outputted:
+                    print("")
+                if args.name == node_name_key or not args.name:
+                    node = node_map[node_name_key]
+                    machine_data.append(node.to_data())
+                    if not args.machine_readable:
+                        node.print_node(args.no_utf8, args.no_color)
+                        outputted = True
 
-        self.construct_storpool(node_map, storage_pool_list_replies[0].proto_msg)
-
-        rsc_dfn_list_replies = self._linstor.resource_dfn_list()
-        exit_code = self.check_list_sanity(args, rsc_dfn_list_replies)
-        if exit_code != ExitCode.OK:
-            return exit_code
-
-        self.get_volume_size(rsc_dfn_list_replies[0].proto_msg, volume_def_map)
-
-        rsc_list_replies = self._linstor.resource_list()
-        exit_code = self.check_list_sanity(args, rsc_list_replies)
-        if exit_code != ExitCode.OK:
-            return exit_code
-
-        self.construct_rsc(node_map, rsc_list_replies[0].proto_msg, volume_def_map)
-
-        if args.name:
-            if args.name in node_map:
-                node = node_map[args.name]
-                node.print_node(args.no_utf8, args.no_color)
-            else:
+            if args.machine_readable:
+                print(self._to_json(machine_data))
+            elif not outputted and args.name:
                 sys.stderr.write('%s: no such node\n' % args.name)
                 return ExitCode.OBJECT_NOT_FOUND
 
-        else:
-            for index, node_name_key in enumerate(node_map):
-                if index:
-                    print("")
-                node = node_map[node_name_key]
-                node.print_node(args.no_utf8, args.no_color)
+        except LinstorClientError as lce:
+            return lce.exit_code
+
+        return ExitCode.OK
 
     def check_list_sanity(self, args, replies):
         if replies:
             if self.check_for_api_replies(replies):
-                return self.handle_replies(args, replies)
-        return ExitCode.OK
+                rc = self.handle_replies(args, replies)
+                raise LinstorClientError("List reply error", rc)
+        return True
 
-    def get_volume_size(self, rsc_dfn_list, volume_def_map):
+    @classmethod
+    def get_volume_size(cls, rsc_dfn_list):
+        """
+        Constructs a map of minor numbers to volume sizes.
+
+        :param rsc_dfn_list: Protobuf definition list
+        :return: the created minor number to volume size map.
+        :rtype: dict[int, int]
+        """
+        volume_def_map = {}  # type dict[int, int]
         for rsc_dfn in rsc_dfn_list.rsc_dfns:
             for vlmdfn in rsc_dfn.vlm_dfns:
                 volume_def_map[vlmdfn.vlm_minor] = vlmdfn.vlm_size
+        return volume_def_map
 
     def make_volume_node(self, vlm, volume_def_map):
         volume_node = TreeNode('volume' + str(vlm.vlm_nr), '', Color.DARKGREEN)
@@ -347,11 +357,21 @@ class NodeCommands(Commands):
             storpool_node.set_description('storage pool')
             node_map[storpool.node_name].add_child(storpool_node)
 
-    def construct_node(self, node_map, node_list):
+    @classmethod
+    def construct_node(cls, node_list):
+        """
+        Constructs a dict of node names to TreeNodes
+
+        :param node_list:
+        :return:
+        :rtype: dict[str, TreeNode]
+        """
+        node_map = {}
         for n in node_list.nodes:
             root_node = TreeNode(n.name, '', Color.RED)
             root_node.set_description('node')
             node_map[n.name] = root_node
+        return node_map
 
     @classmethod
     def show_netinterfaces(cls, args, lstnodes):

@@ -181,13 +181,17 @@ class Commands(object):
         return ExitCode.OK
 
     @classmethod
+    def _to_json(cls, data):
+        return json.dumps(data, indent=2)
+
+    @classmethod
     def _print_machine_readable(cls, data):
         """
         serializes the given protobuf data and prints to stdout.
         """
         assert(isinstance(data, list))
         d = [protobuf_to_dict(x.proto_msg) for x in data]
-        s = json.dumps(d, indent=2)
+        s = cls._to_json(d)
 
         # try:
         #     s = ""
