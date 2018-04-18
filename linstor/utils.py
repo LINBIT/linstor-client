@@ -355,7 +355,7 @@ def filter_new_args(unsetprefix, args):
         "controllers", "warn_as_error", "no_utf8", "no_color",
         "machine_readable", "disable_config", "timeout"
     ]
-    for k, v in args.__dict__.iteritems():
+    for k, v in args.__dict__.items():
         if v is not None and k not in reserved_keys:
             key = k.replace('_', '-')
 
