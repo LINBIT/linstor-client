@@ -85,7 +85,9 @@ class ZshGenerator(object):
             if action.option_strings:
                 # get longest option string
                 optstr = sorted(action.option_strings, key=len, reverse=True)[0]
-                opt_data = [optstr, action.help.replace("'", "''") if action.help else ' ']
+                helptxt = action.help.replace("'", "''") if action.help else ' '
+                helptxt = helptxt.replace(":", "\\:")
+                opt_data = [optstr, helptxt]
                 if action.choices:
                     opt_data.append("(" + " ".join(action.choices) + ")")
                 opts.append("'" + ':'.join(opt_data) + "'")
