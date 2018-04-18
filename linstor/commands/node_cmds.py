@@ -3,7 +3,7 @@ import linstor
 from linstor.commands import Commands
 from linstor.utils import Output, rangecheck, SizeCalc, namecheck, ip_completer, LinstorClientError
 from linstor.consts import NODE_NAME, Color, ExitCode
-from linstor.commands.tree import TreeNode
+from linstor.tree import TreeNode
 from linstor.sharedconsts import (
     DFLT_STLT_PORT_PLAIN,
     DFLT_CTRL_PORT_PLAIN,
