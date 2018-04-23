@@ -36,10 +36,6 @@ class DrbdOptions(Commands):
 
         return foo
 
-    @classmethod
-    def mybool(cls, x):
-        return x.lower() in ('y', 'yes', 't', 'true', 'on')
-
     def add_arguments(self, parser, option_list):
 
         options = DrbdOptions._options['options']
@@ -50,7 +46,11 @@ class DrbdOptions(Commands):
             if option['type'] == 'symbol':
                 parser.add_argument('--' + opt_key, choices=option['symbols'])
             if option['type'] == 'boolean':
-                parser.add_argument('--' + opt_key, type=self.mybool, help="yes/no (Default: %s)" % (option['default']))
+                parser.add_argument(
+                    '--' + opt_key,
+                    choices=['yes', 'no'],
+                    help="yes/no (Default: %s)" % (option['default'])
+                )
             if option['type'] == 'string':
                 parser.add_argument('--' + opt_key)
             if option['type'] == 'numeric-or-symbol':
@@ -133,8 +133,6 @@ class DrbdOptions(Commands):
             if is_unset:
                 deletes.append(key)
             else:
-                if self._options['options'][prop_name]['type'] == 'boolean':
-                    new_args[arg] = 'yes' if self.mybool(new_args[arg]) else 'no'
                 modify[key] = new_args[arg]
 
         return modify, deletes
