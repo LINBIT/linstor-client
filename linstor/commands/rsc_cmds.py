@@ -202,7 +202,7 @@ class ResourceCommands(Commands):
                         return None
 
                     self._linstor.create_watch(
-                        lambda replies: None,
+                        lambda replies: self.handle_replies(args, replies),
                         event_handler,
                         node_name=node_name,
                         resource_name=args.resource_definition_name

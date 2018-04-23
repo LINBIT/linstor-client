@@ -75,6 +75,7 @@ from linstor.proto.Filter_pb2 import Filter
 from linstor.proto.eventdata.EventVlmDiskState_pb2 import EventVlmDiskState
 from linstor.proto.eventdata.EventRscState_pb2 import EventRscState
 import linstor.sharedconsts as apiconsts
+from linstor.consts import ExitCode
 
 API_VERSION = 1
 API_VERSION_MIN = 1
@@ -195,6 +196,7 @@ class _LinstorNetClient(threading.Thread):
         self._errors = []  # list of errors that happened in the select thread
         self._api_version = None
         self._cur_msg_id = AtomicInt(1)
+        self._cur_watch_id = AtomicInt(1)
 
     def __del__(self):
         self.disconnect()
@@ -604,12 +606,17 @@ class _LinstorNetClient(threading.Thread):
                     self._cv_sock.wait(1)
 
                 if msg_id in self._replies:
-                    reply_handler(self._replies.pop(msg_id))
+                    handler_rc = reply_handler(self._replies.pop(msg_id))
+                    if handler_rc != ExitCode.OK:
+                        return
 
                 while self._events:
                     handler_result = event_handler(*self._events.popleft())
                     if handler_result and handler_result.get('stop'):
                         return
+
+    def next_watch_id(self):
+        return self._cur_watch_id.get_and_inc()
 
     @staticmethod
     def _adrtuple2str(tuple):
@@ -1315,7 +1322,7 @@ class Linstor(object):
         Watch events from the controller.
         """
         msg = MsgCrtWatch()
-        msg.watch_id = 1
+        msg.watch_id = self._linstor_client.next_watch_id()
         if node_name:
             msg.node_name = node_name
         if resource_name:
