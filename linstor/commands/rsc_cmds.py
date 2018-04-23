@@ -35,6 +35,11 @@ class ResourceCommands(Commands):
             help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_res.add_argument('-d', '--diskless', action="store_true", help='Should the resource be diskless')
         p_new_res.add_argument(
+            '--wait-for-ready',
+            action='store_true',
+            help='Wait for the volumes to be ready for use before returning'
+        )
+        p_new_res.add_argument(
             '--auto-place',
             help='Auto place a resource to a specified number of nodes',
             type=int
@@ -167,22 +172,43 @@ class ResourceCommands(Commands):
                 args.do_not_place_with,
                 args.do_not_place_with_regex
             )
+
+            return self.handle_replies(args, replies)
         else:
             # normal create resource
             # check that node is given
             if not args.node_name:
                 raise ArgumentError("create-resource: too few arguments: Node name missing.")
 
-            replies = []
+            rc = ExitCode.OK
             for node_name in args.node_name:
-                replies += self._linstor.resource_create(
+                replies = self._linstor.resource_create(
                     node_name,
                     args.resource_definition_name,
                     args.diskless,
                     args.storage_pool
                 )
 
-        return self.handle_replies(args, replies)
+                current_rc = self.handle_replies(args, replies)
+
+                if current_rc != ExitCode.OK:
+                    rc = current_rc
+                elif args.wait_for_ready:
+                    def event_handler(event_header, event_data):
+                        if event_header.node_name == node_name and \
+                                event_header.event_name == apiconsts.EVENT_RESOURCE_STATE and \
+                                event_data.state == "Ready":
+                            return {'stop': True}
+                        return None
+
+                    self._linstor.create_watch(
+                        lambda replies: None,
+                        event_handler,
+                        node_name=node_name,
+                        resource_name=args.resource_definition_name
+                    )
+
+            return rc
 
     def delete(self, args):
         # execute delete storpooldfns and flatten result list

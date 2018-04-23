@@ -16,6 +16,7 @@ MANIFEST
 # these can be generated in the linstor-common with:
 # make python
 linstor/proto/*.py
+linstor/proto/eventdata/*.py
 linstor/sharedconsts.py
 linstor/properties.py
 linstor/consts_githash.py

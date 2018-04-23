@@ -5,7 +5,7 @@ import linstor
 from linstor.utils import Output, LinstorClientError
 from linstor.protobuf_to_dict import protobuf_to_dict
 import linstor.linstorapi as linstorapi
-from linstor.sharedconsts import NAMESPC_AUXILIARY
+from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE
 from linstor.consts import ExitCode, KEY_LS_CONTROLLERS
 from linstor.properties import properties
 
@@ -55,6 +55,7 @@ class Commands(object):
     GET_STORAGE_POOL_PROPS = 'list-storage-pool-properties'
     GET_VOLUME_DEF_PROPS = 'list-volume-definition-properties'
     GET_CONTROLLER_PROPS = 'list-controller-properties'
+    CREATE_WATCH = 'create-watch'
     HELP = 'help'
     INTERACTIVE = 'interactive'
     LIST_COMMANDS = 'list-commands'
@@ -467,6 +468,14 @@ class MiscCommands(Commands):
         )
         c_shutdown.set_defaults(func=self.cmd_shutdown)
 
+        # watch
+        c_create_watch = parser.add_parser(
+            Commands.CREATE_WATCH,
+            aliases=[],
+            description='Watch events'
+        )
+        c_create_watch.set_defaults(func=self.cmd_create_watch)
+
         # crypt
         c_crypt_enter_passphr = parser.add_parser(
             Commands.CRYPT_ENTER_PASSPHRASE,
@@ -523,6 +532,28 @@ class MiscCommands(Commands):
     def cmd_shutdown(self, args):
         replies = self._linstor.shutdown_controller()
         return self.handle_replies(args, replies)
+
+    def cmd_create_watch(self, args):
+        def reply_handler(replies):
+            self.handle_replies(args, replies)
+
+        event_formatter_table = {
+            EVENT_VOLUME_DISK_STATE: lambda event_data: "Disk state: " + event_data.disk_state,
+            EVENT_RESOURCE_STATE: lambda event_data: "Resource state: " + event_data.state
+        }
+
+        def event_handler(event_header, event_data):
+            event_data_display = event_formatter_table[event_header.event_name](event_data)
+
+            print(
+                event_header.event_name +
+                " (" + event_header.node_name +
+                "/" + event_header.resource_name +
+                ("/" + str(event_header.volume_number) if event_header.HasField("volume_number") else "") +
+                "): " + event_data_display
+            )
+
+        self._linstor.create_watch(reply_handler, event_handler)
 
     def cmd_crypt_enter_passphrase(self, args):
         if args.passphrase:

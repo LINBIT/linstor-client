@@ -23,8 +23,10 @@ import logging
 import socket
 import select
 import ssl
+from collections import deque
 from google.protobuf.internal import encoder
 from google.protobuf.internal import decoder
+
 try:
     from urlparse import urlparse
 except ImportError:
@@ -33,6 +35,7 @@ except ImportError:
 from linstor.proto.MsgHeader_pb2 import MsgHeader
 from linstor.proto.MsgApiVersion_pb2 import MsgApiVersion
 from linstor.proto.MsgApiCallResponse_pb2 import MsgApiCallResponse
+from linstor.proto.MsgEvent_pb2 import MsgEvent
 from linstor.proto.MsgCrtNode_pb2 import MsgCrtNode
 from linstor.proto.MsgModNode_pb2 import MsgModNode
 from linstor.proto.MsgDelNode_pb2 import MsgDelNode
@@ -64,10 +67,13 @@ from linstor.proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
 from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
 from linstor.proto.MsgDelCtrlCfgProp_pb2 import MsgDelCtrlCfgProp
 from linstor.proto.MsgControlCtrl_pb2 import MsgControlCtrl
+from linstor.proto.MsgCrtWatch_pb2 import MsgCrtWatch
 from linstor.proto.MsgEnterCryptPassphrase_pb2 import MsgEnterCryptPassphrase
 from linstor.proto.MsgCrtCryptPassphrase_pb2 import MsgCrtCryptPassphrase
 from linstor.proto.MsgModCryptPassphrase_pb2 import MsgModCryptPassphrase
 from linstor.proto.Filter_pb2 import Filter
+from linstor.proto.eventdata.EventVlmDiskState_pb2 import EventVlmDiskState
+from linstor.proto.eventdata.EventRscState_pb2 import EventRscState
 import linstor.sharedconsts as apiconsts
 
 API_VERSION = 1
@@ -185,6 +191,7 @@ class _LinstorNetClient(threading.Thread):
         self._cv_sock = threading.Condition(self._slock)
         self._logger = logging.getLogger('LinstorNetClient')
         self._replies = {}
+        self._events = deque()
         self._errors = []  # list of errors that happened in the select thread
         self._api_version = None
         self._cur_msg_id = AtomicInt(1)
@@ -238,6 +245,17 @@ class _LinstorNetClient(threading.Thread):
             n += msg_len
             pb_msgs.append(msg_buf)
         return pb_msgs
+
+    @classmethod
+    def _parse_event(cls, event_name, event_data_bytes):
+        event_reader_table = {
+            apiconsts.EVENT_VOLUME_DISK_STATE: EventVlmDiskState,
+            apiconsts.EVENT_RESOURCE_STATE: EventRscState
+        }
+
+        event_data = event_reader_table[event_name]()
+        event_data.ParseFromString(event_data_bytes)
+        return event_data
 
     @classmethod
     def _parse_proto_msgs(cls, type_tuple, data):
@@ -400,7 +418,7 @@ class _LinstorNetClient(threading.Thread):
         :return:
         """
         self._errors = []
-        package = bytes()  # current package data
+        buffer = bytes()  # current data
         exp_pkg_len = 0  # expected package length
 
         while self._socket:
@@ -435,53 +453,67 @@ class _LinstorNetClient(threading.Thread):
                         self._errors.append(
                             LinstorNetworkError("Remote '{hp}' closed connection dropped.".format(hp=self._host)))
 
-                    package += read
-                    pkg_len = len(package)
-                    self._logger.debug("pkg_len: " + str(pkg_len))
-                    if pkg_len > 15 and exp_pkg_len == 0:  # header is 16 bytes
-                        exp_pkg_len = self._parse_payload_length(package[:16])
+                    buffer += read
+                    need_more_data = False
+                    while not need_more_data and len(buffer):
+                        buffer_len = len(buffer)
+                        self._logger.debug("buffer_len: " + str(buffer_len))
+                        if buffer_len > 15 and exp_pkg_len == 0:  # header is 16 bytes
+                            exp_pkg_len = self._parse_payload_length(buffer[:16])
 
-                    self._logger.debug("exp_pkg_len: " + str(exp_pkg_len))
-                    if exp_pkg_len and pkg_len == (exp_pkg_len + 16):  # check if we received the full data pkg
-                        msgs = self._split_proto_msgs(package[16:])
-                        assert (len(msgs) > 0)  # we should have at least a header message
-
-                        # reset state variables
-                        package = bytes()
-                        exp_pkg_len = 0
-
-                        hdr = self._parse_proto_msg(MsgHeader, msgs[0])  # parse header
-                        self._logger.debug(str(hdr))
-
-                        reply_map = {
-                            apiconsts.API_PONG: (None, None),
-                            apiconsts.API_REPLY: (MsgApiCallResponse, ApiCallResponse),
-                            apiconsts.API_LST_STOR_POOL_DFN: (MsgLstStorPoolDfn, ProtoMessageResponse),
-                            apiconsts.API_LST_STOR_POOL: (MsgLstStorPool, ProtoMessageResponse),
-                            apiconsts.API_LST_NODE: (MsgLstNode, ProtoMessageResponse),
-                            apiconsts.API_LST_RSC_DFN: (MsgLstRscDfn, ProtoMessageResponse),
-                            apiconsts.API_LST_RSC: (MsgLstRsc, ProtoMessageResponse),
-                            apiconsts.API_LST_VLM: (MsgLstRsc, ProtoMessageResponse),
-                            apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, ProtoMessageResponse)
-                        }
-
-                        if hdr.api_call == apiconsts.API_VERSION:  # this shouldn't happen
-                            self._parse_api_version(msgs[1])
-                            assert False  # this should not be sent a second time
-                        elif hdr.api_call == apiconsts.API_PING:
-                            self.send_msg(apiconsts.API_PONG)
-
-                        elif hdr.api_call in reply_map.keys():
-                            # parse other message according to the reply_map and add them to the self._replies
-                            replies = self._parse_proto_msgs(reply_map[hdr.api_call], msgs[1:])
-                            with self._cv_sock:
-                                self._replies[hdr.msg_id] = replies
-                                self._cv_sock.notifyAll()
+                        self._logger.debug("exp_pkg_len: " + str(exp_pkg_len))
+                        if exp_pkg_len == 0 or buffer_len < (exp_pkg_len + 16):  # check if we received the full package
+                            need_more_data = True
                         else:
-                            self._logger.error("Unknown linstor api message reply: " + hdr.api_call)
-                            self.disconnect()
-                            with self._cv_sock:
-                                self._cv_sock.notifyAll()
+                            package = buffer[16: exp_pkg_len + 16]
+
+                            # reset state variables
+                            buffer = buffer[exp_pkg_len + 16:]
+                            exp_pkg_len = 0
+
+                            msgs = self._split_proto_msgs(package)
+                            assert (len(msgs) > 0)  # we should have at least a header message
+
+                            hdr = self._parse_proto_msg(MsgHeader, msgs[0])  # parse header
+                            self._logger.debug(str(hdr))
+
+                            reply_map = {
+                                apiconsts.API_PONG: (None, None),
+                                apiconsts.API_REPLY: (MsgApiCallResponse, ApiCallResponse),
+                                apiconsts.API_LST_STOR_POOL_DFN: (MsgLstStorPoolDfn, ProtoMessageResponse),
+                                apiconsts.API_LST_STOR_POOL: (MsgLstStorPool, ProtoMessageResponse),
+                                apiconsts.API_LST_NODE: (MsgLstNode, ProtoMessageResponse),
+                                apiconsts.API_LST_RSC_DFN: (MsgLstRscDfn, ProtoMessageResponse),
+                                apiconsts.API_LST_RSC: (MsgLstRsc, ProtoMessageResponse),
+                                apiconsts.API_LST_VLM: (MsgLstRsc, ProtoMessageResponse),
+                                apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, ProtoMessageResponse)
+                            }
+
+                            if hdr.api_call == apiconsts.API_VERSION:  # this shouldn't happen
+                                self._parse_api_version(msgs[1])
+                                assert False  # this should not be sent a second time
+                            elif hdr.api_call == apiconsts.API_PING:
+                                self.send_msg(apiconsts.API_PONG)
+
+                            elif hdr.api_call == apiconsts.API_EVENT:
+                                resp = MsgEvent()
+                                resp.ParseFromString(msgs[1])
+                                event_data = self._parse_event(resp.event_name, msgs[2])
+                                with self._cv_sock:
+                                    self._events.append((resp, event_data))
+                                    self._cv_sock.notifyAll()
+
+                            elif hdr.api_call in reply_map.keys():
+                                # parse other message according to the reply_map and add them to the self._replies
+                                replies = self._parse_proto_msgs(reply_map[hdr.api_call], msgs[1:])
+                                with self._cv_sock:
+                                    self._replies[hdr.msg_id] = replies
+                                    self._cv_sock.notifyAll()
+                            else:
+                                self._logger.error("Unknown linstor api message reply: " + hdr.api_call)
+                                self.disconnect()
+                                with self._cv_sock:
+                                    self._cv_sock.notifyAll()
 
     @property
     def connected(self):
@@ -557,6 +589,27 @@ class _LinstorNetClient(threading.Thread):
                     return None
                 self._cv_sock.wait(1)
             return self._replies.pop(msg_id)
+
+    def wait_for_result_and_events(self, msg_id, reply_handler, event_handler):
+        """
+        This method blocks and waits for an answer to the given msg_id and for events.
+
+        :param int msg_id:
+        """
+        with self._cv_sock:
+            while True:
+                while msg_id not in self._replies and not self._events:
+                    if not self.connected:
+                        return
+                    self._cv_sock.wait(1)
+
+                if msg_id in self._replies:
+                    reply_handler(self._replies.pop(msg_id))
+
+                while self._events:
+                    handler_result = event_handler(*self._events.popleft())
+                    if handler_result and handler_result.get('stop'):
+                        return
 
     @staticmethod
     def _adrtuple2str(tuple):
@@ -1256,6 +1309,21 @@ class Linstor(object):
         msg = MsgControlCtrl()
         msg.command = apiconsts.API_CMD_SHUTDOWN
         return self._send_and_wait(apiconsts.API_CONTROL_CTRL, msg)
+
+    def create_watch(self, reply_handler, event_handler, node_name=None, resource_name=None, volume_number=None):
+        """
+        Watch events from the controller.
+        """
+        msg = MsgCrtWatch()
+        msg.watch_id = 1
+        if node_name:
+            msg.node_name = node_name
+        if resource_name:
+            msg.resource_name = resource_name
+        if volume_number:
+            msg.volume_number = volume_number
+        msg_id = self._linstor_client.send_msg(apiconsts.API_CRT_WATCH, msg)
+        self._linstor_client.wait_for_result_and_events(msg_id, reply_handler, event_handler)
 
     def crypt_create_passphrase(self, passphrase):
         """
