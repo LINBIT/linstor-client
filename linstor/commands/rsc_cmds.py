@@ -274,6 +274,7 @@ class ResourceCommands(Commands):
         tbl.add_column("StoragePool")
         tbl.add_column("VolumeNr")
         tbl.add_column("MinorNr")
+        tbl.add_column("DeviceName")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
         for rsc in lstmsg.resources:
@@ -304,6 +305,7 @@ class ResourceCommands(Commands):
                     vlm.stor_pool_name,
                     str(vlm.vlm_nr),
                     str(vlm.vlm_minor_nr),
+                    "/dev/drbd{minor}".format(minor=vlm.vlm_minor_nr),
                     state
                 ])
 
