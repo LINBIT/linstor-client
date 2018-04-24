@@ -75,7 +75,6 @@ from linstor.proto.Filter_pb2 import Filter
 from linstor.proto.eventdata.EventVlmDiskState_pb2 import EventVlmDiskState
 from linstor.proto.eventdata.EventRscState_pb2 import EventRscState
 import linstor.sharedconsts as apiconsts
-from linstor.consts import ExitCode
 
 API_VERSION = 1
 API_VERSION_MIN = 1
@@ -606,8 +605,7 @@ class _LinstorNetClient(threading.Thread):
                     self._cv_sock.wait(1)
 
                 if msg_id in self._replies:
-                    handler_rc = reply_handler(self._replies.pop(msg_id))
-                    if handler_rc != ExitCode.OK:
+                    if not reply_handler(self._replies.pop(msg_id)):
                         return
 
                 while self._events:

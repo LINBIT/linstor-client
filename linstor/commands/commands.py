@@ -535,7 +535,7 @@ class MiscCommands(Commands):
 
     def cmd_create_watch(self, args):
         def reply_handler(replies):
-            return self.handle_replies(args, replies)
+            return self.handle_replies(args, replies) == ExitCode.OK
 
         event_formatter_table = {
             EVENT_VOLUME_DISK_STATE: lambda event_data: "Disk state: " + event_data.disk_state,
