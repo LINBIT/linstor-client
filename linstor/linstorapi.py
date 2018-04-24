@@ -71,6 +71,7 @@ from linstor.proto.MsgCrtWatch_pb2 import MsgCrtWatch
 from linstor.proto.MsgEnterCryptPassphrase_pb2 import MsgEnterCryptPassphrase
 from linstor.proto.MsgCrtCryptPassphrase_pb2 import MsgCrtCryptPassphrase
 from linstor.proto.MsgModCryptPassphrase_pb2 import MsgModCryptPassphrase
+from linstor.proto.MsgModRscConn_pb2 import MsgModRscConn
 from linstor.proto.Filter_pb2 import Filter
 from linstor.proto.eventdata.EventVlmDiskState_pb2 import EventVlmDiskState
 from linstor.proto.eventdata.EventRscState_pb2 import EventRscState
@@ -1367,6 +1368,27 @@ class Linstor(object):
         msg.old_passphrase = old_passphrase
         msg.new_passphrase = new_passphrase
         return self._send_and_wait(apiconsts.API_MOD_CRYPT_PASS, msg)
+
+    def resource_conn_modify(self, rsc_name, node_a, node_b, property_dict, delete_props):
+        """
+        Modify properties of a resource connection.
+        Identified by the resource name, node1 and node2 arguments.
+
+        :param str rsc_name: Name of the resource.
+        :param str node_a: Name of the first node.
+        :param str node_b: Name of the second node.
+        :param dict[str, str] property_dict: Dict containing key, value pairs for new values.
+        :param list[str] delete_props: List of properties to delete
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
+        msg = MsgModRscConn()
+
+        msg.rsc_name = rsc_name
+        msg.node_1_name = node_a
+        msg.node_2_name = node_b
+        msg = self._modify_props(msg, property_dict, delete_props)
+        return self._send_and_wait(apiconsts.API_MOD_RSC_CONN, msg)
 
     def ping(self):
         """
