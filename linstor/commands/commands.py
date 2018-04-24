@@ -277,7 +277,7 @@ class Commands(object):
 
     @classmethod
     def get_allowed_props(cls, objname):
-        return [x for x in properties[objname] if not x.get('internal', False)]
+        return [x for x in properties[objname] if not x.get('internal', False)] if objname in properties else []
 
     @classmethod
     def get_allowed_prop_keys(cls, objname):
