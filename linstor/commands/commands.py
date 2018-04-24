@@ -127,7 +127,8 @@ class Commands(object):
     Hidden = [
         EXIT,
         DMMIGRATE,
-        GEN_ZSH_COMPLETER
+        GEN_ZSH_COMPLETER,
+        CREATE_WATCH
     ]
 
     def __init__(self):
