@@ -141,7 +141,7 @@ class StoragePoolCommands(Commands):
             supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
 
             freespace = ""
-            if storpool.HasField("free_space"):
+            if storpool.driver != 'DisklessDriver' and storpool.HasField("free_space"):
                 freespace = SizeCalc.approximate_size_string(storpool.free_space.free_space)
 
             tbl.add_row([
