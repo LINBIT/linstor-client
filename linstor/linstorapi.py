@@ -182,6 +182,19 @@ class ApiCallResponse(ProtoMessageResponse):
 
 class _LinstorNetClient(threading.Thread):
     IO_SIZE = 4096
+    HDR_LEN = 16
+
+    REPLY_MAP = {
+        apiconsts.API_PONG: (None, None),
+        apiconsts.API_REPLY: (MsgApiCallResponse, ApiCallResponse),
+        apiconsts.API_LST_STOR_POOL_DFN: (MsgLstStorPoolDfn, ProtoMessageResponse),
+        apiconsts.API_LST_STOR_POOL: (MsgLstStorPool, ProtoMessageResponse),
+        apiconsts.API_LST_NODE: (MsgLstNode, ProtoMessageResponse),
+        apiconsts.API_LST_RSC_DFN: (MsgLstRscDfn, ProtoMessageResponse),
+        apiconsts.API_LST_RSC: (MsgLstRsc, ProtoMessageResponse),
+        apiconsts.API_LST_VLM: (MsgLstRsc, ProtoMessageResponse),
+        apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, ProtoMessageResponse)
+    }
 
     def __init__(self, timeout=20):
         super(_LinstorNetClient, self).__init__()
@@ -197,6 +210,7 @@ class _LinstorNetClient(threading.Thread):
         self._api_version = None
         self._cur_msg_id = AtomicInt(1)
         self._cur_watch_id = AtomicInt(1)
+        self._stats_received = 0
 
     def __del__(self):
         self.disconnect()
@@ -420,7 +434,7 @@ class _LinstorNetClient(threading.Thread):
         :return:
         """
         self._errors = []
-        buffer = bytes()  # current data
+        package = bytes()  # current package data
         exp_pkg_len = 0  # expected package length
 
         while self._socket:
@@ -444,7 +458,7 @@ class _LinstorNetClient(threading.Thread):
                     if self._socket is None:  # socket was closed
                         break
 
-                    read = self._socket.recv(4096)
+                    read = self._socket.recv(_LinstorNetClient.IO_SIZE)
 
                     if len(read) == 0:
                         self._logger.debug(
@@ -455,41 +469,37 @@ class _LinstorNetClient(threading.Thread):
                         self._errors.append(
                             LinstorNetworkError("Remote '{hp}' closed connection dropped.".format(hp=self._host)))
 
-                    buffer += read
-                    need_more_data = False
-                    while not need_more_data and len(buffer):
-                        buffer_len = len(buffer)
-                        self._logger.debug("buffer_len: " + str(buffer_len))
-                        if buffer_len > 15 and exp_pkg_len == 0:  # header is 16 bytes
-                            exp_pkg_len = self._parse_payload_length(buffer[:16])
+                    package += read
+                    pkg_len = len(package)
+                    self._stats_received += pkg_len
+                    self._logger.debug("pkg_len: " + str(pkg_len))
+
+                    def has_hdr():  # used as macro
+                        return pkg_len > _LinstorNetClient.HDR_LEN - 1 and exp_pkg_len == 0
+
+                    def has_more_data():  # used as macro
+                        return pkg_len >= (exp_pkg_len + _LinstorNetClient.HDR_LEN) and exp_pkg_len
+
+                    while has_hdr() or has_more_data():
+                        if has_hdr():  # header is 16 bytes
+                            exp_pkg_len = self._parse_payload_length(package[:_LinstorNetClient.HDR_LEN])
 
                         self._logger.debug("exp_pkg_len: " + str(exp_pkg_len))
-                        if exp_pkg_len == 0 or buffer_len < (exp_pkg_len + 16):  # check if we received the full package
-                            need_more_data = True
-                        else:
-                            package = buffer[16: exp_pkg_len + 16]
 
-                            # reset state variables
-                            buffer = buffer[exp_pkg_len + 16:]
-                            exp_pkg_len = 0
-
-                            msgs = self._split_proto_msgs(package)
+                        if has_more_data():
+                            # cut out the parsing package
+                            parse_buf = package[_LinstorNetClient.HDR_LEN:exp_pkg_len + _LinstorNetClient.HDR_LEN]
+                            msgs = self._split_proto_msgs(parse_buf)
                             assert (len(msgs) > 0)  # we should have at least a header message
+
+                            # update buffer and length variables
+                            package = package[exp_pkg_len + _LinstorNetClient.HDR_LEN:]  # put data into next parse run
+                            pkg_len = len(package)  # update package length
+                            self._logger.debug("pkg_len upd: " + str(len(package)))
+                            exp_pkg_len = 0
 
                             hdr = self._parse_proto_msg(MsgHeader, msgs[0])  # parse header
                             self._logger.debug(str(hdr))
-
-                            reply_map = {
-                                apiconsts.API_PONG: (None, None),
-                                apiconsts.API_REPLY: (MsgApiCallResponse, ApiCallResponse),
-                                apiconsts.API_LST_STOR_POOL_DFN: (MsgLstStorPoolDfn, ProtoMessageResponse),
-                                apiconsts.API_LST_STOR_POOL: (MsgLstStorPool, ProtoMessageResponse),
-                                apiconsts.API_LST_NODE: (MsgLstNode, ProtoMessageResponse),
-                                apiconsts.API_LST_RSC_DFN: (MsgLstRscDfn, ProtoMessageResponse),
-                                apiconsts.API_LST_RSC: (MsgLstRsc, ProtoMessageResponse),
-                                apiconsts.API_LST_VLM: (MsgLstRsc, ProtoMessageResponse),
-                                apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, ProtoMessageResponse)
-                            }
 
                             if hdr.api_call == apiconsts.API_VERSION:  # this shouldn't happen
                                 self._parse_api_version(msgs[1])
@@ -505,9 +515,9 @@ class _LinstorNetClient(threading.Thread):
                                     self._events.append((resp, event_data))
                                     self._cv_sock.notifyAll()
 
-                            elif hdr.api_call in reply_map.keys():
+                            elif hdr.api_call in self.REPLY_MAP.keys():
                                 # parse other message according to the reply_map and add them to the self._replies
-                                replies = self._parse_proto_msgs(reply_map[hdr.api_call], msgs[1:])
+                                replies = self._parse_proto_msgs(self.REPLY_MAP[hdr.api_call], msgs[1:])
                                 with self._cv_sock:
                                     self._replies[hdr.msg_id] = replies
                                     self._cv_sock.notifyAll()
@@ -616,6 +626,15 @@ class _LinstorNetClient(threading.Thread):
 
     def next_watch_id(self):
         return self._cur_watch_id.get_and_inc()
+
+    def stats(self):
+        """
+        Returns network statistics as printable string.
+
+        :return: Returns network statistics as printable string.
+        :rtype: str
+        """
+        return "Received bytes: {b}".format(b=self._stats_received)
 
     @staticmethod
     def _adrtuple2str(tuple):
@@ -1408,6 +1427,15 @@ class Linstor(object):
         :rtype: list[ApiCallResponse]
         """
         return self._linstor_client.wait_for_result(msg_id)
+
+    def stats(self):
+        """
+        Returns a printable string containing network statistics.
+
+        :return: A string containing network stats.s
+        :rtype: str
+        """
+        return self._linstor_client.stats()
 
 
 if __name__ == "__main__":
