@@ -477,6 +477,9 @@ class MiscCommands(Commands):
             aliases=[],
             description='Watch events'
         )
+        c_create_watch.add_argument('--node-name', help='Name of the node').completer = self.node_completer
+        c_create_watch.add_argument('--resource-name', help='Name of the resource').completer = self.resource_completer
+        c_create_watch.add_argument('--volume-number', type=int, help='Volume number')
         c_create_watch.set_defaults(func=self.cmd_create_watch)
 
         # crypt
@@ -556,7 +559,10 @@ class MiscCommands(Commands):
                 "): " + event_data_display
             )
 
-        self._linstor.create_watch(reply_handler, event_handler)
+        self._linstor.create_watch(reply_handler, event_handler,
+                                   node_name=args.node_name,
+                                   resource_name=args.resource_name,
+                                   volume_number=args.volume_number)
 
     def cmd_crypt_enter_passphrase(self, args):
         if args.passphrase:

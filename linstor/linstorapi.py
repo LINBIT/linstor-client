@@ -1341,11 +1341,12 @@ class Linstor(object):
         """
         msg = MsgCrtWatch()
         msg.watch_id = self._linstor_client.next_watch_id()
-        if node_name:
+        if node_name is not None:
             msg.node_name = node_name
-        if resource_name:
+        if resource_name is not None:
             msg.resource_name = resource_name
-        if volume_number:
+        if volume_number is not None:
+            msg.filter_by_volume_number = True
             msg.volume_number = volume_number
         msg_id = self._linstor_client.send_msg(apiconsts.API_CRT_WATCH, msg)
         self._linstor_client.wait_for_result_and_events(msg_id, reply_handler, event_handler)
