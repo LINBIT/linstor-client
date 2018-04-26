@@ -1,3 +1,57 @@
+linstor-client (0.1.6-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * update .gitignore file
+  * zsh-completer: options with '-' and ' in the name where incorrectly ge [...]
+  * all received proto message should share the same base class
+  * some PEP8 and minor fixes
+  * linstorapi: add a delete controller config property method
+  * implement setting and unsetting of drbd options
+  * fix unittests, with new node property
+  * move tree.py into linstor module (from commands)
+  * use latest linstor-common
+  * add machine_readable flag support describe-node
+  * fix drbd options with boolean type
+  * unittest: add tests for drbd {resource,volume} options
+  * iteritems() -> items() py3 fix
+  * zsh-completer: escape ':' while generating
+  * drbd-options: only allow yes/no for boolean options
+  * show the drbd device in list-volume output
+  * remove use of ExitCode from linstorapi
+  * linstorapi: add modify rsc connection method
+  * add command drbd-resource-connection-option
+  * check for missing objects in linstor props
+  * cleanup and add a stats method to the _LinstorNetClient
+  * storagepools: do not show free space for diskless driver
+
+  [ Roland Kammerer ]
+  * Dockerfile: mv MAINTAINER section
+  * docker: improve integration
+  * Makefile: rm git reset of drbdsetup_options.py
+
+  [ Joel Colledge ]
+  * Clarify that the range properties only apply to auto-allocation
+  * Simplify tree printing
+  * Do not assume that the storage pool for a volume is given by a propert [...]
+  * Tidy up colors in tree drawing
+  * Fix describe-node rebase issues - compatibility with ProtoMessageResponse
+  * Introduce LinStor events
+  * Use a new watch ID for each watch
+  * Add create-watch to the hidden commands list to fix unit test
+  * Fix waiting for newly created resources to be ready
+  * Support filters with the create-watch command
+
+  [ junhe ]
+  * Added decribe-node command
+  * added --no-utf8 option
+  * added support for color, --no-color and diskless resource
+
+  [ Hayley Swimelar ]
+  * clean up imports for nodes
+  * clean up node commands imports
+
+ -- Roland Kammerer <roland.kammerer@linbit.com>  Thu, 26 Apr 2018 15:59:29 +0200
+
 linstor-client (0.1.5-1) experimental; urgency=medium
 
   [ Robert Altnoeder ]
