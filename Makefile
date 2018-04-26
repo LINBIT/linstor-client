@@ -34,7 +34,6 @@ linstor/drbdsetup_options.py:
 
 release: up2date clean doc
 	$(PYTHON) setup.py sdist
-	git checkout linstor/drbdsetup_options.py
 	@echo && echo "Did you run distclean?"
 	@echo && echo "Did you generate and commit the latest drbdsetup options?"
 
