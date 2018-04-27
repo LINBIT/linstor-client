@@ -75,6 +75,7 @@ class ExitCode(object):
     CONNECTION_TIMEOUT = 21
     UNEXPECTED_REPLY = 22
     API_ERROR = 10
+    NO_SATELLITE_CONNECTION = 11
 
 
 class Color(object):

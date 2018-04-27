@@ -510,7 +510,10 @@ class _LinstorNetClient(threading.Thread):
                             elif hdr.api_call == apiconsts.API_EVENT:
                                 resp = MsgEvent()
                                 resp.ParseFromString(msgs[1])
-                                event_data = self._parse_event(resp.event_name, msgs[2])
+                                if resp.event_action in [apiconsts.EVENT_STREAM_OPEN, apiconsts.EVENT_STREAM_VALUE]:
+                                    event_data = self._parse_event(resp.event_name, msgs[2])
+                                else:
+                                    event_data = None
                                 with self._cv_sock:
                                     self._events.append((resp, event_data))
                                     self._cv_sock.notifyAll()
@@ -612,17 +615,18 @@ class _LinstorNetClient(threading.Thread):
             while True:
                 while msg_id not in self._replies and not self._events:
                     if not self.connected:
-                        return
+                        return None
                     self._cv_sock.wait(1)
 
                 if msg_id in self._replies:
-                    if not reply_handler(self._replies.pop(msg_id)):
-                        return
+                    reply_handler_result = reply_handler(self._replies.pop(msg_id))
+                    if reply_handler_result is not None:
+                        return reply_handler_result
 
                 while self._events:
-                    handler_result = event_handler(*self._events.popleft())
-                    if handler_result and handler_result.get('stop'):
-                        return
+                    event_handler_result = event_handler(*self._events.popleft())
+                    if event_handler_result is not None:
+                        return event_handler_result
 
     def next_watch_id(self):
         return self._cur_watch_id.get_and_inc()
@@ -1349,7 +1353,7 @@ class Linstor(object):
             msg.filter_by_volume_number = True
             msg.volume_number = volume_number
         msg_id = self._linstor_client.send_msg(apiconsts.API_CRT_WATCH, msg)
-        self._linstor_client.wait_for_result_and_events(msg_id, reply_handler, event_handler)
+        return self._linstor_client.wait_for_result_and_events(msg_id, reply_handler, event_handler)
 
     def crypt_create_passphrase(self, passphrase):
         """

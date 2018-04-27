@@ -162,6 +162,10 @@ class ResourceCommands(Commands):
         Commands.add_parser_keyvalue(p_setprop, "resource")
         p_setprop.set_defaults(func=self.set_props)
 
+    @staticmethod
+    def _satellite_not_connected(replies):
+        return any(reply.ret_code & apiconsts.WARN_NOT_CONNECTED == apiconsts.WARN_NOT_CONNECTED for reply in replies)
+
     def create(self, args):
         if args.auto_place:
             # auto-place resource
@@ -181,6 +185,7 @@ class ResourceCommands(Commands):
                 raise ArgumentError("create-resource: too few arguments: Node name missing.")
 
             rc = ExitCode.OK
+            satellites_connected = True
             for node_name in args.node_name:
                 replies = self._linstor.resource_create(
                     node_name,
@@ -189,24 +194,45 @@ class ResourceCommands(Commands):
                     args.storage_pool
                 )
 
-                current_rc = self.handle_replies(args, replies)
+                create_rc = self.handle_replies(args, replies)
 
-                if current_rc != ExitCode.OK:
-                    rc = current_rc
-                elif args.wait_for_ready:
-                    def event_handler(event_header, event_data):
-                        if event_header.node_name == node_name and \
-                                event_header.event_name == apiconsts.EVENT_RESOURCE_STATE and \
-                                event_data.state == "Ready":
-                            return {'stop': True}
+                if create_rc != ExitCode.OK:
+                    rc = create_rc
+
+                if ResourceCommands._satellite_not_connected(replies):
+                    satellites_connected = False
+
+            if rc == ExitCode.OK and args.wait_for_ready and not satellites_connected:
+                rc = ExitCode.NO_SATELLITE_CONNECTION
+
+            if rc == ExitCode.OK and args.wait_for_ready:
+                for node_name in args.node_name:
+                    def reply_handler(replies):
+                        create_watch_rc = self.handle_replies(args, replies)
+                        if create_watch_rc != ExitCode.OK:
+                            return create_watch_rc
                         return None
 
-                    self._linstor.create_watch(
-                        lambda replies: self.handle_replies(args, replies) == ExitCode.OK,
+                    def event_handler(event_header, event_data):
+                        if event_header.node_name == node_name and \
+                                event_header.event_name == apiconsts.EVENT_RESOURCE_STATE:
+                            if event_data is not None and event_data.ready:
+                                return ExitCode.OK
+                            if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_NO_CONNECTION:
+                                return ExitCode.NO_SATELLITE_CONNECTION
+                            if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
+                                return ExitCode.API_ERROR
+                        return None
+
+                    watch_rc = self._linstor.create_watch(
+                        reply_handler,
                         event_handler,
                         node_name=node_name,
                         resource_name=args.resource_definition_name
                     )
+
+                    if watch_rc != ExitCode.OK:
+                        rc = watch_rc
 
             return rc
 
@@ -290,12 +316,9 @@ class ResourceCommands(Commands):
 
                     if state == 'DUnknown':
                         state = tbl.color_cell("Unknown", Color.YELLOW)
-                    elif state == 'Diskless':
-                        if vlm_state.disk_failed:
-                            state = tbl.color_cell("DiskFailed", Color.RED)
                     elif state in ['Inconsistent', 'Failed']:
                         state = tbl.color_cell(state, Color.RED)
-                    elif state in ['UpToDate']:
+                    elif state in ['UpToDate', 'Diskless']:
                         pass  # green text
                     else:
                         state = tbl.color_cell(state, Color.YELLOW)

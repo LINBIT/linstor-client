@@ -541,23 +541,30 @@ class MiscCommands(Commands):
 
     def cmd_create_watch(self, args):
         def reply_handler(replies):
-            return self.handle_replies(args, replies) == ExitCode.OK
+            create_watch_rc = self.handle_replies(args, replies)
+            if create_watch_rc != ExitCode.OK:
+                return create_watch_rc
+            return None
 
         event_formatter_table = {
             EVENT_VOLUME_DISK_STATE: lambda event_data: "Disk state: " + event_data.disk_state,
-            EVENT_RESOURCE_STATE: lambda event_data: "Resource state: " + event_data.state
+            EVENT_RESOURCE_STATE: lambda event_data: "Resource ready: " + str(event_data.ready)
         }
 
         def event_handler(event_header, event_data):
-            event_data_display = event_formatter_table[event_header.event_name](event_data)
+            event_header_display = \
+                event_header.event_name + \
+                " [" + event_header.event_action + "]" + \
+                " (" + event_header.node_name + \
+                "/" + event_header.resource_name + \
+                ("/" + str(event_header.volume_number) if event_header.HasField("volume_number") else "") + \
+                ")"
 
-            print(
-                event_header.event_name +
-                " (" + event_header.node_name +
-                "/" + event_header.resource_name +
-                ("/" + str(event_header.volume_number) if event_header.HasField("volume_number") else "") +
-                "): " + event_data_display
-            )
+            if event_data:
+                event_data_display = event_formatter_table[event_header.event_name](event_data)
+                print(event_header_display + " " + event_data_display)
+            else:
+                print(event_header_display)
 
         self._linstor.create_watch(reply_handler, event_handler,
                                    node_name=args.node_name,
