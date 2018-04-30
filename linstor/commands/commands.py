@@ -96,21 +96,13 @@ class Commands(object):
             LONG = "create"
             SHORT = "c"
 
-        class CreateNetInterface(object):
-            LONG = "create-interface"
-            SHORT = "ci"
+        class Modify(object):
+            LONG = "modify"
+            SHORT = "m"
 
-        class ModifyNetInterface(object):
-            LONG = "modify-interface"
-            SHORT = "mi"
-
-        class DeleteNetInterface(object):
-            LONG = "remove-interface"
-            SHORT = "ri"
-
-        class ListNetInterface(object):
-            LONG = "list-interface"
-            SHORT = "li"
+        class Interface(object):
+            LONG = "interface"
+            SHORT = "i"
 
         class CreateDef(object):
             LONG = "create-definition"

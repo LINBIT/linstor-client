@@ -40,10 +40,7 @@ class NodeCommands(Commands):
                     Commands.Subcommands.List,
                     Commands.Subcommands.Delete,
                     Commands.Subcommands.Describe,
-                    Commands.Subcommands.CreateNetInterface,
-                    Commands.Subcommands.ListNetInterface,
-                    Commands.Subcommands.ModifyNetInterface,
-                    Commands.Subcommands.DeleteNetInterface,
+                    Commands.Subcommands.Interface,
                     Commands.Subcommands.SetAuxProperties,
                     Commands.Subcommands.ListProperties,
                 ]))
@@ -115,10 +112,29 @@ class NodeCommands(Commands):
                                help='Name of the node to remove').completer = self.node_completer
         p_rm_node.set_defaults(func=self.delete)
 
+        # Interface commands
+
+        interface_parser = node_subp.add_parser(
+            Commands.Subcommands.Interface.LONG,
+            formatter_class=argparse.RawTextHelpFormatter,
+            aliases=[Commands.Subcommands.Interface.SHORT],
+            description="%s subcommands" % Commands.Subcommands.Interface.LONG)
+
+        interface_subp = interface_parser.add_subparsers(
+            title="%s subcommands" % Commands.Subcommands.Interface.LONG,
+            metavar="",
+            description=Commands.Subcommands.generate_desc(
+                [
+                    Commands.Subcommands.Create,
+                    Commands.Subcommands.List,
+                    Commands.Subcommands.Modify,
+                    Commands.Subcommands.Delete,
+                ]))
+
         # create net interface
-        p_create_netinterface = node_subp.add_parser(
-            Commands.Subcommands.CreateNetInterface.LONG,
-            aliases=[Commands.Subcommands.CreateNetInterface.SHORT],
+        p_create_netinterface = interface_subp.add_parser(
+            Commands.Subcommands.Create.LONG,
+            aliases=[Commands.Subcommands.Create.SHORT],
             description='Creates and adds a new netinterface to a given node. If port is specified this netinterface '
                         'is used as satellite port'
         )
@@ -142,9 +158,9 @@ class NodeCommands(Commands):
         p_create_netinterface.set_defaults(func=self.create_netif)
 
         # modify net interface
-        p_mod_netif = node_subp.add_parser(
-            Commands.Subcommands.ModifyNetInterface.LONG,
-            aliases=[Commands.Subcommands.ModifyNetInterface.SHORT],
+        p_mod_netif = interface_subp.add_parser(
+            Commands.Subcommands.Modify.LONG,
+            aliases=[Commands.Subcommands.Modify.SHORT],
             description='Change the ip listen address of a netinterface on the given node.'
         )
         p_mod_netif.add_argument('-p', '--port', type=rangecheck(1, 65535),
@@ -161,9 +177,9 @@ class NodeCommands(Commands):
         p_mod_netif.set_defaults(func=self.modify_netif)
 
         # delete net interface
-        p_delete_netinterface = node_subp.add_parser(
-            Commands.Subcommands.DeleteNetInterface.LONG,
-            aliases=[Commands.Subcommands.DeleteNetInterface.SHORT],
+        p_delete_netinterface = interface_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
             description='Delete a netinterface from a node.'
         )
         p_delete_netinterface.add_argument(
@@ -198,9 +214,9 @@ class NodeCommands(Commands):
         p_lnodes.set_defaults(func=self.list)
 
         # list netinterface
-        p_lnetif = node_subp.add_parser(
-            Commands.Subcommands.ListNetInterface.LONG,
-            aliases=[Commands.Subcommands.ListNetInterface.SHORT],
+        p_lnetif = interface_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of netinterfaces from a node.'
         )
         p_lnetif.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
