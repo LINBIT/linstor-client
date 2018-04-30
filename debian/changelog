@@ -1,3 +1,14 @@
+linstor-client (0.1.7-1) experimental; urgency=medium
+
+  [ Joel Colledge ]
+  * Handle closing event streams and disconnected satellites
+  * Use new-peer instead of net-options so that the 'transport' DRBD prope [...]
+
+  [ Roland Kammerer ]
+  * include xml files (drbdsetup.xml)
+
+ -- Roland Kammerer <roland.kammerer@linbit.com>  Mon, 30 Apr 2018 18:26:44 +0200
+
 linstor-client (0.1.6-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
