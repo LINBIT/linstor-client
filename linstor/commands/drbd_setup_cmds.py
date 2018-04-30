@@ -10,7 +10,7 @@ class DrbdOptions(Commands):
     _options = drbd_options
 
     _CategoyMap = {
-        'net-options': apiconsts.NAMESPC_DRBD_NET_OPTIONS,
+        'new-peer': apiconsts.NAMESPC_DRBD_NET_OPTIONS,
         'disk-options': apiconsts.NAMESPC_DRBD_DISK_OPTIONS,
         'resource-options': apiconsts.NAMESPC_DRBD_RESOURCE_OPTIONS,
         'peer-device-options': apiconsts.NAMESPC_DRBD_PEER_DEVICE_OPTIONS
