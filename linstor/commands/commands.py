@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 from linstor.utils import Output, LinstorClientError
 from linstor.protobuf_to_dict import protobuf_to_dict
 import linstor.linstorapi as linstorapi
-from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE
+from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE, \
+    EVENT_RESOURCE_DEPLOYMENT_STATE
 from linstor.consts import ExitCode, KEY_LS_CONTROLLERS
 from linstor.properties import properties
 
@@ -581,7 +582,9 @@ class MiscCommands(Commands):
 
         event_formatter_table = {
             EVENT_VOLUME_DISK_STATE: lambda event_data: "Disk state: " + event_data.disk_state,
-            EVENT_RESOURCE_STATE: lambda event_data: "Resource ready: " + str(event_data.ready)
+            EVENT_RESOURCE_STATE: lambda event_data: "Resource ready: " + str(event_data.ready),
+            EVENT_RESOURCE_DEPLOYMENT_STATE: lambda event_data:
+                "Deployment state: " + event_data.responses[0].message_format
         }
 
         def event_handler(event_header, event_data):
@@ -594,8 +597,12 @@ class MiscCommands(Commands):
                 ")"
 
             if event_data:
-                event_data_display = event_formatter_table[event_header.event_name](event_data)
-                print(event_header_display + " " + event_data_display)
+                event_formatter = event_formatter_table.get(event_header.event_name)
+                if event_formatter is None:
+                    print(event_header_display)
+                else:
+                    event_data_display = event_formatter(event_data)
+                    print(event_header_display + " " + event_data_display)
             else:
                 print(event_header_display)
 

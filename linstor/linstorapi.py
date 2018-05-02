@@ -79,6 +79,7 @@ from linstor.proto.MsgErrorReport_pb2 import MsgErrorReport
 from linstor.proto.Filter_pb2 import Filter
 from linstor.proto.eventdata.EventVlmDiskState_pb2 import EventVlmDiskState
 from linstor.proto.eventdata.EventRscState_pb2 import EventRscState
+from linstor.proto.eventdata.EventRscDeploymentState_pb2 import EventRscDeploymentState
 import linstor.sharedconsts as apiconsts
 
 API_VERSION = 1
@@ -293,10 +294,16 @@ class _LinstorNetClient(threading.Thread):
     def _parse_event(cls, event_name, event_data_bytes):
         event_reader_table = {
             apiconsts.EVENT_VOLUME_DISK_STATE: EventVlmDiskState,
-            apiconsts.EVENT_RESOURCE_STATE: EventRscState
+            apiconsts.EVENT_RESOURCE_STATE: EventRscState,
+            apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE: EventRscDeploymentState
         }
 
-        event_data = event_reader_table[event_name]()
+        event_reader = event_reader_table.get(event_name)
+
+        if event_reader is None:
+            return None
+
+        event_data = event_reader()
         event_data.ParseFromString(event_data_bytes)
         return event_data
 

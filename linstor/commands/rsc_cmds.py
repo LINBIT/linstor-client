@@ -214,14 +214,38 @@ class ResourceCommands(Commands):
                         return None
 
                     def event_handler(event_header, event_data):
-                        if event_header.node_name == node_name and \
-                                event_header.event_name == apiconsts.EVENT_RESOURCE_STATE:
-                            if event_data is not None and event_data.ready:
+                        if event_header.node_name == node_name:
+                            if event_header.event_name in \
+                                    [apiconsts.EVENT_RESOURCE_STATE, apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE]:
+                                if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_NO_CONNECTION:
+                                    print(Output.color_str('WARNING:', Color.YELLOW, args.no_color) +
+                                          " Satellite connection lost")
+                                    return ExitCode.NO_SATELLITE_CONNECTION
+                                if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
+                                    print((Output.color_str('ERROR:', Color.RED, args.no_color)) + " Resource removed")
+                                    return ExitCode.API_ERROR
+
+                            if event_header.event_name == apiconsts.EVENT_RESOURCE_STATE and \
+                                    event_data is not None and event_data.ready:
                                 return ExitCode.OK
-                            if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_NO_CONNECTION:
-                                return ExitCode.NO_SATELLITE_CONNECTION
-                            if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
+
+                            if event_header.event_name == apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE and \
+                                    event_data is not None:
+                                api_call_responses = [
+                                    linstor.linstorapi.ApiCallResponse(response)
+                                    for response in event_data.responses
+                                ]
+                                failure_responses = [
+                                    api_call_response for api_call_response in api_call_responses
+                                    if not api_call_response.is_success()
+                                ]
+
+                                if not failure_responses:
+                                    return None
+
+                                self.handle_replies(args, api_call_responses)
                                 return ExitCode.API_ERROR
+
                         return None
 
                     watch_rc = self._linstor.create_watch(
