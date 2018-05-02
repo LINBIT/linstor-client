@@ -316,9 +316,13 @@ class ResourceCommands(Commands):
 
                     if state == 'DUnknown':
                         state = tbl.color_cell("Unknown", Color.YELLOW)
+                    elif state == 'Diskless':
+                        if apiconsts.FLAG_DISKLESS not in rsc.rsc_flags:  # unintentional diskless
+                            state = tbl.color_cell(state, Color.RED)
+                        # else pass -> green diskless
                     elif state in ['Inconsistent', 'Failed']:
                         state = tbl.color_cell(state, Color.RED)
-                    elif state in ['UpToDate', 'Diskless']:
+                    elif state in ['UpToDate']:
                         pass  # green text
                     else:
                         state = tbl.color_cell(state, Color.YELLOW)
