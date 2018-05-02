@@ -2,6 +2,7 @@ recursive-include man-pages *.gz
 recursive-include man-pages *.xml
 recursive-include scripts *
 include linstor-common/linstor/proto/*.proto
+include linstor-common/linstor/proto/eventdata/*.proto
 include linstor-common/*.json
 include linstor-common/*.py
 include linstor-common/*.xml

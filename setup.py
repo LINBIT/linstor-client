@@ -197,6 +197,7 @@ setup(
         "linstor.commands",
         "linstor.protobuf_to_dict",
         "linstor.proto",
+        "linstor.proto.eventdata",
     ],
     install_requires=[
         "protobuf"
