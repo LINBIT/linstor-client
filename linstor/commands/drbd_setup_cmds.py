@@ -108,7 +108,7 @@ class DrbdOptions(Commands):
         )
 
         resource_conn_cmd = parser.add_parser(
-            Commands.DRBD_RESOURCE_CONNECTION_OPTIONS,
+            Commands.DRBD_PEER_OPTIONS,
             description="Set drbd peer-device options."
         )
         resource_conn_cmd.add_argument(

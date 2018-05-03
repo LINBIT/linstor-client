@@ -50,7 +50,7 @@ class Commands(object):
     DRBD_OPTIONS = 'drbd-options'
     DRBD_RESOURCE_OPTIONS = 'drbd-resource-options'
     DRBD_VOLUME_OPTIONS = 'drbd-volume-options'
-    DRBD_RESOURCE_CONNECTION_OPTIONS = 'drbd-resource-connection-options'
+    DRBD_PEER_OPTIONS = 'drbd-peer-options'
     EXIT = 'exit'
     GET_NODE_PROPS = 'list-node-properties'
     GET_RESOURCE_DEF_PROPS = 'list-resource-definition-properties'
@@ -108,7 +108,7 @@ class Commands(object):
         DRBD_OPTIONS,
         DRBD_RESOURCE_OPTIONS,
         DRBD_VOLUME_OPTIONS,
-        DRBD_RESOURCE_CONNECTION_OPTIONS,
+        DRBD_PEER_OPTIONS,
         GET_NODE_PROPS,
         GET_RESOURCE_DEF_PROPS,
         GET_RESOURCE_PROPS,
