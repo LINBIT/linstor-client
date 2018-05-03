@@ -1,3 +1,17 @@
+linstor-client (0.1.8-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * add commands to list and show error reports
+  * list-volumes: show unintentional diskless volumes in red
+
+  [ Joel Colledge ]
+  * Handle resource deployment state event
+
+  [ Roland Kammerer ]
+  * build,fixup: also include eventdata
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 03 May 2018 09:20:10 +0200
+
 linstor-client (0.1.7-1) experimental; urgency=medium
 
   [ Joel Colledge ]
