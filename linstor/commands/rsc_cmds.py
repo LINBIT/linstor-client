@@ -177,7 +177,38 @@ class ResourceCommands(Commands):
                 args.do_not_place_with_regex
             )
 
-            return self.handle_replies(args, replies)
+            rc = self.handle_replies(args, replies)
+
+            if rc == ExitCode.OK and args.wait_for_ready:
+                def reply_handler(replies):
+                    create_watch_rc = self.handle_replies(args, replies)
+                    if create_watch_rc != ExitCode.OK:
+                        return create_watch_rc
+                    return None
+
+                def event_handler(event_header, event_data):
+                    if event_header.event_name == apiconsts.EVENT_RESOURCE_DEFINITION_READY:
+                        if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
+                            print((Output.color_str('ERROR:', Color.RED, args.no_color)) + " Resource removed")
+                            return ExitCode.API_ERROR
+
+                        if event_data is not None:
+                            if event_data.error_count > 0:
+                                return ExitCode.API_ERROR
+
+                            if event_data.ready_count == args.auto_place:
+                                return ExitCode.OK
+
+                    return None
+
+                rc = self._linstor.create_watch(
+                    reply_handler,
+                    event_handler,
+                    resource_name=args.resource_definition_name
+                )
+
+            return rc
+
         else:
             # normal create resource
             # check that node is given

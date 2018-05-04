@@ -8,7 +8,7 @@ from linstor.utils import Output, LinstorClientError
 from linstor.protobuf_to_dict import protobuf_to_dict
 import linstor.linstorapi as linstorapi
 from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE, \
-    EVENT_RESOURCE_DEPLOYMENT_STATE
+    EVENT_RESOURCE_DEPLOYMENT_STATE, EVENT_RESOURCE_DEFINITION_READY
 from linstor.consts import ExitCode, KEY_LS_CONTROLLERS
 from linstor.properties import properties
 
@@ -584,7 +584,9 @@ class MiscCommands(Commands):
             EVENT_VOLUME_DISK_STATE: lambda event_data: "Disk state: " + event_data.disk_state,
             EVENT_RESOURCE_STATE: lambda event_data: "Resource ready: " + str(event_data.ready),
             EVENT_RESOURCE_DEPLOYMENT_STATE: lambda event_data:
-                "Deployment state: " + event_data.responses[0].message_format
+                "Deployment state: " + event_data.responses[0].message_format,
+            EVENT_RESOURCE_DEFINITION_READY: lambda event_data:
+                "Resource definition; ready: " + str(event_data.ready_count) + ", error: " + str(event_data.error_count)
         }
 
         def event_handler(event_header, event_data):
