@@ -24,7 +24,7 @@ class TestProperties(LinstorTestCase):
         self.assertTrue(vlm_dfn_resp.is_success())
 
         # create resource on node1
-        rsc_resps = self.execute_with_resp(['create-resource', '-s', 'storage', 'rsc1', 'node1'])
+        rsc_resps = self.execute_with_resp(['create-resource', '--async', '-s', 'storage', 'rsc1', 'node1'])
         self.assertEqual(3, len(rsc_resps))
         self.assertTrue(rsc_resps[0].is_warning())  # satellite not reachable
         self.assertTrue(rsc_resps[1].is_success())  # resource created
