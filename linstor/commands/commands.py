@@ -109,8 +109,8 @@ class Commands(object):
             SHORT = "cd"
 
         class Delete(object):
-            LONG = "remove"
-            SHORT = "r"
+            LONG = "delete"
+            SHORT = "d"
 
         class SetProperty(object):
             LONG = "set-property"
@@ -134,7 +134,7 @@ class Commands(object):
 
         class Describe(object):
             LONG = "describe"
-            SHORT = "d"
+            SHORT = "dsc"
 
         @staticmethod
         def generate_desc(subcommands):
