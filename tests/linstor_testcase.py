@@ -235,42 +235,42 @@ class LinstorTestCaseWithData(LinstorTestCase):
     def setUpClass(cls):
         super(LinstorTestCaseWithData, cls).setUpClass()
 
-        cls.assert_execute(['create-node', 'fakehost1', '1.0.0.1'])
-        cls.assert_execute(['create-node', 'fakehost2', '1.0.0.2'])
-        cls.assert_execute(['create-node', 'fakehost3', '1.0.0.3'])
-        cls.assert_execute(['create-node', 'fakemachine', '1.0.0.4'])
+        cls.assert_execute(['node', 'create', 'fakehost1', '1.0.0.1'])
+        cls.assert_execute(['node', 'create', 'fakehost2', '1.0.0.2'])
+        cls.assert_execute(['node', 'create', 'fakehost3', '1.0.0.3'])
+        cls.assert_execute(['node', 'create', 'fakemachine', '1.0.0.4'])
 
-        cls.assert_execute(['create-netinterface', 'fakehost1', 'fastnet', '10.0.0.1'])
+        cls.assert_execute(['node', 'interface', 'create', 'fakehost1', 'fastnet', '10.0.0.1'])
 
-        cls.assert_execute(['create-storage-pool', 'DfltStorPool', 'fakehost1', 'lvm', 'mylvmpool'])
-        cls.assert_execute(['create-storage-pool', 'DfltStorPool', 'fakehost2', 'lvm', 'mylvmpool'])
-        cls.assert_execute(['create-storage-pool', 'DfltStorPool', 'fakehost3', 'lvm', 'mylvmpool'])
+        cls.assert_execute(['storage-pool', 'create', 'DfltStorPool', 'fakehost1', 'lvm', 'mylvmpool'])
+        cls.assert_execute(['storage-pool', 'create', 'DfltStorPool', 'fakehost2', 'lvm', 'mylvmpool'])
+        cls.assert_execute(['storage-pool', 'create', 'DfltStorPool', 'fakehost3', 'lvm', 'mylvmpool'])
 
-        cls.assert_execute(['create-storage-pool', 'thinpool', 'fakehost1', 'lvmthin', 'mythinpool'])
-        cls.assert_execute(['create-storage-pool', 'thinpool', 'fakehost2', 'lvmthin', 'mythinpool'])
+        cls.assert_execute(['storage-pool', 'create', 'thinpool', 'fakehost1', 'lvmthin', 'mythinpool'])
+        cls.assert_execute(['storage-pool', 'create', 'thinpool', 'fakehost2', 'lvmthin', 'mythinpool'])
 
-        cls.assert_execute(['create-storage-pool', 'zfsubuntu', 'fakehost1', 'zfs', 'zfsstorage'])
-        cls.assert_execute(['create-storage-pool', 'zfsubuntu', 'fakehost2', 'zfs', 'zfsstorage'])
+        cls.assert_execute(['storage-pool', 'create', 'zfsubuntu', 'fakehost1', 'zfs', 'zfsstorage'])
+        cls.assert_execute(['storage-pool', 'create', 'zfsubuntu', 'fakehost2', 'zfs', 'zfsstorage'])
 
-        cls.assert_execute(['create-resource-definition', 'rsc1'])
-        cls.assert_execute(['create-volume-definition', 'rsc1', '128Mib'])
+        cls.assert_execute(['resource-definition', 'create', 'rsc1'])
+        cls.assert_execute(['volume-definition', 'create', 'rsc1', '128Mib'])
 
-        cls.assert_execute(['create-resource', '--async',  'rsc1', 'fakehost1'])
-        cls.assert_execute(['create-resource', '--async', 'rsc1', 'fakehost2'])
-        cls.assert_execute(['create-resource', '--async', '-d', 'rsc1', 'fakehost3'])
+        cls.assert_execute(['resource', 'create', '--async', 'rsc1', 'fakehost1'])
+        cls.assert_execute(['resource', 'create', '--async', 'rsc1', 'fakehost2'])
+        cls.assert_execute(['resource', 'create', '--async', '-d', 'rsc1', 'fakehost3'])
 
-        cls.assert_execute(['create-resource-definition', 'rsc-zfs'])
-        cls.assert_execute(['create-volume-definition', 'rsc-zfs', '128Mib'])
+        cls.assert_execute(['resource-definition', 'create', 'rsc-zfs'])
+        cls.assert_execute(['volume-definition', 'create', 'rsc-zfs', '128Mib'])
 
-        cls.assert_execute(['create-resource', '--async', 'rsc-zfs', 'fakehost1', '-s', 'zfsubuntu'])
-        cls.assert_execute(['create-resource', '--async', 'rsc-zfs', 'fakehost2', '-s', 'zfsubuntu'])
+        cls.assert_execute(['resource', 'create', '--async', 'rsc-zfs', 'fakehost1', '-s', 'zfsubuntu'])
+        cls.assert_execute(['resource', 'create', '--async', 'rsc-zfs', 'fakehost2', '-s', 'zfsubuntu'])
 
-        cls.assert_execute(['create-resource-definition', 'rsc_thin'])
-        cls.assert_execute(['create-volume-definition', 'rsc_thin', '128Mib'])
-        cls.assert_execute(['create-volume-definition', 'rsc_thin', '64Mib'])
+        cls.assert_execute(['resource-definition', 'create', 'rsc_thin'])
+        cls.assert_execute(['volume-definition', 'create', 'rsc_thin', '128Mib'])
+        cls.assert_execute(['volume-definition', 'create', 'rsc_thin', '64Mib'])
 
-        cls.assert_execute(['create-resource', '--async', 'rsc_thin', 'fakehost1', '-s', 'thinpool'])
-        cls.assert_execute(['create-resource', '--async', 'rsc_thin', 'fakehost2', '-s', 'thinpool'])
+        cls.assert_execute(['resource', 'create', '--async', 'rsc_thin', 'fakehost1', '-s', 'thinpool'])
+        cls.assert_execute(['resource', 'create', '--async', 'rsc_thin', 'fakehost2', '-s', 'thinpool'])
 
     def get_list(self, field, response):
         self.assertEqual(1, len(response))

@@ -4,13 +4,13 @@ import linstor.sharedconsts as apiconsts
 
 class TestListFilters(LinstorTestCaseWithData):
     def get_resource_dfn_properties(self, rsc_dfn_name):
-        resourcedef_props = self.execute_with_machine_output(['list-resource-definition-properties', rsc_dfn_name])
+        resourcedef_props = self.execute_with_machine_output(['resource-definition', 'list-properties', rsc_dfn_name])
         self.assertEqual(1, len(resourcedef_props))
         return resourcedef_props[0]
 
     def get_volume_dfn_properties(self, rsc_dfn_name, vlm_nr):
         volumedef_props = self.execute_with_machine_output(
-            ['list-volume-definition-properties', rsc_dfn_name, vlm_nr]
+            ['volume-definition', 'list-properties', rsc_dfn_name, vlm_nr]
         )
         self.assertEqual(1, len(volumedef_props))
         return volumedef_props[0]
