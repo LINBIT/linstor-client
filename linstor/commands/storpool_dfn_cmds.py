@@ -1,9 +1,9 @@
 import argparse
+
 import linstor
 from linstor.commands import Commands
-from linstor.utils import namecheck
-from linstor.consts import ExitCode
 from linstor.consts import STORPOOL_NAME
+from linstor.utils import namecheck
 
 
 class StoragePoolDefinitionCommands(Commands):

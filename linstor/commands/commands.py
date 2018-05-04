@@ -1,17 +1,18 @@
 import argparse
-import os
-import json
 import getpass
-import linstor
+import json
+import os
 import re
 from datetime import datetime, timedelta
-from linstor.utils import Output, LinstorClientError
-from linstor.protobuf_to_dict import protobuf_to_dict
+
+import linstor
 import linstor.linstorapi as linstorapi
 from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE, \
     EVENT_RESOURCE_DEPLOYMENT_STATE, EVENT_RESOURCE_DEFINITION_READY
 from linstor.consts import ExitCode, KEY_LS_CONTROLLERS
 from linstor.properties import properties
+from linstor.protobuf_to_dict import protobuf_to_dict
+from linstor.utils import LinstorClientError, Output
 
 
 class ArgumentError(Exception):

@@ -1,15 +1,12 @@
 import argparse
+import re
+import sys
 
 import linstor
 from linstor.commands import Commands
-from linstor.utils import SizeCalc, namecheck, Output
 from linstor.consts import RES_NAME, Color, ExitCode
-from linstor.sharedconsts import (
-    FLAG_DELETE
-)
-
-import re
-import sys
+from linstor.sharedconsts import FLAG_DELETE
+from linstor.utils import Output, SizeCalc, namecheck
 
 
 class VolumeDefinitionCommands(Commands):

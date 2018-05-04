@@ -1,12 +1,10 @@
 import argparse
 
 import linstor
-from linstor.commands import Commands, ArgumentError
-from linstor.utils import namecheck, SizeCalc
-from linstor.sharedconsts import (
-    KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
-)
+from linstor.commands import ArgumentError, Commands
 from linstor.consts import NODE_NAME, STORPOOL_NAME
+from linstor.sharedconsts import KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
+from linstor.utils import SizeCalc, namecheck
 
 
 class StoragePoolCommands(Commands):

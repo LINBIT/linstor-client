@@ -1,12 +1,10 @@
 import argparse
-import linstor
 
+import linstor
 from linstor.commands import Commands
-from linstor.utils import rangecheck, namecheck, Output
-from linstor.sharedconsts import (
-    FLAG_DELETE
-)
-from linstor.consts import RES_NAME, Color, ExitCode
+from linstor.consts import RES_NAME, Color
+from linstor.sharedconsts import FLAG_DELETE
+from linstor.utils import Output, namecheck, rangecheck
 
 
 class ResourceDefinitionCommands(Commands):
