@@ -35,9 +35,9 @@ class ResourceCommands(Commands):
             help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_res.add_argument('-d', '--diskless', action="store_true", help='Should the resource be diskless')
         p_new_res.add_argument(
-            '--wait-for-ready',
+            '--async',
             action='store_true',
-            help='Wait for the volumes to be ready for use before returning'
+            help='Do not wait for deployment on satellites before returning'
         )
         p_new_res.add_argument(
             '--auto-place',
@@ -179,7 +179,7 @@ class ResourceCommands(Commands):
 
             rc = self.handle_replies(args, replies)
 
-            if rc == ExitCode.OK and args.wait_for_ready:
+            if rc == ExitCode.OK and not args.async:
                 def reply_handler(replies):
                     create_watch_rc = self.handle_replies(args, replies)
                     if create_watch_rc != ExitCode.OK:
@@ -233,10 +233,10 @@ class ResourceCommands(Commands):
                 if ResourceCommands._satellite_not_connected(replies):
                     satellites_connected = False
 
-            if rc == ExitCode.OK and args.wait_for_ready and not satellites_connected:
+            if rc == ExitCode.OK and not args.async and not satellites_connected:
                 rc = ExitCode.NO_SATELLITE_CONNECTION
 
-            if rc == ExitCode.OK and args.wait_for_ready:
+            if rc == ExitCode.OK and not args.async:
                 for node_name in args.node_name:
                     def reply_handler(replies):
                         create_watch_rc = self.handle_replies(args, replies)
