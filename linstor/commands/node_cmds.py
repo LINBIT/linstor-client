@@ -41,7 +41,7 @@ class NodeCommands(Commands):
                     Commands.Subcommands.Delete,
                     Commands.Subcommands.Describe,
                     Commands.Subcommands.Interface,
-                    Commands.Subcommands.SetAuxProperties,
+                    Commands.Subcommands.SetProperty,
                     Commands.Subcommands.ListProperties,
                 ]))
 
@@ -239,8 +239,8 @@ class NodeCommands(Commands):
 
         # set properties
         p_setp = node_subp.add_parser(
-            Commands.Subcommands.SetAuxProperties.LONG,
-            aliases=[Commands.Subcommands.SetAuxProperties.SHORT],
+            Commands.Subcommands.SetProperty.LONG,
+            aliases=[Commands.Subcommands.SetProperty.SHORT],
             description="Set a property on the given node."
         )
         p_setp.add_argument(

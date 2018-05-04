@@ -28,7 +28,7 @@ class ResourceDefinitionCommands(Commands):
                     Commands.Subcommands.Create,
                     Commands.Subcommands.List,
                     Commands.Subcommands.Delete,
-                    Commands.Subcommands.SetAuxProperties,
+                    Commands.Subcommands.SetProperty,
                     Commands.Subcommands.ListProperties,
                 ]))
 
@@ -93,8 +93,8 @@ class ResourceDefinitionCommands(Commands):
 
         # set properties
         p_setprop = res_def_subp.add_parser(
-            Commands.Subcommands.SetAuxProperties.LONG,
-            aliases=[Commands.Subcommands.SetAuxProperties.SHORT],
+            Commands.Subcommands.SetProperty.LONG,
+            aliases=[Commands.Subcommands.SetProperty.SHORT],
             description='Sets properties for the given resource definition.')
         p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
         Commands.add_parser_keyvalue(p_setprop, 'resource-definition')

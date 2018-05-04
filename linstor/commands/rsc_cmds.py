@@ -40,7 +40,7 @@ class ResourceCommands(Commands):
                     Commands.Subcommands.List,
                     Commands.Subcommands.ListVolumes,
                     Commands.Subcommands.Delete,
-                    Commands.Subcommands.SetProperties,
+                    Commands.Subcommands.SetProperty,
                     Commands.Subcommands.ListProperties,
                 ]))
 
@@ -169,8 +169,8 @@ class ResourceCommands(Commands):
 
         # set properties
         p_setprop = res_subp.add_parser(
-            Commands.Subcommands.SetProperties.LONG,
-            aliases=[Commands.Subcommands.SetProperties.SHORT],
+            Commands.Subcommands.SetProperty.LONG,
+            aliases=[Commands.Subcommands.SetProperty.SHORT],
             description='Sets properties for the given resource on the given node.')
         p_setprop.add_argument(
             'name',

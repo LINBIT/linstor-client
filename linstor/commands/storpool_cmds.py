@@ -36,7 +36,7 @@ class StoragePoolCommands(Commands):
                     Commands.Subcommands.Create,
                     Commands.Subcommands.List,
                     Commands.Subcommands.Delete,
-                    Commands.Subcommands.SetProperties,
+                    Commands.Subcommands.SetProperty,
                     Commands.Subcommands.ListProperties,
                 ]))
 
@@ -115,8 +115,8 @@ class StoragePoolCommands(Commands):
 
         # set properties
         p_setprop = sp_subp.add_parser(
-            Commands.Subcommands.SetProperties.LONG,
-            aliases=[Commands.Subcommands.SetProperties.SHORT],
+            Commands.Subcommands.SetProperty.LONG,
+            aliases=[Commands.Subcommands.SetProperty.SHORT],
             description='Sets properties for the given storage pool on the given node.')
         p_setprop.add_argument(
             'name',

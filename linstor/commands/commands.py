@@ -112,13 +112,9 @@ class Commands(object):
             LONG = "remove"
             SHORT = "r"
 
-        class SetProperties(object):
-            LONG = "set-properties"
+        class SetProperty(object):
+            LONG = "set-property"
             SHORT = "sp"
-
-        class SetAuxProperties(object):
-            LONG = "set-aux-properties"
-            SHORT = "sap"
 
         class EnterPassphrase(object):
             LONG = "enter-passphrase"
@@ -478,7 +474,7 @@ class MiscCommands(Commands):
             metavar="",
             description=Commands.Subcommands.generate_desc(
                 [
-                    Commands.Subcommands.SetProperties,
+                    Commands.Subcommands.SetProperty,
                     Commands.Subcommands.ListProperties,
                     Commands.Subcommands.Shutdown,
                 ]))
@@ -493,8 +489,8 @@ class MiscCommands(Commands):
 
         #  controller - set props
         c_set_ctrl_props = con_subp.add_parser(
-            Commands.Subcommands.SetProperties.LONG,
-            aliases=[Commands.Subcommands.SetProperties.SHORT],
+            Commands.Subcommands.SetProperty.LONG,
+            aliases=[Commands.Subcommands.SetProperty.SHORT],
             description='Set a controller config property.')
         Commands.add_parser_keyvalue(c_set_ctrl_props, "controller")
         c_set_ctrl_props.set_defaults(func=self.cmd_set_controller_props)
