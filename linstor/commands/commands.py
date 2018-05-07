@@ -37,8 +37,7 @@ class Commands(object):
     NODE = 'node'
     RESOURCE = 'resource'
     RESOURCE_DEF = 'resource-definition'
-    LIST_ERROR_REPORTS = 'list-error-reports'
-    ERROR_REPORT = 'error-report'
+    ERROR_REPORTS = 'error-reports'
     STORAGE_POOL = 'storage-pool'
     STORAGE_POOL_DEF = 'storage-pool-definition'
     VOLUME_DEF = 'volume-definition'
@@ -52,8 +51,7 @@ class Commands(object):
         NODE,
         RESOURCE,
         RESOURCE_DEF,
-        LIST_ERROR_REPORTS,
-        ERROR_REPORT,
+        ERROR_REPORTS,
         STORAGE_POOL,
         STORAGE_POOL_DEF,
         VOLUME_DEF
@@ -75,6 +73,10 @@ class Commands(object):
         class List(object):
             LONG = "list"
             SHORT = "l"
+
+        class Show(object):
+            LONG = "show"
+            SHORT = "s"
 
         class ListProperties(object):
             LONG = "list-properties"
@@ -527,8 +529,25 @@ class MiscCommands(Commands):
         )
         c_crypt_modify_passphr.set_defaults(func=self.cmd_crypt_modify_passphrase)
 
-        c_list_error_reports = parser.add_parser(
-            Commands.LIST_ERROR_REPORTS,
+        # Error subcommands
+        error_parser = parser.add_parser(
+            Commands.ERROR_REPORTS,
+            aliases=["err"],
+            formatter_class=argparse.RawTextHelpFormatter,
+            help="Error report subcommands")
+
+        error_subp = error_parser.add_subparsers(
+            title="Error report commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(
+                [
+                    Commands.Subcommands.List,
+                    Commands.Subcommands.Show
+                ]))
+
+        c_list_error_reports = error_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
             description='List error reports.'
         )
         c_list_error_reports.add_argument('-s', '--since', help='Show errors since n days. e.g. "3days"')
@@ -547,8 +566,9 @@ class MiscCommands(Commands):
         )
         c_list_error_reports.set_defaults(func=self.cmd_list_error_reports)
 
-        c_error_report = parser.add_parser(
-            Commands.ERROR_REPORT,
+        c_error_report = error_subp.add_parser(
+            Commands.Subcommands.Show.LONG,
+            aliases=[Commands.Subcommands.Show.SHORT],
             description='Output content of an error report.'
         )
         c_error_report.add_argument("report_id", nargs='+')
