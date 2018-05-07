@@ -168,7 +168,7 @@ class LinStorCLI(object):
 
         argcomplete.autocomplete(parser)
 
-        subp.metavar = "{%s}" % ", ".join(Commands.MainList)
+        subp.metavar = "{%s}" % ", ".join(sorted(Commands.MainList))
 
         return parser
 
@@ -335,7 +335,7 @@ class LinStorCLI(object):
         # import pprint
         # pp = pprint.PrettyPrinter()
         # pp.pprint(self._all_commands)
-        for cmd in Commands.MainList:
+        for cmd in sorted(Commands.MainList):
             sys.stdout.write("- " + cmd)
             aliases = LinStorCLI.get_command_aliases(self._all_commands, cmd)
             if aliases:
