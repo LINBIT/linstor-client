@@ -17,7 +17,7 @@ class TestListFilters(LinstorTestCaseWithData):
 
     def test_resource_protocol(self):
         """symbolic option test"""
-        resp = self.execute_with_resp(['drbd-resource-options', '--protocol', 'A', 'rsc1'])
+        resp = self.execute_with_resp(['resource-definition', 'drbd-options', '--protocol', 'A', 'rsc1'])
         self.assertGreater(len(resp), 0)
         resp_upd = resp[0]
         self.assertEqual(apiconsts.MODIFIED | apiconsts.MASK_MOD | apiconsts.MASK_RSC_DFN, resp_upd.ret_code)
@@ -25,7 +25,7 @@ class TestListFilters(LinstorTestCaseWithData):
         resourcedef_props = self.get_resource_dfn_properties('rsc1')
         self.find_and_check_prop(resourcedef_props, apiconsts.NAMESPC_DRBD_NET_OPTIONS + '/protocol', 'A')
 
-        resp = self.execute_with_resp(['drbd-resource-options', '--protocol', 'C', 'rsc1'])
+        resp = self.execute_with_resp(['resource-definition', 'drbd-options', '--protocol', 'C', 'rsc1'])
         self.assertGreater(len(resp), 0)
         resp_upd = resp[0]
         self.assertEqual(apiconsts.MODIFIED | apiconsts.MASK_MOD | apiconsts.MASK_RSC_DFN, resp_upd.ret_code)
@@ -35,7 +35,7 @@ class TestListFilters(LinstorTestCaseWithData):
 
     def test_resource_mdflushes(self):
         """Boolean option test"""
-        resp = self.execute_with_resp(['drbd-resource-options', '--md-flushes', 'no', 'rsc1'])
+        resp = self.execute_with_resp(['resource-definition', 'drbd-options', '--md-flushes', 'no', 'rsc1'])
         self.assertGreater(len(resp), 0)
         resp_upd = resp[0]
         self.assertEqual(apiconsts.MODIFIED | apiconsts.MASK_MOD | apiconsts.MASK_RSC_DFN, resp_upd.ret_code)
@@ -43,7 +43,7 @@ class TestListFilters(LinstorTestCaseWithData):
         resourcedef_props = self.get_resource_dfn_properties('rsc1')
         self.find_and_check_prop(resourcedef_props, apiconsts.NAMESPC_DRBD_DISK_OPTIONS + '/md-flushes', 'no')
 
-        resp = self.execute_with_resp(['drbd-resource-options', '--md-flushes', 'yes', 'rsc1'])
+        resp = self.execute_with_resp(['resource-definition', 'drbd-options', '--md-flushes', 'yes', 'rsc1'])
         self.assertGreater(len(resp), 0)
         resp_upd = resp[0]
         self.assertEqual(apiconsts.MODIFIED | apiconsts.MASK_MOD | apiconsts.MASK_RSC_DFN, resp_upd.ret_code)
@@ -53,7 +53,7 @@ class TestListFilters(LinstorTestCaseWithData):
 
     def test_resource_disktimeout(self):
         """Numeric option test"""
-        resp = self.execute_with_resp(['drbd-resource-options', '--disk-timeout', '5000', 'rsc1'])
+        resp = self.execute_with_resp(['resource-definition', 'drbd-options', '--disk-timeout', '5000', 'rsc1'])
         self.assertGreater(len(resp), 0)
         resp_upd = resp[0]
         self.assertEqual(apiconsts.MODIFIED | apiconsts.MASK_MOD | apiconsts.MASK_RSC_DFN, resp_upd.ret_code)
@@ -61,7 +61,7 @@ class TestListFilters(LinstorTestCaseWithData):
         resourcedef_props = self.get_resource_dfn_properties('rsc1')
         self.find_and_check_prop(resourcedef_props, apiconsts.NAMESPC_DRBD_DISK_OPTIONS + '/disk-timeout', '5000')
 
-        resp = self.execute_with_resp(['drbd-resource-options', '--disk-timeout', '0', 'rsc1'])
+        resp = self.execute_with_resp(['resource-definition', 'drbd-options', '--disk-timeout', '0', 'rsc1'])
         self.assertGreater(len(resp), 0)
         resp_upd = resp[0]
         self.assertEqual(apiconsts.MODIFIED | apiconsts.MASK_MOD | apiconsts.MASK_RSC_DFN, resp_upd.ret_code)

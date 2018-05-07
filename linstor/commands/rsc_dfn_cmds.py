@@ -1,7 +1,7 @@
 import argparse
 
 import linstor
-from linstor.commands import Commands
+from linstor.commands import Commands, DrbdOptions
 from linstor.consts import RES_NAME, Color
 from linstor.sharedconsts import FLAG_DELETE
 from linstor.utils import Output, namecheck, rangecheck
@@ -18,7 +18,7 @@ class ResourceDefinitionCommands(Commands):
             Commands.RESOURCE_DEF,
             aliases=["rd"],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Resouce definition subcommands")
+            help="Resource definition subcommands")
 
         res_def_subp = res_def_parser.add_subparsers(
             title="resource definition subcommands",
@@ -30,6 +30,7 @@ class ResourceDefinitionCommands(Commands):
                     Commands.Subcommands.Delete,
                     Commands.Subcommands.SetProperty,
                     Commands.Subcommands.ListProperties,
+                    Commands.Subcommands.DrbdOptions
                 ]))
 
         p_new_res_dfn = res_def_subp.add_parser(
@@ -100,6 +101,23 @@ class ResourceDefinitionCommands(Commands):
         Commands.add_parser_keyvalue(p_setprop, 'resource-definition')
         p_setprop.set_defaults(func=self.set_props)
 
+        # drbd options
+        p_drbd_opts = res_def_subp.add_parser(
+            Commands.Subcommands.DrbdOptions.LONG,
+            aliases=[Commands.Subcommands.DrbdOptions.SHORT],
+            description="Set drbd resource options."
+        )
+        p_drbd_opts.add_argument(
+            'resource_name',
+            type=namecheck(RES_NAME),
+            help="Resource name"
+        ).completer = self.resource_dfn_completer
+        DrbdOptions.add_arguments(
+            p_drbd_opts,
+            [x for x in DrbdOptions.drbd_options()['options'] if x in DrbdOptions.drbd_options()['filters']['resource']]
+        )
+        p_drbd_opts.set_defaults(func=self.set_drbd_opts)
+
     def create(self, args):
         replies = self._linstor.resource_dfn_create(args.name, args.port)
         return self.handle_replies(args, replies)
@@ -148,4 +166,17 @@ class ResourceDefinitionCommands(Commands):
         args = self._attach_aux_prop(args)
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
         replies = self._linstor.resource_dfn_modify(args.name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
+        return self.handle_replies(args, replies)
+
+    def set_drbd_opts(self, args):
+        a = DrbdOptions.filter_new(args)
+        del a['resource-name']  # remove resource name key
+
+        mod_props, del_props = DrbdOptions.parse_opts(a)
+
+        replies = self._linstor.resource_dfn_modify(
+            args.resource_name,
+            mod_props,
+            del_props
+        )
         return self.handle_replies(args, replies)
