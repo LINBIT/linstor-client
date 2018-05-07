@@ -81,14 +81,14 @@ class ResourceCommands(Commands):
             help='Try to avoid nodes that already have a resource deployed whos name is matching the given regular expression.'
         )
         p_new_res.add_argument(
-            'resource_definition_name',
-            type=namecheck(RES_NAME),
-            help='Name of the resource definition').completer = self.resource_dfn_completer
-        p_new_res.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
             nargs='*',
             help='Name of the node to deploy the resource').completer = self.node_completer
+        p_new_res.add_argument(
+            'resource_definition_name',
+            type=namecheck(RES_NAME),
+            help='Name of the resource definition').completer = self.resource_dfn_completer
         p_new_res.set_defaults(func=self.create)
 
         # remove-resource
@@ -103,11 +103,11 @@ class ResourceCommands(Commands):
         p_rm_res.add_argument('-q', '--quiet', action="store_true",
                               help='Unless this option is used, linstor will issue a safety question '
                               'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_res.add_argument('name',
-                              help='Name of the resource to delete').completer = self.resource_completer
         p_rm_res.add_argument('node_name',
                               nargs="+",
                               help='Name of the node').completer = self.node_completer
+        p_rm_res.add_argument('name',
+                              help='Name of the resource to delete').completer = self.resource_completer
         p_rm_res.set_defaults(func=self.delete)
 
         resgroupby = [x.name for x in ResourceCommands._resource_headers]
@@ -163,11 +163,11 @@ class ResourceCommands(Commands):
             description="Prints all properties of the given resource.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
-            'resource_name',
-            help="Resource name").completer = self.resource_completer
-        p_sp.add_argument(
             'node_name',
             help="Node name where the resource is deployed.").completer = self.node_completer
+        p_sp.add_argument(
+            'resource_name',
+            help="Resource name").completer = self.resource_completer
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
@@ -176,14 +176,14 @@ class ResourceCommands(Commands):
             aliases=[Commands.Subcommands.SetProperty.SHORT],
             description='Sets properties for the given resource on the given node.')
         p_setprop.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            help='Node name where resource is deployed.').completer = self.node_completer
+        p_setprop.add_argument(
             'name',
             type=namecheck(RES_NAME),
             help='Name of the resource'
         ).completer = self.resource_completer
-        p_setprop.add_argument(
-            'node_name',
-            type=namecheck(NODE_NAME),
-            help='Node name where resource is deployed.').completer = self.node_completer
         Commands.add_parser_keyvalue(p_setprop, "resource")
         p_setprop.set_defaults(func=self.set_props)
 

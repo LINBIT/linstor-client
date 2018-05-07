@@ -46,11 +46,11 @@ class StoragePoolCommands(Commands):
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
             description='Defines a Linstor storage pool for use with Linstor.')
-        p_new_storpool.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the new storage pool')
         p_new_storpool.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
             help='Name of the node for the new storage pool').completer = self.node_completer
+        p_new_storpool.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the new storage pool')
         p_new_storpool.add_argument(
             'driver',
             choices=StoragePoolCommands.driver_completer(""),
@@ -73,12 +73,12 @@ class StoragePoolCommands(Commands):
             action="store_true",
             help='Unless this option is used, linstor will issue a safety question '
             'that must be answered with yes, otherwise the operation is canceled.')
-        p_rm_storpool.add_argument('name',
-                                   help='Name of the storage pool to delete').completer = self.storage_pool_completer
         p_rm_storpool.add_argument(
             'node_name',
             nargs="+",
             help='Name of the Node where the storage pool exists.').completer = self.node_completer
+        p_rm_storpool.add_argument('name',
+                                   help='Name of the storage pool to delete').completer = self.storage_pool_completer
         p_rm_storpool.set_defaults(func=self.delete)
 
         # list storpool
@@ -106,12 +106,12 @@ class StoragePoolCommands(Commands):
             description="Prints all properties of the given storage pool.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
-            'storage_pool_name',
-            help="Storage pool for which to print the properties").completer = self.storage_pool_completer
-        p_sp.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
             help='Name of the node for the storage pool').completer = self.node_completer
+        p_sp.add_argument(
+            'storage_pool_name',
+            help="Storage pool for which to print the properties").completer = self.storage_pool_completer
         p_sp.set_defaults(func=self.print_props)
 
         # set properties
@@ -120,14 +120,14 @@ class StoragePoolCommands(Commands):
             aliases=[Commands.Subcommands.SetProperty.SHORT],
             description='Sets properties for the given storage pool on the given node.')
         p_setprop.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            help='Name of the node for the storage pool').completer = self.node_completer
+        p_setprop.add_argument(
             'name',
             type=namecheck(STORPOOL_NAME),
             help='Name of the storage pool'
         ).completer = self.storage_pool_completer
-        p_setprop.add_argument(
-            'node_name',
-            type=namecheck(NODE_NAME),
-            help='Name of the node for the storage pool').completer = self.node_completer
         Commands.add_parser_keyvalue(p_setprop, 'storagepool')
         p_setprop.set_defaults(func=self.set_props)
 

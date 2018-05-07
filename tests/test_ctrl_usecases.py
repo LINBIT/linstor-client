@@ -37,7 +37,7 @@ class TestUseCases(LinstorTestCase):
         self.assertTrue([n for n in nodes if n['name'] == 'node1'])
 
         # create storagepool
-        storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'storage', 'node1', 'lvm', 'lvmpool'])
+        storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'node1', 'storage', 'lvm', 'lvmpool'])
         self.assertTrue(storpool_resps[0].is_warning())
         self.assertEqual(WARN_NOT_CONNECTED | MASK_STOR_POOL | MASK_CRT, storpool_resps[0].ret_code)
         self.assertTrue(storpool_resps[1].is_success())
@@ -65,7 +65,7 @@ class TestUseCases(LinstorTestCase):
         self.assertTrue(vlm_dfn_resp.is_success())
 
         # create resource on node1
-        rsc_resps = self.execute_with_resp(['resource', 'create', '--async', '-s', 'storage', 'rsc1', 'node1'])
+        rsc_resps = self.execute_with_resp(['resource', 'create', '--async', '-s', 'storage', 'node1', 'rsc1'])
         self.assertEqual(3, len(rsc_resps))
         self.assertTrue(rsc_resps[0].is_warning())  # satellite not reachable
         self.assertTrue(rsc_resps[1].is_success())  # resource created
@@ -88,7 +88,7 @@ class TestUseCases(LinstorTestCase):
         self.assertIn('vlm_minor_nr', vlms[0])
 
         # delete resource
-        rsc_resps = self.execute_with_resp(['resource', 'delete', 'rsc1', 'node1'])
+        rsc_resps = self.execute_with_resp(['resource', 'delete', 'node1', 'rsc1'])
         self.assertEqual(2, len(rsc_resps))
         warn_resp = rsc_resps[0]
         self.assertTrue(warn_resp.is_warning(), str(warn_resp))
@@ -124,7 +124,7 @@ class TestCreateCommands(LinstorTestCase):
         self.assertTrue(node.is_success())
         self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node.ret_code)
 
-        storpool = self.execute_with_resp(['storage-pool', 'create', 'storpool', 'storpool.node1', 'lvm', 'drbdpool'])
+        storpool = self.execute_with_resp(['storage-pool', 'create', 'storpool.node1', 'storpool', 'lvm', 'drbdpool'])
         no_active = storpool[0]
         storpool = storpool[1]
         self.assertTrue(no_active.is_warning())

@@ -10,7 +10,7 @@ class TestProperties(LinstorTestCase):
         self.assertTrue(cnode_resp.is_success())
 
         # create storagepool
-        storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'storage', 'node1', 'lvm', 'lvmpool'])
+        storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'node1', 'storage', 'lvm', 'lvmpool'])
         self.assertTrue(storpool_resps[0].is_warning())
         self.assertEqual(WARN_NOT_CONNECTED | MASK_STOR_POOL | MASK_CRT, storpool_resps[0].ret_code)
         self.assertTrue(storpool_resps[1].is_success())
@@ -24,7 +24,7 @@ class TestProperties(LinstorTestCase):
         self.assertTrue(vlm_dfn_resp.is_success())
 
         # create resource on node1
-        rsc_resps = self.execute_with_resp(['resource', 'create', '--async', '-s', 'storage', 'rsc1', 'node1'])
+        rsc_resps = self.execute_with_resp(['resource', 'create', '--async', '-s', 'storage', 'node1', 'rsc1'])
         self.assertEqual(3, len(rsc_resps))
         self.assertTrue(rsc_resps[0].is_warning())  # satellite not reachable
         self.assertTrue(rsc_resps[1].is_success())  # resource created
@@ -72,7 +72,7 @@ class TestProperties(LinstorTestCase):
         self.check_prop(prop, NAMESPC_AUXILIARY + '/stor', 'lvmcomplex')
 
         # storage pool props
-        storage_props = self.execute_with_machine_output(['storage-pool', 'list-properties', 'storage', 'node1'])
+        storage_props = self.execute_with_machine_output(['storage-pool', 'list-properties', 'node1', 'storage'])
         self.assertEqual(1, len(storage_props))
         storage_props = storage_props[0]
         self.assertEqual(1, len(storage_props))
@@ -80,12 +80,12 @@ class TestProperties(LinstorTestCase):
         self.check_prop(prop, NAMESPC_STORAGE_DRIVER + '/LvmVg', 'lvmpool')
 
         storage_resp = self.execute_with_resp(
-            ['storage-pool', 'set-property', 'storage', 'node1', '--aux', 'stor', 'lvmcomplex']
+            ['storage-pool', 'set-property', 'node1', 'storage', '--aux', 'stor', 'lvmcomplex']
         )
         self.assertEqual(2, len(storage_resp))
         self.assertTrue(storage_resp[0].is_success())
 
-        storage_props = self.execute_with_machine_output(['storage-pool', 'list-properties', 'storage', 'node1'])
+        storage_props = self.execute_with_machine_output(['storage-pool', 'list-properties', 'node1', 'storage'])
         self.assertEqual(1, len(storage_props))
         storage_props = storage_props[0]
         self.assertEqual(2, len(storage_props))
@@ -124,7 +124,7 @@ class TestProperties(LinstorTestCase):
         self.check_prop(prop, NAMESPC_AUXILIARY + '/volumespec', 'cascading')
 
         # resource
-        resource_props = self.execute_with_machine_output(['resource', 'list-properties', 'rsc1', 'node1'])
+        resource_props = self.execute_with_machine_output(['resource', 'list-properties', 'node1', 'rsc1'])
         self.assertEqual(1, len(resource_props))
         resource_props = resource_props[0]
         self.assertEqual(1, len(resource_props))
@@ -132,13 +132,13 @@ class TestProperties(LinstorTestCase):
         self.check_prop(prop, KEY_STOR_POOL_NAME, 'storage')
 
         storage_resp = self.execute_with_resp(
-            ['resource', 'set-property', 'rsc1', 'node1', '--aux', 'NIC', '10.0.0.1']
+            ['resource', 'set-property', 'node1', 'rsc1', '--aux', 'NIC', '10.0.0.1']
         )
         self.assertEqual(2, len(storage_resp))
         self.assertTrue(storage_resp[0].is_warning())
         self.assertTrue(storage_resp[1].is_success())
 
-        resource_props = self.execute_with_machine_output(['resource', 'list-properties', 'rsc1', 'node1'])
+        resource_props = self.execute_with_machine_output(['resource', 'list-properties', 'node1', 'rsc1'])
         self.assertEqual(1, len(resource_props))
         resource_props = resource_props[0]
         self.assertEqual(2, len(resource_props))
