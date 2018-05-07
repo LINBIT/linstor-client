@@ -535,6 +535,10 @@ class MiscCommands(Commands):
         c_crypt_modify_passphr.set_defaults(func=self.cmd_crypt_modify_passphrase)
 
         # Error subcommands
+        error_subcmds = [
+            Commands.Subcommands.List,
+            Commands.Subcommands.Show
+        ]
         error_parser = parser.add_parser(
             Commands.ERROR_REPORTS,
             aliases=["err"],
@@ -544,11 +548,8 @@ class MiscCommands(Commands):
         error_subp = error_parser.add_subparsers(
             title="Error report commands",
             metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.List,
-                    Commands.Subcommands.Show
-                ]))
+            description=Commands.Subcommands.generate_desc(error_subcmds)
+        )
 
         c_list_error_reports = error_subp.add_parser(
             Commands.Subcommands.List.LONG,
@@ -578,6 +579,8 @@ class MiscCommands(Commands):
         )
         c_error_report.add_argument("report_id", nargs='+')
         c_error_report.set_defaults(func=self.cmd_error_report)
+
+        self.check_subcommands(error_subp, error_subcmds)
 
     def cmd_create_watch(self, args):
         def reply_handler(replies):
