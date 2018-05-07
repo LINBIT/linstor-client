@@ -1347,7 +1347,10 @@ class Linstor(object):
         """
         msg = MsgSetCtrlCfgProp()
         msg.value = value
-        msg.key, msg.namespace = self._split_prop_key(key)
+        split_key, ns = self._split_prop_key(key)
+        msg.key = split_key
+        if ns:
+            msg.namespace = ns
 
         return self._send_and_wait(apiconsts.API_SET_CFG_VAL, msg)
 
