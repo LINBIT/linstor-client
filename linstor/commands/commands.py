@@ -29,7 +29,6 @@ class Commands(object):
     CRYPT = 'encryption'
     DMMIGRATE = 'dm-migrate'
     DRBD_PEER_OPTIONS = 'drbd-peer-options'
-    DRBD_VOLUME_OPTIONS = 'drbd-volume-options'
     EXIT = 'exit'
     GEN_ZSH_COMPLETER = 'gen-zsh-completer'
     CREATE_WATCH = 'create-watch'
@@ -49,7 +48,6 @@ class Commands(object):
         CONTROLLER,
         CRYPT,
         DRBD_PEER_OPTIONS,
-        DRBD_VOLUME_OPTIONS,
         HELP,
         INTERACTIVE,
         LIST_COMMANDS,

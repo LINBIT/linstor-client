@@ -70,7 +70,7 @@ class TestListFilters(LinstorTestCaseWithData):
         self.find_and_check_prop(resourcedef_props, apiconsts.NAMESPC_DRBD_DISK_OPTIONS + '/disk-timeout', '0')
 
     def test_volume_on_io_error(self):
-        resp = self.execute_with_resp(['drbd-volume-options', '--on-io-error', 'detach', 'rsc1', '0'])
+        resp = self.execute_with_resp(['volume-definition', 'drbd-options', '--on-io-error', 'detach', 'rsc1', '0'])
         self.assertGreater(len(resp), 0)
         resp_upd = resp[0]
         self.assertEqual(apiconsts.MODIFIED | apiconsts.MASK_MOD | apiconsts.MASK_VLM_DFN, resp_upd.ret_code)
@@ -78,7 +78,7 @@ class TestListFilters(LinstorTestCaseWithData):
         volumedef_props = self.get_volume_dfn_properties('rsc1', '0')
         self.find_and_check_prop(volumedef_props, apiconsts.NAMESPC_DRBD_DISK_OPTIONS + '/on-io-error', 'detach')
 
-        resp = self.execute_with_resp(['drbd-volume-options', '--on-io-error', 'pass_on', 'rsc1', '0'])
+        resp = self.execute_with_resp(['volume-definition', 'drbd-options', '--on-io-error', 'pass_on', 'rsc1', '0'])
         self.assertGreater(len(resp), 0)
         resp_upd = resp[0]
         self.assertEqual(apiconsts.MODIFIED | apiconsts.MASK_MOD | apiconsts.MASK_VLM_DFN, resp_upd.ret_code)

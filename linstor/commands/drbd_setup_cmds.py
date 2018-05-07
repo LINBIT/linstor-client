@@ -92,18 +92,6 @@ class DrbdOptions(Commands):
                                     action='store_true')
 
     def setup_commands(self, parser):
-        volume_cmd = parser.add_parser(Commands.DRBD_VOLUME_OPTIONS, description="Set drbd volume options.")
-        volume_cmd.add_argument(
-            'resource',
-            type=namecheck(RES_NAME),
-            help="Resource name"
-        ).completer = self.resource_completer
-        volume_cmd.add_argument(
-            'volume_nr',
-            type=int,
-            help="Volume number"
-        )
-
         resource_conn_cmd = parser.add_parser(
             Commands.DRBD_PEER_OPTIONS,
             description="Set drbd peer-device options."
@@ -125,10 +113,8 @@ class DrbdOptions(Commands):
         ).completer = self.node_completer
 
         options = DrbdOptions._options['options']
-        self.add_arguments(volume_cmd, [x for x in options if x in DrbdOptions._options['filters']['volume']])
         self.add_arguments(resource_conn_cmd, [x for x in options if options[x]['category'] == 'peer-device-options'])
 
-        volume_cmd.set_defaults(func=self._option_volume)
         resource_conn_cmd.set_defaults(func=self._option_resource_conn)
 
         return True
@@ -155,21 +141,6 @@ class DrbdOptions(Commands):
                 modify[key] = new_args[arg]
 
         return modify, deletes
-
-    def _option_volume(self, args):
-        a = self.filter_new(args)
-        del a['resource']  # remove volume name key
-        del a['volume-nr']
-
-        mod_props, del_props = self._parse_opts(a)
-
-        replies = self._linstor.volume_dfn_modify(
-            args.resource,
-            args.volume_nr,
-            mod_props,
-            del_props
-        )
-        return self.handle_replies(args, replies)
 
     def _option_resource_conn(self, args):
         a = self.filter_new(args)
