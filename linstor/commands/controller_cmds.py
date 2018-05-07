@@ -1,4 +1,4 @@
-import argparse
+import linstor.argparse.argparse as argparse
 from linstor.commands import Commands, DrbdOptions
 
 

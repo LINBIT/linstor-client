@@ -1,4 +1,4 @@
-import argparse
+import linstor.argparse.argparse as argparse
 
 import linstor
 import linstor.sharedconsts as apiconsts

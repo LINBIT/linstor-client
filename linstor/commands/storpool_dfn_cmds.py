@@ -1,4 +1,4 @@
-import argparse
+import linstor.argparse.argparse as argparse
 
 import linstor
 from linstor.commands import Commands

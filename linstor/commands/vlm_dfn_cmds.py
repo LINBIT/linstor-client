@@ -1,4 +1,4 @@
-import argparse
+import linstor.argparse.argparse as argparse
 import re
 import sys
 
