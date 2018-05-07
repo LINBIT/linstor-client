@@ -481,6 +481,11 @@ class MiscCommands(Commands):
         c_create_watch.set_defaults(func=self.cmd_create_watch)
 
         # Enryption subcommands
+        crypt_subcmds = [
+            Commands.Subcommands.EnterPassphrase,
+            Commands.Subcommands.CreatePassphrase,
+            Commands.Subcommands.ModifyPassphrase,
+        ]
         crypt_parser = parser.add_parser(
             Commands.CRYPT,
             aliases=["e"],
@@ -490,12 +495,7 @@ class MiscCommands(Commands):
         crypt_subp = crypt_parser.add_subparsers(
             title="Encryption commands",
             metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.EnterPassphrase,
-                    Commands.Subcommands.CreatePassphrase,
-                    Commands.Subcommands.ModifyPassphrase,
-                ]))
+            description=Commands.Subcommands.generate_desc(crypt_subcmds))
 
         c_crypt_enter_passphr = crypt_subp.add_parser(
             Commands.Subcommands.EnterPassphrase.LONG,
@@ -533,6 +533,8 @@ class MiscCommands(Commands):
             help="New passphrase used for encryption."
         )
         c_crypt_modify_passphr.set_defaults(func=self.cmd_crypt_modify_passphrase)
+
+        self.check_subcommands(crypt_subp, crypt_subcmds)
 
         # Error subcommands
         error_subcmds = [
