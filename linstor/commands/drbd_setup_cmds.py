@@ -8,6 +8,7 @@ import linstor.sharedconsts as apiconsts
 
 class DrbdOptions(Commands):
     _options = drbd_options
+    unsetprefix = 'unset'
 
     _CategoyMap = {
         'new-peer': apiconsts.NAMESPC_DRBD_NET_OPTIONS,
@@ -18,7 +19,10 @@ class DrbdOptions(Commands):
 
     def __init__(self):
         super(DrbdOptions, self).__init__()
-        self.unsetprefix = 'unset'
+
+    @classmethod
+    def drbd_options(cls):
+        return cls._options
 
     @staticmethod
     def numeric_symbol(_min, _max, _symbols):
@@ -36,8 +40,9 @@ class DrbdOptions(Commands):
 
         return foo
 
-    def add_arguments(self, parser, option_list):
-
+    @classmethod
+    def add_arguments(cls, parser, option_list):
+        assert(len(option_list) > 0)
         options = DrbdOptions._options['options']
         for opt_key in option_list:
             option = options[opt_key]
@@ -83,11 +88,10 @@ class DrbdOptions(Commands):
             if opt_key == 'help':
                 continue
             else:
-                parser.add_argument('--%s-%s' % (self.unsetprefix, opt_key),
+                parser.add_argument('--%s-%s' % (cls.unsetprefix, opt_key),
                                     action='store_true')
 
     def setup_commands(self, parser):
-        common = parser.add_parser(Commands.DRBD_OPTIONS, description="Set common drbd options.")
         resource_cmd = parser.add_parser(Commands.DRBD_RESOURCE_OPTIONS, description="Set drbd resource options.")
         resource_cmd.add_argument(
             'resource',
@@ -128,31 +132,31 @@ class DrbdOptions(Commands):
         ).completer = self.node_completer
 
         options = DrbdOptions._options['options']
-        self.add_arguments(common, options.keys())
         self.add_arguments(resource_cmd, [x for x in options if x in DrbdOptions._options['filters']['resource']])
         self.add_arguments(volume_cmd, [x for x in options if x in DrbdOptions._options['filters']['volume']])
         self.add_arguments(resource_conn_cmd, [x for x in options if options[x]['category'] == 'peer-device-options'])
 
-        common.set_defaults(func=self._option_common)
         resource_cmd.set_defaults(func=self._option_resource)
         volume_cmd.set_defaults(func=self._option_volume)
         resource_conn_cmd.set_defaults(func=self._option_resource_conn)
 
         return True
 
-    def filter_new(self, args):
+    @classmethod
+    def filter_new(cls, args):
         """return a dict containing all non-None args"""
-        return filter_new_args(self.unsetprefix, args)
+        return filter_new_args(cls.unsetprefix, args)
 
-    def _parse_opts(self, new_args):
+    @classmethod
+    def parse_opts(cls, new_args):
         modify = {}
         deletes = []
         for arg in new_args:
-            is_unset = arg.startswith(self.unsetprefix)
-            prop_name = arg[len(self.unsetprefix) + 1:] if is_unset else arg
-            category = self._options['options'][prop_name]['category']
+            is_unset = arg.startswith(cls.unsetprefix)
+            prop_name = arg[len(cls.unsetprefix) + 1:] if is_unset else arg
+            category = cls._options['options'][prop_name]['category']
 
-            namespace = self._CategoyMap[category]
+            namespace = cls._CategoyMap[category]
             key = namespace + '/' + prop_name
             if is_unset:
                 deletes.append(key)
@@ -160,20 +164,6 @@ class DrbdOptions(Commands):
                 modify[key] = new_args[arg]
 
         return modify, deletes
-
-    def _option_common(self, args):
-        a = self.filter_new(args)
-
-        mod_props, del_props = self._parse_opts(a)
-
-        replies = []
-        for prop, val in mod_props.items():
-            replies.extend(self._linstor.controller_set_prop(prop, val))
-
-        for delkey in del_props:
-            replies.extend(self._linstor.controller_del_prop(delkey))
-
-        return self.handle_replies(args, replies)
 
     def _option_resource(self, args):
         a = self.filter_new(args)
@@ -209,7 +199,7 @@ class DrbdOptions(Commands):
         del a['node-a']
         del a['node-b']
 
-        mod_props, del_props = self._parse_opts(a)
+        mod_props, del_props = self.parse_opts(a)
 
         replies = self._linstor.resource_conn_modify(
             args.resource,

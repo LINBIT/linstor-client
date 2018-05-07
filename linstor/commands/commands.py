@@ -28,7 +28,6 @@ class Commands(object):
     CONTROLLER = 'controller'
     CRYPT = 'encryption'
     DMMIGRATE = 'dm-migrate'
-    DRBD_OPTIONS = 'drbd-options'
     DRBD_PEER_OPTIONS = 'drbd-peer-options'
     DRBD_RESOURCE_OPTIONS = 'drbd-resource-options'
     DRBD_VOLUME_OPTIONS = 'drbd-volume-options'
@@ -50,7 +49,6 @@ class Commands(object):
     MainList = [
         CONTROLLER,
         CRYPT,
-        DRBD_OPTIONS,
         DRBD_PEER_OPTIONS,
         DRBD_RESOURCE_OPTIONS,
         DRBD_VOLUME_OPTIONS,
@@ -135,6 +133,10 @@ class Commands(object):
         class Describe(object):
             LONG = "describe"
             SHORT = "dsc"
+
+        class DrbdOptions(object):
+            LONG = "drbd-options"
+            SHORT = "opt"
 
         @staticmethod
         def generate_desc(subcommands):
@@ -462,47 +464,6 @@ class MiscCommands(Commands):
         super(MiscCommands, self).__init__()
 
     def setup_commands(self, parser):
-        # Controller commands
-        con_parser = parser.add_parser(
-            Commands.CONTROLLER,
-            aliases=["c"],
-            formatter_class=argparse.RawTextHelpFormatter,
-            help="Controller subcommands")
-
-        con_subp = con_parser.add_subparsers(
-            title="Controller commands",
-            metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.SetProperty,
-                    Commands.Subcommands.ListProperties,
-                    Commands.Subcommands.Shutdown,
-                ]))
-
-        # Controller - get props
-        c_ctrl_props = con_subp.add_parser(
-            Commands.Subcommands.ListProperties.LONG,
-            aliases=[Commands.Subcommands.ListProperties.SHORT],
-            description='Print current controller config properties.')
-        c_ctrl_props.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        c_ctrl_props.set_defaults(func=self.cmd_print_controller_props)
-
-        #  controller - set props
-        c_set_ctrl_props = con_subp.add_parser(
-            Commands.Subcommands.SetProperty.LONG,
-            aliases=[Commands.Subcommands.SetProperty.SHORT],
-            description='Set a controller config property.')
-        Commands.add_parser_keyvalue(c_set_ctrl_props, "controller")
-        c_set_ctrl_props.set_defaults(func=self.cmd_set_controller_props)
-
-        # Controller - shutdown
-        c_shutdown = con_subp.add_parser(
-            Commands.Subcommands.Shutdown.LONG,
-            aliases=[Commands.Subcommands.Shutdown.SHORT],
-            description='Shutdown the linstor controller'
-        )
-        c_shutdown.set_defaults(func=self.cmd_shutdown)
-
         # watch
         c_create_watch = parser.add_parser(
             Commands.CREATE_WATCH,
@@ -594,28 +555,6 @@ class MiscCommands(Commands):
         )
         c_error_report.add_argument("report_id", nargs='+')
         c_error_report.set_defaults(func=self.cmd_error_report)
-
-    @classmethod
-    def _props_list(cls, args, lstmsg):
-        result = []
-        if lstmsg:
-            result.append(lstmsg.props)
-        return result
-
-    def cmd_print_controller_props(self, args):
-        lstmsg = self._linstor.controller_props()
-
-        return self.output_props_list(args, lstmsg, self._props_list)
-
-    def cmd_set_controller_props(self, args):
-        props = Commands.parse_key_value_pairs([args.key + '=' + args.value])
-
-        replies = [x for subx in props['pairs'] for x in self._linstor.controller_set_prop(subx[0], subx[1])]
-        return self.handle_replies(args, replies)
-
-    def cmd_shutdown(self, args):
-        replies = self._linstor.shutdown_controller()
-        return self.handle_replies(args, replies)
 
     def cmd_create_watch(self, args):
         def reply_handler(replies):

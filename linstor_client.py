@@ -32,6 +32,7 @@ import linstor.argcomplete as argcomplete
 import linstor.linstorapi as linstorapi
 import linstor.utils as utils
 from linstor.commands import (
+    ControllerCommands,
     VolumeDefinitionCommands,
     StoragePoolDefinitionCommands,
     StoragePoolCommands,
@@ -66,6 +67,7 @@ class LinStorCLI(object):
     def __init__(self):
         self._all_commands = None
 
+        self._controller_commands = ControllerCommands()
         self._node_commands = NodeCommands()
         self._storage_pool_dfn_commands = StoragePoolDefinitionCommands()
         self._storage_pool_commands = StoragePoolCommands()
@@ -124,6 +126,9 @@ class LinStorCLI(object):
         p_exit = subp.add_parser(Commands.EXIT, aliases=['quit'],
                                  description='Only useful in interactive mode')
         p_exit.set_defaults(func=self.cmd_exit)
+
+        # controller commands
+        self._controller_commands.setup_commands(subp)
 
         # add all node commands
         self._node_commands.setup_commands(subp)
@@ -219,6 +224,7 @@ class LinStorCLI(object):
             # only connect if not already connected or a local only command was executed
             if self._linstorapi is None and args.func not in local_only_cmds:
                 self._linstorapi = linstorapi.Linstor(Commands.controller_list(args.controllers)[0])
+                self._controller_commands._linstor = self._linstorapi
                 self._node_commands._linstor = self._linstorapi
                 self._storage_pool_dfn_commands._linstor = self._linstorapi
                 self._storage_pool_commands._linstor = self._linstorapi
