@@ -1,12 +1,10 @@
 import linstor.argparse.argparse as argparse
-from linstor.utils import rangecheck, filter_new_args, namecheck
-from linstor.commands import Commands
-from linstor.consts import RES_NAME, NODE_NAME
+from linstor.utils import rangecheck, filter_new_args
 from linstor.drbdsetup_options import drbd_options
 import linstor.sharedconsts as apiconsts
 
 
-class DrbdOptions(Commands):
+class DrbdOptions(object):
     _options = drbd_options
     unsetprefix = 'unset'
 
@@ -16,9 +14,6 @@ class DrbdOptions(Commands):
         'resource-options': apiconsts.NAMESPC_DRBD_RESOURCE_OPTIONS,
         'peer-device-options': apiconsts.NAMESPC_DRBD_PEER_DEVICE_OPTIONS
     }
-
-    def __init__(self):
-        super(DrbdOptions, self).__init__()
 
     @classmethod
     def drbd_options(cls):
@@ -91,34 +86,6 @@ class DrbdOptions(Commands):
                 parser.add_argument('--%s-%s' % (cls.unsetprefix, opt_key),
                                     action='store_true')
 
-    def setup_commands(self, parser):
-        resource_conn_cmd = parser.add_parser(
-            Commands.DRBD_PEER_OPTIONS,
-            description="Set drbd peer-device options."
-        )
-        resource_conn_cmd.add_argument(
-            'resource',
-            type=namecheck(RES_NAME),
-            help="Resource name"
-        ).completer = self.resource_completer
-        resource_conn_cmd.add_argument(
-            'node_a',
-            type=namecheck(NODE_NAME),
-            help="1. Node in the node connection"
-        ).completer = self.node_completer
-        resource_conn_cmd.add_argument(
-            'node_b',
-            type=namecheck(NODE_NAME),
-            help="1. Node in the node connection"
-        ).completer = self.node_completer
-
-        options = DrbdOptions._options['options']
-        self.add_arguments(resource_conn_cmd, [x for x in options if options[x]['category'] == 'peer-device-options'])
-
-        resource_conn_cmd.set_defaults(func=self._option_resource_conn)
-
-        return True
-
     @classmethod
     def filter_new(cls, args):
         """return a dict containing all non-None args"""
@@ -141,20 +108,3 @@ class DrbdOptions(Commands):
                 modify[key] = new_args[arg]
 
         return modify, deletes
-
-    def _option_resource_conn(self, args):
-        a = self.filter_new(args)
-        del a['resource']
-        del a['node-a']
-        del a['node-b']
-
-        mod_props, del_props = self.parse_opts(a)
-
-        replies = self._linstor.resource_conn_modify(
-            args.resource,
-            args.node_a,
-            args.node_b,
-            mod_props,
-            del_props
-        )
-        return self.handle_replies(args, replies)

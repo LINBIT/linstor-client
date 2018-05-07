@@ -28,7 +28,6 @@ class Commands(object):
     CONTROLLER = 'controller'
     CRYPT = 'encryption'
     DMMIGRATE = 'dm-migrate'
-    DRBD_PEER_OPTIONS = 'drbd-peer-options'
     EXIT = 'exit'
     GEN_ZSH_COMPLETER = 'gen-zsh-completer'
     CREATE_WATCH = 'create-watch'
@@ -47,7 +46,6 @@ class Commands(object):
     MainList = [
         CONTROLLER,
         CRYPT,
-        DRBD_PEER_OPTIONS,
         HELP,
         INTERACTIVE,
         LIST_COMMANDS,
@@ -133,6 +131,10 @@ class Commands(object):
         class DrbdOptions(object):
             LONG = "drbd-options"
             SHORT = "opt"
+
+        class DrbdPeerDeviceOptions(object):
+            LONG = "drbd-peer-options"
+            SHORT = "popt"
 
         @staticmethod
         def generate_desc(subcommands):

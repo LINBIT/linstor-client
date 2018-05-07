@@ -2,7 +2,7 @@ import argparse
 
 import linstor
 import linstor.sharedconsts as apiconsts
-from linstor.commands import Commands
+from linstor.commands import Commands, DrbdOptions
 from linstor.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color, ExitCode
 from linstor.utils import Output, namecheck
 
@@ -42,6 +42,7 @@ class ResourceCommands(Commands):
                     Commands.Subcommands.Delete,
                     Commands.Subcommands.SetProperty,
                     Commands.Subcommands.ListProperties,
+                    Commands.Subcommands.DrbdPeerDeviceOptions
                 ]))
 
         # new-resource
@@ -183,6 +184,35 @@ class ResourceCommands(Commands):
             help='Node name where resource is deployed.').completer = self.node_completer
         Commands.add_parser_keyvalue(p_setprop, "resource")
         p_setprop.set_defaults(func=self.set_props)
+
+        # drbd peer device options
+        p_drbd_peer_opts = res_subp.add_parser(
+            Commands.Subcommands.DrbdPeerDeviceOptions.LONG,
+            aliases=[Commands.Subcommands.DrbdPeerDeviceOptions.SHORT],
+            description="Set drbd peer-device options."
+        )
+        p_drbd_peer_opts.add_argument(
+            'resource_name',
+            type=namecheck(RES_NAME),
+            help="Resource name"
+        ).completer = self.resource_completer
+        p_drbd_peer_opts.add_argument(
+            'node_a',
+            type=namecheck(NODE_NAME),
+            help="1. Node in the node connection"
+        ).completer = self.node_completer
+        p_drbd_peer_opts.add_argument(
+            'node_b',
+            type=namecheck(NODE_NAME),
+            help="1. Node in the node connection"
+        ).completer = self.node_completer
+
+        DrbdOptions.add_arguments(
+            p_drbd_peer_opts,
+            [x for x in DrbdOptions.drbd_options()['options']
+                if DrbdOptions.drbd_options()['options'][x]['category'] == 'peer-device-options']
+        )
+        p_drbd_peer_opts.set_defaults(func=self.drbd_peer_opts)
 
     @staticmethod
     def _satellite_not_connected(replies):
@@ -443,6 +473,23 @@ class ResourceCommands(Commands):
             args.name,
             mod_prop_dict['pairs'],
             mod_prop_dict['delete']
+        )
+        return self.handle_replies(args, replies)
+
+    def drbd_peer_opts(self, args):
+        a = DrbdOptions.filter_new(args)
+        del a['resource-name']
+        del a['node-a']
+        del a['node-b']
+
+        mod_props, del_props = DrbdOptions.parse_opts(a)
+
+        replies = self._linstor.resource_conn_modify(
+            args.resource_name,
+            args.node_a,
+            args.node_b,
+            mod_props,
+            del_props
         )
         return self.handle_replies(args, replies)
 
