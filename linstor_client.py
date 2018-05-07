@@ -112,7 +112,7 @@ class LinStorCLI(object):
         # help
         p_help = subp.add_parser(Commands.HELP,
                                  description='Print help for a command')
-        p_help.add_argument('command')
+        p_help.add_argument('command', nargs='*')
         p_help.set_defaults(func=self.cmd_help)
 
         # list
@@ -421,7 +421,7 @@ class LinStorCLI(object):
             sys.stderr.write("The client is already running in interactive mode\n")
 
     def cmd_help(self, args):
-        return self.parse_and_execute([args.command, "-h"])
+        return self.parse_and_execute(args.command + ["-h"])
 
     def cmd_exit(self, _):
         sys.exit(ExitCode.OK)
