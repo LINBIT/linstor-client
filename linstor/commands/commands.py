@@ -151,7 +151,12 @@ class Commands(object):
 
             return "\n".join([
                 " - {} ({})".format(sub.LONG, sub.SHORT)
-                for sub in subcommands])
+                for sub in sorted(subcommands, key=lambda x:x.LONG)])
+
+    @classmethod
+    def check_subcommands(cls, subp, subcmds):
+        assert len(subp.choices) == len(subcmds) * 2, "not all subcommands are defined"
+        subp.metavar = "{%s}" % ", ".join(sorted([x.LONG for x in subcmds]))
 
     @classmethod
     def handle_replies(cls, args, replies):

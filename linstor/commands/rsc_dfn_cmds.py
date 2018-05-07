@@ -12,6 +12,14 @@ class ResourceDefinitionCommands(Commands):
         super(ResourceDefinitionCommands, self).__init__()
 
     def setup_commands(self, parser):
+        subcmds = [
+            Commands.Subcommands.Create,
+            Commands.Subcommands.List,
+            Commands.Subcommands.Delete,
+            Commands.Subcommands.SetProperty,
+            Commands.Subcommands.ListProperties,
+            Commands.Subcommands.DrbdOptions
+        ]
 
         # Resource subcommands
         res_def_parser = parser.add_parser(
@@ -23,15 +31,8 @@ class ResourceDefinitionCommands(Commands):
         res_def_subp = res_def_parser.add_subparsers(
             title="resource definition subcommands",
             metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.Create,
-                    Commands.Subcommands.List,
-                    Commands.Subcommands.Delete,
-                    Commands.Subcommands.SetProperty,
-                    Commands.Subcommands.ListProperties,
-                    Commands.Subcommands.DrbdOptions
-                ]))
+            description=Commands.Subcommands.generate_desc(subcmds)
+        )
 
         p_new_res_dfn = res_def_subp.add_parser(
             Commands.Subcommands.Create.LONG,
@@ -117,6 +118,8 @@ class ResourceDefinitionCommands(Commands):
             [x for x in DrbdOptions.drbd_options()['options'] if x in DrbdOptions.drbd_options()['filters']['resource']]
         )
         p_drbd_opts.set_defaults(func=self.set_drbd_opts)
+
+        self.check_subcommands(res_def_subp, subcmds)
 
     def create(self, args):
         replies = self._linstor.resource_dfn_create(args.name, args.port)

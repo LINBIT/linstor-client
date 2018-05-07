@@ -8,6 +8,13 @@ class ControllerCommands(Commands):
 
     def setup_commands(self, parser):
         # Controller commands
+        subcmds = [
+            Commands.Subcommands.SetProperty,
+            Commands.Subcommands.ListProperties,
+            Commands.Subcommands.Shutdown,
+            Commands.Subcommands.DrbdOptions
+        ]
+
         con_parser = parser.add_parser(
             Commands.CONTROLLER,
             aliases=["c"],
@@ -17,13 +24,8 @@ class ControllerCommands(Commands):
         con_subp = con_parser.add_subparsers(
             title="Controller commands",
             metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.SetProperty,
-                    Commands.Subcommands.ListProperties,
-                    Commands.Subcommands.Shutdown,
-                    Commands.Subcommands.DrbdOptions
-                ]))
+            description=Commands.Subcommands.generate_desc(subcmds)
+        )
 
         # Controller - get props
         c_ctrl_props = con_subp.add_parser(
@@ -56,6 +58,8 @@ class ControllerCommands(Commands):
             description='Shutdown the linstor controller'
         )
         c_shutdown.set_defaults(func=self.cmd_shutdown)
+
+        self.check_subcommands(con_subp, subcmds)
 
     @classmethod
     def _props_list(cls, args, lstmsg):

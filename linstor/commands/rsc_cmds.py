@@ -25,6 +25,16 @@ class ResourceCommands(Commands):
         :return:
         """
 
+        subcmds = [
+            Commands.Subcommands.Create,
+            Commands.Subcommands.List,
+            Commands.Subcommands.ListVolumes,
+            Commands.Subcommands.Delete,
+            Commands.Subcommands.SetProperty,
+            Commands.Subcommands.ListProperties,
+            Commands.Subcommands.DrbdPeerDeviceOptions
+        ]
+
         # Resource subcommands
         res_parser = parser.add_parser(
             Commands.RESOURCE,
@@ -34,16 +44,8 @@ class ResourceCommands(Commands):
         res_subp = res_parser.add_subparsers(
             title="resource commands",
             metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.Create,
-                    Commands.Subcommands.List,
-                    Commands.Subcommands.ListVolumes,
-                    Commands.Subcommands.Delete,
-                    Commands.Subcommands.SetProperty,
-                    Commands.Subcommands.ListProperties,
-                    Commands.Subcommands.DrbdPeerDeviceOptions
-                ]))
+            description=Commands.Subcommands.generate_desc(subcmds)
+        )
 
         # new-resource
         p_new_res = res_subp.add_parser(
@@ -213,6 +215,8 @@ class ResourceCommands(Commands):
                 if DrbdOptions.drbd_options()['options'][x]['category'] == 'peer-device-options']
         )
         p_drbd_peer_opts.set_defaults(func=self.drbd_peer_opts)
+
+        self.check_subcommands(res_subp, subcmds)
 
     @staticmethod
     def _satellite_not_connected(replies):

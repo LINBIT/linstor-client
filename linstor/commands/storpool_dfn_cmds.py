@@ -11,8 +11,15 @@ class StoragePoolDefinitionCommands(Commands):
         super(StoragePoolDefinitionCommands, self).__init__()
 
     def setup_commands(self, parser):
+        # storpool subcommands
+        subcmds = [
+            Commands.Subcommands.Create,
+            Commands.Subcommands.List,
+            Commands.Subcommands.Delete,
+            Commands.Subcommands.SetProperty,
+            Commands.Subcommands.ListProperties
+        ]
 
-        # Resource subcommands
         spd_parser = parser.add_parser(
             Commands.STORAGE_POOL_DEF,
             aliases=["spd"],
@@ -21,14 +28,8 @@ class StoragePoolDefinitionCommands(Commands):
         spd_subp = spd_parser.add_subparsers(
             title="Storage pool definition subcommands",
             metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.Create,
-                    Commands.Subcommands.List,
-                    Commands.Subcommands.Delete,
-                    Commands.Subcommands.SetProperty,
-                    Commands.Subcommands.ListProperties,
-                ]))
+            description=Commands.Subcommands.generate_desc(subcmds)
+        )
 
         # new-storpol definition
         p_new_storpool_dfn = spd_subp.add_parser(
@@ -98,6 +99,8 @@ class StoragePoolDefinitionCommands(Commands):
         ).competer = self.storage_pool_dfn_completer
         Commands.add_parser_keyvalue(p_setprop, "storagepool-definition")
         p_setprop.set_defaults(func=self.set_props)
+
+        self.check_subcommands(spd_subp, subcmds)
 
     def create(self, args):
         replies = self._linstor.storage_pool_dfn_create(args.name)

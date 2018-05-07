@@ -23,8 +23,17 @@ class NodeCommands(Commands):
         super(NodeCommands, self).__init__()
 
     def setup_commands(self, parser):
-
         # Node subcommands
+        subcmds = [
+            Commands.Subcommands.Create,
+            Commands.Subcommands.List,
+            Commands.Subcommands.Delete,
+            Commands.Subcommands.Describe,
+            Commands.Subcommands.Interface,
+            Commands.Subcommands.SetProperty,
+            Commands.Subcommands.ListProperties
+        ]
+
         node_parser = parser.add_parser(
             Commands.NODE,
             aliases=["n"],
@@ -34,16 +43,8 @@ class NodeCommands(Commands):
         node_subp = node_parser.add_subparsers(
             title="Node commands",
             metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.Create,
-                    Commands.Subcommands.List,
-                    Commands.Subcommands.Delete,
-                    Commands.Subcommands.Describe,
-                    Commands.Subcommands.Interface,
-                    Commands.Subcommands.SetProperty,
-                    Commands.Subcommands.ListProperties,
-                ]))
+            description=Commands.Subcommands.generate_desc(subcmds)
+        )
 
         # create node
         p_new_node = node_subp.add_parser(
@@ -249,6 +250,8 @@ class NodeCommands(Commands):
         ).completer = self.node_completer
         Commands.add_parser_keyvalue(p_setp, "node")
         p_setp.set_defaults(func=self.set_props)
+
+        self.check_subcommands(node_subp, subcmds)
 
     def create(self, args):
         replies = self._linstor.node_create(

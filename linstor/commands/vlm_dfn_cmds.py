@@ -14,7 +14,16 @@ class VolumeDefinitionCommands(Commands):
         super(VolumeDefinitionCommands, self).__init__()
 
     def setup_commands(self, parser):
-        # Resource subcommands
+        # volume definition subcommands
+        subcmds = [
+            Commands.Subcommands.Create,
+            Commands.Subcommands.List,
+            Commands.Subcommands.Delete,
+            Commands.Subcommands.SetProperty,
+            Commands.Subcommands.ListProperties,
+            Commands.Subcommands.DrbdOptions
+        ]
+
         vol_def_parser = parser.add_parser(
             Commands.VOLUME_DEF,
             aliases=["vd"],
@@ -24,15 +33,8 @@ class VolumeDefinitionCommands(Commands):
         vol_def_subp = vol_def_parser.add_subparsers(
             title="Volume definition commands",
             metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.Create,
-                    Commands.Subcommands.List,
-                    Commands.Subcommands.Delete,
-                    Commands.Subcommands.SetProperty,
-                    Commands.Subcommands.ListProperties,
-                    Commands.Subcommands.DrbdOptions
-                ]))
+            description=Commands.Subcommands.generate_desc(subcmds)
+        )
 
         p_new_vol = vol_def_subp.add_parser(
             Commands.Subcommands.Create.LONG,
@@ -150,6 +152,8 @@ class VolumeDefinitionCommands(Commands):
             [x for x in DrbdOptions.drbd_options()['options'] if x in DrbdOptions.drbd_options()['filters']['volume']]
         )
         p_drbd_opts.set_defaults(func=self.set_drbd_opts)
+
+        self.check_subcommands(vol_def_subp, subcmds)
 
     def create(self, args):
         replies = self._linstor.volume_dfn_create(

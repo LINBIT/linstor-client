@@ -21,8 +21,15 @@ class StoragePoolCommands(Commands):
         super(StoragePoolCommands, self).__init__()
 
     def setup_commands(self, parser):
-
         # Storage pool subcommands
+        subcmds = [
+            Commands.Subcommands.Create,
+            Commands.Subcommands.List,
+            Commands.Subcommands.Delete,
+            Commands.Subcommands.SetProperty,
+            Commands.Subcommands.ListProperties
+        ]
+
         sp_parser = parser.add_parser(
             Commands.STORAGE_POOL,
             aliases=["sp"],
@@ -31,14 +38,8 @@ class StoragePoolCommands(Commands):
         sp_subp = sp_parser.add_subparsers(
             title="Storage pool commands",
             metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.Create,
-                    Commands.Subcommands.List,
-                    Commands.Subcommands.Delete,
-                    Commands.Subcommands.SetProperty,
-                    Commands.Subcommands.ListProperties,
-                ]))
+            description=Commands.Subcommands.generate_desc(subcmds)
+        )
 
         # new-storpol
         p_new_storpool = sp_subp.add_parser(
@@ -129,6 +130,8 @@ class StoragePoolCommands(Commands):
             help='Name of the node for the storage pool').completer = self.node_completer
         Commands.add_parser_keyvalue(p_setprop, 'storagepool')
         p_setprop.set_defaults(func=self.set_props)
+
+        self.check_subcommands(sp_subp, subcmds)
 
     def create(self, args):
         # construct correct driver name
