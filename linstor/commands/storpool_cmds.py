@@ -57,9 +57,12 @@ class StoragePoolCommands(Commands):
             help='Name of the driver used for the new storage pool').completer = StoragePoolCommands.driver_completer
         p_new_storpool.add_argument(
             'driver_pool_name',
-            type=namecheck(STORPOOL_NAME),  # TODO use STORPOOL_NAME check for now
+            type=str,
             nargs='?',
-            help='Volumegroup/Pool name of the driver e.g. drbdpool')
+            help='Volume group/pool to use, e.g. drbdpool. '
+            'For \'lvm\', the volume group; '
+            'for \'lvmthin\', the full name of the thin pool, namely VG/LV; '
+            'for \'zfs\', the zPool.')
         p_new_storpool.set_defaults(func=self.create)
 
         # remove-storpool
@@ -155,9 +158,7 @@ class StoragePoolCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [self._stor_pool_headers[0].name])
 
         for storpool in lstmsg.stor_pools:
-            driver_device_prop = [x for x in storpool.props
-                                  if x.key == self._linstor.get_driver_key(storpool.driver)]
-            driver_device = driver_device_prop[0].value if driver_device_prop else ''
+            driver_device = self._linstor.storage_props_to_driver_pool(storpool.driver[:-len('Driver')], storpool.props)
 
             supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
             supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
