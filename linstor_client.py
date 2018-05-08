@@ -213,7 +213,12 @@ class LinStorCLI(object):
         try:
             args = self.parse(pargs)
 
-            local_only_cmds = [self.cmd_list, MigrateCommands.cmd_dmmigrate, self._zsh_generator.cmd_completer]
+            local_only_cmds = [
+                self.cmd_list,
+                MigrateCommands.cmd_dmmigrate,
+                self._zsh_generator.cmd_completer,
+                self.cmd_help
+            ]
 
             # only connect if not already connected or a local only command was executed
             if self._linstorapi is None and args.func not in local_only_cmds:
