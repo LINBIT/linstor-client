@@ -38,7 +38,8 @@ class NodeCommands(Commands):
             Commands.NODE,
             aliases=["n"],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Node subcommands")
+            description="Node subcommands"
+        )
 
         node_subp = node_parser.add_subparsers(
             title="Node commands",

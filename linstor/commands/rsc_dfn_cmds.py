@@ -26,7 +26,7 @@ class ResourceDefinitionCommands(Commands):
             Commands.RESOURCE_DEF,
             aliases=["rd"],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Resource definition subcommands")
+            description="Resource definition subcommands")
 
         res_def_subp = res_def_parser.add_subparsers(
             title="resource definition subcommands",

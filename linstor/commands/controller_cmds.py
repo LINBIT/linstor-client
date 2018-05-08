@@ -19,7 +19,7 @@ class ControllerCommands(Commands):
             Commands.CONTROLLER,
             aliases=["c"],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Controller subcommands")
+            description="Controller subcommands")
 
         con_subp = con_parser.add_subparsers(
             title="Controller commands",

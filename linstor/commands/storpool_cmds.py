@@ -34,7 +34,7 @@ class StoragePoolCommands(Commands):
             Commands.STORAGE_POOL,
             aliases=["sp"],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Storage pool subcommands")
+            description="Storage pool subcommands")
         sp_subp = sp_parser.add_subparsers(
             title="Storage pool commands",
             metavar="",

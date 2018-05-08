@@ -28,7 +28,7 @@ class VolumeDefinitionCommands(Commands):
             Commands.VOLUME_DEF,
             aliases=["vd"],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Volume definition subcommands")
+            description="Volume definition subcommands")
 
         vol_def_subp = vol_def_parser.add_subparsers(
             title="Volume definition commands",

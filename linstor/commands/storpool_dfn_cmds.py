@@ -24,7 +24,7 @@ class StoragePoolDefinitionCommands(Commands):
             Commands.STORAGE_POOL_DEF,
             aliases=["spd"],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Storage pool definition subcommands")
+            description="Storage pool definition subcommands")
         spd_subp = spd_parser.add_subparsers(
             title="Storage pool definition subcommands",
             metavar="",

@@ -490,7 +490,7 @@ class MiscCommands(Commands):
             Commands.CRYPT,
             aliases=["e"],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Encryption subcommands")
+            description="Encryption subcommands")
 
         crypt_subp = crypt_parser.add_subparsers(
             title="Encryption commands",
@@ -545,7 +545,7 @@ class MiscCommands(Commands):
             Commands.ERROR_REPORTS,
             aliases=["err"],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Error report subcommands")
+            description="Error report subcommands")
 
         error_subp = error_parser.add_subparsers(
             title="Error report commands",

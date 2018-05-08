@@ -40,7 +40,7 @@ class ResourceCommands(Commands):
             Commands.RESOURCE,
             aliases=["r"],
             formatter_class=argparse.RawTextHelpFormatter,
-            help="Resouce subcommands")
+            description="Resouce subcommands")
         res_subp = res_parser.add_subparsers(
             title="resource commands",
             metavar="",
