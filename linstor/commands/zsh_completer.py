@@ -77,10 +77,23 @@ class ZshGenerator(object):
         print(self.cmds_list_str())
         print(_footer)
 
-    def cmd(self, cmd):
-        c = "        ({cmd})\n".format(cmd=cmd)
-        opts = []
+    def describe_cmds(self, cmd, indent=0):
         argparse_cmd = self._parser._name_parser_map[cmd]
+        safe_str = cmd.replace('-', '_')
+        c = " " * indent + "local {cmd}_cmds;\n".format(cmd=safe_str)
+        c += " " * indent + "{cmd}_cmds=(\n".format(cmd=safe_str)
+        for action in argparse_cmd._actions:
+            subcmds = action.choices if action.choices else []
+            for subcmd in subcmds:
+                c += " " * indent + "  '{subcmd}:'\n".format(subcmd=subcmd)
+        c += " " * indent + ")\n"
+        c += " " * indent + "_describe -t {cmd}_cmds '{cmd} cmds' {cmd}_cmds \"$@\" && ret=0\n".format(cmd=safe_str)
+        return c
+
+    @classmethod
+    def arguments_str(cls, argparse_cmd):
+        c = ""
+        opts = []
         for action in argparse_cmd._actions:
             if action.option_strings:
                 # get longest option string
@@ -99,7 +112,24 @@ class ZshGenerator(object):
                     opt_data.append("()")
                 opts.append("'" + ':'.join(opt_data) + "'")
         if opts:
-            c += "          _arguments " + " ".join(opts) + " && ret=0\n"
+            c += "_arguments " + " ".join(opts) + " && ret=0\n"
+        return c
+
+    def cmd(self, cmd):
+        c = "        ({cmd})\n".format(cmd=cmd)
+        c += "          case $line[2] in\n"
+        # argparse_cmd = self._parser._name_parser_map[cmd]
+        # for action in argparse_cmd._actions:
+        #     subcmds = action.choices if action.choices else []
+        #     for subcmd in subcmds:
+        #         c += "            ({subcmd})\n".format(subcmd=subcmd)
+        #         c += "              " + self.arguments_str(action.choices[subcmd])
+        #         c += "            ;;\n"
+        c += "            *)\n"
+        c += self.describe_cmds(cmd, indent=14)
+        c += "            ;;\n"
+        c += "          esac\n"
+        #c += self.arguments_str(argparse_cmd)
         c += "        ;;"
         return c
 
@@ -107,9 +137,9 @@ class ZshGenerator(object):
         tuples = []
         for x in Commands.MainList:
             cmd = self._parser._name_parser_map[x]
-            desc = cmd.description
+            desc = cmd.description if cmd.description else ""
             shortlen = 40
-            if len(desc) > shortlen:
+            if desc and len(desc) > shortlen:
                 desc = desc[:shortlen - 3] + '...'
             tuples.append((x, desc))
         return "\n    ".join(["'" + x[0] + ':' + x[1] + "'" for x in tuples])
