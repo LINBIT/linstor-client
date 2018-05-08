@@ -246,8 +246,8 @@ class LinstorTestCaseWithData(LinstorTestCase):
         cls.assert_execute(['storage-pool', 'create', 'fakehost2', 'DfltStorPool', 'lvm', 'mylvmpool'])
         cls.assert_execute(['storage-pool', 'create', 'fakehost3', 'DfltStorPool', 'lvm', 'mylvmpool'])
 
-        cls.assert_execute(['storage-pool', 'create', 'fakehost1', 'thinpool', 'lvmthin', 'mythinpool'])
-        cls.assert_execute(['storage-pool', 'create', 'fakehost2', 'thinpool', 'lvmthin', 'mythinpool'])
+        cls.assert_execute(['storage-pool', 'create', 'fakehost1', 'thinpool', 'lvmthin', 'myvg/mythinpool'])
+        cls.assert_execute(['storage-pool', 'create', 'fakehost2', 'thinpool', 'lvmthin', 'myvg/mythinpool'])
 
         cls.assert_execute(['storage-pool', 'create', 'fakehost1', 'zfsubuntu', 'zfs', 'zfsstorage'])
         cls.assert_execute(['storage-pool', 'create', 'fakehost2', 'zfsubuntu', 'zfs', 'zfsstorage'])
