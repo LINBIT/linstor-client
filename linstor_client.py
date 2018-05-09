@@ -381,6 +381,8 @@ class LinStorCLI(object):
                         sys.stdout.write("\nIncorrect syntax. Use 'help {cmd}' for more information:\n".format(cmd=cmd))
                 else:
                     unknown(cmd)
+            except KeyboardInterrupt:
+                pass
             except BaseException:
                 traceback.print_exc(file=sys.stdout)
 
