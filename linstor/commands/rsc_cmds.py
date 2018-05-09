@@ -2,7 +2,7 @@ import linstor.argparse.argparse as argparse
 
 import linstor
 import linstor.sharedconsts as apiconsts
-from linstor.commands import Commands, DrbdOptions
+from linstor.commands import Commands, DrbdOptions, ArgumentError
 from linstor.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color, ExitCode
 from linstor.utils import Output, namecheck
 
@@ -269,7 +269,7 @@ class ResourceCommands(Commands):
             # normal create resource
             # check that node is given
             if not args.node_name:
-                raise ArgumentError("create-resource: too few arguments: Node name missing.")
+                raise ArgumentError("resource create: too few arguments: Node name missing.")
 
             rc = ExitCode.OK
             satellites_connected = True
