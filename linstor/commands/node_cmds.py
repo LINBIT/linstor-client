@@ -115,6 +115,12 @@ class NodeCommands(Commands):
         p_rm_node.set_defaults(func=self.delete)
 
         # Interface commands
+        netif_subcmds = [
+            Commands.Subcommands.Create,
+            Commands.Subcommands.List,
+            Commands.Subcommands.Modify,
+            Commands.Subcommands.Delete
+        ]
 
         interface_parser = node_subp.add_parser(
             Commands.Subcommands.Interface.LONG,
@@ -125,13 +131,7 @@ class NodeCommands(Commands):
         interface_subp = interface_parser.add_subparsers(
             title="%s subcommands" % Commands.Subcommands.Interface.LONG,
             metavar="",
-            description=Commands.Subcommands.generate_desc(
-                [
-                    Commands.Subcommands.Create,
-                    Commands.Subcommands.List,
-                    Commands.Subcommands.Modify,
-                    Commands.Subcommands.Delete,
-                ]))
+            description=Commands.Subcommands.generate_desc(netif_subcmds))
 
         # create net interface
         p_create_netinterface = interface_subp.add_parser(
@@ -252,6 +252,7 @@ class NodeCommands(Commands):
         Commands.add_parser_keyvalue(p_setp, "node")
         p_setp.set_defaults(func=self.set_props)
 
+        self.check_subcommands(interface_subp, netif_subcmds)
         self.check_subcommands(node_subp, subcmds)
 
     def create(self, args):
