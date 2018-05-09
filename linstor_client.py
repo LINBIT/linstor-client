@@ -21,6 +21,7 @@
 import sys
 import os
 import traceback
+import itertools
 try:
     import ConfigParser as configparser
 except ImportError:
@@ -236,7 +237,7 @@ class LinStorCLI(object):
         except ArgumentError as ae:
             sys.stderr.write(ae.message + '\n')
             try:
-                self.parse(pargs + ['-h'])
+                self.parse(list(itertools.takewhile(lambda x: not x.startswith('-'), pargs)) + ['-h'])
             except SystemExit:
                 pass
             return ExitCode.ARGPARSE_ERROR
