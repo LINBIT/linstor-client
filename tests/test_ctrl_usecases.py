@@ -88,7 +88,7 @@ class TestUseCases(LinstorTestCase):
         self.assertIn('vlm_minor_nr', vlms[0])
 
         # delete resource
-        rsc_resps = self.execute_with_resp(['resource', 'delete', 'node1', 'rsc1'])
+        rsc_resps = self.execute_with_resp(['resource', 'delete', '--async', 'node1', 'rsc1'])
         self.assertEqual(2, len(rsc_resps))
         warn_resp = rsc_resps[0]
         self.assertTrue(warn_resp.is_warning(), str(warn_resp))

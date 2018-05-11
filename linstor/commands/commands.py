@@ -177,6 +177,17 @@ class Commands(object):
         return rc
 
     @classmethod
+    def all_api_replies_success(cls, replies):
+        """
+        Checks if none of the replies has an error.
+
+        :param list[linstorapi.ApiCallResponse] replies: apicallresponse to check
+        :return: True if none of the replies has an error.
+        :rtype: bool
+        """
+        return all([not r.is_error() for r in replies])
+
+    @classmethod
     def check_for_api_replies(cls, replies):
         return isinstance(replies[0], linstor.linstorapi.ApiCallResponse)
 
