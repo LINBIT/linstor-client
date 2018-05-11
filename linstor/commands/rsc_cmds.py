@@ -272,7 +272,6 @@ class ResourceCommands(Commands):
                 raise ArgumentError("resource create: too few arguments: Node name missing.")
 
             rc = ExitCode.OK
-            satellites_connected = True
             for node_name in args.node_name:
                 replies = self._linstor.resource_create(
                     node_name,
@@ -286,10 +285,7 @@ class ResourceCommands(Commands):
                 if create_rc != ExitCode.OK:
                     rc = create_rc
 
-                if ResourceCommands._satellite_not_connected(replies):
-                    satellites_connected = False
-
-            if rc == ExitCode.OK and not args.async and not satellites_connected:
+            if rc == ExitCode.OK and not args.async and not ResourceCommands._satellite_not_connected(replies):
                 rc = ExitCode.NO_SATELLITE_CONNECTION
 
             if rc == ExitCode.OK and not args.async:
