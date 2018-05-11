@@ -80,6 +80,11 @@ class ResourceCommands(Commands):
                               'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_res.add_argument('name',
                               help='Name of the resource to delete').completer = self.resource_completer
+        p_rm_res.add_argument(
+            '--async',
+            action='store_true',
+            help='Do not wait for deployment on satellites before returning'
+        )
         p_rm_res.add_argument('node_name',
                               nargs="+",
                               help='Name of the node').completer = self.node_completer
@@ -287,10 +292,68 @@ class ResourceCommands(Commands):
 
             return rc
 
+    @classmethod
+    def check_failure_events(cls, event_name, event_data):
+        if event_name == apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE and event_data is not None:
+            api_call_responses = [
+                linstor.linstorapi.ApiCallResponse(response)
+                for response in event_data.responses
+            ]
+            failure_responses = [
+                api_call_response for api_call_response in api_call_responses
+                if not api_call_response.is_success()
+            ]
+
+            return failure_responses if failure_responses else None
+
     def delete(self, args):
-        # execute delete storpooldfns and flatten result list
-        replies = [x for subx in args.node_name for x in self._linstor.resource_delete(subx, args.name)]
-        return self.handle_replies(args, replies)
+        if args.async:
+            # execute delete resource and flatten result list
+            replies = [x for subx in args.node_name for x in self._linstor.resource_delete(subx, args.name)]
+            return self.handle_replies(args, replies)
+        else:
+            def reply_handler(replies_):
+                if not self.all_api_replies_success(replies_):
+                    return replies_
+                return None
+
+            def event_handler(event_header, event_data):
+                if event_header.event_name in [
+                        apiconsts.EVENT_RESOURCE_STATE,
+                        apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE]:
+                    if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_NO_CONNECTION:
+                        print(Output.color_str('WARNING:', Color.YELLOW, args.no_color) +
+                              " Satellite connection lost")
+                        return ExitCode.NO_SATELLITE_CONNECTION
+                    if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
+                        return ExitCode.OK
+
+                    return self.check_failure_events(event_header.event_name, event_data)
+                return None
+
+            all_delete_replies = []
+            for node in args.node_name:
+                replies = self.get_linstorapi().resource_delete(node, args.name)
+                all_delete_replies += replies
+
+                if not self.all_api_replies_success(replies):
+                    return self.handle_replies(args, all_delete_replies)
+
+                watch_result = self.get_linstorapi().create_watch(
+                    reply_handler,
+                    event_handler,
+                    node_name=node,
+                    resource_name=args.name
+                )
+
+                if isinstance(watch_result, list):
+                    all_delete_replies += watch_result
+                    if not self.all_api_replies_success(watch_result):
+                        return self.handle_replies(args, all_delete_replies)
+                elif watch_result != ExitCode.OK:
+                    return watch_result
+
+            return self.handle_replies(args, all_delete_replies)
 
     @staticmethod
     def find_rsc_state(rsc_states, rsc_name, node_name):
