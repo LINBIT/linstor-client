@@ -225,6 +225,13 @@ class _LinstorNetClient(threading.Thread):
         apiconsts.API_LST_ERROR_REPORTS: (MsgErrorReport, ErrorReport)
     }
 
+    EVENT_READER_TABLE = {
+        apiconsts.EVENT_VOLUME_DISK_STATE: EventVlmDiskState,
+        apiconsts.EVENT_RESOURCE_STATE: EventRscState,
+        apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE: EventRscDeploymentState,
+        apiconsts.EVENT_RESOURCE_DEFINITION_READY: EventRscDfnReady
+    }
+
     def __init__(self, timeout=20):
         super(_LinstorNetClient, self).__init__()
         self._socket = None  # type: socket.socket
@@ -293,14 +300,7 @@ class _LinstorNetClient(threading.Thread):
 
     @classmethod
     def _parse_event(cls, event_name, event_data_bytes):
-        event_reader_table = {
-            apiconsts.EVENT_VOLUME_DISK_STATE: EventVlmDiskState,
-            apiconsts.EVENT_RESOURCE_STATE: EventRscState,
-            apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE: EventRscDeploymentState,
-            apiconsts.EVENT_RESOURCE_DEFINITION_READY: EventRscDfnReady
-        }
-
-        event_reader = event_reader_table.get(event_name)
+        event_reader = cls.EVENT_READER_TABLE.get(event_name)
 
         if event_reader is None:
             return None
