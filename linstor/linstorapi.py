@@ -300,6 +300,13 @@ class _LinstorNetClient(threading.Thread):
 
     @classmethod
     def _parse_event(cls, event_name, event_data_bytes):
+        """
+        Parses the given byte data according to the event header name.
+
+        :param event_name: Event header name
+        :param event_data_bytes: Data bytes for protobuf message
+        :return: parsed protobuf message
+        """
         event_reader = cls.EVENT_READER_TABLE.get(event_name)
 
         if event_reader is None:
@@ -643,9 +650,15 @@ class _LinstorNetClient(threading.Thread):
 
     def wait_for_result_and_events(self, msg_id, reply_handler, event_handler):
         """
-        This method blocks and waits for an answer to the given msg_id and for events.
+        This method blocks and waits for an answer to the given msg_id and for any events.
+        If any of the callable handler functions returns not None this method returns with the handler function
+        result, otherwise it stays in its wait/listen loop.
+        In simple words, this method will loop as long as its given handler functions return None.
 
         :param int msg_id:
+        :param Callable[[ApiCallResponse], None] reply_handler: function that is called if an reply was received.
+        :param Callable event_handler: function that is called if an event was received.
+        :return: The result of a handler function if it returns not None
         """
         with self._cv_sock:
             while True:
@@ -1409,6 +1422,13 @@ class Linstor(object):
     def create_watch(self, reply_handler, event_handler, node_name=None, resource_name=None, volume_number=None):
         """
         Watch events from the controller.
+
+        :param Callable[[ApiCallResponse], None] reply_handler: function that is called if an reply was received.
+        :param Callable event_handler: function that is called if an event was received.
+        :param str node_name: Node name to subscribe for events
+        :param str resource_name: Resource name to subscribe for events
+        :param int volume_number: Volume number to subscribe for events
+        :return: Return value of reply_handler or event_handler
         """
         msg = MsgCrtWatch()
         msg.watch_id = self._linstor_client.next_watch_id()
