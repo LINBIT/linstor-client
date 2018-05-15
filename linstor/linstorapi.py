@@ -553,8 +553,12 @@ class _LinstorNetClient(threading.Thread):
                             elif hdr.api_call == apiconsts.API_EVENT:
                                 resp = MsgEvent()
                                 resp.ParseFromString(msgs[1])
-                                if resp.event_action in [apiconsts.EVENT_STREAM_OPEN, apiconsts.EVENT_STREAM_VALUE]:
-                                    event_data = self._parse_event(resp.event_name, msgs[2])
+                                if resp.event_action in [
+                                    apiconsts.EVENT_STREAM_OPEN,
+                                    apiconsts.EVENT_STREAM_VALUE,
+                                    apiconsts.EVENT_STREAM_CLOSE_REMOVED
+                                ]:
+                                    event_data = self._parse_event(resp.event_name, msgs[2]) if len(msgs) > 2 else None
                                 else:
                                     event_data = None
                                 with self._cv_sock:
