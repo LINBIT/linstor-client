@@ -305,6 +305,7 @@ class ResourceCommands(Commands):
             ]
 
             return failure_responses if failure_responses else None
+        return None
 
     def delete(self, args):
         if args.async:
@@ -318,15 +319,13 @@ class ResourceCommands(Commands):
                 return None
 
             def event_handler(event_header, event_data):
-                if event_header.event_name in [
-                        apiconsts.EVENT_RESOURCE_STATE,
-                        apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE]:
+                if event_header.event_name in [apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE]:
                     if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_NO_CONNECTION:
                         print(Output.color_str('WARNING:', Color.YELLOW, args.no_color) +
                               " Satellite connection lost")
                         return ExitCode.NO_SATELLITE_CONNECTION
                     if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
-                        return ExitCode.OK
+                        return [linstor.linstorapi.ApiCallResponse(response) for response in event_data.responses]
 
                     return self.check_failure_events(event_header.event_name, event_data)
                 return None
