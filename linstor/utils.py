@@ -33,11 +33,11 @@ from linstor.consts import (
     RES_NAME_MINLEN,
     RES_NAME_VALID_CHARS,
     RES_NAME_VALID_INNER_CHARS,
-    SNAPS_NAME,
-    SNAPS_NAME_MAXLEN,
-    SNAPS_NAME_MINLEN,
-    SNAPS_NAME_VALID_CHARS,
-    SNAPS_NAME_VALID_INNER_CHARS,
+    SNAPSHOT_NAME,
+    SNAPSHOT_NAME_MAXLEN,
+    SNAPSHOT_NAME_MINLEN,
+    SNAPSHOT_NAME_VALID_CHARS,
+    SNAPSHOT_NAME_VALID_INNER_CHARS,
     STORPOOL_NAME,
     STORPOOL_NAME_MAXLEN,
     STORPOOL_NAME_MINLEN,
@@ -290,11 +290,11 @@ def namecheck(checktype):
         max_length = RES_NAME_MAXLEN
         valid_chars = RES_NAME_VALID_CHARS
         valid_inner_chars = RES_NAME_VALID_INNER_CHARS
-    elif checktype == SNAPS_NAME:
-        min_length = SNAPS_NAME_MINLEN
-        max_length = SNAPS_NAME_MAXLEN
-        valid_chars = SNAPS_NAME_VALID_CHARS
-        valid_inner_chars = SNAPS_NAME_VALID_INNER_CHARS
+    elif checktype == SNAPSHOT_NAME:
+        min_length = SNAPSHOT_NAME_MINLEN
+        max_length = SNAPSHOT_NAME_MAXLEN
+        valid_chars = SNAPSHOT_NAME_VALID_CHARS
+        valid_inner_chars = SNAPSHOT_NAME_VALID_INNER_CHARS
     elif checktype == STORPOOL_NAME:
         min_length = STORPOOL_NAME_MINLEN
         max_length = STORPOOL_NAME_MAXLEN

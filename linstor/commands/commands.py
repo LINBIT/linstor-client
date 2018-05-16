@@ -41,6 +41,7 @@ class Commands(object):
     STORAGE_POOL = 'storage-pool'
     STORAGE_POOL_DEF = 'storage-pool-definition'
     VOLUME_DEF = 'volume-definition'
+    SNAPSHOT = 'snapshot'
 
     MainList = [
         CONTROLLER,
@@ -54,7 +55,8 @@ class Commands(object):
         ERROR_REPORTS,
         STORAGE_POOL,
         STORAGE_POOL_DEF,
-        VOLUME_DEF
+        VOLUME_DEF,
+        SNAPSHOT
     ]
     Hidden = [
         DMMIGRATE,

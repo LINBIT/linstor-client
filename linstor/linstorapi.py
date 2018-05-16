@@ -76,6 +76,7 @@ from linstor.proto.MsgModCryptPassphrase_pb2 import MsgModCryptPassphrase
 from linstor.proto.MsgModRscConn_pb2 import MsgModRscConn
 from linstor.proto.MsgReqErrorReport_pb2 import MsgReqErrorReport
 from linstor.proto.MsgErrorReport_pb2 import MsgErrorReport
+from linstor.proto.MsgCrtSnapshot_pb2 import MsgCrtSnapshot
 from linstor.proto.Filter_pb2 import Filter
 from linstor.proto.eventdata.EventVlmDiskState_pb2 import EventVlmDiskState
 from linstor.proto.eventdata.EventRscState_pb2 import EventRscState
@@ -1504,6 +1505,21 @@ class Linstor(object):
         msg.node_2_name = node_b
         msg = self._modify_props(msg, property_dict, delete_props)
         return self._send_and_wait(apiconsts.API_MOD_RSC_CONN, msg)
+
+    def snapshot_create(self, rsc_name, snapshot_name):
+        """
+        Create a snapshot.
+
+        :param str rsc_name: Name of the resource.
+        :param str snapshot_name: Name of the new snapshot.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
+        msg = MsgCrtSnapshot()
+
+        msg.snapshot.rsc_name = rsc_name
+        msg.snapshot.snapshot_name = snapshot_name
+        return self._send_and_wait(apiconsts.API_CRT_SNAPSHOT, msg)
 
     def error_report_list(self, nodes=None, with_content=False, since=None, to=None, ids=None):
         """

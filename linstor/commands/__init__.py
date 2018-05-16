@@ -7,5 +7,6 @@ from .storpool_dfn_cmds import StoragePoolDefinitionCommands
 from .storpool_cmds import StoragePoolCommands
 from .rsc_cmds import ResourceCommands
 from .vlm_dfn_cmds import VolumeDefinitionCommands
+from .snapshot_cmds import SnapshotCommands
 from .migrate_cmds import MigrateCommands
 from .zsh_completer import ZshGenerator
