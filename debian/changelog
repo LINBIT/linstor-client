@@ -1,3 +1,22 @@
+linstor-client (0.1.9-1ubuntu1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * drbd-options: rename drbd-resource-connection-options to drbd-peer-options
+  * resource: simplify satellite_not_connected check
+  * resource: delete is now synchronous
+  * linstorapi: allow close_remove events to contain data
+  * rsc: delete event now receives a final deleted apicallrc
+  * rsc: fix machine output for error cases or multi node calls
+
+  [ Joel Colledge ]
+  * Enable waiting for auto-placed resource deployment
+  * Wait for resource deployment by default when creating
+  * Use --async when creating resources for tests because no satellites ar [...]
+
+  [ Peinthor Rene ]
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 17 May 2018 10:22:53 +0200
+
 linstor-client (0.1.8-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
