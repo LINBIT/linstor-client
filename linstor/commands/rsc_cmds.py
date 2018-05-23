@@ -1,6 +1,7 @@
 import linstor.argparse.argparse as argparse
 
 import linstor
+import linstor.linstorapi as linstorapi
 import linstor.sharedconsts as apiconsts
 from linstor.commands import Commands, DrbdOptions, ArgumentError
 from linstor.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color, ExitCode
@@ -227,12 +228,6 @@ class ResourceCommands(Commands):
     def _satellite_not_connected(replies):
         return any(reply.ret_code & apiconsts.WARN_NOT_CONNECTED == apiconsts.WARN_NOT_CONNECTED for reply in replies)
 
-    @classmethod
-    def default_reply_handler(cls, replies_):
-        if not cls.all_api_replies_success(replies_):
-            return replies_
-        return None
-
     def create(self, args):
         all_replies = []
         if args.auto_place:
@@ -245,7 +240,7 @@ class ResourceCommands(Commands):
                 args.do_not_place_with_regex
             )
 
-            if not self.all_api_replies_success(all_replies):
+            if not self._linstor.all_api_responses_success(all_replies):
                 return self.handle_replies(args, all_replies)
 
             if not args.async:
@@ -264,15 +259,15 @@ class ResourceCommands(Commands):
 
                     return None
 
-                watch_result = self._linstor.create_watch(
-                    self.default_reply_handler,
+                watch_result = self._linstor.watch_events(
+                    self._linstor.return_if_failure,
                     event_handler,
-                    resource_name=args.resource_definition_name
+                    linstorapi.ObjectIdentifier(resource_name=args.resource_definition_name)
                 )
 
                 if isinstance(watch_result, list):
                     all_replies += watch_result
-                    if not self.all_api_replies_success(watch_result):
+                    if not self._linstor.all_api_responses_success(watch_result):
                         return self.handle_replies(args, all_replies)
                 elif watch_result != ExitCode.OK:
                     return watch_result
@@ -291,7 +286,7 @@ class ResourceCommands(Commands):
                     args.storage_pool
                 )
 
-                if not self.all_api_replies_success(all_replies):
+                if not self._linstor.all_api_responses_success(all_replies):
                     return self.handle_replies(args, all_replies)
 
             def event_handler(event_header, event_data):
@@ -319,16 +314,15 @@ class ResourceCommands(Commands):
             if not ResourceCommands._satellite_not_connected(all_replies) and not args.async:
                 for node_name in args.node_name:
 
-                    watch_result = self._linstor.create_watch(
-                        self.default_reply_handler,
+                    watch_result = self._linstor.watch_events(
+                        self._linstor.return_if_failure,
                         event_handler,
-                        node_name=node_name,
-                        resource_name=args.resource_definition_name
+                        linstorapi.ObjectIdentifier(node_name=node_name, resource_name=args.resource_definition_name)
                     )
 
                     if isinstance(watch_result, list):
                         all_replies += watch_result
-                        if not self.all_api_replies_success(watch_result):
+                        if not self._linstor.all_api_responses_success(watch_result):
                             return self.handle_replies(args, all_replies)
                     elif watch_result != ExitCode.OK:
                         return watch_result
@@ -373,19 +367,18 @@ class ResourceCommands(Commands):
                 replies = self.get_linstorapi().resource_delete(node, args.name)
                 all_delete_replies += replies
 
-                if not self.all_api_replies_success(replies):
+                if not self._linstor.all_api_responses_success(replies):
                     return self.handle_replies(args, all_delete_replies)
 
-                watch_result = self.get_linstorapi().create_watch(
-                    self.default_reply_handler,
+                watch_result = self.get_linstorapi().watch_events(
+                    self._linstor.return_if_failure,
                     event_handler,
-                    node_name=node,
-                    resource_name=args.name
+                    linstorapi.ObjectIdentifier(node_name=node, resource_name=args.name)
                 )
 
                 if isinstance(watch_result, list):
                     all_delete_replies += watch_result
-                    if not self.all_api_replies_success(watch_result):
+                    if not self._linstor.all_api_responses_success(watch_result):
                         return self.handle_replies(args, all_delete_replies)
                 elif watch_result != ExitCode.OK:
                     return watch_result

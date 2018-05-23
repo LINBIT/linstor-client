@@ -82,6 +82,7 @@ from linstor.proto.eventdata.EventVlmDiskState_pb2 import EventVlmDiskState
 from linstor.proto.eventdata.EventRscState_pb2 import EventRscState
 from linstor.proto.eventdata.EventRscDeploymentState_pb2 import EventRscDeploymentState
 from linstor.proto.eventdata.EventRscDfnReady_pb2 import EventRscDfnReady
+from linstor.proto.eventdata.EventSnapshotDeployment_pb2 import EventSnapshotDeployment
 import linstor.sharedconsts as apiconsts
 
 API_VERSION = 1
@@ -209,6 +210,30 @@ class ErrorReport(ProtoMessageResponse):
         return self._proto_msg.node_names
 
 
+class ObjectIdentifier(object):
+    def __init__(
+            self,
+            node_name=None,
+            resource_name=None,
+            volume_number=None,
+            snapshot_name=None):
+        self._node_name = node_name
+        self._resource_name = resource_name
+        self._volume_number = volume_number
+        self._snapshot_name = snapshot_name
+
+    def write_to_create_watch_msg(self, msg):
+        if self._node_name is not None:
+            msg.node_name = self._node_name
+        if self._resource_name is not None:
+            msg.resource_name = self._resource_name
+        if self._volume_number is not None:
+            msg.filter_by_volume_number = True
+            msg.volume_number = self._volume_number
+        if self._snapshot_name is not None:
+            msg.snapshot_name = self._snapshot_name
+
+
 class _LinstorNetClient(threading.Thread):
     IO_SIZE = 4096
     HDR_LEN = 16
@@ -230,7 +255,8 @@ class _LinstorNetClient(threading.Thread):
         apiconsts.EVENT_VOLUME_DISK_STATE: EventVlmDiskState,
         apiconsts.EVENT_RESOURCE_STATE: EventRscState,
         apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE: EventRscDeploymentState,
-        apiconsts.EVENT_RESOURCE_DEFINITION_READY: EventRscDfnReady
+        apiconsts.EVENT_RESOURCE_DEFINITION_READY: EventRscDfnReady,
+        apiconsts.EVENT_SNAPSHOT_DEPLOYMENT: EventSnapshotDeployment
     }
 
     def __init__(self, timeout=20):
@@ -653,29 +679,21 @@ class _LinstorNetClient(threading.Thread):
                 self._cv_sock.wait(1)
             return self._replies.pop(msg_id)
 
-    def wait_for_result_and_events(self, msg_id, reply_handler, event_handler):
+    def wait_for_events(self, event_handler):
         """
-        This method blocks and waits for an answer to the given msg_id and for any events.
-        If any of the callable handler functions returns not None this method returns with the handler function
-        result, otherwise it stays in its wait/listen loop.
-        In simple words, this method will loop as long as its given handler functions return None.
+        This method blocks and waits for any events.
+        The handler function is called for each event.
+        When the value returned by the handler is not None, this method returns that value.
 
-        :param int msg_id:
-        :param Callable[[ApiCallResponse], None] reply_handler: function that is called if an reply was received.
         :param Callable event_handler: function that is called if an event was received.
-        :return: The result of a handler function if it returns not None
+        :return: The result of the handler function if it returns not None
         """
         with self._cv_sock:
             while True:
-                while msg_id not in self._replies and not self._events:
+                while not self._events:
                     if not self.connected:
                         return None
                     self._cv_sock.wait(1)
-
-                if msg_id in self._replies:
-                    reply_handler_result = reply_handler(self._replies.pop(msg_id))
-                    if reply_handler_result is not None:
-                        return reply_handler_result
 
                 while self._events:
                     event_handler_result = event_handler(*self._events.popleft())
@@ -734,6 +752,23 @@ class Linstor(object):
         self.disconnect()
 
     @classmethod
+    def all_api_responses_success(cls, replies):
+        """
+        Checks if none of the responses has an error.
+
+        :param list[ApiCallResponse] replies: apicallresponse to check
+        :return: True if none of the replies has an error.
+        :rtype: bool
+        """
+        return all([not r.is_error() for r in replies])
+
+    @classmethod
+    def return_if_failure(cls, replies_):
+        if not cls.all_api_responses_success(replies_):
+            return replies_
+        return None
+
+    @classmethod
     def _modify_props(cls, msg, property_dict, delete_props=None):
         for key, val in property_dict.items():
             lin_kv = msg.override_props.add()
@@ -756,6 +791,52 @@ class Linstor(object):
         msg_id = self._linstor_client.send_msg(api_call, msg)
         replies = self._linstor_client.wait_for_result(msg_id)
         return replies
+
+    def _watch_send_and_wait(
+            self,
+            api_call,
+            msg,
+            async,
+            event_name,
+            object_identifier):
+        """
+        Helper function that sends a api call[+msg], waits for the answer from the controller and waits for a response
+        in the form of an event containing API responses.
+
+        :param str api_call: API call identifier
+        :param msg: Proto message to send
+        :param bool async: True to return without waiting for the action to complete on the satellites.
+        :param str event_name: Event name
+        :param ObjectIdentifier object_identifier: Object to subscribe for events
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
+
+        if not async:
+            watch_responses = self.create_watch(object_identifier)
+
+            if not self.all_api_responses_success(watch_responses):
+                return watch_responses
+
+        api_call_responses = self._send_and_wait(api_call, msg)
+        if async or not self.all_api_responses_success(api_call_responses):
+            return api_call_responses
+
+        def event_handler(event_header, event_data):
+            if event_header.event_name == event_name and event_data and event_data.responses:
+                responses = [ApiCallResponse(response) for response in event_data.responses]
+                if event_header.event_action in [
+                    apiconsts.EVENT_STREAM_CLOSE_REMOVED,
+                    apiconsts.EVENT_STREAM_CLOSE_NO_CONNECTION
+                ]:
+                    return api_call_responses + responses
+                else:
+                    failure_responses = self.return_if_failure(responses)
+                    if failure_responses is not None:
+                        return api_call_responses + responses
+            return None
+
+        return self._linstor_client.wait_for_events(event_handler)
 
     def connect(self):
         """
@@ -1424,28 +1505,34 @@ class Linstor(object):
         msg.command = apiconsts.API_CMD_SHUTDOWN
         return self._send_and_wait(apiconsts.API_CONTROL_CTRL, msg)
 
-    def create_watch(self, reply_handler, event_handler, node_name=None, resource_name=None, volume_number=None):
+    def create_watch(self, object_identifier):
         """
-        Watch events from the controller.
+        Create watch for events from the controller.
 
-        :param Callable[[ApiCallResponse], None] reply_handler: function that is called if an reply was received.
-        :param Callable event_handler: function that is called if an event was received.
-        :param str node_name: Node name to subscribe for events
-        :param str resource_name: Resource name to subscribe for events
-        :param int volume_number: Volume number to subscribe for events
-        :return: Return value of reply_handler or event_handler
+        :param ObjectIdentifier object_identifier: Object to subscribe for events
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
         """
         msg = MsgCrtWatch()
         msg.watch_id = self._linstor_client.next_watch_id()
-        if node_name is not None:
-            msg.node_name = node_name
-        if resource_name is not None:
-            msg.resource_name = resource_name
-        if volume_number is not None:
-            msg.filter_by_volume_number = True
-            msg.volume_number = volume_number
-        msg_id = self._linstor_client.send_msg(apiconsts.API_CRT_WATCH, msg)
-        return self._linstor_client.wait_for_result_and_events(msg_id, reply_handler, event_handler)
+        object_identifier.write_to_create_watch_msg(msg)
+        return self._send_and_wait(apiconsts.API_CRT_WATCH, msg)
+
+    def watch_events(self, reply_handler, event_handler, object_identifier):
+        """
+        Create watch and process events from the controller.
+
+        :param Callable[[ApiCallResponse], None] reply_handler: function that is called on the watch creation reply.
+        :param Callable event_handler: function that is called if an event was received.
+        :param ObjectIdentifier object_identifier: Object to subscribe for events
+        :return: Return value of reply_handler or event_handler, when not None
+        """
+        replies = self.create_watch(object_identifier)
+        reply_handler_result = reply_handler(replies)
+        if reply_handler_result is not None:
+            return reply_handler_result
+
+        return self._linstor_client.wait_for_events(event_handler)
 
     def crypt_create_passphrase(self, passphrase):
         """
@@ -1506,12 +1593,13 @@ class Linstor(object):
         msg = self._modify_props(msg, property_dict, delete_props)
         return self._send_and_wait(apiconsts.API_MOD_RSC_CONN, msg)
 
-    def snapshot_create(self, rsc_name, snapshot_name):
+    def snapshot_create(self, rsc_name, snapshot_name, async):
         """
         Create a snapshot.
 
         :param str rsc_name: Name of the resource.
         :param str snapshot_name: Name of the new snapshot.
+        :param bool async: True to return without waiting for the action to complete on the satellites.
         :return: A list containing ApiCallResponses from the controller.
         :rtype: list[ApiCallResponse]
         """
@@ -1519,7 +1607,13 @@ class Linstor(object):
 
         msg.snapshot.rsc_name = rsc_name
         msg.snapshot.snapshot_name = snapshot_name
-        return self._send_and_wait(apiconsts.API_CRT_SNAPSHOT, msg)
+        return self._watch_send_and_wait(
+            apiconsts.API_CRT_SNAPSHOT,
+            msg,
+            async,
+            apiconsts.EVENT_SNAPSHOT_DEPLOYMENT,
+            ObjectIdentifier(resource_name=rsc_name, snapshot_name=snapshot_name)
+        )
 
     def error_report_list(self, nodes=None, with_content=False, since=None, to=None, ids=None):
         """

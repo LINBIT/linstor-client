@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import linstor
 import linstor.linstorapi as linstorapi
 from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE, \
-    EVENT_RESOURCE_DEPLOYMENT_STATE, EVENT_RESOURCE_DEFINITION_READY
+    EVENT_RESOURCE_DEPLOYMENT_STATE, EVENT_RESOURCE_DEFINITION_READY, EVENT_SNAPSHOT_DEPLOYMENT
 from linstor.consts import ExitCode, KEY_LS_CONTROLLERS
 from linstor.properties import properties
 from linstor.protobuf_to_dict import protobuf_to_dict
@@ -177,17 +177,6 @@ class Commands(object):
                 rc = current_rc
 
         return rc
-
-    @classmethod
-    def all_api_replies_success(cls, replies):
-        """
-        Checks if none of the replies has an error.
-
-        :param list[linstorapi.ApiCallResponse] replies: apicallresponse to check
-        :return: True if none of the replies has an error.
-        :rtype: bool
-        """
-        return all([not r.is_error() for r in replies])
 
     @classmethod
     def check_for_api_replies(cls, replies):
@@ -597,6 +586,10 @@ class MiscCommands(Commands):
 
         self.check_subcommands(error_subp, error_subcmds)
 
+    @staticmethod
+    def _summarize_api_call_responses(responses):
+        return "; ".join([response.message_format for response in responses])
+
     def cmd_create_watch(self, args):
         def reply_handler(replies):
             create_watch_rc = self.handle_replies(args, replies)
@@ -608,9 +601,12 @@ class MiscCommands(Commands):
             EVENT_VOLUME_DISK_STATE: lambda event_data: "Disk state: " + event_data.disk_state,
             EVENT_RESOURCE_STATE: lambda event_data: "Resource ready: " + str(event_data.ready),
             EVENT_RESOURCE_DEPLOYMENT_STATE: lambda event_data:
-                "Deployment state: " + event_data.responses[0].message_format,
+                "Deployment state: " + self._summarize_api_call_responses(event_data.responses),
             EVENT_RESOURCE_DEFINITION_READY: lambda event_data:
-                "Resource definition; ready: " + str(event_data.ready_count) + ", error: " + str(event_data.error_count)
+                "Resource definition; ready: " + str(event_data.ready_count) +
+                ", error: " + str(event_data.error_count),
+            EVENT_SNAPSHOT_DEPLOYMENT: lambda event_data:
+                "Snapshot deployment state: " + self._summarize_api_call_responses(event_data.responses)
         }
 
         def event_handler(event_header, event_data):
@@ -620,6 +616,7 @@ class MiscCommands(Commands):
                 " (" + event_header.node_name + \
                 "/" + event_header.resource_name + \
                 ("/" + str(event_header.volume_number) if event_header.HasField("volume_number") else "") + \
+                ("@" + str(event_header.snapshot_name) if event_header.HasField("snapshot_name") else "") + \
                 ")"
 
             if event_data:
@@ -632,10 +629,14 @@ class MiscCommands(Commands):
             else:
                 print(event_header_display)
 
-        self._linstor.create_watch(reply_handler, event_handler,
-                                   node_name=args.node_name,
-                                   resource_name=args.resource_name,
-                                   volume_number=args.volume_number)
+        self._linstor.watch_events(
+            reply_handler, event_handler,
+            linstorapi.ObjectIdentifier(
+                node_name=args.node_name,
+                resource_name=args.resource_name,
+                volume_number=args.volume_number
+            )
+        )
 
     def cmd_crypt_enter_passphrase(self, args):
         if args.passphrase:
