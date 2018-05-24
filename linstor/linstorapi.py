@@ -1605,8 +1605,8 @@ class Linstor(object):
         """
         msg = MsgCrtSnapshot()
 
-        msg.snapshot.rsc_name = rsc_name
-        msg.snapshot.snapshot_name = snapshot_name
+        msg.snapshot_dfn.rsc_name = rsc_name
+        msg.snapshot_dfn.snapshot_name = snapshot_name
         return self._watch_send_and_wait(
             apiconsts.API_CRT_SNAPSHOT,
             msg,
