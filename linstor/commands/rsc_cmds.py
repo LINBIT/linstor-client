@@ -59,7 +59,7 @@ class ResourceCommands(Commands):
             '-s', '--storage-pool',
             type=namecheck(STORPOOL_NAME),
             help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
-        p_new_res.add_argument('-d', '--diskless', action="store_true", help='Should the resource be diskless')
+        p_new_res.add_argument('--diskless', '-d', action="store_true", help='Should the resource be diskless')
         p_new_res.add_argument(
             '--async',
             action='store_true',
