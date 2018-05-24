@@ -65,6 +65,7 @@ from linstor.proto.MsgCrtRsc_pb2 import MsgCrtRsc
 from linstor.proto.MsgModRsc_pb2 import MsgModRsc
 from linstor.proto.MsgDelRsc_pb2 import MsgDelRsc
 from linstor.proto.MsgLstRsc_pb2 import MsgLstRsc
+from linstor.proto.MsgLstSnapshotDfn_pb2 import MsgLstSnapshotDfn
 from linstor.proto.MsgSetCtrlCfgProp_pb2 import MsgSetCtrlCfgProp
 from linstor.proto.MsgLstCtrlCfgProps_pb2 import MsgLstCtrlCfgProps
 from linstor.proto.MsgDelCtrlCfgProp_pb2 import MsgDelCtrlCfgProp
@@ -247,6 +248,7 @@ class _LinstorNetClient(threading.Thread):
         apiconsts.API_LST_RSC_DFN: (MsgLstRscDfn, ProtoMessageResponse),
         apiconsts.API_LST_RSC: (MsgLstRsc, ProtoMessageResponse),
         apiconsts.API_LST_VLM: (MsgLstRsc, ProtoMessageResponse),
+        apiconsts.API_LST_SNAPSHOT_DFN: (MsgLstSnapshotDfn, ProtoMessageResponse),
         apiconsts.API_LST_CFG_VAL: (MsgLstCtrlCfgProps, ProtoMessageResponse),
         apiconsts.API_LST_ERROR_REPORTS: (MsgErrorReport, ErrorReport)
     }
@@ -1614,6 +1616,15 @@ class Linstor(object):
             apiconsts.EVENT_SNAPSHOT_DEPLOYMENT,
             ObjectIdentifier(resource_name=rsc_name, snapshot_name=snapshot_name)
         )
+
+    def snapshot_dfn_list(self):
+        """
+        Request a list of all snapshot definitions known to the controller.
+
+        :return: A MsgLstSnapshotDfn proto message containing all information.
+        :rtype: list[ProtoMessageResponse]
+        """
+        return self._send_and_wait(apiconsts.API_LST_SNAPSHOT_DFN)
 
     def error_report_list(self, nodes=None, with_content=False, since=None, to=None, ids=None):
         """
