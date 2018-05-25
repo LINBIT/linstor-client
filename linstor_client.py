@@ -121,6 +121,7 @@ class LinStorCLI(object):
         # list
         p_list = subp.add_parser(Commands.LIST_COMMANDS, aliases=['commands', 'list'],
                                  description='List available commands')
+        p_list.add_argument('-t', '--tree', action="store_true", help="Print a tree view of all commands.")
         p_list.set_defaults(func=self.cmd_list)
 
         # exit
@@ -341,18 +342,59 @@ class LinStorCLI(object):
     def get_command_aliases(all_commands, cmd):
         return [x for subx in all_commands if cmd in subx for x in subx if cmd not in x]
 
+    @staticmethod
+    def gen_cmd_tree(subp):
+        cmd_map = {}
+        for cmd in subp._name_parser_map:
+            argparse_cmd = subp._name_parser_map[cmd]
+            new_subp = argparse_cmd._actions[-1]
+            if isinstance(new_subp, argparse._SubParsersAction):
+                if argparse_cmd.prog in cmd_map:
+                    cmd_map[argparse_cmd.prog] =\
+                        (cmd_map[argparse_cmd.prog][0] + [cmd], LinStorCLI.gen_cmd_tree(new_subp))
+                else:
+                    cmd_map[argparse_cmd.prog] = ([cmd], LinStorCLI.gen_cmd_tree(new_subp))
+            else:
+                if argparse_cmd.prog in cmd_map:
+                    cmd_map[argparse_cmd.prog] = (cmd_map[argparse_cmd.prog][0] + [cmd], {})
+                else:
+                    cmd_map[argparse_cmd.prog] = ([cmd], {})
+
+        return cmd_map
+
+    @staticmethod
+    def print_cmd_tree(entry, indent=0):
+        for fullcmd in sorted(entry.keys()):
+            cmd = fullcmd[fullcmd.rindex(' '):].strip()
+            aliases, sub_cmds = entry[fullcmd]
+            p_str = cmd
+            if len(aliases) > 1:
+                p_str += " ({al})".format(cmd=cmd, al=sorted(aliases, key=len)[0])
+            print(" " * indent + "- " + p_str)
+            LinStorCLI.print_cmd_tree(sub_cmds, indent + 2)
+
     def cmd_list(self, args):
         sys.stdout.write('Use "help <command>" to get help for a specific command.\n\n')
         sys.stdout.write('Available commands:\n')
         # import pprint
         # pp = pprint.PrettyPrinter()
         # pp.pprint(self._all_commands)
-        for cmd in sorted(Commands.MainList):
-            sys.stdout.write("- " + cmd)
-            aliases = LinStorCLI.get_command_aliases(self._all_commands, cmd)
-            if aliases:
-                sys.stdout.write(" (%s)" % (", ".join(aliases)))
-            sys.stdout.write("\n")
+
+        if args.tree:
+            subp = self._parser._actions[-1]
+            assert (isinstance(subp, argparse._SubParsersAction))
+            cmd_map = LinStorCLI.gen_cmd_tree(subp)
+            LinStorCLI.print_cmd_tree(
+                {k: v for k, v in cmd_map.items() if k[k.rindex(' '):].strip() in Commands.MainList}
+            )
+        else:
+            for cmd in sorted(Commands.MainList):
+                sys.stdout.write("- " + cmd)
+                aliases = LinStorCLI.get_command_aliases(self._all_commands, cmd)
+                if aliases:
+                    sys.stdout.write(" (%s)" % (", ".join(aliases)))
+                sys.stdout.write("\n")
+
         return 0
 
     def cmd_interactive(self, args):
@@ -416,6 +458,7 @@ class LinStorCLI(object):
             except ImportError:
                 pass
 
+            args.tree = False
             self.cmd_list(args)
             while True:
                 try:
