@@ -108,6 +108,10 @@ class Commands(object):
             LONG = "delete"
             SHORT = "d"
 
+        class Lost(object):
+            LONG = "lost"
+            SHORT = "lo"
+
         class SetProperty(object):
             LONG = "set-property"
             SHORT = "sp"

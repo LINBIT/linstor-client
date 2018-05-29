@@ -28,6 +28,7 @@ class NodeCommands(Commands):
             Commands.Subcommands.Create,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
+            Commands.Subcommands.Lost,
             Commands.Subcommands.Describe,
             Commands.Subcommands.Interface,
             Commands.Subcommands.SetProperty,
@@ -113,6 +114,18 @@ class NodeCommands(Commands):
         p_rm_node.add_argument('name',
                                help='Name of the node to remove').completer = self.node_completer
         p_rm_node.set_defaults(func=self.delete)
+
+        # lost-node
+        p_lost_node = node_subp.add_parser(
+            Commands.Subcommands.Lost.LONG,
+            aliases=[Commands.Subcommands.Lost.SHORT],
+            description='Removes an unrecoverable node from the linstor cluster. '
+            'All linstor resources attached to this node will be deleted from the database.'
+        )
+        p_lost_node.add_argument(
+            'name',
+            help='Name of the node to delete.').completer = self.node_completer
+        p_lost_node.set_defaults(func=self.lost)
 
         # Interface commands
         netif_subcmds = [
@@ -269,6 +282,11 @@ class NodeCommands(Commands):
 
     def delete(self, args):
         replies = self._linstor.node_delete(args.name)
+
+        return self.handle_replies(args, replies)
+
+    def lost(self, args):
+        replies = self._linstor.node_lost(args.name)
 
         return self.handle_replies(args, replies)
 

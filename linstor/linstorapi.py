@@ -945,6 +945,19 @@ class Linstor(object):
 
         return self._send_and_wait(apiconsts.API_DEL_NODE, msg)
 
+    def node_lost(self, node_name):
+        """
+        Deletes an unrecoverable node on the controller.
+
+        :param str node_name: Node name to delete.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
+        msg = MsgDelNode()
+        msg.node_name = node_name
+
+        return self._send_and_wait(apiconsts.API_LOST_NODE, msg)
+
     def netinterface_create(self, node_name, interface_name, ip, port=None, com_type=None):
         """
         Create a netinterface for a given node.
