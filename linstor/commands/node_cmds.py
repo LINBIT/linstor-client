@@ -6,6 +6,7 @@ import linstor
 from linstor.commands import Commands
 from linstor.tree import TreeNode
 from linstor.consts import NODE_NAME, Color, ExitCode
+import linstor.sharedconsts as apiconsts
 from linstor.sharedconsts import (DFLT_CTRL_PORT_PLAIN, DFLT_CTRL_PORT_SSL,
                                   DFLT_STLT_PORT_PLAIN, VAL_NETCOM_TYPE_PLAIN,
                                   VAL_NETCOM_TYPE_SSL, VAL_NETIF_TYPE_IP,
@@ -297,13 +298,24 @@ class NodeCommands(Commands):
         tbl.add_column("NodeType")
         tbl.add_column("IPs")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
+        conn_stat_dict = {
+            apiconsts.CONN_STATUS_OFFLINE: ("OFFLINE", Color.RED),
+            apiconsts.CONN_STATUS_CONNECTED: ("Connected", Color.YELLOW),
+            apiconsts.CONN_STATUS_ONLINE: ("Online", Color.GREEN),
+            apiconsts.CONN_STATUS_VERSION_MISMATCH: ("OFFLINE(VERSION MISMATCH)", Color.RED),
+            apiconsts.CONN_STATUS_FULL_SYNC_FAILED: ("OFFLINE(FULL SYNC FAILED)", Color.RED),
+            apiconsts.CONN_STATUS_AUTHENTICATION_ERROR: ("OFFLINE(AUTHENTICATION ERROR)", Color.RED),
+            apiconsts.CONN_STATUS_UNKNOWN: ("Unknown", Color.YELLOW)
+        }
+
         for n in lstmsg.nodes:
             ips = [if_.address for if_ in n.net_interfaces]
+            conn_stat = conn_stat_dict[n.connection_status]
             tbl.add_row([
                 n.name,
                 n.type,
                 ",".join(ips),
-                tbl.color_cell("ok", Color.DARKGREEN) if n.connected else tbl.color_cell("OFFLINE", Color.RED)
+                tbl.color_cell(conn_stat[0], conn_stat[1])
             ])
         tbl.show()
 
