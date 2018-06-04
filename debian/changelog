@@ -1,3 +1,78 @@
+linstor-client (0.2.0-1ubuntu1) experimental; urgency=medium
+
+  [ Hayley Swimelar ]
+  * subparsify resource commands
+  * add volume and additonal resource subcommands
+  * add in node command subparsers
+  * add in resource definition subparsers
+  * add in volume definition subparsers
+  * add in storage pool subparsers
+  * add in storage pool definition subparsers
+  * remove old commands from list of commands
+  * add encryption subcommands
+  * clean up subcommands on top level parser
+  * add in controller subparser
+  * make describe node fit new api
+  * add helper function to create descriptons for subparsers
+  * add description for node subcommands
+  * add help output for resource subcommands
+  * add help output for resource dfn subcommands
+  * add help output for volume dfn subcommands
+  * add help output for storage pool subcommands
+  * add help output for storage pool dfn subcommands
+  * add help output for misc subcommands
+  * make node interfaces their own subparser
+
+  [ Rene Peinthor ]
+  * clean up import of several files
+  * remove setauxproperty subcommand and setproperties to setproperty
+  * rename delete action from 'remove' to 'delete'
+  * fix unittests to use new command syntax
+  * fix setting of controller properties
+  * move controller commands into its own class/file
+  * move drbd-resource-options command into resource-definition object
+  * move drbd-volume-options command into volume-definition object
+  * move drbd-peer-options into resource object commands
+  * move error-report commands into its own group
+  * sort main commandlist
+  * show subcommands on incomplete object calls
+  * reorder positional arguments by object priority
+  * show error-reports subcommands on incomplete call
+  * show encryption subcommands on incomplete call
+  * import our shipped argparse
+  * use description instead of help attribute for subparsers
+  * zsh-completer: restore basic command completion
+  * add help command to no connection commands
+  * list node interface subcommands on incomplete call
+  * rsc-cmds: fix unresolved ArgumentError
+  * stop creating errors while printing help for commands
+  * hide stacktrace if command is canceled in interactive mode
+  * resource: simplify satellite_not_connected check
+  * linstorapi: use static event reader table
+  * linstorapi: document event methods
+  * resource: delete is now synchronous
+  * linstorapi: allow close_remove events to contain data
+  * rsc: delete event now receives a final deleted apicallrc
+  * rsc: fix machine output for error cases or multi node calls
+  * show '--diskless' instead of '-d' in quick help
+  * add a -t --tree option to list command
+  * add the node lost command
+  * node-list: show better node connection status
+  * new linstor logging now writes to stdout
+  * do not include linstorapi in module
+
+  [ Joel Colledge ]
+  * Enable the help command to give help for subcommands
+  * Supply VG and LV when creating an LVM thin storage pool
+  * Supply VG and LV when creating LVM thin storage pools for tests
+  * Add create snapshot command
+  * Make snapshot creation synchronous
+  * Clarify that the snapshot create API takes a snapshot definition
+  * Add snapshot list command
+  * Fix specifying port and encryption type when creating nodes
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 04 Jun 2018 17:22:43 +0200
+
 linstor-client (0.1.8-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
