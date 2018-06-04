@@ -79,7 +79,7 @@ class LinstorTestCase(unittest.TestCase):
         )
         print('Waiting for controller to start, if this takes longer than 10s cancel')
         while True:
-            line = cls.controller.stderr.readline()  # this will block
+            line = cls.controller.stdout.readline()  # this will block
             line = line.decode()
             sys.stdout.write(line)
             sys.stdout.flush()
