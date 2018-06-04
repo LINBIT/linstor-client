@@ -3,7 +3,7 @@ import linstor.argparse.argparse as argparse
 import linstor
 from linstor.commands import Commands
 from linstor.consts import RES_NAME, SNAPSHOT_NAME, Color
-from linstor.sharedconsts import FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
+from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
 from linstor.utils import Output, namecheck
 
 
@@ -20,7 +20,8 @@ class SnapshotCommands(Commands):
 
         subcmds = [
             Commands.Subcommands.Create,
-            Commands.Subcommands.List
+            Commands.Subcommands.List,
+            Commands.Subcommands.Delete
         ]
 
         # Snapshot subcommands
@@ -35,7 +36,7 @@ class SnapshotCommands(Commands):
             description=Commands.Subcommands.generate_desc(subcmds)
         )
 
-        # new-snapshot
+        # new snapshot
         p_new_snapshot = snapshot_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
@@ -55,6 +56,21 @@ class SnapshotCommands(Commands):
             help='Name of the snapshot local to the resource definition')
         p_new_snapshot.set_defaults(func=self.create)
 
+        # delete snapshot
+        p_delete_snapshot = snapshot_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
+            description='Deletes a snapshot.')
+        p_delete_snapshot.add_argument(
+            'resource_definition_name',
+            type=namecheck(RES_NAME),
+            help='Name of the resource definition').completer = self.resource_dfn_completer
+        p_delete_snapshot.add_argument(
+            'snapshot_name',
+            type=namecheck(SNAPSHOT_NAME),
+            help='Name of the snapshot local to the resource definition')
+        p_delete_snapshot.set_defaults(func=self.delete)
+
         # list snapshot definitions
         p_lsnapshots = snapshot_subp.add_parser(
             Commands.Subcommands.List.LONG,
@@ -70,6 +86,10 @@ class SnapshotCommands(Commands):
         replies = self._linstor.snapshot_create(args.resource_definition_name, args.snapshot_name, args.async)
         return self.handle_replies(args, replies)
 
+    def delete(self, args):
+        replies = self._linstor.snapshot_delete(args.resource_definition_name, args.snapshot_name)
+        return self.handle_replies(args, replies)
+
     @classmethod
     def show(cls, args, lstmsg):
         tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
@@ -77,7 +97,9 @@ class SnapshotCommands(Commands):
         tbl.add_column("SnapshotName")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
         for snapshot_dfn in lstmsg.snapshot_dfns:
-            if FLAG_FAILED_DEPLOYMENT in snapshot_dfn.snapshot_dfn_flags:
+            if FLAG_DELETE in snapshot_dfn.snapshot_dfn_flags:
+                state_cell = tbl.color_cell("DELETING", Color.RED)
+            elif FLAG_FAILED_DEPLOYMENT in snapshot_dfn.snapshot_dfn_flags:
                 state_cell = tbl.color_cell("Failed", Color.RED)
             elif FLAG_FAILED_DISCONNECT in snapshot_dfn.snapshot_dfn_flags:
                 state_cell = tbl.color_cell("Satellite disconnected", Color.RED)

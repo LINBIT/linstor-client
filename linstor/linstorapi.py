@@ -78,6 +78,7 @@ from linstor.proto.MsgModRscConn_pb2 import MsgModRscConn
 from linstor.proto.MsgReqErrorReport_pb2 import MsgReqErrorReport
 from linstor.proto.MsgErrorReport_pb2 import MsgErrorReport
 from linstor.proto.MsgCrtSnapshot_pb2 import MsgCrtSnapshot
+from linstor.proto.MsgDelSnapshot_pb2 import MsgDelSnapshot
 from linstor.proto.Filter_pb2 import Filter
 from linstor.proto.eventdata.EventVlmDiskState_pb2 import EventVlmDiskState
 from linstor.proto.eventdata.EventRscState_pb2 import EventRscState
@@ -1630,6 +1631,21 @@ class Linstor(object):
             apiconsts.EVENT_SNAPSHOT_DEPLOYMENT,
             ObjectIdentifier(resource_name=rsc_name, snapshot_name=snapshot_name)
         )
+
+    def snapshot_delete(self, rsc_name, snapshot_name):
+        """
+        Delete a snapshot.
+
+        :param str rsc_name: Name of the resource.
+        :param str snapshot_name: Name of the snapshot.
+        :return: A list containing ApiCallResponses from the controller.
+        :rtype: list[ApiCallResponse]
+        """
+        msg = MsgDelSnapshot()
+
+        msg.rsc_name = rsc_name
+        msg.snapshot_name = snapshot_name
+        return self._send_and_wait(apiconsts.API_DEL_SNAPSHOT, msg)
 
     def snapshot_dfn_list(self):
         """
