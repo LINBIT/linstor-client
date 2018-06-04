@@ -910,8 +910,8 @@ class Linstor(object):
             else:
                 raise LinstorError("Communication type %s has no default port" % com_type)
 
-            netif.stlt_port = port
-            netif.stlt_encryption_type = com_type
+        netif.stlt_port = port
+        netif.stlt_encryption_type = com_type
 
         return self._send_and_wait(apiconsts.API_CRT_NODE, msg)
 
