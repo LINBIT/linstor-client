@@ -740,7 +740,7 @@ class Linstor(object):
         :param str ctrl_host: Linstor uri to the controller e.g. linstor://192.168.0.1
         """
         self._ctrl_host = ctrl_host
-        self._linstor_client = _LinstorNetClient()
+        self._linstor_client = None
         self._logger = logging.getLogger('Linstor')
 
     def __del__(self):
@@ -846,6 +846,7 @@ class Linstor(object):
 
         :return: True
         """
+        self._linstor_client = _LinstorNetClient()
         self._linstor_client.connect(self._ctrl_host)
         self._linstor_client.daemon = True
         self._linstor_client.start()
