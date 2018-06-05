@@ -28,7 +28,7 @@ class LinstorTestCase(unittest.TestCase):
     @classmethod
     def find_linstor_tar(cls, paths):
         for spath in paths:
-            tarpath = os.path.join(spath, "linstor.tar")
+            tarpath = os.path.join(spath, "linstor-server.tar")
             if os.path.exists(tarpath):
                 return tarpath
         return None
