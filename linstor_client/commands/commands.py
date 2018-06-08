@@ -143,6 +143,14 @@ class Commands(object):
             LONG = "drbd-peer-options"
             SHORT = "popt"
 
+        class Resource(object):
+            LONG = "resource"
+            SHORT = "r"
+
+        class Restore(object):
+            LONG = "restore"
+            SHORT = "rst"
+
         @staticmethod
         def generate_desc(subcommands):
             """

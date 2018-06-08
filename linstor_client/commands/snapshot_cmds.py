@@ -2,7 +2,7 @@ import linstor_client.argparse.argparse as argparse
 
 import linstor_client
 from linstor_client.commands import Commands
-from linstor_client.consts import RES_NAME, SNAPSHOT_NAME, Color
+from linstor_client.consts import NODE_NAME, RES_NAME, SNAPSHOT_NAME, Color
 from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
 from linstor_client.utils import Output, namecheck
 
@@ -21,7 +21,8 @@ class SnapshotCommands(Commands):
         subcmds = [
             Commands.Subcommands.Create,
             Commands.Subcommands.List,
-            Commands.Subcommands.Delete
+            Commands.Subcommands.Delete,
+            Commands.Subcommands.Resource
         ]
 
         # Snapshot subcommands
@@ -80,10 +81,61 @@ class SnapshotCommands(Commands):
         p_lsnapshots.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lsnapshots.set_defaults(func=self.list)
 
+        # resource commands
+        resource_subcmds = [
+            Commands.Subcommands.Restore
+        ]
+
+        resource_parser = snapshot_subp.add_parser(
+            Commands.Subcommands.Resource.LONG,
+            formatter_class=argparse.RawTextHelpFormatter,
+            aliases=[Commands.Subcommands.Resource.SHORT],
+            description="%s subcommands" % Commands.Subcommands.Resource.LONG)
+
+        resource_subp = resource_parser.add_subparsers(
+            title="%s subcommands" % Commands.Subcommands.Resource.LONG,
+            metavar="",
+            description=Commands.Subcommands.generate_desc(resource_subcmds))
+
+        # restore resource from snapshot
+        p_restore_snapshot = resource_subp.add_parser(
+            Commands.Subcommands.Restore.LONG,
+            aliases=[Commands.Subcommands.Restore.SHORT],
+            description='Restores a snapshot on a node. '
+                        'Creates a new resource initialized with the data from a given snapshot. '
+                        'The volume definitions of the target resource must match those from the snapshot.')
+        p_restore_snapshot.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            nargs='+',
+            help='Names of the nodes where the snapshot should be restored').completer = self.node_completer
+        p_restore_snapshot.add_argument(
+            '--from-resource', '--fr',
+            required=True,
+            type=namecheck(RES_NAME),
+            help='Name of the resource definition containing the snapshot').completer = self.resource_dfn_completer
+        p_restore_snapshot.add_argument(
+            '--from-snapshot', '--fs',
+            required=True,
+            type=namecheck(SNAPSHOT_NAME),
+            help='Name of the snapshot to restore from')
+        p_restore_snapshot.add_argument(
+            '--to-resource', '--tr',
+            required=True,
+            type=namecheck(RES_NAME),
+            help='Name of the resource definition in which to create the resource from this snapshot'
+        ).completer = self.resource_dfn_completer
+        p_restore_snapshot.set_defaults(func=self.restore)
+
         self.check_subcommands(snapshot_subp, subcmds)
 
     def create(self, args):
         replies = self._linstor.snapshot_create(args.resource_definition_name, args.snapshot_name, args.async)
+        return self.handle_replies(args, replies)
+
+    def restore(self, args):
+        replies = self._linstor.snapshot_resource_restore(
+            args.node_name, args.from_resource, args.from_snapshot, args.to_resource)
         return self.handle_replies(args, replies)
 
     def delete(self, args):
