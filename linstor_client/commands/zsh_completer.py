@@ -1,6 +1,6 @@
 from .commands import Commands
 
-_header = """#compdef linstor_client.py linstor
+_header = """#compdef linstor_client_main.py linstor
 #autoload
 
 # ------------------------------------------------------------------------------

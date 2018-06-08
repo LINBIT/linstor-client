@@ -23,7 +23,7 @@ import os
 import subprocess
 import sys
 
-from linstor.consts import (
+from linstor_client.consts import (
     NODE_NAME,
     NODE_NAME_LABEL_MAXLEN,
     NODE_NAME_MAXLEN,
@@ -184,7 +184,7 @@ def checkrange(v, i, j):
 # "type" used for argparse
 def rangecheck(i, j):
     def range(v):
-        import linstor.argparse.argparse as argparse
+        import linstor_client.argparse.argparse as argparse
         v = int(v)
         if not checkrange(v, i, j):
             raise argparse.ArgumentTypeError('Range: [%d, %d]' % (i, j))
@@ -305,7 +305,7 @@ def namecheck(checktype):
         max_length = NODE_NAME_MAXLEN
 
     def check(name):
-        import linstor.argparse.argparse as argparse
+        import linstor_client.argparse.argparse as argparse
         if checktype == NODE_NAME:
             name = check_node_name(name)
         else:

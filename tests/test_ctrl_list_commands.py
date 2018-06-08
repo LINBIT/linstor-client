@@ -1,6 +1,6 @@
 import unittest
 from .linstor_testcase import LinstorTestCase, LinstorTestCaseWithData
-import linstor_client
+import linstor_client_main
 
 
 class TestListCommands(LinstorTestCase):
@@ -130,7 +130,7 @@ class TestCompleters(LinstorTestCaseWithData):
         jout = self.execute_with_machine_output(['node', 'list'])
         nodes = self.get_list('nodes', jout)
 
-        linstor_cli = linstor_client.LinStorCLI()
+        linstor_cli = linstor_client_main.LinStorCLI()
         linstor_cli._node_commands.get_linstorapi(parsed_args=_FakeArgs(self.host() + ':' + str(self.port())))
         cmpl_nodes = linstor_cli._node_commands.node_completer("")
         self.assertEqual(len(nodes), len(cmpl_nodes))
@@ -146,7 +146,7 @@ class TestCompleters(LinstorTestCaseWithData):
         nodes = self.get_list('nodes', jout)
         netifs = [x for n in nodes if n['name'] == 'fakehost1' for x in n['net_interfaces']]
 
-        linstor_cli = linstor_client.LinStorCLI()
+        linstor_cli = linstor_client_main.LinStorCLI()
         args = _FakeArgs(self.host() + ':' + str(self.port()))
         args.node_name = 'fakehost1'
         linstor_cli._node_commands.get_linstorapi(parsed_args=args)
@@ -160,7 +160,7 @@ class TestCompleters(LinstorTestCaseWithData):
         jout = self.execute_with_machine_output(['storage-pool-definition', 'list'])
         stor_pools = self.get_list('stor_pool_dfns', jout)
 
-        linstor_cli = linstor_client.LinStorCLI()
+        linstor_cli = linstor_client_main.LinStorCLI()
         linstor_cli._node_commands.get_linstorapi(parsed_args=_FakeArgs(self.host() + ':' + str(self.port())))
         cmpl_stor_pools = linstor_cli._node_commands.storage_pool_dfn_completer("")
         self.assertEqual(len(stor_pools), len(cmpl_stor_pools))
@@ -172,7 +172,7 @@ class TestCompleters(LinstorTestCaseWithData):
         jout = self.execute_with_machine_output(['storage-pool-definition', 'list'])
         stor_pools = self.get_list('stor_pool_dfns', jout)
 
-        linstor_cli = linstor_client.LinStorCLI()
+        linstor_cli = linstor_client_main.LinStorCLI()
         linstor_cli._node_commands.get_linstorapi(parsed_args=_FakeArgs(self.host() + ':' + str(self.port())))
         cmpl_stor_pools = linstor_cli._node_commands.storage_pool_completer("")
         self.assertEqual(len(stor_pools), len(cmpl_stor_pools))
@@ -184,7 +184,7 @@ class TestCompleters(LinstorTestCaseWithData):
         jout = self.execute_with_machine_output(['resource-definition', 'list'])
         resources = self.get_list('rsc_dfns', jout)
 
-        linstor_cli = linstor_client.LinStorCLI()
+        linstor_cli = linstor_client_main.LinStorCLI()
         linstor_cli._node_commands.get_linstorapi(parsed_args=_FakeArgs(self.host() + ':' + str(self.port())))
         cmpl_resources = linstor_cli._node_commands.resource_dfn_completer("")
         self.assertEqual(len(resources), len(cmpl_resources))
@@ -196,7 +196,7 @@ class TestCompleters(LinstorTestCaseWithData):
         jout = self.execute_with_machine_output(['resource-definition', 'list'])
         resources = self.get_list('rsc_dfns', jout)
 
-        linstor_cli = linstor_client.LinStorCLI()
+        linstor_cli = linstor_client_main.LinStorCLI()
         linstor_cli._node_commands.get_linstorapi(parsed_args=_FakeArgs(self.host() + ':' + str(self.port())))
         cmpl_resources = linstor_cli._node_commands.resource_completer("")
         self.assertEqual(len(resources), len(cmpl_resources))

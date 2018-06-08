@@ -1,10 +1,10 @@
-import linstor.argparse.argparse as argparse
+import linstor_client.argparse.argparse as argparse
 
-import linstor
-from linstor.commands import Commands, DrbdOptions
-from linstor.consts import RES_NAME, Color
+import linstor_client
+from linstor_client.commands import Commands, DrbdOptions
+from linstor_client.consts import RES_NAME, Color
 from linstor.sharedconsts import FLAG_DELETE
-from linstor.utils import Output, namecheck, rangecheck
+from linstor_client.utils import Output, namecheck, rangecheck
 
 
 class ResourceDefinitionCommands(Commands):
@@ -132,7 +132,7 @@ class ResourceDefinitionCommands(Commands):
 
     @classmethod
     def show(cls, args, lstmsg):
-        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("ResourceName")
         tbl.add_column("Port")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))

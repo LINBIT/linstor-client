@@ -1,19 +1,19 @@
-import linstor.argparse.argparse as argparse
+import linstor_client.argparse.argparse as argparse
 import collections
 import sys
 
-import linstor
-from linstor.commands import Commands
-from linstor.tree import TreeNode
-from linstor.consts import NODE_NAME, Color, ExitCode
+import linstor_client
+from linstor_client.commands import Commands
+from linstor_client.tree import TreeNode
+from linstor_client.consts import NODE_NAME, Color, ExitCode
 import linstor.sharedconsts as apiconsts
 from linstor.sharedconsts import (DFLT_CTRL_PORT_PLAIN, DFLT_CTRL_PORT_SSL,
                                   DFLT_STLT_PORT_PLAIN, VAL_NETCOM_TYPE_PLAIN,
                                   VAL_NETCOM_TYPE_SSL, VAL_NETIF_TYPE_IP,
                                   VAL_NODE_TYPE_AUX, VAL_NODE_TYPE_CMBD,
                                   VAL_NODE_TYPE_CTRL, VAL_NODE_TYPE_STLT)
-from linstor.utils import (LinstorClientError, Output, SizeCalc, ip_completer,
-                           namecheck, rangecheck)
+from linstor_client.utils import (LinstorClientError, Output, SizeCalc, ip_completer,
+                                  namecheck, rangecheck)
 
 
 class NodeCommands(Commands):
@@ -293,7 +293,7 @@ class NodeCommands(Commands):
 
     @classmethod
     def show_nodes(cls, args, lstmsg):
-        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("Node")
         tbl.add_column("NodeType")
         tbl.add_column("IPs")

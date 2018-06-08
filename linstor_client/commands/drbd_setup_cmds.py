@@ -1,5 +1,5 @@
-import linstor.argparse.argparse as argparse
-from linstor.utils import rangecheck, filter_new_args
+import linstor_client.argparse.argparse as argparse
+from linstor_client.utils import rangecheck, filter_new_args
 from linstor.drbdsetup_options import drbd_options
 import linstor.sharedconsts as apiconsts
 

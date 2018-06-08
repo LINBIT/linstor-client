@@ -1,6 +1,6 @@
 import json
 import sys
-from linstor.commands import Commands
+from linstor_client.commands import Commands
 from linstor.sharedconsts import (
     VAL_NODE_TYPE_STLT,
     VAL_NODE_TYPE_CTRL,

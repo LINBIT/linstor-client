@@ -1,7 +1,7 @@
 import unittest
 from .linstor_testcase import LinstorTestCase
 from linstor.sharedconsts import *
-from linstor.utils import SizeCalc
+from linstor_client.utils import SizeCalc
 
 
 class TestUseCases(LinstorTestCase):

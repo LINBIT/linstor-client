@@ -28,11 +28,12 @@ except ImportError:
     import configparser
 
 # import locale
-import linstor.argparse.argparse as argparse
-import linstor.argcomplete as argcomplete
+from linstor import sharedconsts
 import linstor.linstorapi as linstorapi
-import linstor.utils as utils
-from linstor.commands import (
+import linstor_client.argparse.argparse as argparse
+import linstor_client.argcomplete as argcomplete
+import linstor_client.utils as utils
+from linstor_client.commands import (
     ControllerCommands,
     VolumeDefinitionCommands,
     StoragePoolDefinitionCommands,
@@ -48,14 +49,12 @@ from linstor.commands import (
     ArgumentError
 )
 
-from linstor.consts import (
+from linstor_client.consts import (
     GITHASH,
     KEY_LS_CONTROLLERS,
     VERSION,
     ExitCode
 )
-
-from linstor import sharedconsts
 
 
 class LinStorCLI(object):

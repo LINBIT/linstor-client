@@ -1,12 +1,12 @@
-import linstor.argparse.argparse as argparse
+import linstor_client.argparse.argparse as argparse
 import re
 import sys
 
-import linstor
-from linstor.commands import Commands, DrbdOptions
-from linstor.consts import RES_NAME, Color, ExitCode
+import linstor_client
+from linstor_client.commands import Commands, DrbdOptions
+from linstor_client.consts import RES_NAME, Color, ExitCode
 from linstor.sharedconsts import FLAG_DELETE
-from linstor.utils import Output, SizeCalc, namecheck
+from linstor_client.utils import Output, SizeCalc, namecheck
 
 
 class VolumeDefinitionCommands(Commands):
@@ -171,7 +171,7 @@ class VolumeDefinitionCommands(Commands):
 
     @classmethod
     def show(cls, args, lstmsg):
-        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("ResourceName")
         tbl.add_column("VolumeNr")
         tbl.add_column("VolumeMinor")

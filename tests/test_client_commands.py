@@ -1,10 +1,10 @@
 import unittest
-import linstor_client
+import linstor_client_main
 
 
 class TestClientCommands(unittest.TestCase):
     def test_main_commands(self):
-        cli = linstor_client.LinStorCLI()
+        cli = linstor_client_main.LinStorCLI()
         cli.check_parser_commands()
 
 

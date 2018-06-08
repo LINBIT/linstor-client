@@ -1,4 +1,4 @@
-import linstor.argparse.argparse as argparse
+import linstor_client.argparse.argparse as argparse
 import getpass
 import json
 import os
@@ -9,10 +9,10 @@ import linstor
 import linstor.linstorapi as linstorapi
 from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE, \
     EVENT_RESOURCE_DEPLOYMENT_STATE, EVENT_RESOURCE_DEFINITION_READY, EVENT_SNAPSHOT_DEPLOYMENT
-from linstor.consts import ExitCode, KEY_LS_CONTROLLERS
 from linstor.properties import properties
 from linstor.protobuf_to_dict import protobuf_to_dict
-from linstor.utils import LinstorClientError, Output
+from linstor_client.utils import LinstorClientError, Output
+from linstor_client.consts import ExitCode, KEY_LS_CONTROLLERS
 
 
 class ArgumentError(Exception):

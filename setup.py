@@ -26,7 +26,7 @@ from setuptools import setup, Command
 
 
 def get_version():
-    from linstor.consts import VERSION
+    from linstor_client.consts import VERSION
     return VERSION
 
 
@@ -87,7 +87,7 @@ class BuildManCommand(Command):
 
     def run(self):
         assert os.getcwd() == self.cwd, "Must be in package root: %s" % self.cwd
-        from linstor_client import LinStorCLI
+        from linstor_client_main import LinStorCLI
         outdir = "man-pages"
         name = "linstor"
         mansection = '8'
@@ -142,9 +142,9 @@ class BuildManCommand(Command):
             gzip.GzipFile.__enter__ = __enter
             gzip.GzipFile.__exit__ = __exit
 
-        from linstor.utils import check_output
+        from linstor_client.utils import check_output
 
-        replace = ("linstor_client.py", "linstor")
+        replace = ("linstor_client_main.py", "linstor")
 
         for cmd in client._all_commands:
             toplevel = cmd[0]
@@ -157,7 +157,7 @@ class BuildManCommand(Command):
             sys.stdout.write("Generating %s ...\n" % (outfile))
             mangen = ["help2man", "-n", toplevel, '-s', mansection,
                       '--version-string=%s' % (get_version()), "-N",
-                      '"./linstor_client.py %s"' % (toplevel)]
+                      '"./linstor_client_main.py %s"' % (toplevel)]
 
             toexec = " ".join(mangen)
             manpage = check_output(toexec, shell=True)
@@ -184,7 +184,8 @@ setup(
     version=get_setup_version(),
     description="DRBD distributed resource management utility",
     long_description="This client program communicates to controller node which manages the resources",
-    author="Robert Altnoeder <robert.altnoeder@linbit.com>, Roland Kammerer <roland.kammerer@linbit.com>",
+    author="Robert Altnoeder <robert.altnoeder@linbit.com>, Roland Kammerer <roland.kammerer@linbit.com>" +
+           ", Rene Peinthor <rene.peinthor@linbit.com>",
     author_email="roland.kammerer@linbit.com",
     maintainer="LINBIT HA-Solutions GmbH",
     maintainer_email="drbd-user@lists.linbit.com",
@@ -192,9 +193,9 @@ setup(
     license="GPLv3",
     packages=[
         "linstor",
-        "linstor.argparse",
-        "linstor.argcomplete",
-        "linstor.commands",
+        "linstor_client.argparse",
+        "linstor_client.argcomplete",
+        "linstor_client.commands",
         "linstor.protobuf_to_dict",
         "linstor.proto",
         "linstor.proto.eventdata",

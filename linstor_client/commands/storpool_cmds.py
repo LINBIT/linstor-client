@@ -1,20 +1,20 @@
-import linstor.argparse.argparse as argparse
+import linstor_client.argparse.argparse as argparse
 
-import linstor
-from linstor.commands import ArgumentError, Commands
-from linstor.consts import NODE_NAME, STORPOOL_NAME
+import linstor_client
+from linstor_client.commands import ArgumentError, Commands
+from linstor_client.consts import NODE_NAME, STORPOOL_NAME
 from linstor.sharedconsts import KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
-from linstor.utils import SizeCalc, namecheck
+from linstor_client.utils import SizeCalc, namecheck
 
 
 class StoragePoolCommands(Commands):
     _stor_pool_headers = [
-        linstor.TableHeader("StoragePool"),
-        linstor.TableHeader("Node"),
-        linstor.TableHeader("Driver"),
-        linstor.TableHeader("PoolName"),
-        linstor.TableHeader("Free", alignment_text='>'),
-        linstor.TableHeader("SupportsSnapshots")
+        linstor_client.TableHeader("StoragePool"),
+        linstor_client.TableHeader("Node"),
+        linstor_client.TableHeader("Driver"),
+        linstor_client.TableHeader("PoolName"),
+        linstor_client.TableHeader("Free", alignment_text='>'),
+        linstor_client.TableHeader("SupportsSnapshots")
     ]
 
     def __init__(self):
@@ -151,7 +151,7 @@ class StoragePoolCommands(Commands):
         return self.handle_replies(args, replies)
 
     def show(self, args, lstmsg):
-        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         for hdr in self._stor_pool_headers:
             tbl.add_header(hdr)
 

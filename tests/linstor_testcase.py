@@ -1,5 +1,5 @@
 import unittest
-import linstor_client
+import linstor_client_main
 import sys
 try:
     from StringIO import StringIO
@@ -117,7 +117,7 @@ class LinstorTestCase(unittest.TestCase):
     @classmethod
     def execute(cls, cmd_args):
         LinstorTestCase.add_controller_arg(cmd_args)
-        linstor_cli = linstor_client.LinStorCLI()
+        linstor_cli = linstor_client_main.LinStorCLI()
 
         try:
             return linstor_cli.parse_and_execute(cmd_args)
@@ -127,7 +127,7 @@ class LinstorTestCase(unittest.TestCase):
     @classmethod
     def parse_args(cls, cmd_args):
         LinstorTestCase.add_controller_arg(cmd_args)
-        linstor_cli = linstor_client.LinStorCLI()
+        linstor_cli = linstor_client_main.LinStorCLI()
 
         return linstor_cli.parse(cmd_args)
 
@@ -137,7 +137,7 @@ class LinstorTestCase(unittest.TestCase):
         Returns the parsed json output.
         """
         LinstorTestCase.add_controller_arg(cmd_args)
-        linstor_cli = linstor_client.LinStorCLI()
+        linstor_cli = linstor_client_main.LinStorCLI()
         backupstd = sys.stdout
         jout = None
         try:
@@ -165,7 +165,7 @@ class LinstorTestCase(unittest.TestCase):
         Returns the parsed json output.
         """
         LinstorTestCase.add_controller_arg(cmd_args)
-        linstor_cli = linstor_client.LinStorCLI()
+        linstor_cli = linstor_client_main.LinStorCLI()
         backupstd = sys.stdout
 
         try:

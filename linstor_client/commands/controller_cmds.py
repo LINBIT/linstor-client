@@ -1,5 +1,5 @@
-import linstor.argparse.argparse as argparse
-from linstor.commands import Commands, DrbdOptions
+import linstor_client.argparse.argparse as argparse
+from linstor_client.commands import Commands, DrbdOptions
 
 
 class ControllerCommands(Commands):

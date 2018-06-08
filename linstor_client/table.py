@@ -5,7 +5,7 @@ import fcntl
 import errno
 import operator
 
-from linstor.consts import (
+from linstor_client.consts import (
     DEFAULT_TERM_HEIGHT,
     DEFAULT_TERM_WIDTH,
     Color

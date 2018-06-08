@@ -1,10 +1,10 @@
-import linstor.argparse.argparse as argparse
+import linstor_client.argparse.argparse as argparse
 
-import linstor
-from linstor.commands import Commands
-from linstor.consts import RES_NAME, SNAPSHOT_NAME, Color
+import linstor_client
+from linstor_client.commands import Commands
+from linstor_client.consts import RES_NAME, SNAPSHOT_NAME, Color
 from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
-from linstor.utils import Output, namecheck
+from linstor_client.utils import Output, namecheck
 
 
 class SnapshotCommands(Commands):

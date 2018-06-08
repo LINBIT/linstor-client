@@ -1,9 +1,9 @@
-import linstor.argparse.argparse as argparse
+import linstor_client.argparse.argparse as argparse
 
-import linstor
-from linstor.commands import Commands
-from linstor.consts import STORPOOL_NAME
-from linstor.utils import namecheck
+import linstor_client
+from linstor_client.commands import Commands
+from linstor_client.consts import STORPOOL_NAME
+from linstor_client.utils import namecheck
 
 
 class StoragePoolDefinitionCommands(Commands):
@@ -113,7 +113,7 @@ class StoragePoolDefinitionCommands(Commands):
 
     @classmethod
     def show(cls, args, lstmsg):
-        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("StoragePool")
         for storpool_dfn in lstmsg.stor_pool_dfns:
             tbl.add_row([

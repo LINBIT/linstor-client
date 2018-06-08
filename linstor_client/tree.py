@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from linstor.consts import Color
+from linstor_client.consts import Color
 
 
 class TreeFormatter:

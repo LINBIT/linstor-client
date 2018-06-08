@@ -1,19 +1,19 @@
-import linstor.argparse.argparse as argparse
+import linstor_client.argparse.argparse as argparse
 
-import linstor
+import linstor_client
 import linstor.linstorapi as linstorapi
 import linstor.sharedconsts as apiconsts
-from linstor.commands import Commands, DrbdOptions, ArgumentError
-from linstor.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color, ExitCode
-from linstor.utils import Output, namecheck
+from linstor_client.commands import Commands, DrbdOptions, ArgumentError
+from linstor_client.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color, ExitCode
+from linstor_client.utils import Output, namecheck
 
 
 class ResourceCommands(Commands):
     _resource_headers = [
-        linstor.TableHeader("ResourceName"),
-        linstor.TableHeader("Node"),
-        linstor.TableHeader("Port"),
-        linstor.TableHeader("State", Color.DARKGREEN, alignment_text='>')
+        linstor_client.TableHeader("ResourceName"),
+        linstor_client.TableHeader("Node"),
+        linstor_client.TableHeader("Port"),
+        linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text='>')
     ]
 
     def __init__(self):
@@ -394,13 +394,13 @@ class ResourceCommands(Commands):
 
     def show(self, args, lstmsg):
         rsc_dfns = self._linstor.resource_dfn_list()
-        if isinstance(rsc_dfns[0], linstor.linstorapi.ApiCallResponse):
+        if isinstance(rsc_dfns[0], linstorapi.ApiCallResponse):
             return self.handle_replies(args, rsc_dfns)
         rsc_dfns = rsc_dfns[0].proto_msg.rsc_dfns
 
         rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
 
-        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         for hdr in ResourceCommands._resource_headers:
             tbl.add_header(hdr)
 
@@ -438,7 +438,7 @@ class ResourceCommands(Commands):
 
     @classmethod
     def show_volumes(cls, args, lstmsg):
-        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("Node")
         tbl.add_column("Resource")
         tbl.add_column("StoragePool")
