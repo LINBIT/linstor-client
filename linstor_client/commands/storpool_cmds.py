@@ -1,5 +1,6 @@
 import linstor_client.argparse.argparse as argparse
 
+import linstor
 import linstor_client
 from linstor_client.commands import ArgumentError, Commands
 from linstor_client.consts import NODE_NAME, STORPOOL_NAME
@@ -141,7 +142,7 @@ class StoragePoolCommands(Commands):
         driver = 'LvmThin' if args.driver == 'lvmthin' else args.driver.title()
         try:
             replies = self._linstor.storage_pool_create(args.node_name, args.name, driver, args.driver_pool_name)
-        except linstor.linstorapi.LinstorError as e:
+        except linstor.LinstorError as e:
             raise ArgumentError(e.message)
         return self.handle_replies(args, replies)
 

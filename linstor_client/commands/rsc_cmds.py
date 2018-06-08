@@ -1,7 +1,7 @@
 import linstor_client.argparse.argparse as argparse
 
+import linstor
 import linstor_client
-import linstor.linstorapi as linstorapi
 import linstor.sharedconsts as apiconsts
 from linstor_client.commands import Commands, DrbdOptions, ArgumentError
 from linstor_client.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color, ExitCode
@@ -262,7 +262,7 @@ class ResourceCommands(Commands):
                 watch_result = self._linstor.watch_events(
                     self._linstor.return_if_failure,
                     event_handler,
-                    linstorapi.ObjectIdentifier(resource_name=args.resource_definition_name)
+                    linstor.ObjectIdentifier(resource_name=args.resource_definition_name)
                 )
 
                 if isinstance(watch_result, list):
@@ -317,7 +317,7 @@ class ResourceCommands(Commands):
                     watch_result = self._linstor.watch_events(
                         self._linstor.return_if_failure,
                         event_handler,
-                        linstorapi.ObjectIdentifier(node_name=node_name, resource_name=args.resource_definition_name)
+                        linstor.ObjectIdentifier(node_name=node_name, resource_name=args.resource_definition_name)
                     )
 
                     if isinstance(watch_result, list):
@@ -333,7 +333,7 @@ class ResourceCommands(Commands):
     def check_failure_events(cls, event_name, event_data):
         if event_name == apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE and event_data is not None:
             api_call_responses = [
-                linstor.linstorapi.ApiCallResponse(response)
+                linstor.ApiCallResponse(response)
                 for response in event_data.responses
             ]
             failure_responses = [
@@ -357,7 +357,7 @@ class ResourceCommands(Commands):
                               " Satellite connection lost")
                         return ExitCode.NO_SATELLITE_CONNECTION
                     if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
-                        return [linstor.linstorapi.ApiCallResponse(response) for response in event_data.responses]
+                        return [linstor.ApiCallResponse(response) for response in event_data.responses]
 
                     return self.check_failure_events(event_header.event_name, event_data)
                 return None
@@ -373,7 +373,7 @@ class ResourceCommands(Commands):
                 watch_result = self.get_linstorapi().watch_events(
                     self._linstor.return_if_failure,
                     event_handler,
-                    linstorapi.ObjectIdentifier(node_name=node, resource_name=args.name)
+                    linstor.ObjectIdentifier(node_name=node, resource_name=args.name)
                 )
 
                 if isinstance(watch_result, list):
@@ -394,7 +394,7 @@ class ResourceCommands(Commands):
 
     def show(self, args, lstmsg):
         rsc_dfns = self._linstor.resource_dfn_list()
-        if isinstance(rsc_dfns[0], linstorapi.ApiCallResponse):
+        if isinstance(rsc_dfns[0], linstor.ApiCallResponse):
             return self.handle_replies(args, rsc_dfns)
         rsc_dfns = rsc_dfns[0].proto_msg.rsc_dfns
 

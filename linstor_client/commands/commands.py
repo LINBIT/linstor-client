@@ -6,7 +6,6 @@ import re
 from datetime import datetime, timedelta
 
 import linstor
-import linstor.linstorapi as linstorapi
 from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE, \
     EVENT_RESOURCE_DEPLOYMENT_STATE, EVENT_RESOURCE_DEFINITION_READY, EVENT_SNAPSHOT_DEPLOYMENT
 from linstor.properties import properties
@@ -66,9 +65,9 @@ class Commands(object):
     ]
 
     def __init__(self):
-        self._linstor = None  # type: linstorapi.Linstor
+        self._linstor = None  # type: linstor.Linstor
         # _linstor_completer is just here as a cache for completer calls
-        self._linstor_completer = None  # type: linstorapi.Linstor
+        self._linstor_completer = None  # type: linstor.Linstor
 
     class Subcommands(object):
 
@@ -184,7 +183,7 @@ class Commands(object):
 
     @classmethod
     def check_for_api_replies(cls, replies):
-        return isinstance(replies[0], linstor.linstorapi.ApiCallResponse)
+        return isinstance(replies[0], linstor.ApiCallResponse)
 
     @classmethod
     def output_list(cls, args, replies, output_func, single_item=True):
@@ -365,7 +364,7 @@ class Commands(object):
         if not servers:
             return None
 
-        self._linstor_completer = linstorapi.Linstor(servers[0])
+        self._linstor_completer = linstor.Linstor(servers[0])
         self._linstor_completer.connect()
         return self._linstor_completer
 
@@ -635,7 +634,7 @@ class MiscCommands(Commands):
 
         self._linstor.watch_events(
             reply_handler, event_handler,
-            linstorapi.ObjectIdentifier(
+            linstor.ObjectIdentifier(
                 node_name=args.node_name,
                 resource_name=args.resource_name,
                 volume_number=args.volume_number

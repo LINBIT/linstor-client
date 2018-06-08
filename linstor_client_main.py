@@ -28,8 +28,8 @@ except ImportError:
     import configparser
 
 # import locale
+import linstor
 from linstor import sharedconsts
-import linstor.linstorapi as linstorapi
 import linstor_client.argparse.argparse as argparse
 import linstor_client.argcomplete as argcomplete
 import linstor_client.utils as utils
@@ -228,7 +228,7 @@ class LinStorCLI(object):
 
             # only connect if not already connected or a local only command was executed
             if self._linstorapi is None and args.func not in local_only_cmds:
-                self._linstorapi = linstorapi.Linstor(Commands.controller_list(args.controllers)[0])
+                self._linstorapi = linstor.Linstor(Commands.controller_list(args.controllers)[0])
                 self._controller_commands._linstor = self._linstorapi
                 self._node_commands._linstor = self._linstorapi
                 self._storage_pool_dfn_commands._linstor = self._linstorapi
@@ -250,12 +250,12 @@ class LinStorCLI(object):
         except utils.LinstorClientError as lce:
             sys.stderr.write(lce.message + '\n')
             return lce.exit_code
-        except linstorapi.LinstorNetworkError as le:
+        except linstor.LinstorNetworkError as le:
             sys.stderr.write("Error: " + le.message + '\n')
             for err in le.all_errors():
                 sys.stderr.write(' ' * 2 + err.message + '\n')
             rc = ExitCode.CONNECTION_ERROR
-        except linstorapi.LinstorError as le:
+        except linstor.LinstorError as le:
             sys.stderr.write("Error: " + le.message + '\n')
             rc = ExitCode.UNKNOWN_ERROR
 
