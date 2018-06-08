@@ -92,7 +92,7 @@ class SnapshotCommands(Commands):
 
     @classmethod
     def show(cls, args, lstmsg):
-        tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("ResourceName")
         tbl.add_column("SnapshotName")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
