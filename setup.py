@@ -192,6 +192,7 @@ setup(
     url="https://www.linbit.com",
     license="GPLv3",
     packages=[
+        "linstor_client",
         "linstor_client.argparse",
         "linstor_client.argcomplete",
         "linstor_client.commands"

@@ -12,15 +12,8 @@ linstor_client.egg-info/
 build
 MANIFEST
 
-# ignore generated protobuf messages and shared consts
-# these can be generated in the linstor-common with:
-# make python
-linstor/proto/*.py
-linstor/proto/eventdata/*.py
-linstor/sharedconsts.py
-linstor/properties.py
-linstor/consts_githash.py
-linstor/drbdsetup_options.py
+# ignore generated githash version
+linstor_client/consts_githash.py
 
 # unittests ignores
 build/

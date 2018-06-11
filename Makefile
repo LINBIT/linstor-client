@@ -13,7 +13,7 @@ all: doc
 doc:
 	$(PYTHON) setup.py build_man
 
-install: linstor/consts_githash.py
+install: linstor_client/consts_githash.py
 	$(PYTHON) setup.py install --record $(INSTALLFILES)
 
 uninstall:
@@ -52,16 +52,16 @@ deb: up2date
 rpm: up2date
 	$(PYTHON) setup.py bdist_rpm
 
-.PHONY: linstor/consts_githash.py
+.PHONY: linstor_client/consts_githash.py
 ifdef GITHEAD
 override GITDIFF := $(shell $(GIT) diff --name-only HEAD 2>/dev/null | \
 			grep -vxF "MANIFEST.in" | \
 			tr -s '\t\n' '  ' | \
 			sed -e 's/^/ /;s/ *$$//')
-linstor/consts_githash.py:
+linstor_client/consts_githash.py:
 	@echo "GITHASH = 'GIT-hash: $(GITHEAD)$(GITDIFF)'" > $@
 else
-linstor/consts_githash.py:
+linstor_client/consts_githash.py:
 	@echo >&2 "Need a git checkout to regenerate $@"; test -s $@
 endif
 
