@@ -6,3 +6,4 @@ vendor = LINBIT HA-Solutions GmbH
 requires =
   protobuf-python
   python-setuptools
+  python-linstor
