@@ -201,7 +201,7 @@ setup(
         "protobuf",
         "python-linstor"
     ],
-    py_modules=["linstor_client"],
+    py_modules=["linstor_client_main"],
     scripts=["scripts/linstor"],
     data_files=gen_data_files(),
     cmdclass={
