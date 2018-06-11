@@ -200,11 +200,6 @@ class ResourceCommands(Commands):
             description="Set drbd peer-device options."
         )
         p_drbd_peer_opts.add_argument(
-            'resource_name',
-            type=namecheck(RES_NAME),
-            help="Resource name"
-        ).completer = self.resource_completer
-        p_drbd_peer_opts.add_argument(
             'node_a',
             type=namecheck(NODE_NAME),
             help="1. Node in the node connection"
@@ -214,6 +209,11 @@ class ResourceCommands(Commands):
             type=namecheck(NODE_NAME),
             help="1. Node in the node connection"
         ).completer = self.node_completer
+        p_drbd_peer_opts.add_argument(
+            'resource_name',
+            type=namecheck(RES_NAME),
+            help="Resource name"
+        ).completer = self.resource_completer
 
         DrbdOptions.add_arguments(
             p_drbd_peer_opts,
