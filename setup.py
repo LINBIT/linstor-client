@@ -201,7 +201,8 @@ setup(
         "linstor.proto.eventdata",
     ],
     install_requires=[
-        "protobuf"
+        "protobuf",
+        "linstor"
     ],
     py_modules=["linstor_client"],
     scripts=["scripts/linstor"],

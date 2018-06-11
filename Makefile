@@ -10,7 +10,7 @@ DOCKERREGISTRY = drbd.io
 all: doc
 	$(PYTHON) setup.py build
 
-doc: gensrc
+doc:
 	$(PYTHON) setup.py build_man
 
 install: linstor/consts_githash.py
@@ -24,13 +24,9 @@ ifneq ($(U),0)
 up2date:
 	$(error "Update your Version strings/Changelogs")
 else
-up2date: linstor/consts_githash.py
+up2date: linstor_client/consts_githash.py
 	$(info "Version strings/Changelogs up to date")
 endif
-
-.PHONY: linstor/drbdsetup_options.py
-linstor/drbdsetup_options.py:
-	linstor-common/gendrbdoptions.py python $@
 
 release: up2date clean doc
 	$(PYTHON) setup.py sdist
@@ -47,18 +43,13 @@ dockerimage: debrelease
 	docker build -t $(DOCKERREGISTRY)/linstor-client .
 	@echo && echo "Did you run distclean?"
 
-.PHONY: gensrc
-gensrc:
-	make -C linstor-common cleanpython
-	make -C linstor-common python
-
 # no gensrc here, that is in debian/rules
 deb: up2date
 	[ -d ./debian ] || (echo "Your checkout/tarball does not contain a debian directory" && false)
 	debuild -i -us -uc -b
 
 # it is up to you (or the buildenv) to provide a distri specific setup.cfg
-rpm: up2date gensrc
+rpm: up2date
 	$(PYTHON) setup.py bdist_rpm
 
 .PHONY: linstor/consts_githash.py
