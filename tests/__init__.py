@@ -11,7 +11,6 @@ _controller_tests = [
 ]
 
 _std_tests = [
-    "tests.test_utils",
     "tests.test_client_commands"
 ]
 
