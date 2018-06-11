@@ -1,7 +1,6 @@
 import unittest
-from . import test_utils
 from . import test_ctrl_list_commands, test_ctrl_nodes, test_ctrl_usecases
-from . import test_utils, test_ctrl_props, test_drbd_options
+from . import test_ctrl_props, test_drbd_options
 
 _controller_tests = [
     "tests.test_ctrl_list_commands",
