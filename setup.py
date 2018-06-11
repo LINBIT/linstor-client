@@ -192,13 +192,9 @@ setup(
     url="https://www.linbit.com",
     license="GPLv3",
     packages=[
-        "linstor",
         "linstor_client.argparse",
         "linstor_client.argcomplete",
-        "linstor_client.commands",
-        "linstor.protobuf_to_dict",
-        "linstor.proto",
-        "linstor.proto.eventdata",
+        "linstor_client.commands"
     ],
     install_requires=[
         "protobuf",
