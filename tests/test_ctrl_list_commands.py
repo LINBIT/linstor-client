@@ -108,6 +108,9 @@ class TestListFilters(LinstorTestCaseWithData):
                          len([x for x in resources if x['name'] == 'rsc1']))
 
     def test_list_error_reports(self):
+        # force an error report
+        self.execute(["node", "create", "doesnotexist", "299.299.299.299"])
+
         error_reports = self.execute_with_machine_output(["error-reports", "list"])
         self.assertGreater(len(error_reports), 0)
 
