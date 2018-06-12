@@ -1,6 +1,7 @@
 GIT = git
 INSTALLFILES=.installfiles
 PYTHON = python2
+LINSTORAPI = ../linstor-api-py
 override GITHEAD := $(shell test -e .git && $(GIT) rev-parse HEAD)
 
 U := $(shell $(PYTHON) ./setup.py versionup2date >/dev/null 2>&1; echo $$?;)
@@ -11,7 +12,7 @@ all: doc
 	$(PYTHON) setup.py build
 
 doc:
-	$(PYTHON) setup.py build_man
+	PYTHONPATH=$(LINSTORAPI):. $(PYTHON) setup.py build_man
 
 install: linstor_client/consts_githash.py
 	$(PYTHON) setup.py install --record $(INSTALLFILES)
@@ -40,6 +41,8 @@ debrelease:
 	git checkout MANIFEST.in
 
 dockerimage: debrelease
+	cd $(LINSTORAPI) && make debrelease
+	cp $(LINSTORAPI)/dist/*.tar.gz dist/
 	docker build -t $(DOCKERREGISTRY)/linstor-client .
 	@echo && echo "Did you run distclean?"
 
