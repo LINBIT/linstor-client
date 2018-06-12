@@ -107,8 +107,10 @@ class SnapshotCommands(Commands):
         p_restore_snapshot.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
-            nargs='+',
-            help='Names of the nodes where the snapshot should be restored').completer = self.node_completer
+            nargs='*',
+            help='Names of the nodes where the snapshot should be restored. '
+                 'If none are given, resources will be created on all nodes where the snapshot is present.'
+        ).completer = self.node_completer
         p_restore_snapshot.add_argument(
             '--from-resource', '--fr',
             required=True,
