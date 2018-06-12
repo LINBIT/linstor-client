@@ -6,7 +6,6 @@ WITH_BASHCOMPL=$(shell dh --list 2>/dev/null | sed -ne 's/^bash-completion$$/--w
 	dh $@ --with python2 --buildsystem=python_distutils $(WITH_BASHCOMPL)
 
 override_dh_auto_build:
-	make gensrc
 	dh_auto_build
 
 override_dh_install:

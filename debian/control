@@ -12,7 +12,6 @@ Build-Depends: bash-completion,
                help2man,
                python-all (>= 2.6.6-3),
                python-setuptools,
-               python-linstor,
                xsltproc
 Standards-Version: 3.9.6
 
