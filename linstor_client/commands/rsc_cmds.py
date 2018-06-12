@@ -476,7 +476,7 @@ class ResourceCommands(Commands):
                     vlm.stor_pool_name,
                     str(vlm.vlm_nr),
                     str(vlm.vlm_minor_nr),
-                    "/dev/drbd{minor}".format(minor=vlm.vlm_minor_nr),
+                    vlm.device_path,
                     state
                 ])
 
