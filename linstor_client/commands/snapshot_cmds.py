@@ -22,7 +22,8 @@ class SnapshotCommands(Commands):
             Commands.Subcommands.Create,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
-            Commands.Subcommands.Resource
+            Commands.Subcommands.Resource,
+            Commands.Subcommands.VolumeDefinition
         ]
 
         # Snapshot subcommands
@@ -81,6 +82,47 @@ class SnapshotCommands(Commands):
         p_lsnapshots.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lsnapshots.set_defaults(func=self.list)
 
+        # volume definition commands
+        volume_definition_subcmds = [
+            Commands.Subcommands.Restore
+        ]
+
+        volume_definition_parser = snapshot_subp.add_parser(
+            Commands.Subcommands.VolumeDefinition.LONG,
+            formatter_class=argparse.RawTextHelpFormatter,
+            aliases=[Commands.Subcommands.VolumeDefinition.SHORT],
+            description="%s subcommands" % Commands.Subcommands.VolumeDefinition.LONG)
+
+        volume_definition_subp = volume_definition_parser.add_subparsers(
+            title="%s subcommands" % Commands.Subcommands.VolumeDefinition.LONG,
+            metavar="",
+            description=Commands.Subcommands.generate_desc(volume_definition_subcmds))
+
+        # restore resource from snapshot
+        p_restore_volume_definition = volume_definition_subp.add_parser(
+            Commands.Subcommands.Restore.LONG,
+            aliases=[Commands.Subcommands.Restore.SHORT],
+            description='Creates volume definitions from a snapshot. '
+                        'Only the basic structure is restored, that is volume numbers and sizes. '
+                        'Additional configuration such as properties is not restored.')
+        p_restore_volume_definition.add_argument(
+            '--from-resource', '--fr',
+            required=True,
+            type=namecheck(RES_NAME),
+            help='Name of the resource definition containing the snapshot').completer = self.resource_dfn_completer
+        p_restore_volume_definition.add_argument(
+            '--from-snapshot', '--fs',
+            required=True,
+            type=namecheck(SNAPSHOT_NAME),
+            help='Name of the snapshot to restore from')
+        p_restore_volume_definition.add_argument(
+            '--to-resource', '--tr',
+            required=True,
+            type=namecheck(RES_NAME),
+            help='Name of the resource definition in which to create the volume definitions'
+        ).completer = self.resource_dfn_completer
+        p_restore_volume_definition.set_defaults(func=self.restore_volume_definition)
+
         # resource commands
         resource_subcmds = [
             Commands.Subcommands.Restore
@@ -133,6 +175,11 @@ class SnapshotCommands(Commands):
 
     def create(self, args):
         replies = self._linstor.snapshot_create(args.resource_definition_name, args.snapshot_name, args.async)
+        return self.handle_replies(args, replies)
+
+    def restore_volume_definition(self, args):
+        replies = self._linstor.snapshot_volume_definition_restore(
+            args.from_resource, args.from_snapshot, args.to_resource)
         return self.handle_replies(args, replies)
 
     def restore(self, args):

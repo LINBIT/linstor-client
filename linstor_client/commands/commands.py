@@ -147,6 +147,10 @@ class Commands(object):
             LONG = "resource"
             SHORT = "r"
 
+        class VolumeDefinition(object):
+            LONG = "volume-definition"
+            SHORT = "vd"
+
         class Restore(object):
             LONG = "restore"
             SHORT = "rst"
