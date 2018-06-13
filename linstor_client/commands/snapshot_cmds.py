@@ -49,6 +49,13 @@ class SnapshotCommands(Commands):
             help='Do not wait for deployment on satellites before returning'
         )
         p_new_snapshot.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            nargs='*',
+            help='Names of the nodes where the snapshot should be created. '
+                 'If none are given, the snapshot will be taken on all nodes where resources are present.'
+        ).completer = self.node_completer
+        p_new_snapshot.add_argument(
             'resource_definition_name',
             type=namecheck(RES_NAME),
             help='Name of the resource definition').completer = self.resource_dfn_completer
@@ -174,7 +181,8 @@ class SnapshotCommands(Commands):
         self.check_subcommands(snapshot_subp, subcmds)
 
     def create(self, args):
-        replies = self._linstor.snapshot_create(args.resource_definition_name, args.snapshot_name, args.async)
+        replies = self._linstor.snapshot_create(
+            args.node_name, args.resource_definition_name, args.snapshot_name, args.async)
         return self.handle_replies(args, replies)
 
     def restore_volume_definition(self, args):
