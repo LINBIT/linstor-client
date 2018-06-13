@@ -4,7 +4,7 @@ import linstor_client
 from linstor_client.commands import Commands
 from linstor_client.consts import NODE_NAME, RES_NAME, SNAPSHOT_NAME, Color
 from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
-from linstor_client.utils import Output, namecheck
+from linstor_client.utils import Output, SizeCalc, namecheck
 
 
 class SnapshotCommands(Commands):
@@ -204,6 +204,8 @@ class SnapshotCommands(Commands):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("ResourceName")
         tbl.add_column("SnapshotName")
+        tbl.add_column("NodeNames")
+        tbl.add_column("Volumes")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
         for snapshot_dfn in lstmsg.snapshot_dfns:
             if FLAG_DELETE in snapshot_dfn.snapshot_dfn_flags:
@@ -220,6 +222,10 @@ class SnapshotCommands(Commands):
             tbl.add_row([
                 snapshot_dfn.rsc_name,
                 snapshot_dfn.snapshot_name,
+                ", ".join([snapshot.node_name for snapshot in snapshot_dfn.snapshots]),
+                ", ".join([
+                    str(snapshot_vlm_dfn.vlm_nr) + ": " + SizeCalc.approximate_size_string(snapshot_vlm_dfn.vlm_size)
+                    for snapshot_vlm_dfn in snapshot_dfn.snapshot_vlm_dfns]),
                 state_cell
             ])
         tbl.show()
