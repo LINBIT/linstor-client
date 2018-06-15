@@ -22,6 +22,7 @@ import locale
 import os
 import subprocess
 import sys
+from collections import OrderedDict
 
 from linstor_client.consts import (
     NODE_NAME,
@@ -403,7 +404,7 @@ class SizeCalc(object):
     _base_10 = 0x0A00
 
     UNIT_B = 0 | _base_2
-    UNIT_kiB = 10 | _base_2
+    UNIT_KiB = 10 | _base_2
     UNIT_MiB = 20 | _base_2
     UNIT_GiB = 30 | _base_2
     UNIT_TiB = 40 | _base_2
@@ -422,26 +423,28 @@ class SizeCalc(object):
     UNIT_YB = 24 | _base_10
 
     """
-    Unit names are lower-case; functions using the lookup table should
+    Unit keys are lower-case; functions using the lookup table should
     convert the unit name to lower-case to look it up in this table
     """
-    UNITS_MAP = {
-        "k": UNIT_kiB,
-        "m": UNIT_MiB,
-        "g": UNIT_GiB,
-        "t": UNIT_TiB,
-        "p": UNIT_PiB,
-        "kb": UNIT_kB,
-        "mb": UNIT_MB,
-        "gb": UNIT_GB,
-        "tb": UNIT_TB,
-        "pb": UNIT_PB,
-        "kib": UNIT_kiB,
-        "mib": UNIT_MiB,
-        "gib": UNIT_GiB,
-        "tib": UNIT_TiB,
-        "pib": UNIT_PiB,
-    }
+    UNITS_MAP = OrderedDict([(unit_str.lower(), (unit_str, unit)) for unit_str, unit in [
+        ('K', UNIT_KiB),
+        ('kB', UNIT_kB),
+        ('KiB', UNIT_KiB),
+        ('M', UNIT_MiB),
+        ('MB', UNIT_MB),
+        ('MiB', UNIT_MiB),
+        ('G', UNIT_GiB),
+        ('GB', UNIT_GB),
+        ('GiB', UNIT_GiB),
+        ('T', UNIT_TiB),
+        ('TB', UNIT_TB),
+        ('TiB', UNIT_TiB),
+        ('P', UNIT_PiB),
+        ('PB', UNIT_PB),
+        ('PiB', UNIT_PiB),
+    ]])
+
+    UNITS_LIST_STR = ', '.join([unit_str for unit_str, _ in UNITS_MAP.values()])
 
     @classmethod
     def convert(cls, size, unit_in, unit_out):

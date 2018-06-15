@@ -52,13 +52,13 @@ class VolumeDefinitionCommands(Commands):
                                help='Name of an existing resource').completer = self.resource_dfn_completer
         p_new_vol.add_argument(
             'size',
-            help='Size of the volume in resource. '
-            'The default unit for size is GiB (size * (2 ^ 30) bytes). '
-            'Another unit can be specified by using an according postfix. '
+            help='Size of the volume. '
+            'Valid units: ' + SizeCalc.UNITS_LIST_STR + '. '
+            'The default unit is GiB (2 ^ 30 bytes). '
+            'The unit can be specified with a postfix. '
             "Linstor's internal granularity for the capacity of volumes is one "
-            'Kibibyte (2 ^ 10 bytes). All other unit specifications are implicitly '
-            'converted to Kibibyte, so that the actual size value used by linstor '
-            'is the smallest natural number of Kibibytes that is large enough to '
+            'kibibyte (2 ^ 10 bytes). The actual size used by linstor '
+            'is the smallest natural number of kibibytes that is large enough to '
             'accommodate a volume of the requested size in the specified size unit.'
         ).completer = VolumeDefinitionCommands.size_completer
         p_new_vol.set_defaults(func=self.create)
@@ -209,23 +209,23 @@ class VolumeDefinitionCommands(Commands):
         if unit_str == "":
             unit_str = "GiB"
         try:
-            unit = SizeCalc.UNITS_MAP[unit_str.lower()]
+            _, unit = SizeCalc.UNITS_MAP[unit_str.lower()]
         except KeyError:
             sys.stderr.write('"%s" is not a valid unit!\n' % (unit_str))
-            sys.stderr.write('Valid units: %s\n' % (','.join(SizeCalc.UNITS_MAP.keys())))
+            sys.stderr.write('Valid units: %s\n' % SizeCalc.UNITS_LIST_STR)
             sys.exit(ExitCode.ARGPARSE_ERROR)
 
-        unit = SizeCalc.UNITS_MAP[unit_str.lower()]
+        _, unit = SizeCalc.UNITS_MAP[unit_str.lower()]
 
-        if unit != SizeCalc.UNIT_kiB:
+        if unit != SizeCalc.UNIT_KiB:
             size = SizeCalc.convert_round_up(size, unit,
-                                             SizeCalc.UNIT_kiB)
+                                             SizeCalc.UNIT_KiB)
 
         return size
 
     @staticmethod
     def size_completer(prefix, **kwargs):
-        choices = SizeCalc.UNITS_MAP.keys()
+        choices = [unit_str for unit_str, _ in SizeCalc.UNITS_MAP.values()]
         m = re.match('(\d+)(\D*)', prefix)
 
         digits = m.group(1)
