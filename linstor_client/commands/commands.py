@@ -10,6 +10,7 @@ from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVE
     EVENT_RESOURCE_DEPLOYMENT_STATE, EVENT_RESOURCE_DEFINITION_READY, EVENT_SNAPSHOT_DEPLOYMENT
 from linstor.properties import properties
 from linstor.protobuf_to_dict import protobuf_to_dict
+import linstor_client
 from linstor_client.utils import LinstorClientError, Output
 from linstor_client.consts import ExitCode, KEY_LS_CONTROLLERS
 
@@ -305,7 +306,7 @@ class Commands(object):
             return None
 
         for prop_map in prop_list_map:
-            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column("Key")
             tbl.add_column("Value")
             for p in prop_map:
