@@ -127,7 +127,7 @@ class TestProperties(LinstorTestCase):
         resource_props = self.execute_with_machine_output(['resource', 'list-properties', 'node1', 'rsc1'])
         self.assertEqual(1, len(resource_props))
         resource_props = resource_props[0]
-        self.assertEqual(1, len(resource_props))
+        self.assertEqual(2, len(resource_props))
         prop = self.find_prop(resource_props, KEY_STOR_POOL_NAME)
         self.check_prop(prop, KEY_STOR_POOL_NAME, 'storage')
 
@@ -141,7 +141,7 @@ class TestProperties(LinstorTestCase):
         resource_props = self.execute_with_machine_output(['resource', 'list-properties', 'node1', 'rsc1'])
         self.assertEqual(1, len(resource_props))
         resource_props = resource_props[0]
-        self.assertEqual(2, len(resource_props))
+        self.assertEqual(3, len(resource_props))
         prop = self.find_prop(resource_props, KEY_STOR_POOL_NAME)
         self.check_prop(prop, KEY_STOR_POOL_NAME, 'storage')
         prop = self.find_prop(resource_props, NAMESPC_AUXILIARY + '/NIC')
