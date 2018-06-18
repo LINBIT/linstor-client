@@ -454,7 +454,7 @@ class NodeCommands(Commands):
     def show_netinterfaces(cls, args, lstnodes):
         node = NodeCommands.find_node(lstnodes, args.node_name)
         if node:
-            tbl = linstor.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column(node.name, color=Color.GREEN)
             tbl.add_column("NetInterface")
             tbl.add_column("IP")
