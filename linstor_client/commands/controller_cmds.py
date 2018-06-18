@@ -76,7 +76,12 @@ class ControllerCommands(Commands):
     def set_props(self, args):
         props = Commands.parse_key_value_pairs([args.key + '=' + args.value])
 
-        replies = [x for subx in props['pairs'] for x in self._linstor.controller_set_prop(subx, props['pairs'][subx])]
+        replies = []
+        for prop_key, prop_value in props['pairs'].items():
+            replies.extend(self._linstor.controller_set_prop(prop_key, prop_value))
+        for prop_key in props['delete']:
+            replies.extend(self._linstor.controller_del_prop(prop_key))
+
         return self.handle_replies(args, replies)
 
     def cmd_controller_drbd_opts(self, args):
