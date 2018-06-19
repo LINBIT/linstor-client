@@ -4,7 +4,7 @@ import sys
 
 import linstor_client
 from linstor_client.commands import Commands, DrbdOptions
-from linstor_client.consts import RES_NAME, Color, ExitCode
+from linstor_client.consts import RES_NAME, Color, ExitCode, STORPOOL_NAME
 from linstor.sharedconsts import FLAG_DELETE
 from linstor_client.utils import Output, SizeCalc, namecheck
 
@@ -45,6 +45,10 @@ class VolumeDefinitionCommands(Commands):
             'with default settings. Unless minornr is specified, a minor number for '
             "the volume's DRBD block device is assigned automatically by the "
             'linstor server.')
+        p_new_vol.add_argument(
+            '--storage-pool', '-s',
+            type=namecheck(STORPOOL_NAME),
+            help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_vol.add_argument('-n', '--vlmnr', type=int)
         p_new_vol.add_argument('-m', '--minor', type=int)
         p_new_vol.add_argument('--encrypt', action="store_true", help="Encrypt created volumes using cryptsetup.")
@@ -161,7 +165,8 @@ class VolumeDefinitionCommands(Commands):
             self._get_volume_size(args.size),
             args.vlmnr,
             args.minor,
-            args.encrypt
+            args.encrypt,
+            args.storage_pool
         )
         return self.handle_replies(args, replies)
 
