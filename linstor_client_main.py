@@ -27,7 +27,6 @@ try:
 except ImportError:
     import configparser
 
-# import locale
 import linstor
 from linstor import sharedconsts
 import linstor_client.argparse.argparse as argparse
