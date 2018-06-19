@@ -56,7 +56,7 @@ class ResourceCommands(Commands):
             'Unless a specific IP port-number is supplied, the port-number is '
             'automatically selected by the linstor controller on the current node. ')
         p_new_res.add_argument(
-            '-s', '--storage-pool',
+            '--storage-pool', '-s',
             type=namecheck(STORPOOL_NAME),
             help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_res.add_argument('--diskless', '-d', action="store_true", help='Should the resource be diskless')
@@ -67,19 +67,23 @@ class ResourceCommands(Commands):
         )
         p_new_res.add_argument(
             '--auto-place',
-            help='Auto place a resource to a specified number of nodes',
-            type=int
+            type=int,
+            metavar="REPLICA_COUNT",
+            help = 'Auto place a resource to a specified number of nodes'
         )
         p_new_res.add_argument(
             '--do-not-place-with',
             type=namecheck(RES_NAME),
             nargs='+',
+            metavar="RESOURCE_NAME",
             help='Try to avoid nodes that already have a given resource deployed.'
         ).completer = self.resource_completer
         p_new_res.add_argument(
             '--do-not-place-with-regex',
             type=str,
-            help='Try to avoid nodes that already have a resource deployed whos name is matching the given regular expression.'
+            metavar="RESOURCE_REGEX",
+            help='Try to avoid nodes that already have a resource ' +
+                 'deployed whos name is matching the given regular expression.'
         )
         p_new_res.add_argument(
             'node_name',
