@@ -86,6 +86,20 @@ class ResourceCommands(Commands):
                  'deployed whos name is matching the given regular expression.'
         )
         p_new_res.add_argument(
+            '--replicas-on-same',
+            nargs='+',
+            default=[],
+            metavar="AUX_NODE_PROPERTY",
+            help='Tries to place resources on nodes with the same given auxiliary node property values.'
+        )
+        p_new_res.add_argument(
+            '--replicas-on-different',
+            nargs='+',
+            default=[],
+            metavar="AUX_NODE_PROPERTY",
+            help='Tries to place resources on nodes with a different value for the given auxiliary node property.'
+        )
+        p_new_res.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
             nargs='*',
@@ -241,7 +255,9 @@ class ResourceCommands(Commands):
                 args.auto_place,
                 args.storage_pool,
                 args.do_not_place_with,
-                args.do_not_place_with_regex
+                args.do_not_place_with_regex,
+                [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_same],
+                [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different]
             )
 
             if not self._linstor.all_api_responses_success(all_replies):
