@@ -209,7 +209,7 @@ class Table(object):
             try:
                 from natsort import natsorted
                 self.table = natsorted(self.table, key=operator.itemgetter(*group_bys))
-            except:
+            except ImportError:
                 self.table.sort(key=operator.itemgetter(*group_bys))
 
             # restore color overrides after sort
