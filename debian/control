@@ -3,14 +3,12 @@ Maintainer: LINBIT HA Solutions GmbH <drbd-user@lists.linbit.com>
 Uploaders: Roland Kammerer <roland.kammerer@linbit.com>
 Section: python
 Priority: optional
-# Currently, we do not include dh-python (as suggested by jessie),
-# because it is not available on unbuntu 12.04
-# Build-Depends: python-all (>= 2.6.6-3), debhelper (>= 9), dh-python, ...
 Build-Depends: bash-completion,
                debhelper (>= 9),
+               dh-python,
                docbook-xsl,
                help2man,
-               python-all (>= 2.6.6-3),
+               python-all (>= 2.7),
                python-setuptools,
                xsltproc
 Standards-Version: 3.9.6
@@ -23,7 +21,8 @@ Depends: ${misc:Depends},
          python-protobuf,
          python-linstor,
          ${python:Depends}
-Description: DRBD distributed resource management utility
- This is the client that communicates to linstor control nodes.
+Description: Linstor client command line tool
+ This is a command client that communicates with the Linstor controller
+ and gives a userfriendly command line syntax to add/remove/query
+ Linstor objects
  .
- TODO: provide more information.
