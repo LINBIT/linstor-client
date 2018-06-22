@@ -10,6 +10,16 @@ from linstor_client.utils import Output, SizeCalc, namecheck
 
 
 class VolumeDefinitionCommands(Commands):
+    VOLUME_SIZE_HELP =\
+        'Size of the volume. ' \
+        'Valid units: ' + SizeCalc.UNITS_LIST_STR + '. ' \
+        'The default unit is GiB (2 ^ 30 bytes). ' \
+        'The unit can be specified with a postfix. ' \
+        'Linstor\'s internal granularity for the capacity of volumes is one ' \
+        'kibibyte (2 ^ 10 bytes). The actual size used by linstor ' \
+        'is the smallest natural number of kibibytes that is large enough to ' \
+        'accommodate a volume of the requested size in the specified size unit.'
+
     def __init__(self):
         super(VolumeDefinitionCommands, self).__init__()
 
@@ -19,6 +29,7 @@ class VolumeDefinitionCommands(Commands):
             Commands.Subcommands.Create,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
+            Commands.Subcommands.SetSize,
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.DrbdOptions
@@ -56,14 +67,7 @@ class VolumeDefinitionCommands(Commands):
                                help='Name of an existing resource').completer = self.resource_dfn_completer
         p_new_vol.add_argument(
             'size',
-            help='Size of the volume. '
-            'Valid units: ' + SizeCalc.UNITS_LIST_STR + '. '
-            'The default unit is GiB (2 ^ 30 bytes). '
-            'The unit can be specified with a postfix. '
-            "Linstor's internal granularity for the capacity of volumes is one "
-            'kibibyte (2 ^ 10 bytes). The actual size used by linstor '
-            'is the smallest natural number of kibibytes that is large enough to '
-            'accommodate a volume of the requested size in the specified size unit.'
+            help=VolumeDefinitionCommands.VOLUME_SIZE_HELP
         ).completer = VolumeDefinitionCommands.size_completer
         p_new_vol.set_defaults(func=self.create)
 
@@ -156,6 +160,28 @@ class VolumeDefinitionCommands(Commands):
             [x for x in DrbdOptions.drbd_options()['options'] if x in DrbdOptions.drbd_options()['filters']['volume']]
         )
         p_drbd_opts.set_defaults(func=self.set_drbd_opts)
+
+        # set size
+        p_set_size = vol_def_subp.add_parser(
+            Commands.Subcommands.SetSize.LONG,
+            aliases=[Commands.Subcommands.SetSize.SHORT],
+            description='Change the size of a volume. '
+                        'Decreasing the size is only supported when the resource definition does not have any '
+                        'resources. '
+                        'Increasing the size is supported even when the resource definition has resources. '
+                        'Filesystems present on the volumes will not be resized.')
+        p_set_size.add_argument('resource_name', type=namecheck(RES_NAME),
+                                help='Name of an existing resource').completer = self.resource_dfn_completer
+        p_set_size.add_argument(
+            'volume_nr',
+            type=int,
+            help="Volume number"
+        )
+        p_set_size.add_argument(
+            'size',
+            help=VolumeDefinitionCommands.VOLUME_SIZE_HELP
+        ).completer = VolumeDefinitionCommands.size_completer
+        p_set_size.set_defaults(func=self.set_volume_size)
 
         self.check_subcommands(vol_def_subp, subcmds)
 
@@ -265,8 +291,8 @@ class VolumeDefinitionCommands(Commands):
         replies = self._linstor.volume_dfn_modify(
             args.resource_name,
             args.volume_nr,
-            mod_prop_dict['pairs'],
-            mod_prop_dict['delete']
+            set_properties=mod_prop_dict['pairs'],
+            delete_properties=mod_prop_dict['delete']
         )
         return self.handle_replies(args, replies)
 
@@ -280,7 +306,15 @@ class VolumeDefinitionCommands(Commands):
         replies = self._linstor.volume_dfn_modify(
             args.resource_name,
             args.volume_nr,
-            mod_props,
-            del_props
+            set_properties=mod_props,
+            delete_properties=del_props
+        )
+        return self.handle_replies(args, replies)
+
+    def set_volume_size(self, args):
+        replies = self._linstor.volume_dfn_modify(
+            args.resource_name,
+            args.volume_nr,
+            size=self._get_volume_size(args.size)
         )
         return self.handle_replies(args, replies)

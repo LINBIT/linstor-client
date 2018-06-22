@@ -156,6 +156,10 @@ class Commands(object):
             LONG = "restore"
             SHORT = "rst"
 
+        class SetSize(object):
+            LONG = "set-size"
+            SHORT = "size"
+
         @staticmethod
         def generate_desc(subcommands):
             """
