@@ -52,9 +52,7 @@ class ResourceCommands(Commands):
         p_new_res = res_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Defines a DRBD resource for use with linstor. '
-            'Unless a specific IP port-number is supplied, the port-number is '
-            'automatically selected by the linstor controller on the current node. ')
+            description='Deploys a resource definition to a node.')
         p_new_res.add_argument(
             '--storage-pool', '-s',
             type=namecheck(STORPOOL_NAME),
@@ -114,10 +112,10 @@ class ResourceCommands(Commands):
         p_rm_res = res_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description=' Removes a resource and its associated resource definition '
-            'from the linstor cluster. The resource is undeployed from all nodes '
+            description='Removes a resource. '
+            'The resource is undeployed from the node '
             "and the resource entry is marked for removal from linstor's data "
-            'tables. After all nodes have undeployed the resource, the resource '
+            'tables. After the node has undeployed the resource, the resource '
             "entry is removed from linstor's data tables.")
         p_rm_res.add_argument('-q', '--quiet', action="store_true",
                               help='Unless this option is used, linstor will issue a safety question '
