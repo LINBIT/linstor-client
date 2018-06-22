@@ -19,7 +19,7 @@ Architecture: all
 Depends: ${misc:Depends},
          python-natsort,
          python-protobuf,
-         python-linstor,
+         python-linstor (>=0.2.1),
          ${python:Depends}
 Description: Linstor client command line tool
  This is a command client that communicates with the Linstor controller

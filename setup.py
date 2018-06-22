@@ -199,7 +199,7 @@ setup(
     ],
     install_requires=[
         "protobuf",
-        "python-linstor"
+        "python-linstor>=0.2.1"
     ],
     py_modules=["linstor_client_main"],
     scripts=["scripts/linstor"],

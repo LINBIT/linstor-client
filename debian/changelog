@@ -1,4 +1,51 @@
-linstor-client (0.2.0-1ubuntu1) experimental; urgency=medium
+linstor-client (0.2.1-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * allow reuse of the Linstor object (disconnect/connect)
+  * linstorapi: add type hint for _LinstorNetClient
+  * linstortests: root project name is now linstor-server
+  * move client files into the linstor_client module package
+  * cleanup imports of linstor api modules
+  * update linstor-common to see renamed backing_disk field
+  * fix incorrect module reference
+  * remove linstor module
+  * setup.py: remove linstor api packages
+  * git: remove submodule file
+  * setup: add python-linstor dependency
+  * MANIFEST.in: remove linstor-common
+  * setup.py: depend on the correct package
+  * move test_utils to linstor-api-py
+  * tests: remove test_utils test, moved to linstor-api
+  * resource: fix incorrect drbd-peer-options positional order
+  * setup.py: fix some old linstor paths and readd linstor_client package
+  * setup.py: fix main script module paths
+  * deb: remove python-linstor from build deps and don't call gensrc
+  * use devicepath from vlm proto
+  * makefile: fix docker image creation
+  * tests: fix error list unittest by forcing an error report
+  * commands: fix table imports
+  * improve some usage metavar names
+  * linstor_client_mani: tiny import cleanup
+  * vlmdfn: allow to set a storage pool
+  * add --replicas-on-* options to resource create --auto-place
+  * table: better catch import error
+  * debian/control: depend on dh-python and python-all >= 2.7
+
+  [ Joel Colledge ]
+  * Add snapshot delete command
+  * Add snapshot restore command
+  * Restore on all nodes when none are specified
+  * Add snapshot volume definition restore
+  * Allow nodes to be selected when creating a snapshot
+  * Show nodes and volumes in snapshot list
+  * Fix import for list-properties command
+  * Tidy up units for volume definition sizes
+  * Fix deletion of controller properties
+  * Fix expected resource properties to include peer slots
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Fri, 22 Jun 2018 10:10:25 +0200
+
+linstor-client (0.2.0-1) experimental; urgency=medium
 
   [ Hayley Swimelar ]
   * subparsify resource commands
