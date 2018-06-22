@@ -5,7 +5,7 @@ import sys
 import linstor_client
 from linstor_client.commands import Commands, DrbdOptions
 from linstor_client.consts import RES_NAME, Color, ExitCode, STORPOOL_NAME
-from linstor.sharedconsts import FLAG_DELETE
+from linstor.sharedconsts import FLAG_DELETE, FLAG_RESIZE
 from linstor_client.utils import Output, SizeCalc, namecheck
 
 
@@ -210,13 +210,18 @@ class VolumeDefinitionCommands(Commands):
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
         for rsc_dfn in lstmsg.rsc_dfns:
             for vlmdfn in rsc_dfn.vlm_dfns:
+                state = tbl.color_cell("ok", Color.DARKGREEN)
+                if FLAG_DELETE in rsc_dfn.rsc_dfn_flags:
+                    state = tbl.color_cell("DELETING", Color.RED)
+                elif FLAG_RESIZE in vlmdfn.vlm_flags:
+                    state = tbl.color_cell("resizing", Color.DARKPINK)
+
                 tbl.add_row([
                     rsc_dfn.rsc_name,
                     vlmdfn.vlm_nr,
                     vlmdfn.vlm_minor,
                     SizeCalc.approximate_size_string(vlmdfn.vlm_size),
-                    tbl.color_cell("DELETING", Color.RED)
-                    if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
+                    state
                 ])
         tbl.show()
 

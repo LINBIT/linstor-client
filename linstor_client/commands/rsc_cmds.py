@@ -474,22 +474,23 @@ class ResourceCommands(Commands):
                     vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr)
                 else:
                     vlm_state = None
-                state = tbl.color_cell("Unknown", Color.YELLOW)
+                state_prefix = 'Resizing, ' if apiconsts.FLAG_RESIZE in vlm.vlm_flags else ''
+                state = tbl.color_cell(state_prefix + "Unknown", Color.YELLOW)
                 if vlm_state and vlm_state.HasField("disk_state") and vlm_state.disk_state:
-                    state = vlm_state.disk_state
+                    disk_state = vlm_state.disk_state
 
-                    if state == 'DUnknown':
-                        state = tbl.color_cell("Unknown", Color.YELLOW)
-                    elif state == 'Diskless':
+                    if disk_state == 'DUnknown':
+                        state = tbl.color_cell(state_prefix + "Unknown", Color.YELLOW)
+                    elif disk_state == 'Diskless':
                         if apiconsts.FLAG_DISKLESS not in rsc.rsc_flags:  # unintentional diskless
-                            state = tbl.color_cell(state, Color.RED)
+                            state = tbl.color_cell(state_prefix + disk_state, Color.RED)
                         # else pass -> green diskless
-                    elif state in ['Inconsistent', 'Failed']:
-                        state = tbl.color_cell(state, Color.RED)
-                    elif state in ['UpToDate']:
-                        pass  # green text
+                    elif disk_state in ['Inconsistent', 'Failed']:
+                        state = tbl.color_cell(state_prefix + disk_state, Color.RED)
+                    elif disk_state in ['UpToDate']:
+                        state = state_prefix + disk_state  # green text
                     else:
-                        state = tbl.color_cell(state, Color.YELLOW)
+                        state = tbl.color_cell(state_prefix + disk_state, Color.YELLOW)
                 tbl.add_row([
                     rsc.node_name,
                     rsc.name,
