@@ -119,7 +119,7 @@ class TestProperties(LinstorTestCase):
         volumedef_props = self.execute_with_machine_output(['volume-definition', 'list-properties', 'rsc1', '0'])
         self.assertEqual(1, len(volumedef_props))
         volumedef_props = volumedef_props[0]
-        self.assertEqual(1, len(volumedef_props))
+        self.assertEqual(2, len(volumedef_props))
         prop = self.find_prop(volumedef_props, NAMESPC_AUXILIARY + '/volumespec')
         self.check_prop(prop, NAMESPC_AUXILIARY + '/volumespec', 'cascading')
 
