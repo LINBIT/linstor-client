@@ -427,12 +427,15 @@ class ResourceCommands(Commands):
         for rsc in lstmsg.resources:
             rsc_dfn = rsc_dfn_map[rsc.name]
             marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
-            # rsc_state = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
+            rsc_state_proto = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
+            rsc_state = tbl.color_cell("DELETING", Color.RED) if marked_delete else "ok"
+            if rsc_state_proto and rsc_state_proto.HasField('in_use') and rsc_state_proto.in_use:
+                rsc_state = tbl.color_cell("InUse", Color.GREEN)
             tbl.add_row([
                 rsc.name,
                 rsc.node_name,
                 rsc_dfn.rsc_dfn_port,
-                tbl.color_cell("DELETING", Color.RED) if marked_delete else "ok"
+                rsc_state
             ])
         tbl.show()
 
