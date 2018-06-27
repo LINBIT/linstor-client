@@ -482,7 +482,8 @@ class ResourceCommands(Commands):
                     elif disk_state == 'Diskless':
                         if apiconsts.FLAG_DISKLESS not in rsc.rsc_flags:  # unintentional diskless
                             state = tbl.color_cell(state_prefix + disk_state, Color.RED)
-                        # else pass -> green diskless
+                        else:
+                            state = state_prefix + disk_state  # green text
                     elif disk_state in ['Inconsistent', 'Failed']:
                         state = tbl.color_cell(state_prefix + disk_state, Color.RED)
                     elif disk_state in ['UpToDate']:
