@@ -117,6 +117,9 @@ class Table(object):
             'just_col': just_col,
             'just_txt': just_txt})
 
+    def header_name(self, index):
+        return self.header[index]['name']
+
     def add_header(self, header):
         """
 

@@ -20,6 +20,13 @@ class NodeCommands(Commands):
     DISKLESS_STORAGE_POOL = 'DfltDisklessStorPool'
     DISKLESS_RESOURCE_NAME = 'diskless resource'
 
+    _node_headers = [
+        linstor_client.TableHeader("Node"),
+        linstor_client.TableHeader("NodeType"),
+        linstor_client.TableHeader("IPs"),
+        linstor_client.TableHeader("State", color=Color.DARKGREEN)
+    ]
+
     def __init__(self):
         super(NodeCommands, self).__init__()
 
@@ -210,21 +217,17 @@ class NodeCommands(Commands):
         p_delete_netinterface.set_defaults(func=self.delete_netif)
 
         # list nodes
-        nodesverbose = ('Family', 'IP', 'Site')
-        nodesgroupby = ('Name', 'Pool_Size', 'Pool_Free', 'Family', 'IP', 'State')
+        node_groupby = [x.name for x in self._node_headers]
+        node_group_completer = Commands.show_group_completer(node_groupby, "groupby")
 
-        nodes_verbose_completer = Commands.show_group_completer(nodesverbose, "show")
-        nodes_group_completer = Commands.show_group_completer(nodesgroupby, "groupby")
         p_lnodes = node_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all cluster nodes known to linstor. '
             'By default, the list is printed as a human readable table.')
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lnodes.add_argument('-s', '--show', nargs='+',
-                              choices=nodesverbose).completer = nodes_verbose_completer
         p_lnodes.add_argument('-g', '--groupby', nargs='+',
-                              choices=nodesgroupby).completer = nodes_group_completer
+                              choices=node_groupby).completer = node_group_completer
         p_lnodes.add_argument('-N', '--nodes', nargs='+', type=namecheck(NODE_NAME),
                               help='Filter by list of nodes').completer = self.node_completer
         p_lnodes.set_defaults(func=self.list)
@@ -294,10 +297,9 @@ class NodeCommands(Commands):
     @classmethod
     def show_nodes(cls, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        tbl.add_column("Node")
-        tbl.add_column("NodeType")
-        tbl.add_column("IPs")
-        tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
+        for hdr in cls._node_headers:
+            tbl.add_header(hdr)
+
         conn_stat_dict = {
             apiconsts.CONN_STATUS_OFFLINE: ("OFFLINE", Color.RED),
             apiconsts.CONN_STATUS_CONNECTED: ("Connected", Color.YELLOW),
@@ -308,7 +310,10 @@ class NodeCommands(Commands):
             apiconsts.CONN_STATUS_UNKNOWN: ("Unknown", Color.YELLOW)
         }
 
-        for n in lstmsg.nodes:
+        tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
+
+        node_list = [x for x in lstmsg.nodes if x.name in args.nodes] if args.nodes else lstmsg.nodes
+        for n in node_list:
             ips = [if_.address for if_ in n.net_interfaces]
             conn_stat = conn_stat_dict[n.connection_status]
             tbl.add_row([

@@ -8,6 +8,12 @@ from linstor_client.utils import Output, namecheck, rangecheck
 
 
 class ResourceDefinitionCommands(Commands):
+    _rsc_dfn_headers = [
+        linstor_client.TableHeader("ResourceName"),
+        linstor_client.TableHeader("Port"),
+        linstor_client.TableHeader("State", color=Color.DARKGREEN)
+    ]
+
     def __init__(self):
         super(ResourceDefinitionCommands, self).__init__()
 
@@ -62,10 +68,8 @@ class ResourceDefinitionCommands(Commands):
             help='Name of the resource to delete').completer = self.resource_dfn_completer
         p_rm_res_dfn.set_defaults(func=self.delete)
 
-        resverbose = ('Port',)
-        resgroupby = ('Name', 'Port', 'State')
-        res_verbose_completer = Commands.show_group_completer(resverbose, "show")
-        res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
+        rsc_dfn_groupby = [x.name for x in self._rsc_dfn_headers]
+        rsc_dfn_group_completer = Commands.show_group_completer(rsc_dfn_groupby, "groupby")
 
         p_lrscdfs = res_def_subp.add_parser(
             Commands.Subcommands.List.LONG,
@@ -73,10 +77,8 @@ class ResourceDefinitionCommands(Commands):
             description='Prints a list of all resource definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lrscdfs.add_argument('-s', '--show', nargs='+',
-                               choices=resverbose).completer = res_verbose_completer
         p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
-                               choices=resgroupby).completer = res_group_completer
+                               choices=rsc_dfn_groupby).completer = rsc_dfn_group_completer
         p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
                                help='Filter by list of resources').completer = self.resource_dfn_completer
         p_lrscdfs.set_defaults(func=self.list)
@@ -133,10 +135,11 @@ class ResourceDefinitionCommands(Commands):
     @classmethod
     def show(cls, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        tbl.add_column("ResourceName")
-        tbl.add_column("Port")
-        tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
-        for rsc_dfn in lstmsg.rsc_dfns:
+        for hdr in cls._rsc_dfn_headers:
+            tbl.add_header(hdr)
+
+        tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
+        for rsc_dfn in cls.filter_rsc_dfn_list(lstmsg.rsc_dfns, args.resources):
             tbl.add_row([
                 rsc_dfn.rsc_name,
                 rsc_dfn.rsc_dfn_port,
