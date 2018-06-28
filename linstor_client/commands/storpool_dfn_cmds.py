@@ -43,11 +43,10 @@ class StoragePoolDefinitionCommands(Commands):
         p_new_storpool_dfn.set_defaults(func=self.create)
 
         # remove-storpool definition
-        # TODO description
         p_rm_storpool_dfn = spd_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description=' Removes a storage pool definition ')
+            description='Removes a storage pool definition')
         p_rm_storpool_dfn.add_argument('-q', '--quiet', action="store_true",
                                        help='Unless this option is used, linstor will issue a safety question '
                                        'that must be answered with yes, otherwise the operation is canceled.')
@@ -58,21 +57,12 @@ class StoragePoolDefinitionCommands(Commands):
         p_rm_storpool_dfn.set_defaults(func=self.delete)
 
         # list storpool definitions
-        storpooldfngroupby = ('Name')
-        storpooldfn_group_completer = Commands.show_group_completer(storpooldfngroupby, "groupby")
-
         p_lstorpooldfs = spd_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all storage pool definitions known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpooldfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lstorpooldfs.add_argument('-g', '--groupby', nargs='+',
-                                    choices=storpooldfngroupby).completer = storpooldfn_group_completer
-        p_lstorpooldfs.add_argument(
-            '-R', '--storpool', nargs='+', type=namecheck(STORPOOL_NAME),
-            help='Filter by list of storage pool'
-        ).completer = self.storage_pool_dfn_completer
         p_lstorpooldfs.set_defaults(func=self.list)
 
         # show properties
