@@ -160,6 +160,10 @@ class Commands(object):
             LONG = "set-size"
             SHORT = "size"
 
+        class QueryMaxVlmSize(object):
+            LONG = "query-max-volume-size"
+            SHORT = "qmvs"
+
         @staticmethod
         def generate_desc(subcommands):
             """

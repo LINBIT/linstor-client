@@ -1,9 +1,10 @@
 import linstor_client.argparse.argparse as argparse
 
+import linstor
 import linstor_client
 from linstor_client.commands import Commands
-from linstor_client.consts import STORPOOL_NAME
-from linstor_client.utils import namecheck
+from linstor_client.consts import STORPOOL_NAME, RES_NAME
+from linstor_client.utils import namecheck, SizeCalc
 
 
 class StoragePoolDefinitionCommands(Commands):
@@ -17,7 +18,8 @@ class StoragePoolDefinitionCommands(Commands):
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
             Commands.Subcommands.SetProperty,
-            Commands.Subcommands.ListProperties
+            Commands.Subcommands.ListProperties,
+            Commands.Subcommands.QueryMaxVlmSize
         ]
 
         spd_parser = parser.add_parser(
@@ -90,6 +92,51 @@ class StoragePoolDefinitionCommands(Commands):
         Commands.add_parser_keyvalue(p_setprop, "storagepool-definition")
         p_setprop.set_defaults(func=self.set_props)
 
+        p_query_max_vlm_size = spd_subp.add_parser(
+            Commands.Subcommands.QueryMaxVlmSize.LONG,
+            aliases=[Commands.Subcommands.QueryMaxVlmSize.SHORT],
+            description='Queries the controller for storage pools maximum volume size.')
+        p_query_max_vlm_size.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_query_max_vlm_size.add_argument(
+            '--storage-pool', '-s',
+            type=namecheck(STORPOOL_NAME),
+            help="Storage pool name to query.").completer = self.storage_pool_dfn_completer
+        p_query_max_vlm_size.add_argument(
+            '--do-not-place-with',
+            type=namecheck(RES_NAME),
+            nargs='+',
+            metavar="RESOURCE_NAME",
+            help='Try to avoid nodes that already have a given resource deployed.'
+        ).completer = self.resource_completer
+        p_query_max_vlm_size.add_argument(
+            '--do-not-place-with-regex',
+            type=str,
+            metavar="RESOURCE_REGEX",
+            help='Try to avoid nodes that already have a resource ' +
+                 'deployed whos name is matching the given regular expression.'
+        )
+        p_query_max_vlm_size.add_argument(
+            '--replicas-on-same',
+            nargs='+',
+            default=[],
+            metavar="AUX_NODE_PROPERTY",
+            help='Tries to place resources on nodes with the same given auxiliary node property values.'
+        )
+        p_query_max_vlm_size.add_argument(
+            '--replicas-on-different',
+            nargs='+',
+            default=[],
+            metavar="AUX_NODE_PROPERTY",
+            help='Tries to place resources on nodes with a different value for the given auxiliary node property.'
+        )
+        p_query_max_vlm_size.add_argument(
+            'replica_count',
+            type=int,
+            metavar="REPLICA_COUNT",
+            help='The least amount of replicas.'
+        )
+        p_query_max_vlm_size.set_defaults(func=self.query_max_volume_size)
+
         self.check_subcommands(spd_subp, subcmds)
 
     def create(self, args):
@@ -136,3 +183,46 @@ class StoragePoolDefinitionCommands(Commands):
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
         replies = self._linstor.storage_pool_dfn_modify(args.name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
         return self.handle_replies(args, replies)
+
+    @classmethod
+    def _show_query_max_volume(cls, args, lstmsg):
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl.add_column("StoragePool")
+        tbl.add_column("MaxVolumeSize", just_txt='>')
+        tbl.add_column("Nodes")
+
+        def limited_string(obj_list):
+            limit = 40
+            s = ""
+            list_length = len(obj_list)
+            for i in range(0, len(obj_list)):
+                obj = obj_list[i]
+                s += obj + (", " if i != list_length - 1 else "")
+                if len(s) > limit:
+                    s = s[:limit-3] + "..."
+
+            return s
+
+        for candidate in lstmsg.candidates:
+            tbl.add_row([
+                candidate.stor_pool_name,
+                SizeCalc.approximate_size_string(candidate.max_vlm_size),
+                limited_string(candidate.node_names)
+            ])
+        tbl.show()
+
+    def query_max_volume_size(self, args):
+        replies = self.get_linstorapi().storage_pool_dfn_max_vlm_sizes(
+            args.replica_count,
+            args.storage_pool,
+            args.do_not_place_with,
+            args.do_not_place_with_regex,
+            [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_same],
+            [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different]
+        )
+
+        api_responses = self.get_linstorapi().filter_api_call_response(replies)
+        if api_responses:
+            return self.handle_replies(args, api_responses)
+
+        return self.output_list(args, replies, self._show_query_max_volume)
