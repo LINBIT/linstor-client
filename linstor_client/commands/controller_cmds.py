@@ -99,5 +99,5 @@ class ControllerCommands(Commands):
         return self.handle_replies(args, replies)
 
     def cmd_shutdown(self, args):
-        replies = self._linstor.shutdown_controller()
+        replies = self._linstor.controller_shutdown()
         return self.handle_replies(args, replies)
