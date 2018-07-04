@@ -98,6 +98,11 @@ class ResourceCommands(Commands):
             help='Tries to place resources on nodes with a different value for the given auxiliary node property.'
         )
         p_new_res.add_argument(
+            '--diskless-on-remaining',
+            action="store_true",
+            help='Will add a diskless resource on all non replica nodes.'
+        )
+        p_new_res.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
             nargs='*',
@@ -255,7 +260,8 @@ class ResourceCommands(Commands):
                 args.do_not_place_with,
                 args.do_not_place_with_regex,
                 [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_same],
-                [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different]
+                [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different],
+                diskless_on_remaining=args.diskless_on_remaining
             )
 
             if not self._linstor.all_api_responses_success(all_replies):
