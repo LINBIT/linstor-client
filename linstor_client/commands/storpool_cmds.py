@@ -4,7 +4,8 @@ import linstor
 import linstor_client
 from linstor_client.commands import ArgumentError, Commands
 from linstor_client.consts import NODE_NAME, STORPOOL_NAME
-from linstor.sharedconsts import KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
+from linstor.sharedconsts import KEY_STOR_POOL_SUPPORTS_SNAPSHOTS, KEY_STOR_POOL_PROVISIONING,\
+    VAL_STOR_POOL_PROVISIONING_THIN
 from linstor_client.utils import SizeCalc, namecheck
 
 
@@ -164,8 +165,13 @@ class StoragePoolCommands(Commands):
             supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
             supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
 
+            provisioning_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_PROVISIONING]
+            provisioning = provisioning_prop[0].value if provisioning_prop else ''
+
             freespace = ""
-            if storpool.driver != 'DisklessDriver' and storpool.HasField("free_space"):
+            if provisioning == VAL_STOR_POOL_PROVISIONING_THIN:
+                freespace = "(thin)"
+            elif storpool.driver != 'DisklessDriver' and storpool.HasField("free_space"):
                 freespace = SizeCalc.approximate_size_string(storpool.free_space.free_space)
 
             tbl.add_row([

@@ -500,7 +500,7 @@ class SizeCalc(object):
         Produce human readable size information as a string
         """
         units = []
-        units.append("kiB")
+        units.append("KiB")
         units.append("MiB")
         units.append("GiB")
         units.append("TiB")

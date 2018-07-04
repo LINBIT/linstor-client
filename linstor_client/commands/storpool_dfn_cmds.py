@@ -204,9 +204,14 @@ class StoragePoolDefinitionCommands(Commands):
             return s
 
         for candidate in lstmsg.candidates:
+            if candidate.all_thin:
+                max_vlm_size = "(thin)"
+            else:
+                max_vlm_size = SizeCalc.approximate_size_string(candidate.max_vlm_size)
+
             tbl.add_row([
                 candidate.stor_pool_name,
-                SizeCalc.approximate_size_string(candidate.max_vlm_size),
+                max_vlm_size,
                 limited_string(candidate.node_names)
             ])
         tbl.show()
