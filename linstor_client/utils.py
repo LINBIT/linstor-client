@@ -56,10 +56,10 @@ class Output(object):
 
         rc = answer.ret_code
         ret = 0
-        message = answer.message_format
-        cause = answer.cause_format
-        correction = answer.correction_format
-        details = answer.details_format
+        message = answer.message
+        cause = answer.cause
+        correction = answer.correction
+        details = answer.details
         if rc & MASK_ERROR == MASK_ERROR:
             ret = ExitCode.API_ERROR
             category = Output.color_str('ERROR:\n', Color.RED, no_color)

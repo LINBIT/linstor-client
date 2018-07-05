@@ -616,7 +616,7 @@ class MiscCommands(Commands):
 
     @staticmethod
     def _summarize_api_call_responses(responses):
-        return "; ".join([response.message_format for response in responses])
+        return "; ".join([response.message for response in responses])
 
     def cmd_create_watch(self, args):
         def reply_handler(replies):
