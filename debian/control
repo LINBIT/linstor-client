@@ -18,7 +18,6 @@ Architecture: all
 # keep python-natsort on its own line!
 Depends: ${misc:Depends},
          python-natsort,
-         python-protobuf,
          python-linstor (>=0.2.1),
          ${python:Depends}
 Description: Linstor client command line tool
