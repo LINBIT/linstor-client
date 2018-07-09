@@ -434,9 +434,20 @@ class ResourceCommands(Commands):
             rsc_dfn = rsc_dfn_map[rsc.name]
             marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
             rsc_state_proto = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
-            rsc_state = tbl.color_cell("DELETING", Color.RED) if marked_delete else "ok"
-            if rsc_state_proto and rsc_state_proto.HasField('in_use') and rsc_state_proto.in_use:
-                rsc_state = tbl.color_cell("InUse", Color.GREEN)
+            rsc_state = tbl.color_cell("Unknown", Color.YELLOW)
+            if marked_delete:
+                rsc_state = tbl.color_cell("DELETING", Color.RED)
+            elif rsc_state_proto:
+                if rsc_state_proto.HasField('in_use') and rsc_state_proto.in_use:
+                    rsc_state = tbl.color_cell("InUse", Color.GREEN)
+                else:
+                    for vlm in rsc.vlms:
+                        vlm_state = ResourceCommands.get_volume_state(rsc_state_proto.vlm_states,
+                                                                      vlm.vlm_nr) if rsc_state_proto else None
+                        state_txt, color = self.volume_state_cell(vlm_state, rsc.rsc_flags, vlm.vlm_flags)
+                        rsc_state = tbl.color_cell(state_txt, color)
+                        if color is not None:
+                            break
             tbl.add_row([
                 rsc.name,
                 rsc.node_name,
@@ -463,6 +474,43 @@ class ResourceCommands(Commands):
                 return volume_state
         return None
 
+    @staticmethod
+    def volume_state_cell(vlm_state, rsc_flags, vlm_flags):
+        """
+        Determains the status of a drbd volume for table display.
+
+        :param vlm_state: vlm_state proto
+        :param rsc_flags: rsc flags
+        :param vlm_flags: vlm flags
+        :return: A tuple (state_text, color)
+        """
+        tbl_color = None
+        state_prefix = 'Resizing, ' if apiconsts.FLAG_RESIZE in vlm_flags else ''
+        state = state_prefix + "Unknown"
+        if vlm_state and vlm_state.HasField("disk_state") and vlm_state.disk_state:
+            disk_state = vlm_state.disk_state
+
+            if disk_state == 'DUnknown':
+                state = state_prefix + "Unknown"
+                tbl_color = Color.YELLOW
+            elif disk_state == 'Diskless':
+                if apiconsts.FLAG_DISKLESS not in rsc_flags:  # unintentional diskless
+                    state = state_prefix + disk_state
+                    tbl_color = Color.RED
+                else:
+                    state = state_prefix + disk_state  # green text
+            elif disk_state in ['Inconsistent', 'Failed']:
+                state = state_prefix + disk_state
+                tbl_color = Color.RED
+            elif disk_state in ['UpToDate']:
+                state = state_prefix + disk_state  # green text
+            else:
+                state = state_prefix + disk_state
+                tbl_color = Color.YELLOW
+        else:
+            tbl_color = Color.YELLOW
+        return state, tbl_color
+
     @classmethod
     def show_volumes(cls, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
@@ -477,28 +525,9 @@ class ResourceCommands(Commands):
         for rsc in lstmsg.resources:
             rsc_state = ResourceCommands.get_resource_state(lstmsg.resource_states, rsc.node_name, rsc.name)
             for vlm in rsc.vlms:
-                if rsc_state:
-                    vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr)
-                else:
-                    vlm_state = None
-                state_prefix = 'Resizing, ' if apiconsts.FLAG_RESIZE in vlm.vlm_flags else ''
-                state = tbl.color_cell(state_prefix + "Unknown", Color.YELLOW)
-                if vlm_state and vlm_state.HasField("disk_state") and vlm_state.disk_state:
-                    disk_state = vlm_state.disk_state
-
-                    if disk_state == 'DUnknown':
-                        state = tbl.color_cell(state_prefix + "Unknown", Color.YELLOW)
-                    elif disk_state == 'Diskless':
-                        if apiconsts.FLAG_DISKLESS not in rsc.rsc_flags:  # unintentional diskless
-                            state = tbl.color_cell(state_prefix + disk_state, Color.RED)
-                        else:
-                            state = state_prefix + disk_state  # green text
-                    elif disk_state in ['Inconsistent', 'Failed']:
-                        state = tbl.color_cell(state_prefix + disk_state, Color.RED)
-                    elif disk_state in ['UpToDate']:
-                        state = state_prefix + disk_state  # green text
-                    else:
-                        state = tbl.color_cell(state_prefix + disk_state, Color.YELLOW)
+                vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr) if rsc_state else None
+                state_txt, color = cls.volume_state_cell(vlm_state, rsc.rsc_flags, vlm.vlm_flags)
+                state = tbl.color_cell(state_txt, color) if color else state_txt
                 tbl.add_row([
                     rsc.node_name,
                     rsc.name,
