@@ -95,7 +95,7 @@ class LinStorCLI(object):
                             'If the environment variable %s is set, '
                             'the ones set via this argument get appended.' % KEY_LS_CONTROLLERS)
         parser.add_argument('-m', '--machine-readable', action="store_true")
-        parser.add_argument('-t', '--timeout', default=20, type=int,
+        parser.add_argument('-t', '--timeout', default=300, type=int,
                             help="Connection timeout value.")
         parser.add_argument('--disable-config', action="store_true",
                             help="Disable config loading and only use commandline arguments.")
@@ -213,6 +213,12 @@ class LinStorCLI(object):
             pargs = LinStorCLI.merge_config_arguments(pargs)
         return self._parser.parse_args(pargs)
 
+    @classmethod
+    def _report_linstor_error(cls, le):
+        sys.stderr.write("Error: " + le.message + '\n')
+        for err in le.all_errors():
+            sys.stderr.write(' ' * 2 + err.message + '\n')
+
     def parse_and_execute(self, pargs):
         rc = ExitCode.OK
         try:
@@ -227,7 +233,7 @@ class LinStorCLI(object):
 
             # only connect if not already connected or a local only command was executed
             if self._linstorapi is None and args.func not in local_only_cmds:
-                self._linstorapi = linstor.Linstor(Commands.controller_list(args.controllers)[0])
+                self._linstorapi = linstor.Linstor(Commands.controller_list(args.controllers)[0], timeout=args.timeout)
                 self._controller_commands._linstor = self._linstorapi
                 self._node_commands._linstor = self._linstorapi
                 self._storage_pool_dfn_commands._linstor = self._linstorapi
@@ -250,12 +256,13 @@ class LinStorCLI(object):
             sys.stderr.write(lce.message + '\n')
             return lce.exit_code
         except linstor.LinstorNetworkError as le:
-            sys.stderr.write("Error: " + le.message + '\n')
-            for err in le.all_errors():
-                sys.stderr.write(' ' * 2 + err.message + '\n')
+            self._report_linstor_error(le)
             rc = ExitCode.CONNECTION_ERROR
+        except linstor.LinstorTimeoutError as le:
+            self._report_linstor_error(le)
+            rc = ExitCode.CONNECTION_TIMEOUT
         except linstor.LinstorError as le:
-            sys.stderr.write("Error: " + le.message + '\n')
+            self._report_linstor_error(le)
             rc = ExitCode.UNKNOWN_ERROR
 
         return rc
