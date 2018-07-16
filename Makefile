@@ -40,9 +40,13 @@ debrelease:
 	make release
 	git checkout MANIFEST.in
 
+ifneq ($(FORCE),1)
 dockerimage: debrelease
 	cd $(LINSTORAPI) && make debrelease
 	cp $(LINSTORAPI)/dist/*.tar.gz dist/
+else
+dockerimage:
+endif
 	docker build -t $(DOCKERREGISTRY)/linstor-client .
 	@echo && echo "Did you run distclean?"
 
