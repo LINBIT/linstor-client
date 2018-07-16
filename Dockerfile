@@ -8,12 +8,12 @@ ENV LINSTOR_CLI_VERSION 0.2.1
 ENV LINSTOR_CLI_PKGNAME linstor-client
 ENV LINSTOR_TGZ ${LINSTOR_CLI_PKGNAME}-${LINSTOR_CLI_VERSION}.tar.gz
 
-RUN groupadd makepkg
-RUN useradd -m -g makepkg makepkg
+RUN groupadd makepkg # !lbbuild
+RUN useradd -m -g makepkg makepkg # !lbbuild
 
-RUN apt-get update -y
+RUN apt-get update -y # !lbbuild
 
-RUN apt-get install -y bash-completion debhelper devscripts docbook-xsl help2man protobuf-compiler python-setuptools python-all python-protobuf xsltproc
+RUN apt-get install -y bash-completion debhelper devscripts docbook-xsl help2man protobuf-compiler python-setuptools python-all python-protobuf xsltproc # !lbbuild
 
 COPY /dist/${PYTHON_LINSTOR_TGZ} /tmp/
 COPY /dist/${LINSTOR_TGZ} /tmp/
