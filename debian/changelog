@@ -1,3 +1,33 @@
+linstor-client (0.2.2-1) experimental; urgency=medium
+
+  [ Joel Colledge ]
+  * Add volume resize command
+  * Show resizing state in volume and volume definition lists
+  * Improve resource create and delete help messages
+  * Show thin pool indicator instead of size for thinly provisioned pools
+  * Remove variables from API call response since the original format stri [...]
+
+  [ Roland Kammerer ]
+  * Dockerfile: consistent naming and indenting
+  * build: allow FORCE=1 for dockerimage target
+  * Dockerfile: initial lbbuild integration
+  * build: dockerpath target
+
+  [ Rene Peinthor ]
+  * unittest: fix new volumedefinition property
+  * fix incorrect diskless state reporting
+  * resource-list: indicate resource in use
+  * storpooldfn: remove filter options from storage pool definition
+  * rework all list command filter/groupby options
+  * change renamed api method name controller_shutdown()
+  * storage_pool_dfn: add query max size command
+  * rsc-auto-place: add diskless-on-remaining option
+  * packaging: remove protobuf dependency, already provided from python-linstor
+  * rsc-list: improve the output of resource state
+  * better handle connection timeouts
+
+ -- Joel Colledge <joel.colledge@linbit.com>  Tue, 17 Jul 2018 11:51:57 +0200
+
 linstor-client (0.2.1-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
