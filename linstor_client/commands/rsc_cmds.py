@@ -431,7 +431,9 @@ class ResourceCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
 
         for rsc in lstmsg.resources:
-            rsc_dfn = rsc_dfn_map[rsc.name]
+            rsc_dfn_port = ''
+            if rsc.name in rsc_dfn_map:
+                rsc_dfn_port = rsc_dfn_map[rsc.name].rsc_dfn_port
             marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
             rsc_state_proto = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
             rsc_state = tbl.color_cell("Unknown", Color.YELLOW)
@@ -451,7 +453,7 @@ class ResourceCommands(Commands):
             tbl.add_row([
                 rsc.name,
                 rsc.node_name,
-                rsc_dfn.rsc_dfn_port,
+                rsc_dfn_port,
                 rsc_state
             ])
         tbl.show()
