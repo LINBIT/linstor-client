@@ -234,7 +234,11 @@ class LinStorCLI(object):
 
             # only connect if not already connected or a local only command was executed
             if self._linstorapi is None and args.func not in local_only_cmds:
-                self._linstorapi = linstor.Linstor(Commands.controller_list(args.controllers)[0], timeout=args.timeout)
+                self._linstorapi = linstor.Linstor(
+                    Commands.controller_list(args.controllers)[0],
+                    timeout=args.timeout,
+                    keep_alive=args.func == self.cmd_interactive
+                )
                 self._controller_commands._linstor = self._linstorapi
                 self._node_commands._linstor = self._linstorapi
                 self._storage_pool_dfn_commands._linstor = self._linstorapi
