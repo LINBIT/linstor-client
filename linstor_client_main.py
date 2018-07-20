@@ -62,6 +62,7 @@ class LinStorCLI(object):
     """
 
     interactive = False
+    readline_history_file = "~/.config/linstor/client.history"
 
     def __init__(self):
         self._all_commands = None
@@ -453,6 +454,7 @@ class LinStorCLI(object):
             else:
                 my_input = input
 
+            abs_readline_hist_path = None
             try:
                 import readline
                 # seems after importing readline it is not possible to output to sys.stderr
@@ -460,6 +462,9 @@ class LinStorCLI(object):
                 readline.set_completer_delims("")
                 readline.set_completer(completer.rl_complete)
                 readline.parse_and_bind("tab: complete")
+                abs_readline_hist_path = os.path.expanduser(self.readline_history_file)
+                if os.path.exists(abs_readline_hist_path):
+                    readline.read_history_file(abs_readline_hist_path)
             except ImportError:
                 pass
 
@@ -479,6 +484,13 @@ class LinStorCLI(object):
                     sys.stdout.write("\n")  # additional newline, makes shell prompt happy
                     break
             LinStorCLI.interactive = False
+
+            if abs_readline_hist_path:
+                try:
+                    os.makedirs(os.path.dirname(abs_readline_hist_path))
+                except OSError:
+                    pass
+                readline.write_history_file(abs_readline_hist_path)
         else:
             sys.stderr.write("The client is already running in interactive mode\n")
 
