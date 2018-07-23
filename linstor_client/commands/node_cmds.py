@@ -314,7 +314,11 @@ class NodeCommands(Commands):
 
         node_list = [x for x in lstmsg.nodes if x.name in args.nodes] if args.nodes else lstmsg.nodes
         for n in node_list:
-            ips = [if_.address for if_ in n.net_interfaces]
+            # concat a ip list with satellite connection indicator
+            ips = [
+                if_.address + ("(" + if_.stlt_encryption_type + ")" if if_.stlt_port else "")
+                for if_ in n.net_interfaces
+            ]
             conn_stat = conn_stat_dict[n.connection_status]
             tbl.add_row([
                 n.name,
