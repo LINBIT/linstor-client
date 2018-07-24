@@ -165,13 +165,8 @@ class StoragePoolCommands(Commands):
             supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
             supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
 
-            provisioning_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_PROVISIONING]
-            provisioning = provisioning_prop[0].value if provisioning_prop else ''
-
             freespace = ""
-            if provisioning == VAL_STOR_POOL_PROVISIONING_THIN:
-                freespace = "(thin)"
-            elif storpool.driver != 'DisklessDriver' and storpool.HasField("free_space"):
+            if storpool.driver != 'DisklessDriver' and storpool.HasField("free_space"):
                 freespace = SizeCalc.approximate_size_string(storpool.free_space.free_space)
 
             tbl.add_row([
