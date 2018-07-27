@@ -1,10 +1,11 @@
 import linstor_client.argparse.argparse as argparse
 
+import linstor
 import linstor_client
 from linstor_client.commands import Commands, DrbdOptions
-from linstor_client.consts import RES_NAME, Color
+from linstor_client.consts import RES_NAME, Color, ExitCode
 from linstor.sharedconsts import FLAG_DELETE
-from linstor_client.utils import Output, namecheck, rangecheck
+from linstor_client.utils import namecheck, rangecheck
 
 
 class ResourceDefinitionCommands(Commands):
@@ -59,6 +60,11 @@ class ResourceDefinitionCommands(Commands):
             "and the resource entry is marked for removal from linstor's data "
             "tables. After all nodes have undeployed the resource, the resource "
             "entry is removed from linstor's data tables.")
+        p_rm_res_dfn.add_argument(
+            '--async',
+            action='store_true',
+            help='Do not wait for actual deletion on satellites before returning'
+        )
         p_rm_res_dfn.add_argument('-q', '--quiet', action="store_true",
                                   help='Unless this option is used, linstor will issue a safety question '
                                   'that must be answered with yes, otherwise the operation is canceled.')
@@ -128,9 +134,44 @@ class ResourceDefinitionCommands(Commands):
         return self.handle_replies(args, replies)
 
     def delete(self, args):
-        # execute delete storpooldfns and flatten result list
-        replies = [x for subx in args.name for x in self._linstor.resource_dfn_delete(subx)]
-        return self.handle_replies(args, replies)
+        # execute delete rscdfns and flatten result list
+        if args.async:
+            replies = [x for subx in args.name for x in self._linstor.resource_dfn_delete(subx)]
+            return self.handle_replies(args, replies)
+        else:
+            def delete_rscdfn_handler(event_header, event_data):
+                if event_header.event_name in [linstor.consts.EVENT_RESOURCE_DEPLOYMENT_STATE]:
+                    if event_header.event_action == linstor.consts.EVENT_STREAM_CLOSE_NO_CONNECTION:
+                        print("WARNING: Satellite connection lost")
+                        return ExitCode.NO_SATELLITE_CONNECTION
+                elif event_header.event_name in [linstor.consts.EVENT_RESOURCE_DEFINITION_READY]:
+                    if event_header.event_action == linstor.consts.EVENT_STREAM_CLOSE_REMOVED:
+                        return []
+
+                return linstor.Linstor.exit_on_error_event_handler(event_header, event_data)
+
+            all_delete_replies = []
+            for rsc_name in args.name:
+                replies = self.get_linstorapi().resource_dfn_delete(rsc_name)
+                all_delete_replies += replies
+
+                if not self._linstor.all_api_responses_success(replies):
+                    return self.handle_replies(args, all_delete_replies)
+
+                watch_result = self.get_linstorapi().watch_events(
+                    linstor.Linstor.return_if_failure,
+                    delete_rscdfn_handler,
+                    linstor.ObjectIdentifier(resource_name=rsc_name)
+                )
+
+                if isinstance(watch_result, list):
+                    all_delete_replies += watch_result
+                    if not self._linstor.all_api_responses_success(watch_result):
+                        return self.handle_replies(args, all_delete_replies)
+                elif watch_result != ExitCode.OK:
+                    return watch_result
+
+            return self.handle_replies(args, all_delete_replies)
 
     @classmethod
     def show(cls, args, lstmsg):
