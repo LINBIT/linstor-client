@@ -128,7 +128,7 @@ class ResourceCommands(Commands):
         p_rm_res.add_argument(
             '--async',
             action='store_true',
-            help='Do not wait for deployment on satellites before returning'
+            help='Do not wait for actual deletion on satellites before returning'
         )
         p_rm_res.add_argument('node_name',
                               nargs="+",
