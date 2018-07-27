@@ -331,9 +331,7 @@ class ResourceCommands(Commands):
                             event_data is not None and event_data.ready:
                         return ExitCode.OK
 
-                    return self.check_failure_events(event_header.event_name, event_data)
-
-                return None
+                return linstor.Linstor.exit_on_error_event_handler(event_header, event_data)
 
             if not ResourceCommands._satellite_not_connected(all_replies) and not args.async:
                 for node_name in args.node_name:
@@ -353,21 +351,6 @@ class ResourceCommands(Commands):
 
         return self.handle_replies(args, all_replies)
 
-    @classmethod
-    def check_failure_events(cls, event_name, event_data):
-        if event_name == apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE and event_data is not None:
-            api_call_responses = [
-                linstor.ApiCallResponse(response)
-                for response in event_data.responses
-            ]
-            failure_responses = [
-                api_call_response for api_call_response in api_call_responses
-                if not api_call_response.is_success()
-            ]
-
-            return failure_responses if failure_responses else None
-        return None
-
     def delete(self, args):
         if args.async:
             # execute delete resource and flatten result list
@@ -383,8 +366,7 @@ class ResourceCommands(Commands):
                     if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
                         return [linstor.ApiCallResponse(response) for response in event_data.responses]
 
-                    return self.check_failure_events(event_header.event_name, event_data)
-                return None
+                return linstor.Linstor.exit_on_error_event_handler(event_header, event_data)
 
             all_delete_replies = []
             for node in args.node_name:
