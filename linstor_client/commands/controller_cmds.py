@@ -12,7 +12,8 @@ class ControllerCommands(Commands):
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.Shutdown,
-            Commands.Subcommands.DrbdOptions
+            Commands.Subcommands.DrbdOptions,
+            Commands.Subcommands.Version
         ]
 
         con_parser = parser.add_parser(
@@ -59,6 +60,14 @@ class ControllerCommands(Commands):
         )
         c_shutdown.set_defaults(func=self.cmd_shutdown)
 
+        # Controller - shutdown
+        c_shutdown = con_subp.add_parser(
+            Commands.Subcommands.Version.LONG,
+            aliases=[Commands.Subcommands.Version.SHORT],
+            description='Prints the linstor controller version'
+        )
+        c_shutdown.set_defaults(func=self.cmd_version)
+
         self.check_subcommands(con_subp, subcmds)
 
     @classmethod
@@ -101,3 +110,7 @@ class ControllerCommands(Commands):
     def cmd_shutdown(self, args):
         replies = self._linstor.controller_shutdown()
         return self.handle_replies(args, replies)
+
+    def cmd_version(self, args):
+        version_info = self.get_linstorapi().controller_info().split(',')
+        print("linstor controller " + version_info[2] + "; GIT-hash: " + version_info[3])

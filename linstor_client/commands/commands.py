@@ -164,6 +164,10 @@ class Commands(object):
             LONG = "query-max-volume-size"
             SHORT = "qmvs"
 
+        class Version(object):
+            LONG = "version"
+            SHORT = "v"
+
         @staticmethod
         def generate_desc(subcommands):
             """
