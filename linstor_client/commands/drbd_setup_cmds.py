@@ -39,7 +39,7 @@ class DrbdOptions(object):
     def add_arguments(cls, parser, option_list):
         assert(len(option_list) > 0)
         options = DrbdOptions._options['options']
-        for opt_key in option_list:
+        for opt_key in sorted(option_list):
             option = options[opt_key]
             if opt_key in ['help', '_name']:
                 continue
@@ -79,7 +79,7 @@ class DrbdOptions(object):
                 # filterNew relatively complex
                 parser.add_argument('--' + opt_key, type=rangecheck(min_, max_),
                                     help="Range: [%d, %d]; Default: %d%s" % (min_, max_, default, unit))
-        for opt_key in option_list:
+        for opt_key in sorted(option_list):
             if opt_key == 'help':
                 continue
             else:
