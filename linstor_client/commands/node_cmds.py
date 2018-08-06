@@ -40,7 +40,8 @@ class NodeCommands(Commands):
             Commands.Subcommands.Describe,
             Commands.Subcommands.Interface,
             Commands.Subcommands.SetProperty,
-            Commands.Subcommands.ListProperties
+            Commands.Subcommands.ListProperties,
+            Commands.Subcommands.Modify
         ]
 
         node_parser = parser.add_parser(
@@ -55,6 +56,13 @@ class NodeCommands(Commands):
             metavar="",
             description=Commands.Subcommands.generate_desc(subcmds)
         )
+
+        node_types = [
+            VAL_NODE_TYPE_CTRL,
+            VAL_NODE_TYPE_AUX,
+            VAL_NODE_TYPE_CMBD,
+            VAL_NODE_TYPE_STLT
+        ]
 
         # create node
         p_new_node = node_subp.add_parser(
@@ -71,8 +79,7 @@ class NodeCommands(Commands):
                                     DFLT_CTRL_PORT_SSL,
                                     VAL_NETCOM_TYPE_SSL))
         ntype_def = VAL_NODE_TYPE_STLT
-        p_new_node.add_argument('--node-type', choices=(VAL_NODE_TYPE_CTRL, VAL_NODE_TYPE_AUX,
-                                                        VAL_NODE_TYPE_CMBD, VAL_NODE_TYPE_STLT),
+        p_new_node.add_argument('--node-type', choices=node_types,
                                 default=VAL_NODE_TYPE_STLT, help='Node type (default: %s)' % ntype_def)
         ctype_def = VAL_NETCOM_TYPE_PLAIN
         p_new_node.add_argument('--communication-type', choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
@@ -92,7 +99,25 @@ class NodeCommands(Commands):
                                 help='IP address of the new node').completer = ip_completer("name")
         p_new_node.set_defaults(func=self.create)
 
-        #describe-node
+        # modify node
+        p_modify_node = node_subp.add_parser(
+            Commands.Subcommands.Modify.LONG,
+            aliases=[Commands.Subcommands.Modify.SHORT],
+            description='Modify a node'
+        )
+        p_modify_node.add_argument(
+            '--node-type', '-t',
+            choices=node_types,
+            default=VAL_NODE_TYPE_STLT,
+            help='Node type (default: %s' % ntype_def
+        )
+        p_modify_node.add_argument(
+            'node_name',
+            help='Name of the node to modify.'
+        ).completer = self.node_completer
+        p_modify_node.set_defaults(func=self.modify_node)
+
+        # describe-node
         p_desc_node = node_subp.add_parser(
             Commands.Subcommands.Describe.LONG,
             aliases=[Commands.Subcommands.Describe.SHORT],
@@ -282,6 +307,10 @@ class NodeCommands(Commands):
             args.interface_name
         )
 
+        return self.handle_replies(args, replies)
+
+    def modify_node(self, args):
+        replies = self.get_linstorapi().node_modify(args.node_name, args.node_type)
         return self.handle_replies(args, replies)
 
     def delete(self, args):
@@ -503,7 +532,11 @@ class NodeCommands(Commands):
     def set_props(self, args):
         args = self._attach_aux_prop(args)
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
-        replies = self._linstor.node_modify(args.node_name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
+        replies = self.get_linstorapi().node_modify(
+            args.node_name,
+            property_dict=mod_prop_dict['pairs'],
+            delete_props=mod_prop_dict['delete']
+        )
         return self.handle_replies(args, replies)
 
     def create_netif(self, args):
