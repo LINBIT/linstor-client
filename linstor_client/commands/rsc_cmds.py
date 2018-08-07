@@ -59,6 +59,11 @@ class ResourceCommands(Commands):
             help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_res.add_argument('--diskless', '-d', action="store_true", help='Should the resource be diskless')
         p_new_res.add_argument(
+            '--node-id',
+            type=int,
+            help='Override the automatic selection of DRBD node ID'
+        )
+        p_new_res.add_argument(
             '--async',
             action='store_true',
             help='Do not wait for deployment on satellites before returning'
@@ -307,7 +312,8 @@ class ResourceCommands(Commands):
                     node_name,
                     args.resource_definition_name,
                     args.diskless,
-                    args.storage_pool
+                    args.storage_pool,
+                    args.node_id
                 )
 
                 if not self._linstor.all_api_responses_success(all_replies):
