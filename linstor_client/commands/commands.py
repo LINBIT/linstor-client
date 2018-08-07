@@ -208,11 +208,11 @@ class Commands(object):
 
     @classmethod
     def check_for_api_replies(cls, replies):
-        return isinstance(replies[0], linstor.ApiCallResponse)
+        return replies and isinstance(replies[0], linstor.ApiCallResponse)
 
     @classmethod
     def output_list(cls, args, replies, output_func, single_item=True):
-        if replies:
+        if isinstance(replies, list):
             if cls.check_for_api_replies(replies):
                 return cls.handle_replies(args, replies)
 
@@ -704,7 +704,8 @@ class MiscCommands(Commands):
         replies = self._linstor.crypt_modify_passphrase(old_passphrase, new_passphrase)
         return self.handle_replies(args, replies)
 
-    def show_error_report_list(self, args, lstmsg):
+    @classmethod
+    def show_error_report_list(cls, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_header(linstor_client.TableHeader("Nr.", alignment_text=">"))
         tbl.add_header(linstor_client.TableHeader("Id"))
