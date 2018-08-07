@@ -15,7 +15,7 @@ class MigrateCommands(Commands):
         of.write('''
 ### IMPORTANT: ###
 # -) start with a setup where drbdmanage is in a healthy state (drbdmanage a)
-# -) make sure the LINSTOR DB is empty on *all* nodes
+# -) make sure the LINSTOR DB is empty on the controller node
 # -) drbdmanage shutdown -qc # on all nodes
 # -) mv /etc/drbd.d/drbdctrl.res{,.dis} # on all nodes
 # -) mv /etc/drbd.d/drbdmanage-resources.res{,.dis} # on all nodes
@@ -24,7 +24,7 @@ class MigrateCommands(Commands):
 # -) snapshots
 # -) zfs pools
 #
-# This script is meant to reviewed for plausibility execution
+# This script is meant to be reviewed for plausibility
 # To make sure you did that, you have to remove the following line
 exit 1\n
 ''')
@@ -37,9 +37,9 @@ exit 1\n
     def _get_node_type(name):
         node_types = {
             1: VAL_NODE_TYPE_CTRL,
-            2: VAL_NODE_TYPE_AUX,
-            3: VAL_NODE_TYPE_AUX,
-            4: VAL_NODE_TYPE_STLT,
+            2: VAL_NODE_TYPE_CMBD,
+            3: VAL_NODE_TYPE_STLT,
+            4: VAL_NODE_TYPE_AUX,
         }
         # py2/3
         try:
@@ -64,11 +64,13 @@ exit 1\n
         for nr, v in assg.items():
             n, r = nr.split(':')
             if r == res_name:
-                args = ['--nodeid', str(v['_node_id']), '--storage-pool', 'drbdpool']
+                args = ['--node-id', str(v['_node_id']), ]
                 if v['_tstate'] == 7:
                     args.append('--diskless')
-                args += [r, n]
-                MigrateCommands.lsc(of, 'create-resource', *args)
+                else:
+                    args += ['--storage-pool', 'drbdpool']
+                args += [n, r]
+                MigrateCommands.lsc(of, 'resource', 'create', *args)
 
     @staticmethod
     def cmd_dmmigrate(args):
@@ -92,7 +94,7 @@ exit 1\n
         of.write('### Nodes ###\n')
         nodes = dm['nodes']
         for n, v in nodes.items():
-            MigrateCommands.lsc(of, 'create-node', '--node-type',
+            MigrateCommands.lsc(of, 'node', 'create', '--node-type',
                                 MigrateCommands._get_node_type(n), n, v['_addr'])
         of.write('\n')
 
@@ -101,15 +103,26 @@ exit 1\n
         assg = dm['assg']
         for r, v in res.items():
             of.write('### Resource: %s ###\n' % (r))
-            MigrateCommands.lsc(of, 'create-resource-definition', '--port', str(v['_port']), r)
+            MigrateCommands.lsc(of, 'resource-definition', 'create', '--port', str(v['_port']), r)
+
+            props = v.get('props', {})
+            for prop, propval in props.items():
+                for otype in ('/dso/disko/', '/dso/neto/', '/dso/peerdisko/', '/dso/reso/'):
+                    if prop.startswith(otype):
+                        opt = prop.split('/')[3]
+                        MigrateCommands.lsc(of, 'resource-definition', 'drbd-options', '--'+opt, propval)
+
             volumes = v['volumes']
             vnrs = sorted([int(vnr) for vnr in volumes.keys()])
             for vnr in vnrs:
-                vol = volumes[str(vnr)]
                 vnr_str = str(vnr)
-                MigrateCommands.lsc(of, 'create-volume-definition', '--volnr', vnr_str,
+                vol = volumes[vnr_str]
+                bdname = r+'_'
+                bdname += vnr_str if vnr >= 10 else "0"+vnr_str
+                MigrateCommands.lsc(of, 'volume-definition', 'create', '--vlmnr', vnr_str,
                                     '--minor', str(vol['minor']), r, str(vol['_size_kiB'])+'K')
-                MigrateCommands.lsc(of, 'set-volume-definition-aux-prop', r, vnr_str, 'drbdmanage-compat', 'on')
+                MigrateCommands.lsc(of, 'volume-definition', 'set-property', r, vnr_str,
+                                    'OverrideVlmId', bdname)
             MigrateCommands._create_resource(of, r, assg)
             of.write('\n')
 
