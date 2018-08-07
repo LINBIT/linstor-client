@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from linstor_client.commands import Commands
 from linstor.sharedconsts import (
@@ -21,8 +22,8 @@ class MigrateCommands(Commands):
 # -) mv /etc/drbd.d/drbdmanage-resources.res{,.dis} # on all nodes
 #
 # CURRENTLY THIS SCRIPT IS MISSING THESE FEATURES:
-# -) snapshots
-# -) zfs pools
+# -) snapshots (will not be supported)
+# -) zfs thin pools (currenlty missing in LINSTOR)
 #
 # This script is meant to be reviewed for plausibility
 # To make sure you did that, you have to remove the following line
@@ -34,6 +35,32 @@ exit 1\n
         of.write('linstor %s %s\n' % (cmd, ' '.join(args)))
 
     @staticmethod
+    def _get_selection(question, options):
+        # py2/3
+        try:
+            input = raw_input
+        except NameError:
+            pass
+
+        os.system('clear')
+        while True:
+            sys.stdout.write('%s\n\n' % (question))
+
+            if len(options) > 0:
+                for k in sorted(options.keys()):
+                    sys.stdout.write('%s) %s\n' % (k, options[k]))
+                ans = input('Type a number: ')
+                try:
+                    ans = options.get(int(ans), False)
+                except ValueError:
+                    continue
+            else:
+                ans = input('Your answer: ')
+
+            if ans:
+                return ans
+
+    @staticmethod
     def _get_node_type(name):
         node_types = {
             1: VAL_NODE_TYPE_CTRL,
@@ -41,23 +68,8 @@ exit 1\n
             3: VAL_NODE_TYPE_STLT,
             4: VAL_NODE_TYPE_AUX,
         }
-        # py2/3
-        try:
-            input = raw_input
-        except NameError:
-            pass
 
-        while True:
-            sys.stdout.write('\nNode type for %s\n' % (name))
-            for k in sorted(node_types.keys()):
-                sys.stdout.write('%s) %s\n' % (k, node_types[k]))
-            ans = input('Type a number: ')
-            try:
-                ans = node_types.get(int(ans), False)
-            except ValueError:
-                continue
-            if ans:
-                return ans
+        return MigrateCommands._get_selection('Node type for ' + name, node_types)
 
     @staticmethod
     def _create_resource(of, res_name, assg):
@@ -96,6 +108,26 @@ exit 1\n
         for n, v in nodes.items():
             MigrateCommands.lsc(of, 'node', 'create', '--node-type',
                                 MigrateCommands._get_node_type(n), n, v['_addr'])
+        of.write('\n')
+
+        of.write('### Storage ###\n')
+        MigrateCommands.lsc(of, 'storage-pool-definition', 'create', 'drbdpool')
+
+        storage_types = {
+            1: 'lvm',
+            2: 'lvmthin',
+            3: 'zfs',
+            # 4: 'zfsthin',
+        }
+        for n, v in nodes.items():
+            storage_type = MigrateCommands._get_selection('Which storage type was used on ' + n, storage_types)
+            pool_name = MigrateCommands._get_selection("Volume group/pool to use on " + n + '\n\n'
+                                                       "For 'lvm', the volume group name (e.g., drbdpool);\n"
+                                                       "For 'zfs', the zPool name (e.g., drbdpool);\n"
+                                                       "For 'lvmthin', the full name of the thin pool, namely "
+                                                       "VG/LV (e.g., drbdpool/drbdthinpool);", {})
+            MigrateCommands.lsc(of, 'storage-pool', 'create', n, 'drbdpool', storage_type, pool_name)
+
         of.write('\n')
 
         # resource definitions (+ port)
