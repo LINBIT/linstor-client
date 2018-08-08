@@ -73,15 +73,27 @@ exit 1\n
 
     @staticmethod
     def _create_resource(of, res_name, assg):
+        overall_args = []
         for nr, v in assg.items():
             n, r = nr.split(':')
             if r == res_name:
+                diskless = False
                 args = ['--node-id', str(v['_node_id']), ]
                 if v['_tstate'] == 7:
                     args.append('--diskless')
+                    diskless = True
                 else:
                     args += ['--storage-pool', 'drbdpool']
                 args += [n, r]
+
+                # order does not really matter, but we want at least one node with disk
+                # before we create the first diskless.
+                if diskless:
+                    overall_args.append(args)
+                else:
+                    overall_args.insert(0, args)
+
+        for args in overall_args:
                 MigrateCommands.lsc(of, 'resource', 'create', *args)
 
     @staticmethod
