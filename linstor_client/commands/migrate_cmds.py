@@ -175,7 +175,7 @@ exit 1\n
                 for otype in ('/dso/disko/', '/dso/neto/', '/dso/peerdisko/', '/dso/reso/'):
                     if prop.startswith(otype):
                         opt = prop.split('/')[3]
-                        MigrateCommands.lsc(of, 'resource-definition', 'drbd-options', '--'+opt, propval)
+                        MigrateCommands.lsc(of, 'resource-definition', 'drbd-options', '--'+opt, propval, r)
 
             volumes = v['volumes']
             vnrs = sorted([int(vnr) for vnr in volumes.keys()])
