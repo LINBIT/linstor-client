@@ -11,6 +11,8 @@ from linstor.sharedconsts import (
 
 
 class MigrateCommands(Commands):
+    _pool = 'drbdpool'
+
     @staticmethod
     def _header(of):
         of.write('''
@@ -35,12 +37,20 @@ exit 1\n
         of.write('linstor %s %s\n' % (cmd, ' '.join(args)))
 
     @staticmethod
-    def _get_selection(question, options):
+    def _get_selection(question, options, default=''):
         # py2/3
         try:
             input = raw_input
         except NameError:
             pass
+
+        def ask(prefix):
+            if default:
+                prefix += ' or <Enter> for "%s"' % (default)
+            ans = input('%s: ' % (prefix))
+            if ans == '':  # <Enter>
+                return default  # which is the set default or ''
+            return ans
 
         os.system('clear')
         while True:
@@ -49,19 +59,20 @@ exit 1\n
             if len(options) > 0:
                 for k in sorted(options.keys()):
                     sys.stdout.write('%s) %s\n' % (k, options[k]))
-                ans = input('Type a number: ')
+                ans = ask('Type a number')
                 try:
-                    ans = options.get(int(ans), False)
+                    if ans != default:
+                        ans = options.get(int(ans), False)
                 except ValueError:
                     continue
             else:
-                ans = input('Your answer: ')
+                ans = ask('Your answer')
 
             if ans:
                 return ans
 
     @staticmethod
-    def _get_node_type(name):
+    def _get_node_type(name, default=''):
         node_types = {
             1: VAL_NODE_TYPE_CTRL,
             2: VAL_NODE_TYPE_CMBD,
@@ -69,7 +80,7 @@ exit 1\n
             4: VAL_NODE_TYPE_AUX,
         }
 
-        return MigrateCommands._get_selection('Node type for ' + name, node_types)
+        return MigrateCommands._get_selection('Node type for ' + name, node_types, default)
 
     @staticmethod
     def _create_resource(of, res_name, assg):
@@ -83,7 +94,7 @@ exit 1\n
                     args.append('--diskless')
                     diskless = True
                 else:
-                    args += ['--storage-pool', 'drbdpool']
+                    args += ['--storage-pool', MigrateCommands._pool]
                 args += [n, r]
 
                 # order does not really matter, but we want at least one node with disk
@@ -117,13 +128,20 @@ exit 1\n
 
         of.write('### Nodes ###\n')
         nodes = dm['nodes']
+        node_type = ''
         for n, v in nodes.items():
-            MigrateCommands.lsc(of, 'node', 'create', '--node-type',
-                                MigrateCommands._get_node_type(n), n, v['_addr'])
+            node_type = MigrateCommands._get_node_type(n, node_type)
+            MigrateCommands.lsc(of, 'node', 'create', '--node-type', node_type, n, v['_addr'])
         of.write('\n')
 
         of.write('### Storage ###\n')
-        MigrateCommands.lsc(of, 'storage-pool-definition', 'create', 'drbdpool')
+        MigrateCommands._pool = MigrateCommands._get_selection(
+            'Name of the storage pool\n\nThis does not have to match an exiting LVM pool\n'
+            'it is just a name to summarize individual pools of nodes in LINSTOR\n'
+            'if unsure, just go for the default',
+            {}, 'drbdpool'
+        )
+        MigrateCommands.lsc(of, 'storage-pool-definition', 'create', MigrateCommands._pool)
 
         storage_types = {
             1: 'lvm',
@@ -131,14 +149,17 @@ exit 1\n
             3: 'zfs',
             # 4: 'zfsthin',
         }
+        storage_type, pool_name = '', ''
         for n, v in nodes.items():
-            storage_type = MigrateCommands._get_selection('Which storage type was used on ' + n, storage_types)
+            storage_type = MigrateCommands._get_selection('Which storage type was used on ' + n,
+                                                          storage_types, storage_type)
             pool_name = MigrateCommands._get_selection("Volume group/pool to use on " + n + '\n\n'
                                                        "For 'lvm', the volume group name (e.g., drbdpool);\n"
                                                        "For 'zfs', the zPool name (e.g., drbdpool);\n"
                                                        "For 'lvmthin', the full name of the thin pool, namely "
-                                                       "VG/LV (e.g., drbdpool/drbdthinpool);", {})
-            MigrateCommands.lsc(of, 'storage-pool', 'create', n, 'drbdpool', storage_type, pool_name)
+                                                       "VG/LV (e.g., drbdpool/drbdthinpool);", {}, pool_name)
+            MigrateCommands.lsc(of, 'storage-pool', 'create', n, MigrateCommands._pool,
+                                storage_type, pool_name)
 
         of.write('\n')
 
