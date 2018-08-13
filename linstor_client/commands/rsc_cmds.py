@@ -244,7 +244,8 @@ class ResourceCommands(Commands):
         DrbdOptions.add_arguments(
             p_drbd_peer_opts,
             [x for x in DrbdOptions.drbd_options()['options']
-                if DrbdOptions.drbd_options()['options'][x]['category'] == 'peer-device-options']
+                if x in DrbdOptions.drbd_options()['filters']['peer-device-options']
+            ]
         )
         p_drbd_peer_opts.set_defaults(func=self.drbd_peer_opts)
 
