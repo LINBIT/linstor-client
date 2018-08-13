@@ -27,9 +27,12 @@ class MigrateCommands(Commands):
 # -) snapshots (will not be supported)
 # -) zfs thin pools (currenlty missing in LINSTOR)
 #
+# If the controller is not executed on the local host, set this variable:
+# LS_CONTROLLERS="localhost"
+#
 # This script is meant to be reviewed for plausibility
 # To make sure you did that, you have to remove the following line
-exit 1\n
+echo "migration disabled, review script and remove this line"; exit 1\n
 ''')
 
     @staticmethod
