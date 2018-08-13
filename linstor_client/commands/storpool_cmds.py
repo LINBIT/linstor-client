@@ -15,7 +15,7 @@ class StoragePoolCommands(Commands):
         linstor_client.TableHeader("Node"),
         linstor_client.TableHeader("Driver"),
         linstor_client.TableHeader("PoolName"),
-        linstor_client.TableHeader("Free", alignment_text='>'),
+        linstor_client.TableHeader("FreeCapacity", alignment_text='>'),
         linstor_client.TableHeader("SupportsSnapshots")
     ]
 
@@ -68,7 +68,6 @@ class StoragePoolCommands(Commands):
         p_new_storpool.set_defaults(func=self.create)
 
         # remove-storpool
-        # TODO description
         p_rm_storpool = sp_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
@@ -165,16 +164,16 @@ class StoragePoolCommands(Commands):
             supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
             supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
 
-            freespace = ""
+            free_capacity = ""
             if storpool.driver != 'DisklessDriver' and storpool.HasField("free_space"):
-                freespace = SizeCalc.approximate_size_string(storpool.free_space.free_space)
+                free_capacity = SizeCalc.approximate_size_string(storpool.free_space.free_capacity)
 
             tbl.add_row([
                 storpool.stor_pool_name,
                 storpool.node_name,
                 storpool.driver,
                 driver_device,
-                freespace,
+                free_capacity,
                 supports_snapshots
             ])
         tbl.show()
