@@ -364,16 +364,16 @@ class ResourceCommands(Commands):
             replies = [x for subx in args.node_name for x in self._linstor.resource_delete(subx, args.name)]
             return self.handle_replies(args, replies)
         else:
-            def event_handler(event_header, event_data):
+            def event_handler(event_header, event_data, watch_responses):
                 if event_header.event_name in [apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE]:
                     if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_NO_CONNECTION:
                         print(Output.color_str('WARNING:', Color.YELLOW, args.no_color) +
                               " Satellite connection lost")
                         return ExitCode.NO_SATELLITE_CONNECTION
                     if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
-                        return [linstor.ApiCallResponse(response) for response in event_data.responses]
-
-                return linstor.Linstor.exit_on_error_event_handler(event_header, event_data)
+                        return ExitCode.OK
+                    if event_header.event_action == apiconsts.EVENT_STREAM_VALUE:
+                        watch_responses.append([linstor.ApiCallResponse(response) for response in event_data.responses])
 
             all_delete_replies = []
             for node in args.node_name:
@@ -383,17 +383,18 @@ class ResourceCommands(Commands):
                 if not self._linstor.all_api_responses_success(replies):
                     return self.handle_replies(args, all_delete_replies)
 
+                watch_responses = []
                 watch_result = self.get_linstorapi().watch_events(
                     self._linstor.return_if_failure,
-                    event_handler,
+                    lambda event_header, event_data: event_handler(event_header, event_data, watch_responses),
                     linstor.ObjectIdentifier(node_name=node, resource_name=args.name)
                 )
+                all_delete_replies += watch_responses[-1]
 
-                if isinstance(watch_result, list):
-                    all_delete_replies += watch_result
-                    if not self._linstor.all_api_responses_success(watch_result):
+                if watch_result == ExitCode.OK:
+                    if not self._linstor.all_api_responses_success(watch_responses[-1]):
                         return self.handle_replies(args, all_delete_replies)
-                elif watch_result != ExitCode.OK:
+                else:
                     return watch_result
 
             return self.handle_replies(args, all_delete_replies)
