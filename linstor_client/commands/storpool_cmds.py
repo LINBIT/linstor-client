@@ -16,6 +16,7 @@ class StoragePoolCommands(Commands):
         linstor_client.TableHeader("Driver"),
         linstor_client.TableHeader("PoolName"),
         linstor_client.TableHeader("FreeCapacity", alignment_text='>'),
+        linstor_client.TableHeader("TotalCapacity", alignment_text='>'),
         linstor_client.TableHeader("SupportsSnapshots")
     ]
 
@@ -165,8 +166,10 @@ class StoragePoolCommands(Commands):
             supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
 
             free_capacity = ""
+            total_capacity = ""
             if storpool.driver != 'DisklessDriver' and storpool.HasField("free_space"):
                 free_capacity = SizeCalc.approximate_size_string(storpool.free_space.free_capacity)
+                total_capacity = SizeCalc.approximate_size_string(storpool.free_space.total_capacity)
 
             tbl.add_row([
                 storpool.stor_pool_name,
@@ -174,6 +177,7 @@ class StoragePoolCommands(Commands):
                 storpool.driver,
                 driver_device,
                 free_capacity,
+                total_capacity,
                 supports_snapshots
             ])
         tbl.show()
