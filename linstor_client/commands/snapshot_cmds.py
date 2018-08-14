@@ -4,7 +4,8 @@ import linstor_client
 from linstor_client.commands import Commands
 from linstor_client.consts import NODE_NAME, RES_NAME, SNAPSHOT_NAME, Color
 from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
-from linstor_client.utils import Output, SizeCalc, namecheck
+from linstor_client.utils import Output, namecheck
+from linstor import SizeCalc
 
 
 class SnapshotCommands(Commands):

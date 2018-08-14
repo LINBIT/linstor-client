@@ -2,11 +2,12 @@ import linstor_client.argparse.argparse as argparse
 import re
 import sys
 
+from linstor import SizeCalc
 import linstor_client
 from linstor_client.commands import Commands, DrbdOptions
 from linstor_client.consts import RES_NAME, Color, ExitCode, STORPOOL_NAME
 from linstor.sharedconsts import FLAG_DELETE, FLAG_RESIZE
-from linstor_client.utils import Output, SizeCalc, namecheck
+from linstor_client.utils import namecheck
 
 
 class VolumeDefinitionCommands(Commands):

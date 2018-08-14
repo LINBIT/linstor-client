@@ -1,12 +1,12 @@
 import linstor_client.argparse.argparse as argparse
 
 import linstor
+from linstor import SizeCalc
 import linstor_client
 from linstor_client.commands import ArgumentError, Commands
 from linstor_client.consts import NODE_NAME, STORPOOL_NAME
-from linstor.sharedconsts import KEY_STOR_POOL_SUPPORTS_SNAPSHOTS, KEY_STOR_POOL_PROVISIONING,\
-    VAL_STOR_POOL_PROVISIONING_THIN
-from linstor_client.utils import SizeCalc, namecheck
+from linstor.sharedconsts import KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
+from linstor_client.utils import namecheck
 
 
 class StoragePoolCommands(Commands):

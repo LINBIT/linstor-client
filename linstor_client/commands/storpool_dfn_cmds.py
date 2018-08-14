@@ -1,10 +1,11 @@
 import linstor_client.argparse.argparse as argparse
 
 import linstor
+from linstor import SizeCalc
 import linstor_client
 from linstor_client.commands import Commands
 from linstor_client.consts import STORPOOL_NAME, RES_NAME
-from linstor_client.utils import namecheck, SizeCalc
+from linstor_client.utils import namecheck
 
 
 class StoragePoolDefinitionCommands(Commands):

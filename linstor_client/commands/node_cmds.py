@@ -6,14 +6,10 @@ import linstor_client
 from linstor_client.commands import Commands
 from linstor_client.tree import TreeNode
 from linstor_client.consts import NODE_NAME, Color, ExitCode
-import linstor.sharedconsts as apiconsts
-from linstor.sharedconsts import (DFLT_CTRL_PORT_PLAIN, DFLT_CTRL_PORT_SSL,
-                                  DFLT_STLT_PORT_PLAIN, VAL_NETCOM_TYPE_PLAIN,
-                                  VAL_NETCOM_TYPE_SSL, VAL_NETIF_TYPE_IP,
-                                  VAL_NODE_TYPE_AUX, VAL_NODE_TYPE_CMBD,
-                                  VAL_NODE_TYPE_CTRL, VAL_NODE_TYPE_STLT)
-from linstor_client.utils import (LinstorClientError, Output, SizeCalc, ip_completer,
+from linstor_client.utils import (LinstorClientError, ip_completer,
                                   namecheck, rangecheck)
+import linstor.sharedconsts as apiconsts
+from linstor import SizeCalc
 
 
 class NodeCommands(Commands):
@@ -58,10 +54,10 @@ class NodeCommands(Commands):
         )
 
         node_types = [
-            VAL_NODE_TYPE_CTRL,
-            VAL_NODE_TYPE_AUX,
-            VAL_NODE_TYPE_CMBD,
-            VAL_NODE_TYPE_STLT
+            apiconsts.VAL_NODE_TYPE_CTRL,
+            apiconsts.VAL_NODE_TYPE_AUX,
+            apiconsts.VAL_NODE_TYPE_CMBD,
+            apiconsts.VAL_NODE_TYPE_STLT
         ]
 
         # create node
@@ -72,21 +68,22 @@ class NodeCommands(Commands):
             'linstor cluster.')
         p_new_node.add_argument('-p', '--port', type=rangecheck(1, 65535),
                                 help='default: Satellite %s for %s; Controller %s for %s; %s for %s' % (
-                                    DFLT_STLT_PORT_PLAIN,
-                                    VAL_NETCOM_TYPE_PLAIN,
-                                    DFLT_CTRL_PORT_PLAIN,
-                                    VAL_NETCOM_TYPE_PLAIN,
-                                    DFLT_CTRL_PORT_SSL,
-                                    VAL_NETCOM_TYPE_SSL))
-        ntype_def = VAL_NODE_TYPE_STLT
+                                    apiconsts.DFLT_STLT_PORT_PLAIN,
+                                    apiconsts.VAL_NETCOM_TYPE_PLAIN,
+                                    apiconsts.DFLT_CTRL_PORT_PLAIN,
+                                    apiconsts.VAL_NETCOM_TYPE_PLAIN,
+                                    apiconsts.DFLT_CTRL_PORT_SSL,
+                                    apiconsts.VAL_NETCOM_TYPE_SSL))
+        ntype_def = apiconsts.VAL_NODE_TYPE_STLT
         p_new_node.add_argument('--node-type', choices=node_types,
-                                default=VAL_NODE_TYPE_STLT, help='Node type (default: %s)' % ntype_def)
-        ctype_def = VAL_NETCOM_TYPE_PLAIN
-        p_new_node.add_argument('--communication-type', choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
+                                default=apiconsts.VAL_NODE_TYPE_STLT, help='Node type (default: %s)' % ntype_def)
+        ctype_def = apiconsts.VAL_NETCOM_TYPE_PLAIN
+        p_new_node.add_argument('--communication-type',
+                                choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN, apiconsts.VAL_NETCOM_TYPE_SSL),
                                 default=ctype_def,
                                 help='Communication type (default: %s)' % ctype_def)
-        itype_def = VAL_NETIF_TYPE_IP
-        p_new_node.add_argument('--interface-type', choices=(VAL_NETIF_TYPE_IP,), default=itype_def,
+        itype_def = apiconsts.VAL_NETIF_TYPE_IP
+        p_new_node.add_argument('--interface-type', choices=(apiconsts.VAL_NETIF_TYPE_IP,), default=itype_def,
                                 help='Interface type (default: %s)' % itype_def)
         iname_def = 'default'
         p_new_node.add_argument('--interface-name', default=iname_def,
@@ -108,7 +105,7 @@ class NodeCommands(Commands):
         p_modify_node.add_argument(
             '--node-type', '-t',
             choices=node_types,
-            default=VAL_NODE_TYPE_STLT,
+            default=apiconsts.VAL_NODE_TYPE_STLT,
             help='Node type (default: %s' % ntype_def
         )
         p_modify_node.add_argument(
@@ -193,7 +190,7 @@ class NodeCommands(Commands):
         )
         p_create_netinterface.add_argument(
             '--communication-type',
-            choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
+            choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN, apiconsts.VAL_NETCOM_TYPE_SSL),
             default=ctype_def,
             help='Communication type (default: %s)' % ctype_def
         )
@@ -213,7 +210,8 @@ class NodeCommands(Commands):
         )
         p_mod_netif.add_argument('-p', '--port', type=rangecheck(1, 65535),
                                  help='Port to use for satellite connections')
-        p_mod_netif.add_argument('--communication-type', choices=(VAL_NETCOM_TYPE_PLAIN, VAL_NETCOM_TYPE_SSL),
+        p_mod_netif.add_argument('--communication-type',
+                                 choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN, apiconsts.VAL_NETCOM_TYPE_SSL),
                                  default=ctype_def,
                                  help='Communication type (default: %s)' % ctype_def)
         p_mod_netif.add_argument(
