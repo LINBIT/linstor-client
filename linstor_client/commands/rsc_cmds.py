@@ -314,47 +314,12 @@ class ResourceCommands(Commands):
                     args.resource_definition_name,
                     args.diskless,
                     args.storage_pool,
-                    args.node_id
+                    args.node_id,
+                    args.async
                 )
 
                 if not self._linstor.all_api_responses_success(all_replies):
                     return self.handle_replies(args, all_replies)
-
-            def event_handler(event_header, event_data):
-                if event_header.node_name == node_name:
-                    if event_header.event_name in [
-                            apiconsts.EVENT_RESOURCE_STATE,
-                            apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE
-                    ]:
-                        if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_NO_CONNECTION:
-                            print(Output.color_str('WARNING:', Color.YELLOW, args.no_color) +
-                                  " Satellite connection lost")
-                            return ExitCode.NO_SATELLITE_CONNECTION
-                        if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
-                            print((Output.color_str('ERROR:', Color.RED, args.no_color)) + " Resource removed")
-                            return ExitCode.API_ERROR
-
-                    if event_header.event_name == apiconsts.EVENT_RESOURCE_STATE and \
-                            event_data is not None and event_data.ready:
-                        return ExitCode.OK
-
-                return linstor.Linstor.exit_on_error_event_handler(event_header, event_data)
-
-            if not ResourceCommands._satellite_not_connected(all_replies) and not args.async:
-                for node_name in args.node_name:
-
-                    watch_result = self._linstor.watch_events(
-                        self._linstor.return_if_failure,
-                        event_handler,
-                        linstor.ObjectIdentifier(node_name=node_name, resource_name=args.resource_definition_name)
-                    )
-
-                    if isinstance(watch_result, list):
-                        all_replies += watch_result
-                        if not self._linstor.all_api_responses_success(watch_result):
-                            return self.handle_replies(args, all_replies)
-                    elif watch_result != ExitCode.OK:
-                        return watch_result
 
         return self.handle_replies(args, all_replies)
 
