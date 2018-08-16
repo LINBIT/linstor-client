@@ -1,3 +1,40 @@
+linstor-client (0.5.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * rsc-show: fix possible rsc_dfn exception while deleting rsc_dfns
+  * interactive: store and read the command history
+  * interactive: enable python-linstor keep alive mode
+  * node-list: show satellite connection type
+  * remove setup.cfg.sles11
+  * fix rpm dependencies
+  * delete-res: fix incorrect help text
+  * rsc-delete: use exit_on_error_event_handler
+  * delete-resdfn: add synchronous delete
+  * controller: add command show the controller version
+  * drbd-options: sorted option output list
+  * node: add a node modify command
+  * allow empty responses to be handled correctly
+  * drbd-options: use peer-device-options filter
+  * storpool: rename field free_space to free_capacity
+  * storpool: show/list total_capacity
+  * SizeCalc: class was moved to the linstor api library
+
+  [ Roland Kammerer ]
+  * build: include Dockerfile in release tarballs
+  * dm-migrate: change syntax, add drbdsetup opts
+  * dm-migrate: ask for storage pools
+  * dm-migrate: order resource creations
+  * dm-migrate: ask spd and allow setting defaults
+  * dm-migrate: fix drbdsetup opts
+  * dm-migrate: LS_CONTROLLERS; reason for exit
+
+  [ Joel Colledge ]
+  * Show free space for all stor pools
+  * Allow the node ID to be overridden when creating resources
+  * Events no longer send data with the close message
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 16 Aug 2018 08:38:02 +0200
+
 linstor-client (0.2.2-1) experimental; urgency=medium
 
   [ Joel Colledge ]
