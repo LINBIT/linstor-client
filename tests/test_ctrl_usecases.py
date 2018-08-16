@@ -65,11 +65,11 @@ class TestUseCases(LinstorTestCase):
         self.assertTrue(vlm_dfn_resp.is_success())
 
         # create resource on node1
-        rsc_resps = self.execute_with_resp(['resource', 'create', '--async', '-s', 'storage', 'node1', 'rsc1'])
+        rsc_resps = self.execute_with_resp(['resource', 'create', '-s', 'storage', 'node1', 'rsc1'])
         self.assertEqual(3, len(rsc_resps))
-        self.assertTrue(rsc_resps[0].is_warning())  # satellite not reachable
-        self.assertTrue(rsc_resps[1].is_success())  # resource created
-        self.assertTrue(rsc_resps[2].is_success())  # volume created
+        self.assertTrue(rsc_resps[0].is_success())  # resource created
+        self.assertTrue(rsc_resps[1].is_success())  # volume created
+        self.assertTrue(rsc_resps[2].is_warning())  # satellite not reachable
 
         # check resource
         resource_list = self.execute_with_machine_output(['resource', 'list'])
