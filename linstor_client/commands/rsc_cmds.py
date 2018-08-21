@@ -33,7 +33,8 @@ class ResourceCommands(Commands):
             Commands.Subcommands.Delete,
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
-            Commands.Subcommands.DrbdPeerDeviceOptions
+            Commands.Subcommands.DrbdPeerDeviceOptions,
+            Commands.Subcommands.ToggleDisk
         ]
 
         # Resource subcommands
@@ -248,6 +249,39 @@ class ResourceCommands(Commands):
             ]
         )
         p_drbd_peer_opts.set_defaults(func=self.drbd_peer_opts)
+
+        # toggle-disk
+        p_toggle_disk = res_subp.add_parser(
+            Commands.Subcommands.ToggleDisk.LONG,
+            aliases=[Commands.Subcommands.ToggleDisk.SHORT],
+            description='Toggles a resource between diskless and having a disk.')
+        p_toggle_disk_group_storage = p_toggle_disk.add_mutually_exclusive_group(required=True)
+        p_toggle_disk_group_storage.add_argument(
+            '--storage-pool', '-s',
+            type=namecheck(STORPOOL_NAME),
+            help="Storage pool name to use"
+        ).completer = self.storage_pool_dfn_completer
+        p_toggle_disk_group_storage.add_argument(
+            '--default-storage-pool', '-ds',
+            action='store_true',
+            help="Use the storage pools determined from the properties of the objects to which the volumes belong"
+        )
+        p_toggle_disk.add_argument(
+            '--async',
+            action='store_true',
+            help='Do not wait to apply changes on satellites before returning'
+        )
+        p_toggle_disk.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            help='Node name where resource is deployed'
+        ).completer = self.node_completer
+        p_toggle_disk.add_argument(
+            'name',
+            type=namecheck(RES_NAME),
+            help='Name of the resource'
+        ).completer = self.resource_dfn_completer
+        p_toggle_disk.set_defaults(func=self.toggle_disk)
 
         self.check_subcommands(res_subp, subcmds)
 
@@ -545,7 +579,11 @@ class ResourceCommands(Commands):
         )
         return self.handle_replies(args, replies)
 
-    @staticmethod
-    def completer_volume(prefix, **kwargs):
-        possible = set()
-        return possible
+    def toggle_disk(self, args):
+        replies = self._linstor.resource_toggle_disk(
+            args.node_name,
+            args.name,
+            args.storage_pool,
+            args.async
+        )
+        return self.handle_replies(args, replies)

@@ -164,6 +164,10 @@ class Commands(object):
             LONG = "query-max-volume-size"
             SHORT = "qmvs"
 
+        class ToggleDisk(object):
+            LONG = "toggle-disk"
+            SHORT = "td"
+
         class Version(object):
             LONG = "version"
             SHORT = "v"
