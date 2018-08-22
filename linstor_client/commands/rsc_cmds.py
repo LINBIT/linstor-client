@@ -254,17 +254,23 @@ class ResourceCommands(Commands):
         p_toggle_disk = res_subp.add_parser(
             Commands.Subcommands.ToggleDisk.LONG,
             aliases=[Commands.Subcommands.ToggleDisk.SHORT],
-            description='Toggles a resource between diskless and having a disk.')
+            description='Toggles a resource between diskless and having disks.')
         p_toggle_disk_group_storage = p_toggle_disk.add_mutually_exclusive_group(required=True)
         p_toggle_disk_group_storage.add_argument(
             '--storage-pool', '-s',
             type=namecheck(STORPOOL_NAME),
-            help="Storage pool name to use"
+            help="Add disks to a diskless resource using this storage pool name"
         ).completer = self.storage_pool_dfn_completer
         p_toggle_disk_group_storage.add_argument(
-            '--default-storage-pool', '-ds',
+            '--default-storage-pool', '-dflt',
             action='store_true',
-            help="Use the storage pools determined from the properties of the objects to which the volumes belong"
+            help="Add disks to a diskless resource using the storage pools determined from the properties of the "
+                 "objects to which the volumes belong"
+        )
+        p_toggle_disk_group_storage.add_argument(
+            '--diskless', '-d',
+            action='store_true',
+            help="Remove the disks from a resource"
         )
         p_toggle_disk.add_argument(
             '--async',
@@ -584,6 +590,7 @@ class ResourceCommands(Commands):
             args.node_name,
             args.name,
             args.storage_pool,
+            args.diskless,
             args.async
         )
         return self.handle_replies(args, replies)
