@@ -170,8 +170,8 @@ echo "migration disabled, review script and remove this line"; exit 1\n
                                                        "For 'zfs', the zPool name (e.g., drbdpool);\n"
                                                        "For 'lvmthin', the full name of the thin pool, namely "
                                                        "VG/LV (e.g., drbdpool/drbdthinpool);", {}, pool_name)
-            MigrateCommands.lsc(of, 'storage-pool', 'create', n, MigrateCommands._pool,
-                                storage_type, pool_name)
+            MigrateCommands.lsc(of, 'storage-pool', 'create', storage_type, n,
+                                MigrateCommands._pool, pool_name)
 
         of.write('\n')
 

@@ -10,6 +10,30 @@ from linstor_client.utils import namecheck
 
 
 class StoragePoolCommands(Commands):
+    class Lvm(object):
+        LONG = "lvm"
+        SHORT = "lvm"
+
+    class LvmThin(object):
+        LONG = "lvmthin"
+        SHORT = "lvmthin"
+
+    class Zfs(object):
+        LONG = "zfs"
+        SHORT = "zfs"
+
+    class SwordfishTarget(object):
+        LONG = "swordfish_target"
+        SHORT = "sft"
+
+    class SwordfishInitiator(object):
+        LONG = "swordfish_initiator"
+        SHORT = "sfi"
+
+    class Diskless(object):
+        LONG = "diskless"
+        SHORT = "diskless"
+
     _stor_pool_headers = [
         linstor_client.TableHeader("StoragePool"),
         linstor_client.TableHeader("Node"),
@@ -20,16 +44,22 @@ class StoragePoolCommands(Commands):
         linstor_client.TableHeader("SupportsSnapshots")
     ]
 
-    _driver_list = [
-        "lvm",
-        "lvmthin",
-        "zfs",
-        "diskless",
-        "swordfish"
-    ]
-
     def __init__(self):
         super(StoragePoolCommands, self).__init__()
+
+    @classmethod
+    def _create_pool_args(cls, parser, shared_space=True):
+        parser.add_argument(
+            'node_name',
+            type=namecheck(NODE_NAME),
+            help='Name of the node for the new storage pool').completer = cls.node_completer
+        parser.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the new storage pool')
+        if shared_space:
+            parser.add_argument(
+                '--shared-space',
+                type=namecheck(STORPOOL_NAME),
+                help='Name of used shared space'
+            )
 
     def setup_commands(self, parser):
         # Storage pool subcommands
@@ -52,36 +82,105 @@ class StoragePoolCommands(Commands):
             description=Commands.Subcommands.generate_desc(subcmds)
         )
 
-        # new-storpol
-        p_new_storpool = sp_subp.add_parser(
+        subcmd_create = [
+            StoragePoolCommands.Lvm,
+            StoragePoolCommands.LvmThin,
+            StoragePoolCommands.Zfs,
+            StoragePoolCommands.Diskless,
+            StoragePoolCommands.SwordfishTarget,
+            StoragePoolCommands.SwordfishInitiator
+        ]
+
+        sp_c_parser = sp_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Defines a Linstor storage pool for use with Linstor.')
-        p_new_storpool.add_argument(
-            'node_name',
-            type=namecheck(NODE_NAME),
-            help='Name of the node for the new storage pool').completer = self.node_completer
-        p_new_storpool.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the new storage pool')
-        p_new_storpool.add_argument(
-            '--shared-space',
-            type=namecheck(STORPOOL_NAME),
-            help='Name of used shared space'
+            formatter_class=argparse.RawTextHelpFormatter,
+            description='Defines a Linstor storage pool for use with Linstor.'
         )
-        p_new_storpool.add_argument(
-            'driver',
-            choices=StoragePoolCommands.driver_completer(""),
-            help='Name of the driver used for the new storage pool').completer = StoragePoolCommands.driver_completer
-        p_new_storpool.add_argument(
+        create_subp = sp_c_parser.add_subparsers(
+            title="Storage pool create commands",
+            metavar="{" + ",".join([x.LONG for x in subcmd_create]) + "}",
+            description=Commands.Subcommands.generate_desc(subcmd_create)
+        )
+
+        p_new_lvm_pool = create_subp.add_parser(
+            StoragePoolCommands.Lvm.LONG,
+            aliases=[StoragePoolCommands.Lvm.SHORT],
+            description='Create a lvm storage pool'
+        )
+        self._create_pool_args(p_new_lvm_pool)
+        p_new_lvm_pool.add_argument(
             'driver_pool_name',
             type=str,
-            nargs='?',
-            help='Volume group/pool to use, e.g. drbdpool. '
-            'For \'lvm\', the volume group; '
-            'for \'lvmthin\', the full name of the thin pool, namely VG/LV; '
-            'for \'zfs\', the zPool.'
-            'for \'swordfish\', not needed'
+            help='The Lvm volume group to use.'
         )
-        p_new_storpool.set_defaults(func=self.create)
+        p_new_lvm_pool.set_defaults(func=self.create, driver='Lvm')
+
+        p_new_lvm_thin_pool = create_subp.add_parser(
+            StoragePoolCommands.LvmThin.LONG,
+            aliases=[StoragePoolCommands.LvmThin.SHORT],
+            description='Create a lvm thin storage pool'
+        )
+        self._create_pool_args(p_new_lvm_thin_pool)
+        p_new_lvm_thin_pool.add_argument(
+            'driver_pool_name',
+            type=str,
+            help='The LvmThin volume group to use. The full name of the thin pool, namely VG/LV'
+        )
+        p_new_lvm_thin_pool.set_defaults(func=self.create, driver='LvmThin')
+
+        p_new_zfs_pool = create_subp.add_parser(
+            StoragePoolCommands.Zfs.LONG,
+            aliases=[StoragePoolCommands.Zfs.SHORT],
+            description='Create a zfs storage pool'
+        )
+        self._create_pool_args(p_new_zfs_pool)
+        p_new_zfs_pool.add_argument(
+            'driver_pool_name',
+            type=str,
+            help='The name of the zpool to use.'
+        )
+        p_new_zfs_pool.set_defaults(func=self.create, driver='Zfs')
+
+        p_new_diskless_pool = create_subp.add_parser(
+            StoragePoolCommands.Diskless.LONG,
+            aliases=[StoragePoolCommands.Diskless.SHORT],
+            description='Create a diskless pool'
+        )
+        self._create_pool_args(p_new_diskless_pool, shared_space=False)
+        p_new_diskless_pool.set_defaults(func=self.create, driver='Diskless', driver_pool_name=None)
+
+        p_new_swordfish_target_pool = create_subp.add_parser(
+            StoragePoolCommands.SwordfishTarget.LONG,
+            aliases=[StoragePoolCommands.SwordfishTarget.SHORT],
+            description='Create a swordfish target'
+        )
+        self._create_pool_args(p_new_swordfish_target_pool)
+        p_new_swordfish_target_pool.add_argument(
+            'storage_service',
+            type=str,
+            help="Storage service id."
+        )
+        p_new_swordfish_target_pool.add_argument(
+            'swordfish_storage_pool',
+            type=str,
+            help="Swordfish storage pool"
+        )
+        p_new_swordfish_target_pool.set_defaults(func=self.create_swordfish, driver='SwordfishTarget')
+
+        p_new_swordfish_initiator_pool = create_subp.add_parser(
+            StoragePoolCommands.SwordfishInitiator.LONG,
+            aliases=[StoragePoolCommands.SwordfishInitiator.SHORT],
+            description='Create a swordfish initiator'
+        )
+        self._create_pool_args(p_new_swordfish_initiator_pool)
+        p_new_swordfish_initiator_pool.set_defaults(
+            func=self.create,
+            driver='SwordfishInitiator',
+            driver_pool_name=None
+        )
+
+        # END CREATE SUBCMDS
 
         # remove-storpool
         p_rm_storpool = sp_subp.add_parser(
@@ -154,15 +253,33 @@ class StoragePoolCommands(Commands):
         self.check_subcommands(sp_subp, subcmds)
 
     def create(self, args):
-        # construct correct driver name
-        driver = 'LvmThin' if args.driver == 'lvmthin' else args.driver.title()
         try:
-            replies = self._linstor.storage_pool_create(
+            shrd_space = None if args.driver == 'Diskless' else args.shared_space
+            replies = self.get_linstorapi().storage_pool_create(
                 args.node_name,
                 args.name,
-                driver,
+                args.driver,
                 args.driver_pool_name,
-                shared_space=args.shared_space
+                shared_space=shrd_space
+            )
+        except linstor.LinstorError as e:
+            raise ArgumentError(e.message)
+        return self.handle_replies(args, replies)
+
+    def create_swordfish(self, args):
+        prefix_key = linstor.consts.NAMESPC_STORAGE_DRIVER + '/'
+        properties = {
+            prefix_key + linstor.consts.KEY_STOR_POOL_SF_STOR_SVC: args.storage_service,
+            prefix_key + linstor.consts.KEY_STOR_POOL_SF_STOR_POOL: args.swordfish_storage_pool
+        }
+        try:
+            replies = self.get_linstorapi().storage_pool_create(
+                args.node_name,
+                args.name,
+                args.driver,
+                None,
+                shared_space=args.shared_space,
+                property_dict=properties
             )
         except linstor.LinstorError as e:
             raise ArgumentError(e.message)
@@ -188,7 +305,7 @@ class StoragePoolCommands(Commands):
 
             free_capacity = ""
             total_capacity = ""
-            if storpool.driver != 'DisklessDriver' and storpool.HasField("free_space"):
+            if storpool.driver not in ['DisklessDriver', 'SwordfishInitiator'] and storpool.HasField("free_space"):
                 free_capacity = SizeCalc.approximate_size_string(storpool.free_space.free_capacity)
                 total_capacity = SizeCalc.approximate_size_string(storpool.free_space.total_capacity)
 
@@ -234,9 +351,3 @@ class StoragePoolCommands(Commands):
         )
         return self.handle_replies(args, replies)
 
-    @staticmethod
-    def driver_completer(prefix, **kwargs):
-        if prefix:
-            return [e for e in StoragePoolCommands._driver_list if e.startswith(prefix)]
-
-        return StoragePoolCommands._driver_list

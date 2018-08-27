@@ -10,7 +10,7 @@ class TestProperties(LinstorTestCase):
         self.assertTrue(cnode_resp.is_success())
 
         # create storagepool
-        storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'node1', 'storage', 'lvm', 'lvmpool'])
+        storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'lvm', 'node1', 'storage', 'lvmpool'])
         self.assertTrue(storpool_resps[0].is_warning())
         self.assertEqual(WARN_NOT_CONNECTED | MASK_STOR_POOL | MASK_CRT, storpool_resps[0].ret_code)
         self.assertTrue(storpool_resps[1].is_success())

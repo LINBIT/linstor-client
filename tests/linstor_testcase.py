@@ -242,15 +242,15 @@ class LinstorTestCaseWithData(LinstorTestCase):
 
         cls.assert_execute(['node', 'interface', 'create', 'fakehost1', 'fastnet', '10.0.0.1'])
 
-        cls.assert_execute(['storage-pool', 'create', 'fakehost1', 'DfltStorPool', 'lvm', 'mylvmpool'])
-        cls.assert_execute(['storage-pool', 'create', 'fakehost2', 'DfltStorPool', 'lvm', 'mylvmpool'])
-        cls.assert_execute(['storage-pool', 'create', 'fakehost3', 'DfltStorPool', 'lvm', 'mylvmpool'])
+        cls.assert_execute(['storage-pool', 'create', 'lvm', 'fakehost1', 'DfltStorPool', 'mylvmpool'])
+        cls.assert_execute(['storage-pool', 'create', 'lvm', 'fakehost2', 'DfltStorPool', 'mylvmpool'])
+        cls.assert_execute(['storage-pool', 'create', 'lvm', 'fakehost3', 'DfltStorPool', 'mylvmpool'])
 
-        cls.assert_execute(['storage-pool', 'create', 'fakehost1', 'thinpool', 'lvmthin', 'myvg/mythinpool'])
-        cls.assert_execute(['storage-pool', 'create', 'fakehost2', 'thinpool', 'lvmthin', 'myvg/mythinpool'])
+        cls.assert_execute(['storage-pool', 'create', 'lvmthin', 'fakehost1', 'thinpool', 'myvg/mythinpool'])
+        cls.assert_execute(['storage-pool', 'create', 'lvmthin', 'fakehost2', 'thinpool', 'myvg/mythinpool'])
 
-        cls.assert_execute(['storage-pool', 'create', 'fakehost1', 'zfsubuntu', 'zfs', 'zfsstorage'])
-        cls.assert_execute(['storage-pool', 'create', 'fakehost2', 'zfsubuntu', 'zfs', 'zfsstorage'])
+        cls.assert_execute(['storage-pool', 'create', 'zfs', 'fakehost1', 'zfsubuntu', 'zfsstorage'])
+        cls.assert_execute(['storage-pool', 'create', 'zfs', 'fakehost2', 'zfsubuntu', 'zfsstorage'])
 
         cls.assert_execute(['resource-definition', 'create', 'rsc1'])
         cls.assert_execute(['volume-definition', 'create', 'rsc1', '128Mib'])

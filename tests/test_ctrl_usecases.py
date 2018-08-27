@@ -37,7 +37,7 @@ class TestUseCases(LinstorTestCase):
         self.assertTrue([n for n in nodes if n['name'] == 'node1'])
 
         # create storagepool
-        storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'node1', 'storage', 'lvm', 'lvmpool'])
+        storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'lvm', 'node1', 'storage', 'lvmpool'])
         self.assertTrue(storpool_resps[0].is_warning())
         self.assertEqual(WARN_NOT_CONNECTED | MASK_STOR_POOL | MASK_CRT, storpool_resps[0].ret_code)
         self.assertTrue(storpool_resps[1].is_success())
@@ -124,7 +124,7 @@ class TestCreateCommands(LinstorTestCase):
         self.assertTrue(node.is_success())
         self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node.ret_code)
 
-        storpool = self.execute_with_resp(['storage-pool', 'create', 'storpool.node1', 'storpool', 'lvm', 'drbdpool'])
+        storpool = self.execute_with_resp(['storage-pool', 'create', 'lvm', 'storpool.node1', 'storpool', 'drbdpool'])
         no_active = storpool[0]
         storpool = storpool[1]
         self.assertTrue(no_active.is_warning())
@@ -140,7 +140,7 @@ class TestCreateCommands(LinstorTestCase):
         self.assertEqual(1, len(stor_pool), "created storpool 'storpool' not in list")
 
     def test_create_storage_pool_missing_node(self):
-        storpool = self.execute_with_single_resp(['storage-pool', 'create', 'storpool', 'nonode', 'lvm', 'drbdpool'])
+        storpool = self.execute_with_single_resp(['storage-pool', 'create', 'lvm', 'storpool', 'nonode', 'drbdpool'])
         self.assertTrue(storpool.is_error())
         self.assertEqual(MASK_STOR_POOL | MASK_CRT | FAIL_NOT_FOUND_NODE, storpool.ret_code)
 
