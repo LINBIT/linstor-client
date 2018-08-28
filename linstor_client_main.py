@@ -233,23 +233,35 @@ class LinStorCLI(object):
             ]
 
             # only connect if not already connected or a local only command was executed
+            conn_errors = []
+            contrl_list = Commands.controller_list(args.controllers)
             if self._linstorapi is None and args.func not in local_only_cmds:
-                self._linstorapi = linstor.Linstor(
-                    Commands.controller_list(args.controllers)[0],
-                    timeout=args.timeout,
-                    keep_alive=args.func == self.cmd_interactive
-                )
-                self._controller_commands._linstor = self._linstorapi
-                self._node_commands._linstor = self._linstorapi
-                self._storage_pool_dfn_commands._linstor = self._linstorapi
-                self._storage_pool_commands._linstor = self._linstorapi
-                self._resource_dfn_commands._linstor = self._linstorapi
-                self._volume_dfn_commands._linstor = self._linstorapi
-                self._resource_commands._linstor = self._linstorapi
-                self._snapshot_commands._linstor = self._linstorapi
-                self._misc_commands._linstor = self._linstorapi
-                self._linstorapi.connect()
-            rc = args.func(args)
+                for contrl in contrl_list:
+                    try:
+                        self._linstorapi = linstor.Linstor(
+                            contrl,
+                            timeout=args.timeout,
+                            keep_alive=args.func == self.cmd_interactive
+                        )
+                        self._controller_commands._linstor = self._linstorapi
+                        self._node_commands._linstor = self._linstorapi
+                        self._storage_pool_dfn_commands._linstor = self._linstorapi
+                        self._storage_pool_commands._linstor = self._linstorapi
+                        self._resource_dfn_commands._linstor = self._linstorapi
+                        self._volume_dfn_commands._linstor = self._linstorapi
+                        self._resource_commands._linstor = self._linstorapi
+                        self._snapshot_commands._linstor = self._linstorapi
+                        self._misc_commands._linstor = self._linstorapi
+                        self._linstorapi.connect()
+                        break
+                    except linstor.LinstorNetworkError as le:
+                        conn_errors.append(le)
+            if len(conn_errors) == len(contrl_list):
+                for x in conn_errors:
+                    self._report_linstor_error(x)
+                rc = ExitCode.CONNECTION_ERROR
+            else:
+                rc = args.func(args)
         except ArgumentError as ae:
             sys.stderr.write(ae.message + '\n')
             try:
