@@ -55,6 +55,11 @@ class StoragePoolCommands(Commands):
             help='Name of the node for the new storage pool').completer = self.node_completer
         p_new_storpool.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the new storage pool')
         p_new_storpool.add_argument(
+            '--shared-space',
+            type=namecheck(STORPOOL_NAME),
+            help='Name of used shared space'
+        )
+        p_new_storpool.add_argument(
             'driver',
             choices=StoragePoolCommands.driver_completer(""),
             help='Name of the driver used for the new storage pool').completer = StoragePoolCommands.driver_completer
@@ -142,7 +147,13 @@ class StoragePoolCommands(Commands):
         # construct correct driver name
         driver = 'LvmThin' if args.driver == 'lvmthin' else args.driver.title()
         try:
-            replies = self._linstor.storage_pool_create(args.node_name, args.name, driver, args.driver_pool_name)
+            replies = self._linstor.storage_pool_create(
+                args.node_name,
+                args.name,
+                driver,
+                args.driver_pool_name,
+                shared_space=args.shared_space
+            )
         except linstor.LinstorError as e:
             raise ArgumentError(e.message)
         return self.handle_replies(args, replies)
