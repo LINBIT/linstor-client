@@ -146,7 +146,9 @@ echo "migration disabled, review script and remove this line"; exit 1\n
         )
         MigrateCommands.lsc(of, 'storage-pool-definition', 'create', MigrateCommands._pool)
 
+        NONE = 'NONE'
         storage_types = {
+            0: NONE,
             1: 'lvm',
             2: 'lvmthin',
             3: 'zfs',
@@ -154,8 +156,14 @@ echo "migration disabled, review script and remove this line"; exit 1\n
         }
         storage_type, pool_name = '', ''
         for n, v in nodes.items():
-            storage_type = MigrateCommands._get_selection('Which storage type was used on ' + n,
+            storage_type = MigrateCommands._get_selection('Which storage type was used on ' + n + '\n\n'
+                                                          'Use NONE if this node does not have storage\n'
+                                                          'NONE is used for example for plain hypervisor nodes',
                                                           storage_types, storage_type)
+            if storage_type == NONE:
+                of.write('# %s has no storage (e.g., hypervisor node)\n' % (n))
+                continue
+
             pool_name = MigrateCommands._get_selection("Volume group/pool to use on " + n + '\n\n'
                                                        "For 'lvm', the volume group name (e.g., drbdpool);\n"
                                                        "For 'zfs', the zPool name (e.g., drbdpool);\n"
