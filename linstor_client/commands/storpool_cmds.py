@@ -20,6 +20,14 @@ class StoragePoolCommands(Commands):
         linstor_client.TableHeader("SupportsSnapshots")
     ]
 
+    _driver_list = [
+        "lvm",
+        "lvmthin",
+        "zfs",
+        "diskless",
+        "swordfish"
+    ]
+
     def __init__(self):
         super(StoragePoolCommands, self).__init__()
 
@@ -70,7 +78,9 @@ class StoragePoolCommands(Commands):
             help='Volume group/pool to use, e.g. drbdpool. '
             'For \'lvm\', the volume group; '
             'for \'lvmthin\', the full name of the thin pool, namely VG/LV; '
-            'for \'zfs\', the zPool.')
+            'for \'zfs\', the zPool.'
+            'for \'swordfish\', not needed'
+        )
         p_new_storpool.set_defaults(func=self.create)
 
         # remove-storpool
@@ -226,9 +236,7 @@ class StoragePoolCommands(Commands):
 
     @staticmethod
     def driver_completer(prefix, **kwargs):
-        possible = ["lvm", "lvmthin", "zfs", "diskless"]
-
         if prefix:
-            return [e for e in possible if e.startswith(prefix)]
+            return [e for e in StoragePoolCommands._driver_list if e.startswith(prefix)]
 
-        return possible
+        return StoragePoolCommands._driver_list
