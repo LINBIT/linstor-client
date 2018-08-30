@@ -28,7 +28,8 @@ class MigrateCommands(Commands):
 # -) zfs thin pools (currenlty missing in LINSTOR)
 #
 # If the controller is not executed on the local host, set this variable:
-# LS_CONTROLLERS="localhost"
+LS_CONTROLLERS="localhost"
+export LS_CONTROLLERS
 #
 # This script is meant to be reviewed for plausibility
 # To make sure you did that, you have to remove the following line
