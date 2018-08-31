@@ -19,7 +19,7 @@ class NodeCommands(Commands):
     _node_headers = [
         linstor_client.TableHeader("Node"),
         linstor_client.TableHeader("NodeType"),
-        linstor_client.TableHeader("IPs"),
+        linstor_client.TableHeader("Addresses"),
         linstor_client.TableHeader("State", color=Color.DARKGREEN)
     ]
 
@@ -343,7 +343,8 @@ class NodeCommands(Commands):
         for n in node_list:
             # concat a ip list with satellite connection indicator
             ips = [
-                if_.address + ("(" + if_.stlt_encryption_type + ")" if if_.stlt_port else "")
+                if_.address +
+                (":" + str(if_.stlt_port) + " (" + if_.stlt_encryption_type + ")" if if_.stlt_port else "")
                 for if_ in n.net_interfaces
             ]
             conn_stat = conn_stat_dict[n.connection_status]
