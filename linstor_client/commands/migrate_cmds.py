@@ -140,7 +140,7 @@ echo "migration disabled, review script and remove this line"; exit 1\n
 
         of.write('### Storage ###\n')
         MigrateCommands._pool = MigrateCommands._get_selection(
-            'Name of the storage pool\n\nThis does not have to match an exiting LVM pool\n'
+            'Name of the storage pool\n\nThis does not have to match an existing LVM pool\n'
             'it is just a name to summarize individual pools of nodes in LINSTOR\n'
             'if unsure, just go for the default',
             {}, 'drbdpool'
