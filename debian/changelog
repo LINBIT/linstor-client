@@ -1,3 +1,26 @@
+linstor-client (0.6.0-1) experimental; urgency=medium
+
+  [ Joel Colledge ]
+  * Resource create no longer needs to wait for events
+  * Fix tests to expect the satellite unreachable message after the regist [...]
+  * Add command for adding a disk to a diskless resource
+  * Add option to remove a disk making a resource diskless
+
+  [ Rene Peinthor ]
+  * respect multiple controllers again
+  * storage_pool-create: add shared-space argument
+  * storpool-create: add swordfish driver
+  * storage-pool: rework create and add swordfish drv
+  * dm-migrate: fix typo
+  * nodes: show ports for satellite connections
+
+  [ Roland Kammerer ]
+  * dm-migrate: allow sp c skip
+  * dm-migrate: export LS_CONTROLLERS
+  * dm-migrate: set AllowLargerVolumeSize
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Fri, 31 Aug 2018 11:16:27 +0200
+
 linstor-client (0.5.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
