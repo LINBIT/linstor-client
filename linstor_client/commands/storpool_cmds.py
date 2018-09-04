@@ -114,7 +114,7 @@ class StoragePoolCommands(Commands):
             type=str,
             help='The Lvm volume group to use.'
         )
-        p_new_lvm_pool.set_defaults(func=self.create, driver='Lvm')
+        p_new_lvm_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.LVM)
 
         p_new_lvm_thin_pool = create_subp.add_parser(
             StoragePoolCommands.LvmThin.LONG,
@@ -127,7 +127,7 @@ class StoragePoolCommands(Commands):
             type=str,
             help='The LvmThin volume group to use. The full name of the thin pool, namely VG/LV'
         )
-        p_new_lvm_thin_pool.set_defaults(func=self.create, driver='LvmThin')
+        p_new_lvm_thin_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.LVMThin)
 
         p_new_zfs_pool = create_subp.add_parser(
             StoragePoolCommands.Zfs.LONG,
@@ -140,7 +140,7 @@ class StoragePoolCommands(Commands):
             type=str,
             help='The name of the zpool to use.'
         )
-        p_new_zfs_pool.set_defaults(func=self.create, driver='Zfs')
+        p_new_zfs_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.ZFS)
 
         p_new_diskless_pool = create_subp.add_parser(
             StoragePoolCommands.Diskless.LONG,
@@ -148,7 +148,11 @@ class StoragePoolCommands(Commands):
             description='Create a diskless pool'
         )
         self._create_pool_args(p_new_diskless_pool, shared_space=False)
-        p_new_diskless_pool.set_defaults(func=self.create, driver='Diskless', driver_pool_name=None)
+        p_new_diskless_pool.set_defaults(
+            func=self.create,
+            driver=linstor.StoragePoolDriver.Diskless,
+            driver_pool_name=None
+        )
 
         p_new_swordfish_target_pool = create_subp.add_parser(
             StoragePoolCommands.SwordfishTarget.LONG,
@@ -166,7 +170,10 @@ class StoragePoolCommands(Commands):
             type=str,
             help="Swordfish storage pool"
         )
-        p_new_swordfish_target_pool.set_defaults(func=self.create_swordfish, driver='SwordfishTarget')
+        p_new_swordfish_target_pool.set_defaults(
+            func=self.create_swordfish,
+            driver=linstor.StoragePoolDriver.SwordfishTarget
+        )
 
         p_new_swordfish_initiator_pool = create_subp.add_parser(
             StoragePoolCommands.SwordfishInitiator.LONG,
@@ -176,7 +183,7 @@ class StoragePoolCommands(Commands):
         self._create_pool_args(p_new_swordfish_initiator_pool)
         p_new_swordfish_initiator_pool.set_defaults(
             func=self.create,
-            driver='SwordfishInitiator',
+            driver=linstor.StoragePoolDriver.SwordfishInitiator,
             driver_pool_name=None
         )
 
@@ -254,7 +261,7 @@ class StoragePoolCommands(Commands):
 
     def create(self, args):
         try:
-            shrd_space = None if args.driver == 'Diskless' else args.shared_space
+            shrd_space = None if args.driver == linstor.StoragePoolDriver.Diskless else args.shared_space
             replies = self.get_linstorapi().storage_pool_create(
                 args.node_name,
                 args.name,
@@ -298,14 +305,18 @@ class StoragePoolCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [self._stor_pool_headers[0].name])
 
         for storpool in lstmsg.stor_pools:
-            driver_device = self._linstor.storage_props_to_driver_pool(storpool.driver[:-len('Driver')], storpool.props)
+            driver_device = linstor.StoragePoolDriver.storage_props_to_driver_pool(
+                storpool.driver[:-len('Driver')],
+                storpool.props)
 
             supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
             supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
 
             free_capacity = ""
             total_capacity = ""
-            if storpool.driver not in ['DisklessDriver', 'SwordfishInitiator'] and storpool.HasField("free_space"):
+            if storpool.driver not in [linstor.StoragePoolDriver.Diskless,
+                                       linstor.StoragePoolDriver.SwordfishInitiator] and \
+                    storpool.HasField("free_space"):
                 free_capacity = SizeCalc.approximate_size_string(storpool.free_space.free_capacity)
                 total_capacity = SizeCalc.approximate_size_string(storpool.free_space.total_capacity)
 
