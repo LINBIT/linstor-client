@@ -22,6 +22,10 @@ class StoragePoolCommands(Commands):
         LONG = "zfs"
         SHORT = "zfs"
 
+    class ZfsThin(object):
+        LONG = "zfsthin"
+        SHORT = "zfsthin"
+
     class SwordfishTarget(object):
         LONG = "swordfish_target"
         SHORT = "sft"
@@ -86,6 +90,7 @@ class StoragePoolCommands(Commands):
             StoragePoolCommands.Lvm,
             StoragePoolCommands.LvmThin,
             StoragePoolCommands.Zfs,
+            StoragePoolCommands.ZfsThin,
             StoragePoolCommands.Diskless,
             StoragePoolCommands.SwordfishTarget,
             StoragePoolCommands.SwordfishInitiator
@@ -141,6 +146,19 @@ class StoragePoolCommands(Commands):
             help='The name of the zpool to use.'
         )
         p_new_zfs_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.ZFS)
+
+        p_new_zfsthin_pool = create_subp.add_parser(
+            StoragePoolCommands.ZfsThin.LONG,
+            aliases=[StoragePoolCommands.ZfsThin.SHORT],
+            description='Create a zfs storage pool'
+        )
+        self._create_pool_args(p_new_zfsthin_pool)
+        p_new_zfsthin_pool.add_argument(
+            'driver_pool_name',
+            type=str,
+            help='The name of the zpool to use.'
+        )
+        p_new_zfsthin_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.ZFSThin)
 
         p_new_diskless_pool = create_subp.add_parser(
             StoragePoolCommands.Diskless.LONG,
