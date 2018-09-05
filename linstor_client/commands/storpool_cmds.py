@@ -306,7 +306,7 @@ class StoragePoolCommands(Commands):
 
         for storpool in lstmsg.stor_pools:
             driver_device = linstor.StoragePoolDriver.storage_props_to_driver_pool(
-                storpool.driver[:-len('Driver')],
+                storpool.driver,
                 storpool.props)
 
             supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
