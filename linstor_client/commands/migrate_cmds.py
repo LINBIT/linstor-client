@@ -153,7 +153,7 @@ echo "migration disabled, review script and remove this line"; exit 1\n
             1: 'lvm',
             2: 'lvmthin',
             3: 'zfs',
-            # 4: 'zfsthin',
+            4: 'zfsthin',
         }
         storage_type, pool_name = '', ''
         for n, v in nodes.items():
@@ -167,7 +167,7 @@ echo "migration disabled, review script and remove this line"; exit 1\n
 
             pool_name = MigrateCommands._get_selection("Volume group/pool to use on " + n + '\n\n'
                                                        "For 'lvm', the volume group name (e.g., drbdpool);\n"
-                                                       "For 'zfs', the zPool name (e.g., drbdpool);\n"
+                                                       "For 'zfs' or 'zfsthin', the zPool name (e.g., drbdpool);\n"
                                                        "For 'lvmthin', the full name of the thin pool, namely "
                                                        "VG/LV (e.g., drbdpool/drbdthinpool);", {}, pool_name)
             MigrateCommands.lsc(of, 'storage-pool', 'create', storage_type, n,
