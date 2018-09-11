@@ -224,6 +224,7 @@ class Commands(object):
                 cls._print_machine_readable(replies)
             else:
                 output_func(args, replies[0].proto_msg if single_item else replies)
+                cls.handle_replies(args, replies[1:])
 
         return ExitCode.OK
 
