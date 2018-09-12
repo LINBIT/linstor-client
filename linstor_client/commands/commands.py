@@ -224,7 +224,8 @@ class Commands(object):
                 cls._print_machine_readable(replies)
             else:
                 output_func(args, replies[0].proto_msg if single_item else replies)
-                cls.handle_replies(args, replies[1:])
+                api_replies = linstor.Linstor.filter_api_call_response(replies[1:])
+                cls.handle_replies(args, api_replies)
 
         return ExitCode.OK
 
