@@ -182,8 +182,9 @@ class SnapshotCommands(Commands):
         self.check_subcommands(snapshot_subp, subcmds)
 
     def create(self, args):
+        async_flag = vars(args)["async"]
         replies = self._linstor.snapshot_create(
-            args.node_name, args.resource_definition_name, args.snapshot_name, args.async)
+            args.node_name, args.resource_definition_name, args.snapshot_name, async_flag)
         return self.handle_replies(args, replies)
 
     def restore_volume_definition(self, args):

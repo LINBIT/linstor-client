@@ -134,8 +134,9 @@ class ResourceDefinitionCommands(Commands):
         return self.handle_replies(args, replies)
 
     def delete(self, args):
+        async_flag = vars(args)["async"]
         # execute delete rscdfns and flatten result list
-        if args.async:
+        if async_flag:
             replies = [x for subx in args.name for x in self._linstor.resource_dfn_delete(subx)]
             return self.handle_replies(args, replies)
         else:

@@ -296,6 +296,7 @@ class ResourceCommands(Commands):
         return any(reply.ret_code & apiconsts.WARN_NOT_CONNECTED == apiconsts.WARN_NOT_CONNECTED for reply in replies)
 
     def create(self, args):
+        async_flag = vars(args)["async"]
         all_replies = []
         if args.auto_place:
             # auto-place resource
@@ -313,7 +314,7 @@ class ResourceCommands(Commands):
             if not self._linstor.all_api_responses_no_error(all_replies):
                 return self.handle_replies(args, all_replies)
 
-            if not args.async:
+            if not async_flag:
                 def event_handler(event_header, event_data):
                     if event_header.event_name == apiconsts.EVENT_RESOURCE_DEFINITION_READY:
                         if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
@@ -355,7 +356,7 @@ class ResourceCommands(Commands):
                     args.diskless,
                     args.storage_pool,
                     args.node_id,
-                    args.async
+                    async_flag
                 )
 
                 if not self._linstor.all_api_responses_no_error(all_replies):
@@ -364,7 +365,8 @@ class ResourceCommands(Commands):
         return self.handle_replies(args, all_replies)
 
     def delete(self, args):
-        if args.async:
+        async_flag = vars(args)["async"]
+        if async_flag:
             # execute delete resource and flatten result list
             replies = [x for subx in args.node_name for x in self._linstor.resource_delete(subx, args.name)]
             return self.handle_replies(args, replies)
@@ -586,11 +588,12 @@ class ResourceCommands(Commands):
         return self.handle_replies(args, replies)
 
     def toggle_disk(self, args):
+        async_flag = vars(args)["async"]
         replies = self._linstor.resource_toggle_disk(
             args.node_name,
             args.name,
             args.storage_pool,
             args.diskless,
-            args.async
+            async_flag
         )
         return self.handle_replies(args, replies)
