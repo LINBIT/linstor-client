@@ -199,7 +199,9 @@ class Commands(object):
             Commands._print_machine_readable(replies)
             return rc
 
-        for call_resp in replies:
+        for call_resp in [x for x in replies
+                          if not(x.ret_code == (linstor.consts.CREATED | linstor.consts.MASK_CRT)
+                          and x.message == "Watch created")]:
             current_rc = Output.handle_ret(
                 call_resp.proto_msg,
                 warn_as_error=args.warn_as_error,
