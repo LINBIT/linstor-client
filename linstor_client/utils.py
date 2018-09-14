@@ -127,6 +127,13 @@ class Output(object):
         sys.stderr.write(Output.color_str(msg, color, no_color) + '\n')
         sys.exit(ret)
 
+    @staticmethod
+    def utf8(msg):
+        # e.g., redirect, then force utf8 encoding (default on py3)
+        if sys.stdout.encoding is None:
+            msg = msg.encode('utf-8')
+        return msg
+
 
 # a wrapper for subprocess.check_output
 def check_output(*args, **kwargs):

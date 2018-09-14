@@ -754,9 +754,8 @@ class MiscCommands(Commands):
         return self.output_list(args, lstmsg, self.show_error_report_list, single_item=False)
 
     def show_error_report(self, args, lstmsg):
-
         for error in lstmsg:
-            print(error.text)
+            print(Output.utf8(error.text))
 
     def cmd_error_report(self, args):
         lstmsg = self._linstor.error_report_list(with_content=True, ids=args.report_id)
