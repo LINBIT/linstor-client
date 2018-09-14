@@ -310,7 +310,7 @@ class ResourceCommands(Commands):
                 diskless_on_remaining=args.diskless_on_remaining
             )
 
-            if not self._linstor.all_api_responses_success(all_replies):
+            if not self._linstor.all_api_responses_no_error(all_replies):
                 return self.handle_replies(args, all_replies)
 
             if not args.async:
@@ -330,14 +330,14 @@ class ResourceCommands(Commands):
                     return None
 
                 watch_result = self._linstor.watch_events(
-                    self._linstor.return_if_failure,
+                    self._linstor.return_if_error,
                     event_handler,
                     linstor.ObjectIdentifier(resource_name=args.resource_definition_name)
                 )
 
                 if isinstance(watch_result, list):
                     all_replies += watch_result
-                    if not self._linstor.all_api_responses_success(watch_result):
+                    if not self._linstor.all_api_responses_no_error(watch_result):
                         return self.handle_replies(args, all_replies)
                 elif watch_result != ExitCode.OK:
                     return watch_result
@@ -358,7 +358,7 @@ class ResourceCommands(Commands):
                     args.async
                 )
 
-                if not self._linstor.all_api_responses_success(all_replies):
+                if not self._linstor.all_api_responses_no_error(all_replies):
                     return self.handle_replies(args, all_replies)
 
         return self.handle_replies(args, all_replies)
@@ -385,19 +385,19 @@ class ResourceCommands(Commands):
                 replies = self.get_linstorapi().resource_delete(node, args.name)
                 all_delete_replies += replies
 
-                if not self._linstor.all_api_responses_success(replies):
+                if not self._linstor.all_api_responses_no_error(replies):
                     return self.handle_replies(args, all_delete_replies)
 
                 watch_responses = []
                 watch_result = self.get_linstorapi().watch_events(
-                    self._linstor.return_if_failure,
+                    self._linstor.return_if_error,
                     lambda event_header, event_data: event_handler(event_header, event_data, watch_responses),
                     linstor.ObjectIdentifier(node_name=node, resource_name=args.name)
                 )
                 all_delete_replies += watch_responses[-1]
 
                 if watch_result == ExitCode.OK:
-                    if not self._linstor.all_api_responses_success(watch_responses[-1]):
+                    if not self._linstor.all_api_responses_no_error(watch_responses[-1]):
                         return self.handle_replies(args, all_delete_replies)
                 else:
                     return watch_result
