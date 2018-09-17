@@ -88,6 +88,10 @@ class Output(object):
         if have_details:
             outstream.write("Details:\n")
             Output.print_with_indent(outstream, 4, details)
+
+        if answer.error_report_ids:
+            outstream.write("Show reports:\n")
+            Output.print_with_indent(outstream, 4, "linstor error-reports show " + " ".join(answer.error_report_ids))
         return ret
 
     @staticmethod
