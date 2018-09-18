@@ -151,7 +151,7 @@ class VolumeDefinitionCommands(Commands):
         p_drbd_opts = vol_def_subp.add_parser(
             Commands.Subcommands.DrbdOptions.LONG,
             aliases=[Commands.Subcommands.DrbdOptions.SHORT],
-            description="Set drbd volume options."
+            description=DrbdOptions.description("volume")
         )
         p_drbd_opts.add_argument(
             'resource_name',

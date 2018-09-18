@@ -224,7 +224,7 @@ class ResourceCommands(Commands):
         p_drbd_peer_opts = res_subp.add_parser(
             Commands.Subcommands.DrbdPeerDeviceOptions.LONG,
             aliases=[Commands.Subcommands.DrbdPeerDeviceOptions.SHORT],
-            description="Set drbd peer-device options."
+            description=DrbdOptions.description("peer-device")
         )
         p_drbd_peer_opts.add_argument(
             'node_a',

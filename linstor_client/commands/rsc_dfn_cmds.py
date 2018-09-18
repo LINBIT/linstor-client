@@ -114,7 +114,7 @@ class ResourceDefinitionCommands(Commands):
         p_drbd_opts = res_def_subp.add_parser(
             Commands.Subcommands.DrbdOptions.LONG,
             aliases=[Commands.Subcommands.DrbdOptions.SHORT],
-            description="Set drbd resource options."
+            description=DrbdOptions.description("resource")
         )
         p_drbd_opts.add_argument(
             'resource_name',

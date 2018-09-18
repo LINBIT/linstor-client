@@ -47,7 +47,7 @@ class ControllerCommands(Commands):
         c_drbd_opts = con_subp.add_parser(
             Commands.Subcommands.DrbdOptions.LONG,
             aliases=[Commands.Subcommands.DrbdOptions.SHORT],
-            description="Set common drbd options."
+            description=DrbdOptions.description("drbd")
         )
         DrbdOptions.add_arguments(c_drbd_opts, DrbdOptions.drbd_options()['options'].keys())
         c_drbd_opts.set_defaults(func=self.cmd_controller_drbd_opts)
