@@ -197,7 +197,7 @@ def rangecheck(i, j):
         import linstor_client.argparse.argparse as argparse
         v = int(v)
         if not checkrange(v, i, j):
-            raise argparse.ArgumentTypeError('Range: [%d, %d]' % (i, j))
+            raise argparse.ArgumentTypeError('%d not in range: [%d, %d]' % (v, i, j))
         return v
     return range
 

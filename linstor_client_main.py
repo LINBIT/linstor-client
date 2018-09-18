@@ -262,12 +262,12 @@ class LinStorCLI(object):
                 rc = ExitCode.CONNECTION_ERROR
             else:
                 rc = args.func(args)
-        except ArgumentError as ae:
-            sys.stderr.write(ae.message + '\n')
+        except (ArgumentError, argparse.ArgumentTypeError) as ae:
             try:
                 self.parse(list(itertools.takewhile(lambda x: not x.startswith('-'), pargs)) + ['-h'])
             except SystemExit:
                 pass
+            sys.stderr.write(ae.message + '\n')
             return ExitCode.ARGPARSE_ERROR
         except utils.LinstorClientError as lce:
             sys.stderr.write(lce.message + '\n')
