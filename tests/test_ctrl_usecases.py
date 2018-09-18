@@ -207,6 +207,13 @@ class TestCreateCommands(LinstorTestCase):
         self.assertTrue(vlm_dfn.is_error())
         self.assertEqual(FAIL_NOT_FOUND_RSC_DFN | MASK_CRT | MASK_VLM_DFN, vlm_dfn.ret_code)
 
+    def test_delete_non_existing_rsc_dfn(self):
+        rsc_dfn_del = self.execute_with_resp(['resource-definition', 'delete', 'non_existing_rsc_dfn'])
+        self.assertGreater(len(rsc_dfn_del), 0)
+        rsc_dfn_del_reply = rsc_dfn_del[0]
+        self.assertTrue(rsc_dfn_del_reply.is_warning())
+        self.assertEqual(WARN_NOT_FOUND | MASK_RSC_DFN | MASK_DEL, rsc_dfn_del_reply.ret_code)
+
 
 if __name__ == '__main__':
     unittest.main()
