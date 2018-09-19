@@ -13,6 +13,7 @@ class ResourceCommands(Commands):
         linstor_client.TableHeader("ResourceName"),
         linstor_client.TableHeader("Node"),
         linstor_client.TableHeader("Port"),
+        linstor_client.TableHeader("Usage", Color.DARKGREEN),
         linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text='>')
     ]
 
@@ -434,23 +435,24 @@ class ResourceCommands(Commands):
             marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
             rsc_state_proto = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
             rsc_state = tbl.color_cell("Unknown", Color.YELLOW)
+            rsc_usage = "Unused"
             if marked_delete:
                 rsc_state = tbl.color_cell("DELETING", Color.RED)
             elif rsc_state_proto:
                 if rsc_state_proto.HasField('in_use') and rsc_state_proto.in_use:
-                    rsc_state = tbl.color_cell("InUse", Color.GREEN)
-                else:
-                    for vlm in rsc.vlms:
-                        vlm_state = ResourceCommands.get_volume_state(rsc_state_proto.vlm_states,
-                                                                      vlm.vlm_nr) if rsc_state_proto else None
-                        state_txt, color = self.volume_state_cell(vlm_state, rsc.rsc_flags, vlm.vlm_flags)
-                        rsc_state = tbl.color_cell(state_txt, color)
-                        if color is not None:
-                            break
+                    rsc_usage = tbl.color_cell("InUse", Color.GREEN)
+                for vlm in rsc.vlms:
+                    vlm_state = ResourceCommands.get_volume_state(rsc_state_proto.vlm_states,
+                                                                  vlm.vlm_nr) if rsc_state_proto else None
+                    state_txt, color = self.volume_state_cell(vlm_state, rsc.rsc_flags, vlm.vlm_flags)
+                    rsc_state = tbl.color_cell(state_txt, color)
+                    if color is not None:
+                        break
             tbl.add_row([
                 rsc.name,
                 rsc.node_name,
                 rsc_dfn_port,
+                rsc_usage,
                 rsc_state
             ])
         tbl.show()
@@ -519,10 +521,14 @@ class ResourceCommands(Commands):
         tbl.add_column("VolumeNr")
         tbl.add_column("MinorNr")
         tbl.add_column("DeviceName")
+        tbl.add_column("InUse", color=Output.color(Color.DARKGREEN, args.no_color))
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
         for rsc in lstmsg.resources:
             rsc_state = ResourceCommands.get_resource_state(lstmsg.resource_states, rsc.node_name, rsc.name)
+            rsc_usage = "Unused"
+            if rsc_state.HasField('in_use') and rsc_state.in_use:
+                rsc_usage = tbl.color_cell("InUse", Color.GREEN)
             for vlm in rsc.vlms:
                 vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr) if rsc_state else None
                 state_txt, color = cls.volume_state_cell(vlm_state, rsc.rsc_flags, vlm.vlm_flags)
@@ -534,6 +540,7 @@ class ResourceCommands(Commands):
                     str(vlm.vlm_nr),
                     str(vlm.vlm_minor_nr),
                     vlm.device_path,
+                    rsc_usage,
                     state
                 ])
 
