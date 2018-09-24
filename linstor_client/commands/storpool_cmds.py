@@ -179,11 +179,6 @@ class StoragePoolCommands(Commands):
         )
         self._create_pool_args(p_new_swordfish_target_pool)
         p_new_swordfish_target_pool.add_argument(
-            'storage_service',
-            type=str,
-            help="Storage service id."
-        )
-        p_new_swordfish_target_pool.add_argument(
             'swordfish_storage_pool',
             type=str,
             help="Swordfish storage pool"
@@ -294,7 +289,6 @@ class StoragePoolCommands(Commands):
     def create_swordfish(self, args):
         prefix_key = linstor.consts.NAMESPC_STORAGE_DRIVER + '/'
         properties = {
-            prefix_key + linstor.consts.KEY_STOR_POOL_SF_STOR_SVC: args.storage_service,
             prefix_key + linstor.consts.KEY_STOR_POOL_SF_STOR_POOL: args.swordfish_storage_pool
         }
         try:
