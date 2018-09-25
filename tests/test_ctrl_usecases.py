@@ -90,10 +90,10 @@ class TestUseCases(LinstorTestCase):
         # delete resource
         rsc_resps = self.execute_with_resp(['resource', 'delete', '--async', 'node1', 'rsc1'])
         self.assertEqual(2, len(rsc_resps))
-        warn_resp = rsc_resps[0]
+        warn_resp = rsc_resps[1]
         self.assertTrue(warn_resp.is_warning(), str(warn_resp))
         self.assertEqual(WARN_NOT_CONNECTED | MASK_RSC | MASK_DEL, warn_resp.ret_code)
-        self.assertTrue(rsc_resps[1].is_success())
+        self.assertTrue(rsc_resps[0].is_success())
 
 
 class TestCreateCommands(LinstorTestCase):
