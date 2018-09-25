@@ -156,9 +156,11 @@ class NodeCommands(Commands):
             'expected to undeploy all resources. As soon as all resources have been '
             'undeployed from the node, the node entry is removed from '
             "linstor's data tables.")
-        p_rm_node.add_argument('-q', '--quiet', action="store_true",
-                               help='Unless this option is used, linstor will issue a safety question '
-                               'that must be answered with yes, otherwise the operation is canceled.')
+        p_rm_node.add_argument(
+            '--async',
+            action='store_true',
+            help='Do not wait for actual deletion on satellites before returning'
+        )
         p_rm_node.add_argument('name',
                                help='Name of the node to remove').completer = self.node_completer
         p_rm_node.set_defaults(func=self.delete)
@@ -169,6 +171,11 @@ class NodeCommands(Commands):
             aliases=[Commands.Subcommands.Lost.SHORT],
             description='Removes an unrecoverable node from the linstor cluster. '
             'All linstor resources attached to this node will be deleted from the database.'
+        )
+        p_lost_node.add_argument(
+            '--async',
+            action='store_true',
+            help='Do not wait for actual deletion on peers before returning'
         )
         p_lost_node.add_argument(
             'name',
@@ -334,12 +341,16 @@ class NodeCommands(Commands):
         return self.handle_replies(args, replies)
 
     def delete(self, args):
-        replies = self._linstor.node_delete(args.name)
+        async_flag = vars(args)["async"]
+
+        replies = self._linstor.node_delete(args.name, async_flag)
 
         return self.handle_replies(args, replies)
 
     def lost(self, args):
-        replies = self._linstor.node_lost(args.name)
+        async_flag = vars(args)["async"]
+
+        replies = self._linstor.node_lost(args.name, async_flag)
 
         return self.handle_replies(args, replies)
 

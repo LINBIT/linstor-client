@@ -129,9 +129,6 @@ class ResourceCommands(Commands):
             "and the resource entry is marked for removal from linstor's data "
             'tables. After the node has undeployed the resource, the resource '
             "entry is removed from linstor's data tables.")
-        p_rm_res.add_argument('-q', '--quiet', action="store_true",
-                              help='Unless this option is used, linstor will issue a safety question '
-                              'that must be answered with yes, otherwise the operation is canceled.')
         p_rm_res.add_argument(
             '--async',
             action='store_true',
@@ -367,45 +364,10 @@ class ResourceCommands(Commands):
 
     def delete(self, args):
         async_flag = vars(args)["async"]
-        if async_flag:
-            # execute delete resource and flatten result list
-            replies = [x for subx in args.node_name for x in self._linstor.resource_delete(subx, args.name)]
-            return self.handle_replies(args, replies)
-        else:
-            def event_handler(event_header, event_data, watch_responses):
-                if event_header.event_name in [apiconsts.EVENT_RESOURCE_DEPLOYMENT_STATE]:
-                    if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_NO_CONNECTION:
-                        print(Output.color_str('WARNING:', Color.YELLOW, args.no_color) +
-                              " Satellite connection lost")
-                        return ExitCode.NO_SATELLITE_CONNECTION
-                    if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
-                        return ExitCode.OK
-                    if event_header.event_action == apiconsts.EVENT_STREAM_VALUE:
-                        watch_responses.append([linstor.ApiCallResponse(response) for response in event_data.responses])
 
-            all_delete_replies = []
-            for node in args.node_name:
-                replies = self.get_linstorapi().resource_delete(node, args.name)
-                all_delete_replies += replies
-
-                if not self._linstor.all_api_responses_no_error(replies):
-                    return self.handle_replies(args, all_delete_replies)
-
-                watch_responses = []
-                watch_result = self.get_linstorapi().watch_events(
-                    self._linstor.return_if_error,
-                    lambda event_header, event_data: event_handler(event_header, event_data, watch_responses),
-                    linstor.ObjectIdentifier(node_name=node, resource_name=args.name)
-                )
-                all_delete_replies += watch_responses[-1]
-
-                if watch_result == ExitCode.OK:
-                    if not self._linstor.all_api_responses_no_error(watch_responses[-1]):
-                        return self.handle_replies(args, all_delete_replies)
-                else:
-                    return watch_result
-
-            return self.handle_replies(args, all_delete_replies)
+        # execute delete resource and flatten result list
+        replies = [x for subx in args.node_name for x in self._linstor.resource_delete(subx, args.name, async_flag)]
+        return self.handle_replies(args, replies)
 
     @staticmethod
     def find_rsc_state(rsc_states, rsc_name, node_name):

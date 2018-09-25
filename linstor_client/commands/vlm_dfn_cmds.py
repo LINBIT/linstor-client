@@ -90,9 +90,11 @@ class VolumeDefinitionCommands(Commands):
             "from the resource definition in linstor's data tables. After all "
             'nodes have undeployed the volume, the volume entry is removed from '
             'the resource definition.')
-        p_rm_vol.add_argument('-q', '--quiet', action="store_true",
-                              help='Unless this option is used, linstor will issue a safety question '
-                              'that must be answered with yes, otherwise the operation is canceled.')
+        p_rm_vol.add_argument(
+            '--async',
+            action='store_true',
+            help='Do not wait for actual deletion on satellites before returning'
+        )
         p_rm_vol.add_argument('resource_name',
                               help='Resource name of the volume definition'
                               ).completer = self.resource_dfn_completer
@@ -205,7 +207,9 @@ class VolumeDefinitionCommands(Commands):
         return self.handle_replies(args, replies)
 
     def delete(self, args):
-        replies = self._linstor.volume_dfn_delete(args.resource_name, args.volume_nr)
+        async_flag = vars(args)["async"]
+
+        replies = self._linstor.volume_dfn_delete(args.resource_name, args.volume_nr, async_flag)
         return self.handle_replies(args, replies)
 
     @classmethod
