@@ -397,12 +397,14 @@ class ResourceCommands(Commands):
             marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
             rsc_state_proto = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
             rsc_state = tbl.color_cell("Unknown", Color.YELLOW)
-            rsc_usage = "Unused"
+            rsc_usage = ""
             if marked_delete:
                 rsc_state = tbl.color_cell("DELETING", Color.RED)
             elif rsc_state_proto:
                 if rsc_state_proto.HasField('in_use') and rsc_state_proto.in_use:
                     rsc_usage = tbl.color_cell("InUse", Color.GREEN)
+                else:
+                    rsc_usage = "Unused"
                 for vlm in rsc.vlms:
                     vlm_state = ResourceCommands.get_volume_state(rsc_state_proto.vlm_states,
                                                                   vlm.vlm_nr) if rsc_state_proto else None
@@ -488,9 +490,12 @@ class ResourceCommands(Commands):
 
         for rsc in lstmsg.resources:
             rsc_state = ResourceCommands.get_resource_state(lstmsg.resource_states, rsc.node_name, rsc.name)
-            rsc_usage = "Unused"
-            if rsc_state.HasField('in_use') and rsc_state.in_use:
-                rsc_usage = tbl.color_cell("InUse", Color.GREEN)
+            rsc_usage = ""
+            if rsc_state:
+                if rsc_state.HasField('in_use') and rsc_state.in_use:
+                    rsc_usage = tbl.color_cell("InUse", Color.GREEN)
+                else:
+                    rsc_usage = "Unused"
             for vlm in rsc.vlms:
                 vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr) if rsc_state else None
                 state_txt, color = cls.volume_state_cell(vlm_state, rsc.rsc_flags, vlm.vlm_flags)

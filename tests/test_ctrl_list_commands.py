@@ -29,6 +29,10 @@ class TestListCommands(LinstorTestCase):
         text_out = self.execute_with_text_output(["resource", "list"])
         self.assertIn("ResourceName", text_out)
 
+    def test_volume_text(self):
+        text_out = self.execute_with_text_output(["resource", "list-volumes"])
+        self.assertIn("VolumeNr", text_out)
+
     def test_storage_pool_defs(self):
         jout = self.execute_with_machine_output(["storage-pool-definition", "list"])
         self.assertIsNotNone(jout)
