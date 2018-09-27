@@ -1,11 +1,31 @@
+from __future__ import print_function
+
 import linstor_client.argparse.argparse as argparse
 
 import linstor
 import linstor_client
 import linstor.sharedconsts as apiconsts
-from linstor_client.commands import Commands, DrbdOptions, ArgumentError
-from linstor_client.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color
+from linstor_client.commands import DefaultState, Commands, DrbdOptions, ArgumentError
+from linstor_client.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color, ExitCode
 from linstor_client.utils import Output, namecheck
+
+
+class ResourceCreateTransactionState(object):
+    def __init__(self, terminate_on_error):
+        self.rscs = []
+        self._terminate_on_error = terminate_on_error
+
+    @property
+    def name(self):
+        return 'Resource Creation Transaction'
+
+    @property
+    def prompt(self):
+        return self.name
+
+    @property
+    def terminate_on_error(self):
+        return self._terminate_on_error
 
 
 class ResourceCommands(Commands):
@@ -17,8 +37,10 @@ class ResourceCommands(Commands):
         linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text='>')
     ]
 
-    def __init__(self):
+    def __init__(self, state_service):
         super(ResourceCommands, self).__init__()
+
+        self._state_service = state_service
 
     def setup_commands(self, parser):
         subcmds = [
@@ -29,7 +51,8 @@ class ResourceCommands(Commands):
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.DrbdPeerDeviceOptions,
-            Commands.Subcommands.ToggleDisk
+            Commands.Subcommands.ToggleDisk,
+            Commands.Subcommands.CreateTransactional
         ]
 
         # Resource subcommands
@@ -112,7 +135,7 @@ class ResourceCommands(Commands):
             'resource_definition_name',
             type=namecheck(RES_NAME),
             help='Name of the resource definition').completer = self.resource_dfn_completer
-        p_new_res.set_defaults(func=self.create)
+        p_new_res.set_defaults(func=self.create, allowed_states=[DefaultState, ResourceCreateTransactionState])
 
         # remove-resource
         p_rm_res = res_subp.add_parser(
@@ -281,11 +304,68 @@ class ResourceCommands(Commands):
         ).completer = self.resource_dfn_completer
         p_toggle_disk.set_defaults(func=self.toggle_disk)
 
+        # resource creation transaction commands
+        transactional_create_subcmds = [
+            Commands.Subcommands.TransactionBegin,
+            Commands.Subcommands.TransactionAbort,
+            Commands.Subcommands.TransactionCommit
+        ]
+
+        transactional_create_parser = res_subp.add_parser(
+            Commands.Subcommands.CreateTransactional.LONG,
+            formatter_class=argparse.RawTextHelpFormatter,
+            aliases=[Commands.Subcommands.CreateTransactional.SHORT],
+            description="%s subcommands" % Commands.Subcommands.CreateTransactional.LONG)
+
+        transactional_create_subp = transactional_create_parser.add_subparsers(
+            title="%s subcommands" % Commands.Subcommands.CreateTransactional.LONG,
+            description=Commands.Subcommands.generate_desc(transactional_create_subcmds))
+
+        # begin resource creation transaction
+        p_transactional_create_begin = transactional_create_subp.add_parser(
+            Commands.Subcommands.TransactionBegin.LONG,
+            aliases=[Commands.Subcommands.TransactionBegin.SHORT],
+            description='Start group of resources to create in a single transaction.')
+        p_transactional_create_begin.add_argument(
+            '--terminate-on-error',
+            action='store_true',
+            help='Abort the transaction when any command fails'
+        )
+        p_transactional_create_begin.set_defaults(func=self.transactional_create_begin)
+
+        # abort resource creation transaction
+        p_transactional_create_abort = transactional_create_subp.add_parser(
+            Commands.Subcommands.TransactionAbort.LONG,
+            aliases=[Commands.Subcommands.TransactionAbort.SHORT],
+            description='Abort resource creation transaction.')
+        p_transactional_create_abort.set_defaults(
+            func=self.transactional_create_abort, allowed_states=[ResourceCreateTransactionState])
+
+        # commit resource creation transaction
+        p_transactional_create_commit = transactional_create_subp.add_parser(
+            Commands.Subcommands.TransactionCommit.LONG,
+            aliases=[Commands.Subcommands.TransactionCommit.SHORT],
+            description='Create resources defined in the current resource creation transaction.')
+        p_transactional_create_commit.add_argument(
+            '--async',
+            action='store_true',
+            help='Do not wait for deployment on satellites before returning'
+        )
+        p_transactional_create_commit.set_defaults(
+            func=self.transactional_create_commit, allowed_states=[ResourceCreateTransactionState])
+
+        self.check_subcommands(transactional_create_subp, transactional_create_subcmds)
         self.check_subcommands(res_subp, subcmds)
 
     def create(self, args):
         async_flag = vars(args)["async"]
+        current_state = self._state_service.get_state()
+
         if args.auto_place:
+            if current_state.__class__ == ResourceCreateTransactionState:
+                print("Error: --auto-place not allowed in state '{state.name}'".format(state=current_state))
+                return ExitCode.ILLEGAL_STATE
+
             # auto-place resource
             replies = self._linstor.resource_auto_place(
                 args.resource_definition_name,
@@ -298,6 +378,8 @@ class ResourceCommands(Commands):
                 diskless_on_remaining=args.diskless_on_remaining,
                 async_msg=async_flag
             )
+
+            return self.handle_replies(args, replies)
 
         else:
             # normal create resource
@@ -316,9 +398,13 @@ class ResourceCommands(Commands):
                 for node_name in args.node_name
             ]
 
-            replies = self._linstor.resource_create(rscs, async_flag)
-
-        return self.handle_replies(args, replies)
+            if current_state.__class__ == ResourceCreateTransactionState:
+                print("{} resource(s) added to transaction".format(len(rscs)))
+                current_state.rscs.extend(rscs)
+                return ExitCode.OK
+            else:
+                replies = self._linstor.resource_create(rscs, async_flag)
+                return self.handle_replies(args, replies)
 
     def delete(self, args):
         async_flag = vars(args)["async"]
@@ -528,4 +614,20 @@ class ResourceCommands(Commands):
             args.diskless,
             async_flag
         )
+        return self.handle_replies(args, replies)
+
+    def transactional_create_begin(self, args):
+        return self._state_service.enter_state(
+            ResourceCreateTransactionState(args.terminate_on_error),
+            verbose=args.verbose
+        )
+
+    def transactional_create_abort(self, _):
+        self._state_service.pop_state()
+        return ExitCode.OK
+
+    def transactional_create_commit(self, args):
+        async_flag = vars(args)["async"]
+        replies = self._linstor.resource_create(self._state_service.get_state().rscs, async_flag)
+        self._state_service.pop_state()
         return self.handle_replies(args, replies)

@@ -24,6 +24,20 @@ class ArgumentError(Exception):
         return self._msg
 
 
+class DefaultState(object):
+    @property
+    def name(self):
+        return 'default'
+
+    @property
+    def prompt(self):
+        return 'LINSTOR'
+
+    @property
+    def terminate_on_error(self):
+        return False
+
+
 class Commands(object):
     CONTROLLER = 'controller'
     CRYPT = 'encryption'
@@ -167,6 +181,22 @@ class Commands(object):
         class ToggleDisk(object):
             LONG = "toggle-disk"
             SHORT = "td"
+
+        class CreateTransactional(object):
+            LONG = "create-transactional"
+            SHORT = "ct"
+
+        class TransactionBegin(object):
+            LONG = "begin"
+            SHORT = "b"
+
+        class TransactionAbort(object):
+            LONG = "abort"
+            SHORT = "a"
+
+        class TransactionCommit(object):
+            LONG = "commit"
+            SHORT = "c"
 
         class Version(object):
             LONG = "version"

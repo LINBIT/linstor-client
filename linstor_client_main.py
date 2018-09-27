@@ -45,6 +45,7 @@ from linstor_client.commands import (
     ZshGenerator,
     MiscCommands,
     Commands,
+    DefaultState,
     ArgumentError
 )
 
@@ -56,15 +57,41 @@ from linstor_client.consts import (
 )
 
 
+class StateService(object):
+    def __init__(self, linstor_cli):
+        self._linstor_cli = linstor_cli
+        self._current_state = []
+
+    def enter_state(self, state, verbose):
+        already_interactive = bool(self._current_state)
+        self._current_state.append(state)
+        if not already_interactive:
+            return self._linstor_cli.run_interactive(verbose)
+        return ExitCode.OK
+
+    def pop_state(self):
+        if self._current_state:
+            self._current_state.pop()
+
+    def clear_state(self):
+        self._current_state = []
+
+    def has_state(self):
+        return bool(self._current_state)
+
+    def get_state(self):
+        return self._current_state[-1] if self._current_state else DefaultState()
+
+
 class LinStorCLI(object):
     """
     linstor command line client
     """
 
-    interactive = False
     readline_history_file = "~/.config/linstor/client.history"
 
     def __init__(self):
+        self._state_service = StateService(self)
         self._all_commands = None
 
         self._controller_commands = ControllerCommands()
@@ -73,13 +100,13 @@ class LinStorCLI(object):
         self._storage_pool_commands = StoragePoolCommands()
         self._resource_dfn_commands = ResourceDefinitionCommands()
         self._volume_dfn_commands = VolumeDefinitionCommands()
-        self._resource_commands = ResourceCommands()
+        self._resource_commands = ResourceCommands(self._state_service)
         self._snapshot_commands = SnapshotCommands()
         self._misc_commands = MiscCommands()
         self._zsh_generator = None
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
-        self._linstorapi = None # type: linstor.Linstor
+        self._linstorapi = None  # type: linstor.Linstor
 
     def setup_parser(self):
         parser = argparse.ArgumentParser(prog="linstor")
@@ -123,18 +150,18 @@ class LinStorCLI(object):
         p_help = subp.add_parser(Commands.HELP,
                                  description='Print help for a command')
         p_help.add_argument('command', nargs='*')
-        p_help.set_defaults(func=self.cmd_help)
+        p_help.set_defaults(func=self.cmd_help, always_allowed=True)
 
         # list
         p_list = subp.add_parser(Commands.LIST_COMMANDS, aliases=['commands', 'list'],
                                  description='List available commands')
         p_list.add_argument('-t', '--tree', action="store_true", help="Print a tree view of all commands.")
-        p_list.set_defaults(func=self.cmd_list)
+        p_list.set_defaults(func=self.cmd_list, always_allowed=True)
 
         # exit
         p_exit = subp.add_parser(Commands.EXIT, aliases=['quit'],
                                  description='Only useful in interactive mode')
-        p_exit.set_defaults(func=self.cmd_exit)
+        p_exit.set_defaults(func=self.cmd_exit, always_allowed=True)
 
         # controller commands
         self._controller_commands.setup_commands(subp)
@@ -271,7 +298,14 @@ class LinStorCLI(object):
             else:
                 if args.verbose and args.func != self.cmd_interactive:
                     print("Connected to {h}".format(h=self._linstorapi.controller_host()))
-                rc = args.func(args)
+                current_state = self._state_service.get_state()
+                allowed_states = vars(args).get('allowed_states', [DefaultState])
+                always_allowed = vars(args).get('always_allowed', False)
+                if always_allowed or current_state.__class__ in allowed_states:
+                    rc = args.func(args)
+                else:
+                    sys.stderr.write("Error: Command not allowed in state '{state.name}'\n".format(state=current_state))
+                    rc = ExitCode.ILLEGAL_STATE
         except (ArgumentError, argparse.ArgumentTypeError) as ae:
             try:
                 self.parse(list(itertools.takewhile(lambda x: not x.startswith('-'), pargs)) + ['-h'])
@@ -406,13 +440,16 @@ class LinStorCLI(object):
             LinStorCLI.print_cmd_tree(sub_cmds, indent + 2)
 
     def cmd_list(self, args):
+        return self.print_cmds(args.tree)
+
+    def print_cmds(self, tree=False):
         sys.stdout.write('Use "help <command>" to get help for a specific command.\n\n')
         sys.stdout.write('Available commands:\n')
         # import pprint
         # pp = pprint.PrettyPrinter()
         # pp.pprint(self._all_commands)
 
-        if args.tree:
+        if tree:
             subp = self._parser._actions[-1]
             assert (isinstance(subp, argparse._SubParsersAction))
             cmd_map = LinStorCLI.gen_cmd_tree(subp)
@@ -430,12 +467,20 @@ class LinStorCLI(object):
         return 0
 
     def cmd_interactive(self, args):
+        if self._state_service.has_state():
+            sys.stderr.write("The client is already running in interactive mode\n")
+        else:
+            self.print_cmds()
+            sys.stdout.write("\n")
+            self._state_service.enter_state(DefaultState(), verbose=args.verbose)
+
+    def run_interactive(self, verbose):
         all_cmds = [i for sl in self._all_commands for i in sl]
 
         # helper function
         def unknown(cmd):
             sys.stdout.write("\n" + "Command \"%s\" not known!\n" % cmd)
-            self.cmd_list(args)
+            self.print_cmds()
 
         # helper function
         def parsecatch(cmds_):
@@ -453,7 +498,7 @@ class LinStorCLI(object):
                     sys.exit(ExitCode.OK)
                 elif cmd == "help":
                     if len(cmds_) == 1:
-                        self.cmd_list(args)
+                        self.print_cmds()
                         return
                     else:
                         cmd = " ".join(cmds_[1:])
@@ -464,8 +509,10 @@ class LinStorCLI(object):
                         return
                     if se.code == ExitCode.ARGPARSE_ERROR:
                         sys.stdout.write("\nIncorrect syntax. Use 'help {cmd}' for more information:\n".format(cmd=cmd))
+                        rc = ExitCode.ARGPARSE_ERROR
                 else:
                     unknown(cmd)
+                    rc = ExitCode.ARGPARSE_ERROR
             except KeyboardInterrupt:
                 pass
             except BaseException:
@@ -474,58 +521,60 @@ class LinStorCLI(object):
             if rc == ExitCode.CONNECTION_ERROR:
                 sys.exit(rc)
 
-        # main part of interactive mode:
-        if not LinStorCLI.interactive:
-            LinStorCLI.interactive = True
+            return rc
 
-            # try to load readline
-            # if loaded, raw_input makes use of it
-            if sys.version_info < (3,):
-                my_input = raw_input
-            else:
-                my_input = input
-
-            abs_readline_hist_path = None
-            try:
-                import readline
-                # seems after importing readline it is not possible to output to sys.stderr
-                completer = argcomplete.CompletionFinder(self._parser)
-                readline.set_completer_delims("")
-                readline.set_completer(completer.rl_complete)
-                readline.parse_and_bind("tab: complete")
-                abs_readline_hist_path = os.path.expanduser(self.readline_history_file)
-                if os.path.exists(abs_readline_hist_path):
-                    readline.read_history_file(abs_readline_hist_path)
-            except ImportError:
-                pass
-
-            args.tree = False
-            self.cmd_list(args)
-            while True:
-                try:
-                    sys.stdout.write("\n")
-                    cmds = my_input('LINSTOR{h} ==> '.format(
-                        h='(' + self._linstorapi.controller_host() + ')' if args.verbose else ""
-                    )).strip()
-
-                    cmds = [cmd.strip() for cmd in cmds.split()]
-                    if not cmds:
-                        self.cmd_list(args)
-                    else:
-                        parsecatch(cmds)
-                except (EOFError, KeyboardInterrupt):  # raised by ctrl-d, ctrl-c
-                    sys.stdout.write("\n")  # additional newline, makes shell prompt happy
-                    break
-            LinStorCLI.interactive = False
-
-            if abs_readline_hist_path:
-                try:
-                    os.makedirs(os.path.dirname(abs_readline_hist_path))
-                except OSError:
-                    pass
-                readline.write_history_file(abs_readline_hist_path)
+        # try to load readline
+        # if loaded, raw_input makes use of it
+        if sys.version_info < (3,):
+            my_input = raw_input
         else:
-            sys.stderr.write("The client is already running in interactive mode\n")
+            my_input = input
+
+        abs_readline_hist_path = None
+        try:
+            import readline
+            # seems after importing readline it is not possible to output to sys.stderr
+            completer = argcomplete.CompletionFinder(self._parser)
+            readline.set_completer_delims("")
+            readline.set_completer(completer.rl_complete)
+            readline.parse_and_bind("tab: complete")
+            abs_readline_hist_path = os.path.expanduser(self.readline_history_file)
+            if os.path.exists(abs_readline_hist_path):
+                readline.read_history_file(abs_readline_hist_path)
+        except ImportError:
+            pass
+
+        last_rc = ExitCode.OK
+        while self._state_service.has_state():
+            try:
+                cmds = my_input('{state.prompt}{h} ==> '.format(
+                    state=self._state_service.get_state(),
+                    h='(' + self._linstorapi.controller_host() + ')' if verbose else ""
+                )).strip()
+
+                cmds = [cmd.strip() for cmd in cmds.split()]
+                if not cmds:
+                    self.print_cmds()
+                else:
+                    last_rc = parsecatch(cmds)
+
+                if last_rc != ExitCode.OK:
+                    while self._state_service.has_state() and self._state_service.get_state().terminate_on_error:
+                        self._state_service.pop_state()
+            except EOFError:  # raised by ctrl-d
+                self._state_service.pop_state()
+            except KeyboardInterrupt:  # raised by ctrl-c
+                self._state_service.clear_state()
+            sys.stdout.write("\n")
+
+        if abs_readline_hist_path:
+            try:
+                os.makedirs(os.path.dirname(abs_readline_hist_path))
+            except OSError:
+                pass
+            readline.write_history_file(abs_readline_hist_path)
+
+        return last_rc
 
     def cmd_help(self, args):
         return self.parse_and_execute(args.command + ["-h"])
