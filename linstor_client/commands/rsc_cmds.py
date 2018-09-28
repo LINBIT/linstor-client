@@ -21,12 +21,6 @@ class ResourceCommands(Commands):
         super(ResourceCommands, self).__init__()
 
     def setup_commands(self, parser):
-        """
-
-        :param argparse.ArgumentParser parser:
-        :return:
-        """
-
         subcmds = [
             Commands.Subcommands.Create,
             Commands.Subcommands.List,
