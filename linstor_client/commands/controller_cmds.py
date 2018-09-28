@@ -83,6 +83,7 @@ class ControllerCommands(Commands):
         return self.output_props_list(args, lstmsg, self._props_list)
 
     def set_props(self, args):
+        args = self._attach_aux_prop(args)
         props = Commands.parse_key_value_pairs([args.key + '=' + args.value])
 
         replies = []
