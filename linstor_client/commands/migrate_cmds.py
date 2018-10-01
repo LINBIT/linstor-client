@@ -25,7 +25,6 @@ class MigrateCommands(Commands):
 #
 # CURRENTLY THIS SCRIPT IS MISSING THESE FEATURES:
 # -) snapshots (will not be supported)
-# -) zfs thin pools (currenlty missing in LINSTOR)
 #
 # If the controller is not executed on the local host, set this variable:
 LS_CONTROLLERS="localhost"
