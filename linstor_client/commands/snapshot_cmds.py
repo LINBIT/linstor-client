@@ -48,7 +48,8 @@ class SnapshotCommands(Commands):
             type=namecheck(NODE_NAME),
             nargs='*',
             help='Names of the nodes where the snapshot should be created. '
-                 'If none are given, the snapshot will be taken on all nodes where resources are present.'
+                 'If none are given, the snapshot will be taken on all nodes '
+                 'where the given resources is present.'
         ).completer = self.node_completer
         p_new_snapshot.add_argument(
             'resource_definition_name',
