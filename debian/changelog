@@ -1,3 +1,32 @@
+linstor-client (0.6.2-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * list-cmds: show additional api reply messages
+  * list: do not print non api call responses
+  * filter watch created output from reply output
+  * use correct reply filter methods
+  * fix-python3: async is a keyword in python 3.7
+  * apicallresponse: show linstor command to get error reports
+  * tests: add delete_non_existing_rsc_dfn
+  * main: except ArgumentTypeError
+  * drbd-options: byte options can now use units
+  * rsc: split InUse output from state
+  * storpool-swordfish: storage_service property isn't needed anymore
+  * rsc-list: fix exception if a satellite is not connected
+  * controller-set-prop: honor --aux option
+
+  [ Roland Kammerer ]
+  * fix error-reports show redirect
+  * snapshot create: improve help message
+  * migrate: zfs thin is now supported
+
+  [ Joel Colledge ]
+  * Delete APIs are now synchronous so watching for events is not necessary
+  * Resource delete responses have been swapped
+  * Remove misleading attempt at typing parser argument
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 02 Oct 2018 08:27:53 +0200
+
 linstor-client (0.6.1-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
