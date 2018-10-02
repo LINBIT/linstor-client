@@ -4,7 +4,7 @@ import linstor
 import linstor_client
 import linstor.sharedconsts as apiconsts
 from linstor_client.commands import Commands, DrbdOptions, ArgumentError
-from linstor_client.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color, ExitCode
+from linstor_client.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color
 from linstor_client.utils import Output, namecheck
 
 
@@ -283,16 +283,11 @@ class ResourceCommands(Commands):
 
         self.check_subcommands(res_subp, subcmds)
 
-    @staticmethod
-    def _satellite_not_connected(replies):
-        return any(reply.ret_code & apiconsts.WARN_NOT_CONNECTED == apiconsts.WARN_NOT_CONNECTED for reply in replies)
-
     def create(self, args):
         async_flag = vars(args)["async"]
-        all_replies = []
         if args.auto_place:
             # auto-place resource
-            all_replies = self._linstor.resource_auto_place(
+            replies = self._linstor.resource_auto_place(
                 args.resource_definition_name,
                 args.auto_place,
                 args.storage_pool,
@@ -300,40 +295,9 @@ class ResourceCommands(Commands):
                 args.do_not_place_with_regex,
                 [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_same],
                 [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different],
-                diskless_on_remaining=args.diskless_on_remaining
+                diskless_on_remaining=args.diskless_on_remaining,
+                async_msg=async_flag
             )
-
-            if not self._linstor.all_api_responses_no_error(all_replies):
-                return self.handle_replies(args, all_replies)
-
-            if not async_flag:
-                def event_handler(event_header, event_data):
-                    if event_header.event_name == apiconsts.EVENT_RESOURCE_DEFINITION_READY:
-                        if event_header.event_action == apiconsts.EVENT_STREAM_CLOSE_REMOVED:
-                            print((Output.color_str('ERROR:', Color.RED, args.no_color)) + " Resource removed")
-                            return ExitCode.API_ERROR
-
-                        if event_data is not None:
-                            if event_data.error_count > 0:
-                                return ExitCode.API_ERROR
-
-                            if event_data.ready_count == args.auto_place:
-                                return ExitCode.OK
-
-                    return None
-
-                watch_result = self._linstor.watch_events(
-                    self._linstor.return_if_error,
-                    event_handler,
-                    linstor.ObjectIdentifier(resource_name=args.resource_definition_name)
-                )
-
-                if isinstance(watch_result, list):
-                    all_replies += watch_result
-                    if not self._linstor.all_api_responses_no_error(watch_result):
-                        return self.handle_replies(args, all_replies)
-                elif watch_result != ExitCode.OK:
-                    return watch_result
 
         else:
             # normal create resource
@@ -352,9 +316,9 @@ class ResourceCommands(Commands):
                 for node_name in args.node_name
             ]
 
-            all_replies = self._linstor.resource_create(rscs, async_flag)
+            replies = self._linstor.resource_create(rscs, async_flag)
 
-        return self.handle_replies(args, all_replies)
+        return self.handle_replies(args, replies)
 
     def delete(self, args):
         async_flag = vars(args)["async"]
