@@ -341,18 +341,18 @@ class ResourceCommands(Commands):
             if not args.node_name:
                 raise ArgumentError("resource create: too few arguments: Node name missing.")
 
-            for node_name in args.node_name:
-                all_replies += self._linstor.resource_create(
+            rscs = [
+                linstor.ResourceData(
                     node_name,
                     args.resource_definition_name,
                     args.diskless,
                     args.storage_pool,
-                    args.node_id,
-                    async_flag
+                    args.node_id
                 )
+                for node_name in args.node_name
+            ]
 
-                if not self._linstor.all_api_responses_no_error(all_replies):
-                    return self.handle_replies(args, all_replies)
+            all_replies = self._linstor.resource_create(rscs, async_flag)
 
         return self.handle_replies(args, all_replies)
 
