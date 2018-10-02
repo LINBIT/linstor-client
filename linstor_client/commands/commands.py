@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 import linstor
 from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE, \
-    EVENT_RESOURCE_DEPLOYMENT_STATE, EVENT_RESOURCE_DEFINITION_READY, EVENT_SNAPSHOT_DEPLOYMENT
+    EVENT_RESOURCE_DEPLOYMENT_STATE, EVENT_SNAPSHOT_DEPLOYMENT
 from linstor.properties import properties
 from linstor.protobuf_to_dict import protobuf_to_dict
 import linstor_client
@@ -642,9 +642,6 @@ class MiscCommands(Commands):
             EVENT_RESOURCE_STATE: lambda event_data: "Resource ready: " + str(event_data.ready),
             EVENT_RESOURCE_DEPLOYMENT_STATE: lambda event_data:
                 "Deployment state: " + self._summarize_api_call_responses(event_data.responses),
-            EVENT_RESOURCE_DEFINITION_READY: lambda event_data:
-                "Resource definition; ready: " + str(event_data.ready_count) +
-                ", error: " + str(event_data.error_count),
             EVENT_SNAPSHOT_DEPLOYMENT: lambda event_data:
                 "Snapshot deployment state: " + self._summarize_api_call_responses(event_data.responses)
         }
