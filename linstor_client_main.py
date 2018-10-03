@@ -79,10 +79,17 @@ class LinStorCLI(object):
         self._zsh_generator = None
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
-        self._linstorapi = None
+        self._linstorapi = None # type: linstor.Linstor
 
     def setup_parser(self):
         parser = argparse.ArgumentParser(prog="linstor")
+        """
+        ATTENTION! ATTENTION!
+        If you add a new global option here, don't forget to update:
+        utils.py:filter_new_args
+        otherwise drbd options will fail!
+        ATTENTION OVER! ATTENTION OVER!
+        """
         parser.add_argument('--version', '-v', action='version',
                             version='%(prog)s ' + VERSION + '; ' + GITHASH)
         parser.add_argument('--no-color', action="store_true",
@@ -96,6 +103,7 @@ class LinStorCLI(object):
                             'If the environment variable %s is set, '
                             'the ones set via this argument get appended.' % KEY_LS_CONTROLLERS)
         parser.add_argument('-m', '--machine-readable', action="store_true")
+        parser.add_argument('--verbose', '-V', action='store_true')
         parser.add_argument('-t', '--timeout', default=300, type=int,
                             help="Connection timeout value.")
         parser.add_argument('--disable-config', action="store_true",
@@ -261,6 +269,8 @@ class LinStorCLI(object):
                     self._report_linstor_error(x)
                 rc = ExitCode.CONNECTION_ERROR
             else:
+                if args.verbose and args.func != self.cmd_interactive:
+                    print("Connected to {h}".format(h=self._linstorapi.controller_host()))
                 rc = args.func(args)
         except (ArgumentError, argparse.ArgumentTypeError) as ae:
             try:
@@ -494,7 +504,9 @@ class LinStorCLI(object):
             while True:
                 try:
                     sys.stdout.write("\n")
-                    cmds = my_input('LINSTOR ==> ').strip()
+                    cmds = my_input('LINSTOR{h} ==> '.format(
+                        h='(' + self._linstorapi.controller_host() + ')' if args.verbose else ""
+                    )).strip()
 
                     cmds = [cmd.strip() for cmd in cmds.split()]
                     if not cmds:
