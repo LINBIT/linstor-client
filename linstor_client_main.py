@@ -430,6 +430,11 @@ class LinStorCLI(object):
         # helper function
         def parsecatch(cmds_):
             rc = ExitCode.OK
+
+            # remove linstor if cmd started with it
+            if cmds_ and cmds_[0] == 'linstor':
+                cmds_ = cmds_[1:]
+
             try:
                 rc = self.parse_and_execute(cmds_)
             except SystemExit as se:
