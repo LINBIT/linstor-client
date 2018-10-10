@@ -742,7 +742,7 @@ class MiscCommands(Commands):
     @classmethod
     def show_error_report_list(cls, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        tbl.add_header(linstor_client.TableHeader("Nr.", alignment_text=">"))
+        tbl.add_header(linstor_client.TableHeader("Nr.", alignment_text=linstor_client.TableHeader.ALIGN_RIGHT))
         tbl.add_header(linstor_client.TableHeader("Id"))
         tbl.add_header(linstor_client.TableHeader("Datetime"))
         tbl.add_header(linstor_client.TableHeader("Node"))

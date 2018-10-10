@@ -43,8 +43,8 @@ class StoragePoolCommands(Commands):
         linstor_client.TableHeader("Node"),
         linstor_client.TableHeader("Driver"),
         linstor_client.TableHeader("PoolName"),
-        linstor_client.TableHeader("FreeCapacity", alignment_text='>'),
-        linstor_client.TableHeader("TotalCapacity", alignment_text='>'),
+        linstor_client.TableHeader("FreeCapacity", alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
+        linstor_client.TableHeader("TotalCapacity", alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
         linstor_client.TableHeader("SupportsSnapshots")
     ]
 

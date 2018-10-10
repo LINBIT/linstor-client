@@ -47,18 +47,21 @@ def get_terminal_size():
 
 
 class TableHeader(object):
-    def __init__(self, name, color=None, alignment_color='<', alignment_text='<'):
+    ALIGN_LEFT = '<'
+    ALIGN_RIGHT = '>'
+
+    def __init__(self, name, color=None, align_column=ALIGN_LEFT, alignment_text=ALIGN_LEFT):
         """
         Creates a new TableHeader object.
 
         :param str name:
         :param str color: color to use for this column
-        :param str alignment_color:
+        :param str align_column:
         :param str alignment_text:
         """
         self._name = name
         self._color = color
-        self._alignment_color = alignment_color
+        self._align_column = align_column
         self._alignment_text = alignment_text
 
     @property
@@ -70,8 +73,8 @@ class TableHeader(object):
         return self._color
 
     @property
-    def color_alignment(self):
-        return self._alignment_color
+    def column_alignment(self):
+        return self._align_column
 
     @property
     def text_alignment(self):
@@ -98,13 +101,13 @@ class Table(object):
             self.colors = colors
             self.utf8 = utf8
 
-    def add_column(self, name, color=None, just_col='<', just_txt='<'):
+    def add_column(self, name, color=None, align_column=TableHeader.ALIGN_LEFT, just_txt=TableHeader.ALIGN_LEFT):
         self.got_column = True
         if self.got_row:
             raise SyntaxException("Not allowed to define columns after rows")
-        if just_col == '>':
+        if align_column == TableHeader.ALIGN_RIGHT:
             if self.r_just:
-                raise SyntaxException("Not allowed to use multiple times")
+                raise SyntaxException("Can not right align column more than once")
             else:
                 self.r_just = True
 
@@ -114,7 +117,7 @@ class Table(object):
         self.header.append({
             'name': name,
             'color': color,
-            'just_col': just_col,
+            'align_column': align_column,
             'just_txt': just_txt})
 
     def header_name(self, index):
@@ -122,11 +125,20 @@ class Table(object):
 
     def add_header(self, header):
         """
-
+        Adds a table header
         :param TableHeader header:
         :return:
         """
-        return self.add_column(header.name, header.color, header.color_alignment, header.text_alignment)
+        return self.add_column(header.name, header.color, header.column_alignment, header.text_alignment)
+
+    def add_headers(self, headers):
+        """
+        Adds a list of table headers.
+        :param list[TableHeader] headers: list of table headers
+        :return:
+        """
+        for hdr in headers:
+            self.add_header(hdr)
 
     def add_row(self, row):
         self.got_row = True
@@ -306,7 +318,7 @@ class Table(object):
 
         fstr = ctbl[enc]['pipe']
         for idx, col in enumerate(self.header):
-            if col['just_col'] == '>':
+            if col['align_column'] == TableHeader.ALIGN_RIGHT:
                 space = (maxwidth - sum(columnmax) + co_sum)
                 space_and_overhead = space - (len(self.header) * 3) - 2
                 if space_and_overhead >= 0:

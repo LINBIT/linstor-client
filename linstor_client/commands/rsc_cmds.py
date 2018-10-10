@@ -34,7 +34,7 @@ class ResourceCommands(Commands):
         linstor_client.TableHeader("Node"),
         linstor_client.TableHeader("Port"),
         linstor_client.TableHeader("Usage", Color.DARKGREEN),
-        linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text='>')
+        linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text=linstor_client.TableHeader.ALIGN_RIGHT)
     ]
 
     def __init__(self, state_service):
