@@ -15,6 +15,13 @@ class TestListFilters(LinstorTestCaseWithData):
         self.assertEqual(1, len(volumedef_props))
         return volumedef_props[0]
 
+    def get_resource_conn_properties(self, node_a, node_b, rsc_name):
+        res_con_props = self.execute_with_machine_output(
+            ['resource-connection', 'list-properties', node_a, node_b, rsc_name]
+        )
+        self.assertEqual(1, len(res_con_props))
+        return res_con_props[0]
+
     def test_resource_protocol(self):
         """symbolic option test"""
         resp = self.execute_with_resp(['resource-definition', 'drbd-options', '--protocol', 'A', 'rsc1'])
@@ -85,3 +92,15 @@ class TestListFilters(LinstorTestCaseWithData):
 
         volumedef_props = self.get_volume_dfn_properties('rsc1', '0')
         self.find_and_check_prop(volumedef_props, apiconsts.NAMESPC_DRBD_DISK_OPTIONS + '/on-io-error', 'pass_on')
+
+    def test_connection_options(self):
+        # set peer option
+        resp = self.execute_with_resp(
+            ['resource-connection', 'drbd-options', 'fakehost1', 'fakehost2', 'rsc1', '--protocol', 'A']
+        )
+        self.assertGreater(len(resp), 0)
+        resp_upd = resp[0]
+        self.assertEqual(apiconsts.MODIFIED | apiconsts.MASK_MOD | apiconsts.MASK_RSC_CONN, resp_upd.ret_code)
+
+        rc_con_props = self.get_resource_conn_properties('fakehost1', 'fakehost2', 'rsc1')
+        self.find_and_check_prop(rc_con_props, apiconsts.NAMESPC_DRBD_NET_OPTIONS + '/protocol', 'A')

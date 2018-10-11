@@ -50,6 +50,7 @@ class Commands(object):
     LIST_COMMANDS = 'list-commands'
     NODE = 'node'
     RESOURCE = 'resource'
+    RESOURCE_CONN = 'resource-connection'
     RESOURCE_DEF = 'resource-definition'
     ERROR_REPORTS = 'error-reports'
     STORAGE_POOL = 'storage-pool'
@@ -65,6 +66,7 @@ class Commands(object):
         LIST_COMMANDS,
         NODE,
         RESOURCE,
+        RESOURCE_CONN,
         RESOURCE_DEF,
         ERROR_REPORTS,
         STORAGE_POOL,

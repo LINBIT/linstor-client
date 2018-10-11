@@ -6,6 +6,7 @@ from .rsc_dfn_cmds import ResourceDefinitionCommands
 from .storpool_dfn_cmds import StoragePoolDefinitionCommands
 from .storpool_cmds import StoragePoolCommands
 from .rsc_cmds import ResourceCommands
+from .rsc_conn_cmds import ResourceConnectionCommands
 from .vlm_dfn_cmds import VolumeDefinitionCommands
 from .snapshot_cmds import SnapshotCommands
 from .migrate_cmds import MigrateCommands
