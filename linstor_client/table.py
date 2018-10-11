@@ -90,6 +90,7 @@ class Table(object):
         self.header = []
         self.table = []
         self.coloroverride = []
+        self._header_colors = False
         self.view = None
         self.showseps = False
         self.maxwidth = 0  # if 0, determine terminal width automatically
@@ -153,11 +154,7 @@ class Table(object):
                 color, text = c
                 row[idx] = text
                 if self.colors:
-                    if not self.header[idx]['color']:
-                        raise SyntaxException("Color tuple for this row not allowed "
-                                              "to have colors")
-                    else:
-                        coloroverride[idx] = color
+                    coloroverride[idx] = color
 
         self.table.append(row)
         self.coloroverride.append(coloroverride)
@@ -204,10 +201,6 @@ class Table(object):
         else:
             term_width, _ = get_terminal_size()
             maxwidth = 110 if term_width > 110 else term_width
-
-        # color overhead
-        co = len(Color.RED) + len(Color.NONE)
-        co_sum = 0
 
         hdrnames = [h['name'] for h in self.header]
         if self.groups and self.table:
@@ -256,26 +249,14 @@ class Table(object):
 
         # calc max width per column and set final strings (with color codes)
         self.table.insert(0, [h.replace('_', ' ') for h in hdrnames])
-        ridx = 0
         self.coloroverride.insert(0, [None] * len(self.header))
 
-        for row in self.table:
+        # precalculate maximum column width
+        for ridx, row in enumerate(self.table):
             if row[0] is None:
                 continue
             for idx, col in enumerate(self.header):
-                row[idx] = str(row[idx])
-                if col['color']:
-                    if self.coloroverride[ridx][idx]:
-                        color = self.coloroverride[ridx][idx]
-                    else:
-                        color = col["color"]
-                    row[idx] = color + row[idx] + Color.NONE
-                columnmax[idx] = max(len(row[idx]), columnmax[idx])
-            ridx += 1
-
-        for h in self.header:
-            if h['color']:
-                co_sum += co
+                columnmax[idx] = max(len(str(row[idx])), columnmax[idx])
 
         # insert frames
         self.table.insert(0, [None])
@@ -316,32 +297,46 @@ class Table(object):
         except:
             pass
 
-        fstr = ctbl[enc]['pipe']
-        for idx, col in enumerate(self.header):
-            if col['align_column'] == TableHeader.ALIGN_RIGHT:
-                space = (maxwidth - sum(columnmax) + co_sum)
-                space_and_overhead = space - (len(self.header) * 3) - 2
-                if space_and_overhead >= 0:
-                    fstr += ' ' * space_and_overhead + ctbl[enc]['pipe']
-
-            fstr += u' {' + str(idx) + u':' + col['just_txt'] + str(columnmax[idx]) + u'} ' + ctbl[enc]['pipe']
-
         try:
-            for idx, row in enumerate(self.table):
+            data_idx = 0  # index of the actual data table, self.table was inserted with table separators
+            for ridx, row in enumerate(self.table):
                 if row[0] is None:  # print a separator
-                    if idx == 0:
+                    if ridx == 0:  # top line
                         l, m, r = ctbl[enc]['tl'], ctbl[enc]['msc'], ctbl[enc]['tr']
-                    elif idx == len(self.table) - 1:
+                    elif ridx == len(self.table) - 1:  # header/body separator
                         l, m, r = ctbl[enc]['bl'], ctbl[enc]['msc'], ctbl[enc]['br']
-                    else:
+                    else:  # bottom line
                         l, m, r = ctbl[enc]['ml'], ctbl[enc]['mdc'], ctbl[enc]['mr']
-                    sep = l + m * (sum(columnmax) - co_sum + (3 * len(self.header)) - 1) + r
+                    sep = l + m * (sum(columnmax) + (3 * len(self.header)) - 1) + r
 
                     if self.r_just and len(sep) < maxwidth:
                         sys.stdout.write(l + m * (maxwidth - 2) + r + u"\n")
                     else:
                         sys.stdout.write(sep + u"\n")
                 else:
+                    fstr = ctbl[enc]['pipe']  # prepare the format string per row, this allows colors per cell
+                    for idx, col in enumerate(self.header):  # loop columns
+                        if col['align_column'] == TableHeader.ALIGN_RIGHT:
+                            space = maxwidth - sum(columnmax)
+                            space_and_overhead = space - (len(self.header) * 3) - 2
+                            if space_and_overhead >= 0:
+                                fstr += ' ' * space_and_overhead + ctbl[enc]['pipe']
+
+                        field_format = u'{' + str(idx) + u':' + col['just_txt'] + str(columnmax[idx]) + u'}'
+
+                        fstr += u' '
+                        # add color, if set
+                        if self.coloroverride[data_idx][idx] or col["color"] and (self._header_colors or data_idx > 0):
+                            if self.coloroverride[data_idx][idx]:
+                                color = self.coloroverride[data_idx][idx]
+                            else:
+                                color = col["color"]
+                            fstr += color + field_format + Color.NONE
+                        else:
+                            fstr += field_format
+                        fstr += u' ' + ctbl[enc]['pipe']
+
+                    data_idx += 1  # we wrote a data row, so increase the data_idx
                     sys.stdout.write(fstr.format(*row) + u"\n")
         except IOError as e:
             if e.errno == errno.EPIPE:
