@@ -764,13 +764,16 @@ class MiscCommands(Commands):
         since = args.since
         since_dt = None
         if since:
-            m = re.match(r'(\d+)\W*d', since)
+            m = re.match(r'(\d+\W*d)?(\d+\W*h)?', since)
             if m:
                 since_dt = datetime.now()
-                since_dt -= timedelta(days=int(m.group(1)))
+                if m.group(1):
+                    since_dt -= timedelta(days=int(m.group(1)[:-1]))
+                if m.group(2):
+                    since_dt -= timedelta(hours=int(m.group(2)[:-1]))
             else:
                 raise LinstorClientError(
-                    "Unable to parse since string: '{s_str}'. Use 'NUMdays'".format(s_str=since),
+                    "Unable to parse since string: '{s_str}'. e.g.: 1d10h or 3h'".format(s_str=since),
                     ExitCode.ARGPARSE_ERROR
                 )
 
