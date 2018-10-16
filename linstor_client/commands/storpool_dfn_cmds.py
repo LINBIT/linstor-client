@@ -5,6 +5,7 @@ from linstor import SizeCalc
 import linstor_client
 from linstor_client.commands import Commands
 from linstor_client.consts import STORPOOL_NAME, RES_NAME
+from linstor.sharedconsts import KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO
 from linstor_client.utils import namecheck
 
 
@@ -190,6 +191,7 @@ class StoragePoolDefinitionCommands(Commands):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("StoragePool")
         tbl.add_column("MaxVolumeSize", just_txt='>')
+        tbl.add_column("Provisioning")
         tbl.add_column("Nodes")
 
         def limited_string(obj_list):
@@ -205,14 +207,19 @@ class StoragePoolDefinitionCommands(Commands):
             return s
 
         for candidate in lstmsg.candidates:
-            if candidate.all_thin:
-                max_vlm_size = "(thin)"
-            else:
-                max_vlm_size = SizeCalc.approximate_size_string(candidate.max_vlm_size)
+            max_vlm_size = SizeCalc.approximate_size_string(candidate.max_vlm_size)
+
+            max_oversubscription_ratio_props = \
+                [x for x in candidate.stor_pool_dfn.props if x.key == KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO]
+            max_oversubscription_ratio_prop = max_oversubscription_ratio_props[0].value \
+                if max_oversubscription_ratio_props \
+                else lstmsg.default_max_oversubscription_ratio
+            max_oversubscription_ratio = float(max_oversubscription_ratio_prop)
 
             tbl.add_row([
-                candidate.stor_pool_name,
+                candidate.stor_pool_dfn.stor_pool_name,
                 max_vlm_size,
+                "Thin, oversubscription ratio " + str(max_oversubscription_ratio) if candidate.all_thin else "Thick",
                 limited_string(candidate.node_names)
             ])
         tbl.show()
