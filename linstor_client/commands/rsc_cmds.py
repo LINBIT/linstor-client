@@ -508,10 +508,10 @@ class ResourceCommands(Commands):
                     tbl_color = Color.RED
                 else:
                     state = state_prefix + disk_state  # green text
-            elif disk_state in ['Inconsistent', 'Failed']:
+            elif disk_state in ['Inconsistent', 'Failed', 'To: Creating', 'To: Attachable', 'To: Attaching']:
                 state = state_prefix + disk_state
                 tbl_color = Color.RED
-            elif disk_state in ['UpToDate']:
+            elif disk_state in ['UpToDate', 'Created', 'Attached']:
                 state = state_prefix + disk_state  # green text
             else:
                 state = state_prefix + disk_state
