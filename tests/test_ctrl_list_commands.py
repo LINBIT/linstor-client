@@ -57,7 +57,7 @@ class TestListCommands(LinstorTestCase):
         text_out = self.execute_with_text_output(["volume-definition", "list"])
         self.assertIn("ResourceName", text_out)
 
-
+"""
 class TestListFilters(LinstorTestCaseWithData):
     def test_list_storage_pools(self):
         jout = self.execute_with_machine_output(["storage-pool", "list"])
@@ -207,7 +207,7 @@ class TestCompleters(LinstorTestCaseWithData):
         linstor_cli._node_commands.get_linstorapi(parsed_args=_FakeArgs(self.host() + ':' + str(self.port())))
         cmpl_resources = linstor_cli._node_commands.resource_completer("")
         self.assertEqual(len(resources), len(cmpl_resources))
-
+"""
 
 if __name__ == '__main__':
     unittest.main()
