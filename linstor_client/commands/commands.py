@@ -57,6 +57,7 @@ class Commands(object):
     STORAGE_POOL_DEF = 'storage-pool-definition'
     VOLUME_DEF = 'volume-definition'
     SNAPSHOT = 'snapshot'
+    DRBD_PROXY = 'drbd-proxy'
 
     MainList = [
         CONTROLLER,
@@ -72,7 +73,8 @@ class Commands(object):
         STORAGE_POOL,
         STORAGE_POOL_DEF,
         VOLUME_DEF,
-        SNAPSHOT
+        SNAPSHOT,
+        DRBD_PROXY
     ]
     Hidden = [
         DMMIGRATE,
@@ -376,9 +378,6 @@ class Commands(object):
     @classmethod
     def get_allowed_prop_keys(cls, objname):
         return [x['key'] for x in cls.get_allowed_props(objname)]
-
-    def set_props(self, args):
-        raise NotImplementedError('abstract')
 
     @classmethod
     def _attach_aux_prop(cls, args):

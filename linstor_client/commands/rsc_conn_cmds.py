@@ -176,9 +176,9 @@ class ResourceConnectionCommands(Commands):
         args = self._attach_aux_prop(args)
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
         replies = self._linstor.resource_conn_modify(
+            args.resource_name,
             args.node_name_a,
             args.node_name_b,
-            args.resource_name,
             mod_prop_dict['pairs'],
             mod_prop_dict['delete']
         )
@@ -200,4 +200,3 @@ class ResourceConnectionCommands(Commands):
             del_props
         )
         return self.handle_replies(args, replies)
-
