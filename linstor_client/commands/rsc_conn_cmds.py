@@ -13,7 +13,8 @@ class ResourceConnectionCommands(Commands):
     _headers = [
         TableHeader("Source"),
         TableHeader("Target"),
-        TableHeader("Properties")
+        TableHeader("Properties"),
+        TableHeader("Port")
     ]
 
     def __init__(self):
@@ -145,7 +146,8 @@ class ResourceConnectionCommands(Commands):
             tbl.add_row([
                 rsc_con.node_name_1,
                 rsc_con.node_name_2,
-                props_str if len(props_str) < props_str_size else props_str[:props_str_size] + '...'
+                props_str if len(props_str) < props_str_size else props_str[:props_str_size] + '...',
+                rsc_con.port if rsc_con.HasField('port') else ''
             ])
 
         tbl.show()
