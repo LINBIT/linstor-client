@@ -9,6 +9,8 @@ from linstor_client.utils import namecheck, rangecheck
 
 
 class ResourceDefinitionCommands(Commands):
+    OBJECT_NAME = 'resource-definition'
+
     _rsc_dfn_headers = [
         linstor_client.TableHeader("ResourceName"),
         linstor_client.TableHeader("Port"),
@@ -118,10 +120,7 @@ class ResourceDefinitionCommands(Commands):
             type=namecheck(RES_NAME),
             help="Resource name"
         ).completer = self.resource_dfn_completer
-        DrbdOptions.add_arguments(
-            p_drbd_opts,
-            [x for x in DrbdOptions.drbd_options()['options'] if x in DrbdOptions.drbd_options()['filters']['resource']]
-        )
+        DrbdOptions.add_arguments(p_drbd_opts, self.OBJECT_NAME)
         p_drbd_opts.set_defaults(func=self.set_drbd_opts)
 
         self.check_subcommands(res_def_subp, subcmds)
@@ -183,7 +182,7 @@ class ResourceDefinitionCommands(Commands):
         a = DrbdOptions.filter_new(args)
         del a['resource-name']  # remove resource name key
 
-        mod_props, del_props = DrbdOptions.parse_opts(a)
+        mod_props, del_props = DrbdOptions.parse_opts(a, self.OBJECT_NAME)
 
         replies = self._linstor.resource_dfn_modify(
             args.resource_name,

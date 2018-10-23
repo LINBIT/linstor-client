@@ -29,6 +29,8 @@ class ResourceCreateTransactionState(object):
 
 
 class ResourceCommands(Commands):
+    CONN_OBJECT_NAME = 'rsc-conn'
+
     _resource_headers = [
         linstor_client.TableHeader("ResourceName"),
         linstor_client.TableHeader("Node"),
@@ -257,12 +259,7 @@ class ResourceCommands(Commands):
             help="Resource name"
         ).completer = self.resource_completer
 
-        DrbdOptions.add_arguments(
-            p_drbd_peer_opts,
-            [x for x in DrbdOptions.drbd_options()['options']
-                if x in DrbdOptions.drbd_options()['filters']['peer-device-options']
-            ]
-        )
+        DrbdOptions.add_arguments(p_drbd_peer_opts, self.CONN_OBJECT_NAME)
         p_drbd_peer_opts.set_defaults(func=self.drbd_peer_opts)
 
         # toggle-disk
@@ -594,7 +591,7 @@ class ResourceCommands(Commands):
         del a['node-a']
         del a['node-b']
 
-        mod_props, del_props = DrbdOptions.parse_opts(a)
+        mod_props, del_props = DrbdOptions.parse_opts(a, self.CONN_OBJECT_NAME)
 
         replies = self._linstor.resource_conn_modify(
             args.resource_name,

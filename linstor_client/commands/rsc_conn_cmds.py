@@ -10,6 +10,8 @@ from linstor_client import TableHeader, Table
 
 
 class ResourceConnectionCommands(Commands):
+    OBJECT_NAME = 'rsc-conn'
+
     _headers = [
         TableHeader("Source"),
         TableHeader("Target"),
@@ -122,12 +124,7 @@ class ResourceConnectionCommands(Commands):
             help="Resource name"
         ).completer = self.resource_completer
 
-        DrbdOptions.add_arguments(
-            p_drbd_peer_opts,
-            [x for x in DrbdOptions.drbd_options()['options']
-                if x in DrbdOptions.drbd_options()['filters']['peer-device-options']
-            ]
-        )
+        DrbdOptions.add_arguments(p_drbd_peer_opts, self.OBJECT_NAME)
         p_drbd_peer_opts.set_defaults(func=self.drbd_opts)
 
         self.check_subcommands(subp, subcmds)
@@ -190,7 +187,7 @@ class ResourceConnectionCommands(Commands):
         del a['node-a']
         del a['node-b']
 
-        mod_props, del_props = DrbdOptions.parse_opts(a)
+        mod_props, del_props = DrbdOptions.parse_opts(a, self.OBJECT_NAME)
 
         replies = self._linstor.resource_conn_modify(
             args.resource_name,

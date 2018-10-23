@@ -11,6 +11,8 @@ from linstor_client.utils import namecheck
 
 
 class VolumeDefinitionCommands(Commands):
+    OBJECT_NAME = 'volume-definition'
+
     _vlm_dfn_headers = [
         linstor_client.TableHeader("ResourceName"),
         linstor_client.TableHeader("VolumeNr"),
@@ -165,10 +167,7 @@ class VolumeDefinitionCommands(Commands):
             type=int,
             help="Volume number"
         )
-        DrbdOptions.add_arguments(
-            p_drbd_opts,
-            [x for x in DrbdOptions.drbd_options()['options'] if x in DrbdOptions.drbd_options()['filters']['volume']]
-        )
+        DrbdOptions.add_arguments(p_drbd_opts, self.OBJECT_NAME)
         p_drbd_opts.set_defaults(func=self.set_drbd_opts)
 
         # set size
@@ -317,7 +316,7 @@ class VolumeDefinitionCommands(Commands):
         del a['resource-name']  # remove resource name key
         del a['volume-nr']
 
-        mod_props, del_props = DrbdOptions.parse_opts(a)
+        mod_props, del_props = DrbdOptions.parse_opts(a, self.OBJECT_NAME)
 
         replies = self._linstor.volume_dfn_modify(
             args.resource_name,

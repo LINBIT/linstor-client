@@ -3,6 +3,8 @@ from linstor_client.commands import Commands, DrbdOptions
 
 
 class ControllerCommands(Commands):
+    OBJECT_NAME = 'controller'
+
     def __init__(self):
         super(ControllerCommands, self).__init__()
 
@@ -49,7 +51,7 @@ class ControllerCommands(Commands):
             aliases=[Commands.Subcommands.DrbdOptions.SHORT],
             description=DrbdOptions.description("drbd")
         )
-        DrbdOptions.add_arguments(c_drbd_opts, DrbdOptions.drbd_options()['options'].keys())
+        DrbdOptions.add_arguments(c_drbd_opts, self.OBJECT_NAME)
         c_drbd_opts.set_defaults(func=self.cmd_controller_drbd_opts)
 
         # Controller - shutdown
@@ -97,7 +99,7 @@ class ControllerCommands(Commands):
     def cmd_controller_drbd_opts(self, args):
         a = DrbdOptions.filter_new(args)
 
-        mod_props, del_props = DrbdOptions.parse_opts(a)
+        mod_props, del_props = DrbdOptions.parse_opts(a, self.OBJECT_NAME)
 
         replies = []
         for prop, val in mod_props.items():
