@@ -11,9 +11,9 @@ class TestProperties(LinstorTestCase):
 
         # create storagepool
         storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'lvm', 'node1', 'storage', 'lvmpool'])
-        self.assertTrue(storpool_resps[0].is_warning())
-        self.assertEqual(WARN_NOT_CONNECTED | MASK_STOR_POOL | MASK_CRT, storpool_resps[0].ret_code)
-        self.assertTrue(storpool_resps[1].is_success())
+        self.assertTrue(storpool_resps[0].is_success())
+        self.assertTrue(storpool_resps[1].is_warning())
+        self.assertEqual(WARN_NOT_CONNECTED | MASK_STOR_POOL | MASK_CRT, storpool_resps[1].ret_code)
 
         # create resource def
         rsc_dfn_resp = self.execute_with_single_resp(['resource-definition', 'create', 'rsc1'])

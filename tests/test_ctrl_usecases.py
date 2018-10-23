@@ -38,9 +38,9 @@ class TestUseCases(LinstorTestCase):
 
         # create storagepool
         storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'lvm', 'node1', 'storage', 'lvmpool'])
-        self.assertTrue(storpool_resps[0].is_warning())
-        self.assertEqual(WARN_NOT_CONNECTED | MASK_STOR_POOL | MASK_CRT, storpool_resps[0].ret_code)
-        self.assertTrue(storpool_resps[1].is_success())
+        self.assertTrue(storpool_resps[0].is_success())
+        self.assertTrue(storpool_resps[1].is_warning())
+        self.assertEqual(WARN_NOT_CONNECTED | MASK_STOR_POOL | MASK_CRT, storpool_resps[1].ret_code)
 
         # check
         storagepool_list = self.execute_with_machine_output(['storage-pool', 'list'])
@@ -124,9 +124,9 @@ class TestCreateCommands(LinstorTestCase):
         self.assertTrue(node.is_success())
         self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node.ret_code)
 
-        storpool = self.execute_with_resp(['storage-pool', 'create', 'lvm', 'storpool.node1', 'storpool', 'drbdpool'])
-        no_active = storpool[0]
-        storpool = storpool[1]
+        storpool_responses = self.execute_with_resp(['storage-pool', 'create', 'lvm', 'storpool.node1', 'storpool', 'drbdpool'])
+        storpool = storpool_responses[0]
+        no_active = storpool_responses[1]
         self.assertTrue(no_active.is_warning())
         self.assertTrue(storpool.is_success())
         self.assertEqual(MASK_STOR_POOL | MASK_CRT | CREATED, storpool.ret_code)
