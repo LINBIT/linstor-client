@@ -1,12 +1,14 @@
 from __future__ import print_function
 
 import linstor_client.argparse.argparse as argparse
-from linstor_client.commands import Commands
+from linstor_client.commands import Commands, DrbdOptions
 from linstor_client.consts import RES_NAME
 from linstor_client.utils import namecheck, rangecheck
 
 
 class DrbdProxyCommands(Commands):
+    OBJECT_NAME = 'drbd-proxy'
+
     class Enable(object):
         LONG = "enable"
         SHORT = "e"
@@ -15,13 +17,18 @@ class DrbdProxyCommands(Commands):
         LONG = "disable"
         SHORT = "d"
 
+    class Options(object):
+        LONG = "options"
+        SHORT = "opt"
+
     def __init__(self):
         super(DrbdProxyCommands, self).__init__()
 
     def setup_commands(self, parser):
         subcmds = [
             self.Enable,
-            self.Disable
+            self.Disable,
+            self.Options
         ]
 
         res_conn_parser = parser.add_parser(
@@ -72,6 +79,20 @@ class DrbdProxyCommands(Commands):
         ).completer = self.resource_completer
         p_proxy_disable.set_defaults(func=self.disable)
 
+        # drbd options
+        p_drbd_opts = subp.add_parser(
+            self.Options.LONG,
+            aliases=[self.Options.SHORT],
+            description=DrbdOptions.description("resource")
+        )
+        p_drbd_opts.add_argument(
+            'resource_name',
+            type=namecheck(RES_NAME),
+            help="Resource name"
+        ).completer = self.resource_dfn_completer
+        DrbdOptions.add_arguments(p_drbd_opts, self.OBJECT_NAME)
+        p_drbd_opts.set_defaults(func=self.set_drbd_opts)
+
         self.check_subcommands(subp, subcmds)
 
     def enable(self, args):
@@ -88,5 +109,18 @@ class DrbdProxyCommands(Commands):
             args.resource_name,
             args.node_name_a,
             args.node_name_b
+        )
+        return self.handle_replies(args, replies)
+
+    def set_drbd_opts(self, args):
+        a = DrbdOptions.filter_new(args)
+        del a['resource-name']  # remove resource name key
+
+        mod_props, del_props = DrbdOptions.parse_opts(a, self.OBJECT_NAME)
+
+        replies = self._linstor.drbd_proxy_modify(
+            args.resource_name,
+            mod_props,
+            del_props
         )
         return self.handle_replies(args, replies)
