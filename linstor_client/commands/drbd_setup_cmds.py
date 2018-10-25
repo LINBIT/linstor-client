@@ -14,7 +14,7 @@ def _drbd_options():
             if opt_key is None or opt_key in ['help', '_name']:
                 continue
             object_drbd_options[opt_key] = option
-        drbd_options[object_name] = dict(sorted(object_drbd_options.items(), key=lambda k: k[0]))
+        drbd_options[object_name] = object_drbd_options
     return drbd_options
 
 
@@ -45,7 +45,7 @@ class DrbdOptions(object):
 
     @classmethod
     def add_arguments(cls, parser, object_name, allow_unset=True):
-        for opt_key, option in cls.drbd_options[object_name].items():
+        for opt_key, option in sorted(cls.drbd_options[object_name].items(), key=lambda k: k[0]):
             if option['type'] == 'symbol':
                 parser.add_argument('--' + opt_key, choices=option['values'])
             elif option['type'] == 'boolean':
