@@ -223,7 +223,9 @@ class Commands(object):
 
     @classmethod
     def check_subcommands(cls, subp, subcmds):
-        assert len(subp.choices) == len(subcmds) * 2, "not all subcommands are defined"
+        parser_keys = set(subp.choices.keys())
+        subcmd_keys = set([key for subcmd in subcmds for key in [subcmd.LONG, subcmd.SHORT]])
+        assert parser_keys == subcmd_keys, "not all subcommands are defined"
         subp.metavar = "{%s}" % ", ".join(sorted([x.LONG for x in subcmds]))
 
     @classmethod

@@ -44,7 +44,7 @@ class DrbdOptions(object):
         return foo
 
     @classmethod
-    def add_arguments(cls, parser, object_name):
+    def add_arguments(cls, parser, object_name, allow_unset=True):
         for opt_key, option in cls.drbd_options[object_name].items():
             if option['type'] == 'symbol':
                 parser.add_argument('--' + opt_key, choices=option['values'])
@@ -84,17 +84,18 @@ class DrbdOptions(object):
                     parser.add_argument(
                         '--' + opt_key,
                         type=str,
-                        help="Range: [%d, %d]; Default: %d%s" % (min_, max_, default, unit)
+                        help="Range: [%d, %d]; Default: %s%s" % (min_, max_, str(default), unit)
                     )
                 else:
                     parser.add_argument('--' + opt_key, type=rangecheck(min_, max_),
-                                        help="Range: [%d, %d]; Default: %d%s" % (min_, max_, default, unit))
+                                        help="Range: [%d, %d]; Default: %s%s" % (min_, max_, str(default), unit))
             else:
                 raise LinstorError('Unknown option type ' + option['type'])
 
-            parser.add_argument('--%s-%s' % (cls.unsetprefix, opt_key),
-                                action='store_true',
-                                help=argparse.SUPPRESS)
+            if allow_unset:
+                parser.add_argument('--%s-%s' % (cls.unsetprefix, opt_key),
+                                    action='store_true',
+                                    help=argparse.SUPPRESS)
 
     @classmethod
     def filter_new(cls, args):
