@@ -1,3 +1,31 @@
+linstor-client (0.7.0-1) experimental; urgency=medium
+
+  [ Joel Colledge ]
+  * Multiple resources can now be created with a single API call
+  * The auto-place API is now synchronous so watching for events is not ne [...]
+  * Remove resource definition ready event which is no longer used
+  * Introduce transactional resource creation mode
+  * Show oversubscription information in the max volume size query
+  * Show port field of resource connection
+  * Add DRBD proxy configuration commands
+  * Fix tests to expect storage pool creation responses in a different order
+  * Remove need for drbdsetup_options.py
+  * Add configuration of DRBD Proxy options
+  * Add configuration of DRBD Proxy compression plugins
+  * Fix sorting of DRBD option arguments
+
+  [ Rene Peinthor ]
+  * interactive: allow commands to start with 'linstor'
+  * add a --verbose/-V flag
+  * Table: improve usage of table creation
+  * table: allow single colored cells and improve rendering
+  * resource-connection: add list, sp, lp, drbd-options commands
+  * error-list: allow to specify hours for --since parameter
+  * unittest: disable all unittests that create resources
+  * rsc-list: add swordfish volume state colors
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 30 Oct 2018 10:11:46 +0100
+
 linstor-client (0.6.2-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
