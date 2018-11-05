@@ -6,8 +6,7 @@ import re
 from datetime import datetime, timedelta
 
 import linstor
-from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE, \
-    EVENT_RESOURCE_DEPLOYMENT_STATE, EVENT_SNAPSHOT_DEPLOYMENT
+from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE
 from linstor.properties import properties
 from linstor.protobuf_to_dict import protobuf_to_dict
 import linstor_client
@@ -672,11 +671,7 @@ class MiscCommands(Commands):
 
         event_formatter_table = {
             EVENT_VOLUME_DISK_STATE: lambda event_data: "Disk state: " + event_data.disk_state,
-            EVENT_RESOURCE_STATE: lambda event_data: "Resource ready: " + str(event_data.ready),
-            EVENT_RESOURCE_DEPLOYMENT_STATE: lambda event_data:
-                "Deployment state: " + self._summarize_api_call_responses(event_data.responses),
-            EVENT_SNAPSHOT_DEPLOYMENT: lambda event_data:
-                "Snapshot deployment state: " + self._summarize_api_call_responses(event_data.responses)
+            EVENT_RESOURCE_STATE: lambda event_data: "Resource ready: " + str(event_data.ready)
         }
 
         def event_handler(event_header, event_data):
