@@ -27,6 +27,10 @@ class NodeCommands(Commands):
         LONG = "create-swordfish-target"
         SHORT = "cswt"
 
+    class Reconnect:
+        LONG = "reconnect"
+        SHORT = "rc"
+
     def __init__(self):
         super(NodeCommands, self).__init__()
 
@@ -42,7 +46,8 @@ class NodeCommands(Commands):
             Commands.Subcommands.Interface,
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
-            Commands.Subcommands.Modify
+            Commands.Subcommands.Modify,
+            NodeCommands.Reconnect
         ]
 
         node_parser = parser.add_parser(
@@ -181,6 +186,19 @@ class NodeCommands(Commands):
             'name',
             help='Name of the node to delete.').completer = self.node_completer
         p_lost_node.set_defaults(func=self.lost)
+
+        # reconnect node(s)
+        p_recon_node = node_subp.add_parser(
+            NodeCommands.Reconnect.LONG,
+            aliases=[NodeCommands.Reconnect.SHORT],
+            description='Reconnect a node reinitializing the nodes state.'
+        )
+        p_recon_node.add_argument(
+            'nodes',
+            nargs="+",
+            help='List of nodes to reconnect.'
+        )
+        p_recon_node.set_defaults(func=self.reconnect)
 
         # Interface commands
         netif_subcmds = [
@@ -351,6 +369,11 @@ class NodeCommands(Commands):
         async_flag = vars(args)["async"]
 
         replies = self._linstor.node_lost(args.name, async_flag)
+
+        return self.handle_replies(args, replies)
+
+    def reconnect(self, args):
+        replies = self.get_linstorapi().node_reconnect(args.nodes)
 
         return self.handle_replies(args, replies)
 
