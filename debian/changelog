@@ -1,3 +1,14 @@
+linstor-client (0.7.1-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * add node reconnect command
+  * fix missing rparent
+
+  [ Joel Colledge ]
+  * Create snapshots using reactive approach
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 12 Nov 2018 11:51:20 +0100
+
 linstor-client (0.7.0-1) experimental; urgency=medium
 
   [ Joel Colledge ]
