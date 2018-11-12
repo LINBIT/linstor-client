@@ -129,7 +129,7 @@ class NodeCommands(Commands):
             '--node-type', '-t',
             choices=node_types,
             default=apiconsts.VAL_NODE_TYPE_STLT,
-            help='Node type (default: %s' % ntype_def
+            help='Node type (default: %s)' % ntype_def
         )
         p_modify_node.add_argument(
             'node_name',
