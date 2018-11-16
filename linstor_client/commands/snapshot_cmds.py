@@ -9,6 +9,10 @@ from linstor import SizeCalc
 
 
 class SnapshotCommands(Commands):
+    class Rollback(object):
+        LONG = "rollback"
+        SHORT = "rb"
+
     def __init__(self):
         super(SnapshotCommands, self).__init__()
 
@@ -17,6 +21,7 @@ class SnapshotCommands(Commands):
             Commands.Subcommands.Create,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
+            self.Rollback,
             Commands.Subcommands.Resource,
             Commands.Subcommands.VolumeDefinition
         ]
@@ -75,6 +80,25 @@ class SnapshotCommands(Commands):
             type=namecheck(SNAPSHOT_NAME),
             help='Name of the snapshot local to the resource definition')
         p_delete_snapshot.set_defaults(func=self.delete)
+
+        # roll back to snapshot
+        p_rollback_snapshot = snapshot_subp.add_parser(
+            self.Rollback.LONG,
+            aliases=[self.Rollback.SHORT],
+            description='Rolls resource data back to snapshot state. '
+                        'The resource must not be in use. '
+                        'The snapshot will not be removed and can be used for subsequent rollbacks. '
+                        'Only the most recent snapshot may be used; '
+                        'to roll back to an earlier snapshot, the intermediate snapshots must first be deleted.')
+        p_rollback_snapshot.add_argument(
+            'resource_definition_name',
+            type=namecheck(RES_NAME),
+            help='Name of the resource definition').completer = self.resource_dfn_completer
+        p_rollback_snapshot.add_argument(
+            'snapshot_name',
+            type=namecheck(SNAPSHOT_NAME),
+            help='Name of the snapshot local to the resource definition')
+        p_rollback_snapshot.set_defaults(func=self.rollback)
 
         # list snapshot definitions
         p_lsnapshots = snapshot_subp.add_parser(
@@ -194,6 +218,10 @@ class SnapshotCommands(Commands):
 
     def delete(self, args):
         replies = self._linstor.snapshot_delete(args.resource_definition_name, args.snapshot_name)
+        return self.handle_replies(args, replies)
+
+    def rollback(self, args):
+        replies = self._linstor.snapshot_rollback(args.resource_definition_name, args.snapshot_name)
         return self.handle_replies(args, replies)
 
     @classmethod
