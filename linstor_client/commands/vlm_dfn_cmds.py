@@ -288,7 +288,7 @@ class VolumeDefinitionCommands(Commands):
     def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
-            for rsc_dfn in [x for x in lstmsg.rsc_dfns if x.rsc_name == args.resource_name]:
+            for rsc_dfn in [x for x in lstmsg.rsc_dfns if x.rsc_name.lower() == args.resource_name.lower()]:
                 for vlmdfn in rsc_dfn.vlm_dfns:
                     if vlmdfn.vlm_nr == args.volume_nr:
                         result.append(vlmdfn.vlm_props)
