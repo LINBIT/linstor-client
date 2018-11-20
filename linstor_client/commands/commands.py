@@ -11,7 +11,7 @@ from linstor.properties import properties
 from linstor.protobuf_to_dict import protobuf_to_dict
 import linstor_client
 from linstor_client.utils import LinstorClientError, Output
-from linstor_client.consts import ExitCode, KEY_LS_CONTROLLERS
+from linstor_client.consts import ExitCode, KEY_LS_CONTROLLERS, Color
 
 
 class ArgumentError(Exception):
@@ -364,13 +364,24 @@ class Commands(object):
             print(s)
             return None
 
-        for prop_map in prop_list_map:
-            tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-            tbl.add_column("Key")
-            tbl.add_column("Value")
+        property_map_count = len(prop_list_map)
+        if property_map_count == 0:
+            print(Output.color_str("No property map found for this entry.", Color.YELLOW, args.no_color))
+            return None
+
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl.add_column("Key")
+        tbl.add_column("Value")
+
+        if property_map_count > 0:
+            prop_map = prop_list_map[0]
             for p in prop_map:
                 tbl.add_row([p.key, p.value])
-            tbl.show()
+
+        tbl.show()
+
+        if property_map_count > 1:
+            print(Output.color_str("Unexpected additional property data, ignoring.", Color.YELLOW, args.no_color))
 
     @classmethod
     def get_allowed_props(cls, objname):
