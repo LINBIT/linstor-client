@@ -197,7 +197,7 @@ class NodeCommands(Commands):
             'nodes',
             nargs="+",
             help='List of nodes to reconnect.'
-        )
+        ).completer = self.node_completer
         p_recon_node.set_defaults(func=self.reconnect)
 
         # Interface commands
