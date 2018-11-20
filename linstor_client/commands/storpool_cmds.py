@@ -353,7 +353,8 @@ class StoragePoolCommands(Commands):
         result = []
         if lstmsg:
             for stp in lstmsg.stor_pools:
-                if stp.stor_pool_name == args.storage_pool_name and stp.node_name == args.node_name:
+                if stp.stor_pool_name.lower() == args.storage_pool_name.lower() \
+                        and stp.node_name.lower() == args.node_name.lower():
                     result.append(stp.props)
                     break
         return result

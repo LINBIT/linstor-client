@@ -564,7 +564,7 @@ class ResourceCommands(Commands):
         result = []
         if lstmsg:
             for rsc in lstmsg.resources:
-                if rsc.name == args.resource_name and rsc.node_name == args.node_name:
+                if rsc.name == args.resource_name and rsc.node_name.lower() == args.node_name.lower():
                     result.append(rsc.props)
                     break
         return result

@@ -170,7 +170,7 @@ class StoragePoolDefinitionCommands(Commands):
         result = []
         if lstmsg:
             for storpool_dfn in lstmsg.stor_pool_dfns:
-                if storpool_dfn.stor_pool_name == args.storage_pool_name:
+                if storpool_dfn.stor_pool_name.lower() == args.storage_pool_name.lower():
                     result.append(storpool_dfn.props)
                     break
         return result

@@ -162,7 +162,7 @@ class ResourceDefinitionCommands(Commands):
         result = []
         if lstmsg:
             for rsc_dfn in lstmsg.rsc_dfns:
-                if rsc_dfn.rsc_name == args.resource_name:
+                if rsc_dfn.rsc_name.lower() == args.resource_name.lower():
                     result.append(rsc_dfn.rsc_dfn_props)
                     break
         return result
