@@ -1,3 +1,16 @@
+linstor-client (0.7.2-1) experimental; urgency=medium
+
+  [ Joel Colledge ]
+  * Add snapshot rollback command
+  * Add auto-completion for node reconnect command
+
+  [ Rene Peinthor ]
+  * vlm-dfn/props: fix case sensitive resource lookup
+  * name lookups should be case insensitiv
+  * Add warning if no property map could be found or more data
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 22 Nov 2018 10:52:27 +0100
+
 linstor-client (0.7.1-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
