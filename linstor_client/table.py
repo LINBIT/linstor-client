@@ -211,9 +211,9 @@ class Table(object):
                         row[idx] = int(row[idx])
                     except ValueError:
                         pass
-            orig_table = self.table[:]
+            for idx, row in enumerate(self.table):
+                row += [idx]  # add table index for remap coloroverrides later
             orig_coloroverride = self.coloroverride[:]
-            tidx_used = set()
             try:
                 from natsort import natsorted
                 self.table = natsorted(self.table, key=operator.itemgetter(*group_bys))
@@ -221,12 +221,9 @@ class Table(object):
                 self.table.sort(key=operator.itemgetter(*group_bys))
 
             # restore color overrides after sort
-            for oidx, orow in enumerate(orig_table):
-                for tidx, trow in enumerate(self.table):
-                    if orow == trow and oidx != tidx and tidx not in tidx_used:
-                        tidx_used.add(tidx)
-                        self.coloroverride[tidx] = orig_coloroverride[oidx]
-                        break
+            for idx, row in enumerate(self.table):
+                self.coloroverride[idx] = orig_coloroverride[row[-1]]
+                # maybe remove the additional table index column, but it doesn't do harm
 
             lstlen = len(self.table)
             seps = set()
@@ -299,6 +296,7 @@ class Table(object):
 
         try:
             data_idx = 0  # index of the actual data table, self.table was inserted with table separators
+            space = maxwidth - sum(columnmax)
             for ridx, row in enumerate(self.table):
                 if row[0] is None:  # print a separator
                     if ridx == 0:  # top line
@@ -317,7 +315,6 @@ class Table(object):
                     fstr = ctbl[enc]['pipe']  # prepare the format string per row, this allows colors per cell
                     for idx, col in enumerate(self.header):  # loop columns
                         if col['align_column'] == TableHeader.ALIGN_RIGHT:
-                            space = maxwidth - sum(columnmax)
                             space_and_overhead = space - (len(self.header) * 3) - 2
                             if space_and_overhead >= 0:
                                 fstr += ' ' * space_and_overhead + ctbl[enc]['pipe']
