@@ -410,13 +410,6 @@ class ResourceCommands(Commands):
         replies = [x for subx in args.node_name for x in self._linstor.resource_delete(subx, args.name, async_flag)]
         return self.handle_replies(args, replies)
 
-    @staticmethod
-    def find_rsc_state(rsc_states, rsc_name, node_name):
-        for rscst in rsc_states:
-            if rscst.rsc_name == rsc_name and rscst.node_name == node_name:
-                return rscst
-        return None
-
     def show(self, args, lstmsg):
         rsc_dfns = self._linstor.resource_dfn_list()
         if isinstance(rsc_dfns[0], linstor.ApiCallResponse):
@@ -424,6 +417,7 @@ class ResourceCommands(Commands):
         rsc_dfns = rsc_dfns[0].proto_msg.rsc_dfns
 
         rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
+        rsc_state_lkup = {x.node_name + x.rsc_name: x for x in lstmsg.resource_states}
 
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         for hdr in ResourceCommands._resource_headers:
@@ -436,7 +430,7 @@ class ResourceCommands(Commands):
             if rsc.name in rsc_dfn_map:
                 rsc_dfn_port = rsc_dfn_map[rsc.name].rsc_dfn_port
             marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
-            rsc_state_proto = ResourceCommands.find_rsc_state(lstmsg.resource_states, rsc.name, rsc.node_name)
+            rsc_state_proto = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_state = tbl.color_cell("Unknown", Color.YELLOW)
             rsc_usage = ""
             if marked_delete:
@@ -465,13 +459,6 @@ class ResourceCommands(Commands):
     def list(self, args):
         lstmsg = self._linstor.resource_list(filter_by_nodes=args.nodes, filter_by_resources=args.resources)
         return self.output_list(args, lstmsg, self.show)
-
-    @staticmethod
-    def get_resource_state(res_states, node_name, resource_name):
-        for rsc_state in res_states:
-            if rsc_state.node_name == node_name and rsc_state.rsc_name == resource_name:
-                return rsc_state
-        return None
 
     @staticmethod
     def get_volume_state(volume_states, volume_nr):
@@ -529,8 +516,10 @@ class ResourceCommands(Commands):
         tbl.add_column("InUse", color=Output.color(Color.DARKGREEN, args.no_color))
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
+        rsc_state_lkup = {x.node_name + x.rsc_name: x for x in lstmsg.resource_states}
+
         for rsc in lstmsg.resources:
-            rsc_state = ResourceCommands.get_resource_state(lstmsg.resource_states, rsc.node_name, rsc.name)
+            rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_usage = ""
             if rsc_state:
                 if rsc_state.HasField('in_use') and rsc_state.in_use:
