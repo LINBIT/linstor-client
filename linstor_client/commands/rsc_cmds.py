@@ -513,6 +513,7 @@ class ResourceCommands(Commands):
         tbl.add_column("VolumeNr")
         tbl.add_column("MinorNr")
         tbl.add_column("DeviceName")
+        tbl.add_column("Allocated")
         tbl.add_column("InUse", color=Output.color(Color.DARKGREEN, args.no_color))
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
@@ -537,6 +538,7 @@ class ResourceCommands(Commands):
                     str(vlm.vlm_nr),
                     str(vlm.vlm_minor_nr),
                     vlm.device_path,
+                    linstor.SizeCalc.approximate_size_string(vlm.allocated) if vlm.allocated else "",
                     rsc_usage,
                     state
                 ])
