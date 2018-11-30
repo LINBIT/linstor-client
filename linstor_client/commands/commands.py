@@ -268,7 +268,9 @@ class Commands(object):
 
     @classmethod
     def filter_rsc_dfn_list(cls, rsc_dfn_raw, resources):
-        return [x for x in rsc_dfn_raw if x.rsc_name in resources] if resources else rsc_dfn_raw
+        res_list = [] if resources is None else resources
+        lower_res = [x.lower() for x in res_list]
+        return [x for x in rsc_dfn_raw if x.rsc_name.lower() in lower_res] if resources else rsc_dfn_raw
 
     @classmethod
     def output_props_list(cls, args, lstmsg, prop_show_func):
