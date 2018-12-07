@@ -256,6 +256,10 @@ class LinStorCLI(object):
         # read global options from config file
         if '--disable-config' not in pargs:
             pargs = LinStorCLI.merge_config_arguments(pargs)
+        # very basic way to default into interactive if no options or commands are specified
+        # only python 3.4+ argparse supports default subparsers
+        if not pargs:
+            pargs.append("interactive")
         return self._parser.parse_args(pargs)
 
     @classmethod
