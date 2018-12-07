@@ -282,7 +282,8 @@ class LinStorCLI(object):
 
             # only connect if not already connected or a local only command was executed
             conn_errors = []
-            contrl_list = Commands.controller_list(args.controllers)
+            contrl_list = linstor.MultiLinstor.controller_uri_list(
+                os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + args.controllers)
             if self._linstorapi is None and args.func not in local_only_cmds:
                 for contrl in contrl_list:
                     try:

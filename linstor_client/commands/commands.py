@@ -417,20 +417,6 @@ class Commands(object):
             return possible
         return completer
 
-    @staticmethod
-    def controller_list(cmdl_args_controllers):
-        cenv = os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + cmdl_args_controllers
-
-        servers = []
-        # add linstor uri scheme
-        for hp in cenv.split(','):
-            if hp:
-                if '://' in hp:
-                    servers.append(hp)
-                else:
-                    servers.append("linstor://" + hp)
-        return servers
-
     def get_linstorapi(self, **kwargs):
         if self._linstor:
             return self._linstor
@@ -442,7 +428,7 @@ class Commands(object):
         servers = ['linstor://localhost']
         if 'parsed_args' in kwargs:
             cliargs = kwargs['parsed_args']
-            servers = Commands.controller_list(cliargs.controllers)
+            servers = linstor.MultiLinstor.controller_uri_list(cliargs.controllers)
         if not servers:
             return None
 
