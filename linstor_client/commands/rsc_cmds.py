@@ -290,6 +290,15 @@ class ResourceCommands(Commands):
             help='Do not wait to apply changes on satellites before returning'
         )
         p_toggle_disk.add_argument(
+            '--migrate-from',
+            type=namecheck(NODE_NAME),
+            metavar="MIGRATION_SOURCE",
+            help='Name of the node on which the resource should be deleted once the sync is complete. '
+                 'Only applicable when adding a disk to a diskless resource. '
+                 'The command will complete once the new disk has been added; '
+                 'the deletion will occur later in the background.'
+        ).completer = self.node_completer
+        p_toggle_disk.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
             help='Node name where resource is deployed'
@@ -299,7 +308,7 @@ class ResourceCommands(Commands):
             type=namecheck(RES_NAME),
             help='Name of the resource'
         ).completer = self.resource_dfn_completer
-        p_toggle_disk.set_defaults(func=self.toggle_disk)
+        p_toggle_disk.set_defaults(func=self.toggle_disk, parser=p_toggle_disk)
 
         # resource creation transaction commands
         transactional_create_subcmds = [
@@ -595,12 +604,17 @@ class ResourceCommands(Commands):
 
     def toggle_disk(self, args):
         async_flag = vars(args)["async"]
+
+        if args.diskless and args.migrate_from:
+            args.parser.error("--migrate-from cannot be used with --diskless")
+
         replies = self._linstor.resource_toggle_disk(
             args.node_name,
             args.name,
-            args.storage_pool,
-            args.diskless,
-            async_flag
+            storage_pool=args.storage_pool,
+            migrate_from=args.migrate_from,
+            diskless=args.diskless,
+            async_msg=async_flag
         )
         return self.handle_replies(args, replies)
 

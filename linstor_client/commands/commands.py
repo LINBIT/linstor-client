@@ -684,7 +684,10 @@ class MiscCommands(Commands):
 
         event_formatter_table = {
             EVENT_VOLUME_DISK_STATE: lambda event_data: "Disk state: " + event_data.disk_state,
-            EVENT_RESOURCE_STATE: lambda event_data: "Resource ready: " + str(event_data.ready)
+            EVENT_RESOURCE_STATE: lambda event_data:
+                "Resource ready: " + str(event_data.ready) +
+                ", in-use: " + str(event_data.in_use) +
+                ", up-to-date: " + str(event_data.up_to_date)
         }
 
         def event_handler(event_header, event_data):
