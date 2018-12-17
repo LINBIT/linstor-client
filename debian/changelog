@@ -1,3 +1,18 @@
+linstor-client (0.7.3-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * table: optimize color overriding
+  * rsc-list: use a lookup map for resource state
+  * case insensitive resource definition list filter
+  * if linstor is started without options/arguments, drop into interactive
+  * move controller_list method into linstorapi
+
+  [ Joel Colledge ]
+  * Include thin volume allocated capacity in the volume list
+  * Add option to migrate disk from another node when adding disk to diskl [...]
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 17 Dec 2018 13:41:52 +0100
+
 linstor-client (0.7.2-1) experimental; urgency=medium
 
   [ Joel Colledge ]
