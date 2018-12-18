@@ -547,7 +547,7 @@ class ResourceCommands(Commands):
                     str(vlm.vlm_nr),
                     str(vlm.vlm_minor_nr),
                     vlm.device_path,
-                    linstor.SizeCalc.approximate_size_string(vlm.allocated) if vlm.allocated else "",
+                    linstor.SizeCalc.approximate_size_string(vlm.allocated_size) if vlm.allocated_size else "",
                     rsc_usage,
                     state
                 ])
