@@ -3,10 +3,11 @@ from __future__ import print_function
 import os
 
 import linstor_client.argparse.argparse as argparse
-from linstor_client.commands import Commands, DrbdOptions, ArgumentError
+from linstor_client.commands import Commands, DrbdOptions
 from linstor_client.consts import NODE_NAME, RES_NAME
-from linstor_client.utils import Output, namecheck, Color
+from linstor_client.utils import namecheck
 from linstor_client import TableHeader, Table
+from linstor import consts as apiconsts
 
 
 class ResourceConnectionCommands(Commands):
@@ -19,6 +20,10 @@ class ResourceConnectionCommands(Commands):
         TableHeader("Port")
     ]
 
+    class Path(object):
+        LONG = "path"
+        SHORT = "p"
+
     def __init__(self):
         super(ResourceConnectionCommands, self).__init__()
 
@@ -28,7 +33,8 @@ class ResourceConnectionCommands(Commands):
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.DrbdOptions,
-            Commands.Subcommands.DrbdPeerDeviceOptions
+            Commands.Subcommands.DrbdPeerDeviceOptions,
+            ResourceConnectionCommands.Path
         ]
 
         res_conn_parser = parser.add_parser(
@@ -116,7 +122,7 @@ class ResourceConnectionCommands(Commands):
         p_drbd_peer_opts.add_argument(
             'node_b',
             type=namecheck(NODE_NAME),
-            help="1. Node in the node connection"
+            help="2. Node in the node connection"
         ).completer = self.node_completer
         p_drbd_peer_opts.add_argument(
             'resource_name',
@@ -127,6 +133,111 @@ class ResourceConnectionCommands(Commands):
         DrbdOptions.add_arguments(p_drbd_peer_opts, self.OBJECT_NAME)
         p_drbd_peer_opts.set_defaults(func=self.drbd_opts)
 
+        # Path commands
+        path_subcmds = [
+            Commands.Subcommands.Create,
+            Commands.Subcommands.List,
+            Commands.Subcommands.Delete
+        ]
+
+        path_parser = subp.add_parser(
+            ResourceConnectionCommands.Path.LONG,
+            formatter_class=argparse.RawTextHelpFormatter,
+            aliases=[ResourceConnectionCommands.Path.SHORT],
+            description="%s subcommands" % ResourceConnectionCommands.Path.LONG)
+
+        path_subp = path_parser.add_subparsers(
+            title="%s subcommands" % Commands.Subcommands.Interface.LONG,
+            metavar="",
+            description=Commands.Subcommands.generate_desc(path_subcmds))
+
+        # create path
+        path_create = path_subp.add_parser(
+            Commands.Subcommands.Create.LONG,
+            aliases=[Commands.Subcommands.Create.SHORT],
+            description='Creates a new resource connection path'
+        )
+        path_create.add_argument(
+            "node_a",
+            type=namecheck(NODE_NAME),
+            help="1. Node of the connection"
+        ).completer = self.node_completer
+        path_create.add_argument(
+            "node_b",
+            type=namecheck(NODE_NAME),
+            help="2. Node of the connection"
+        ).completer = self.node_completer
+        path_create.add_argument(
+            "resource_name",
+            type=namecheck(RES_NAME),
+            help="Resource name"
+        ).completer = self.resource_completer
+        path_create.add_argument(
+            "path_name",
+            help="Name of the created path"
+        )
+        path_create.add_argument(
+            "netinterface_a",
+            help="Netinterface name to use for 1. node"
+        )
+        path_create.add_argument(
+            "netinterface_b",
+            help="Netinterface name to use for the 2. node"
+        )
+        path_create.set_defaults(func=self.path_create)
+
+        # delete path
+        path_delete = path_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
+            description='Deletes an existing resource connection path'
+        )
+        path_delete.add_argument(
+            "node_a",
+            type=namecheck(NODE_NAME),
+            help="1. Node of the connection"
+        ).completer = self.node_completer
+        path_delete.add_argument(
+            "node_b",
+            type=namecheck(NODE_NAME),
+            help="2. Node of the connection"
+        ).completer = self.node_completer
+        path_delete.add_argument(
+            "resource_name",
+            type=namecheck(RES_NAME),
+            help="Resource name"
+        ).completer = self.resource_completer
+        path_delete.add_argument(
+            "path_name",
+            help="Name of the created path"
+        )
+        path_delete.set_defaults(func=self.path_delete)
+
+        # list path
+        path_list = path_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
+            description='List all existing resource connection paths'
+        )
+        path_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        path_list.add_argument(
+            "node_a",
+            type=namecheck(NODE_NAME),
+            help="1. Node of the connection"
+        ).completer = self.node_completer
+        path_list.add_argument(
+            "node_b",
+            type=namecheck(NODE_NAME),
+            help="2. Node of the connection"
+        ).completer = self.node_completer
+        path_list.add_argument(
+            "resource_name",
+            type=namecheck(RES_NAME),
+            help="Resource name"
+        ).completer = self.resource_completer
+        path_list.set_defaults(func=self.path_list)
+
+        self.check_subcommands(path_subp, path_subcmds)
         self.check_subcommands(subp, subcmds)
 
     def show(self, args, lstmsg):
@@ -195,5 +306,48 @@ class ResourceConnectionCommands(Commands):
             args.node_b,
             mod_props,
             del_props
+        )
+        return self.handle_replies(args, replies)
+
+    def path_create(self, args):
+        prop_ns = "{ns}/{pn}".format(ns=apiconsts.NAMESPC_CONNECTION_PATHS, pn=args.path_name)
+        props = {
+            "{ns}/{n}".format(ns=prop_ns, n=args.node_a): args.netinterface_a,
+            "{ns}/{n}".format(ns=prop_ns, n=args.node_b): args.netinterface_b,
+        }
+        replies = self.get_linstorapi().resource_conn_modify(
+            args.resource_name,
+            args.node_a,
+            args.node_b,
+            property_dict=props,
+            delete_props=[]
+        )
+        return self.handle_replies(args, replies)
+
+    @classmethod
+    def _path_list(cls, args, lstmsg):
+        result = []
+        if lstmsg:
+            for rsc_con in lstmsg.rsc_connections:
+                if (rsc_con.node_name_1 == args.node_a and rsc_con.node_name_2 == args.node_b) or \
+                        (rsc_con.node_name_2 == args.node_a and rsc_con.node_name_1 == args.node_b):
+                    result.append([x for x in rsc_con.rsc_conn_props
+                                   if x.key.startswith(apiconsts.NAMESPC_CONNECTION_PATHS + '/')])
+                    break
+        return result
+
+    def path_list(self, args):
+        lstmsg = self._linstor.resource_conn_list(args.resource_name)
+        return self.output_props_list(args, lstmsg, self._path_list)
+
+    def path_delete(self, args):
+        prop_ns = "{ns}/{pn}".format(ns=apiconsts.NAMESPC_CONNECTION_PATHS, pn=args.path_name)
+        replies = self.get_linstorapi().resource_conn_modify(
+            args.resource_name,
+            args.node_a,
+            args.node_b,
+            property_dict={},
+            delete_props=["{ns}/{n}".format(ns=prop_ns, n=args.node_a),
+                          "{ns}/{n}".format(ns=prop_ns, n=args.node_b)]
         )
         return self.handle_replies(args, replies)
