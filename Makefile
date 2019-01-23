@@ -7,7 +7,9 @@ override GITHEAD := $(shell test -e .git && $(GIT) rev-parse HEAD)
 U := $(shell $(PYTHON) ./setup.py versionup2date >/dev/null 2>&1; echo $$?;)
 TESTS = $(wildcard unit-tests/*_test.py)
 DOCKERREGISTRY = drbd.io
+DOCKERREGISTRY_PUBLIC = quay.io
 DOCKERREGPATH = $(DOCKERREGISTRY)/linstor-client
+DOCKERREGPATH_PUBLIC = $(DOCKERREGISTRY_PUBLIC)/linbit/linstor-client
 
 all: doc
 	$(PYTHON) setup.py build
@@ -49,11 +51,12 @@ else
 dockerimage:
 endif
 	docker build -t $(DOCKERREGPATH) .
+	docker tag $(DOCKERREGPATH) $(DOCKERREGPATH_PUBLIC)
 	@echo && echo "Did you run distclean?"
 
 .PHONY: dockerpath
 dockerpath:
-	@echo $(DOCKERREGPATH)
+	@echo $(DOCKERREGPATH) $(DOCKERREGPATH_PUBLIC)
 
 # no gensrc here, that is in debian/rules
 deb: up2date
