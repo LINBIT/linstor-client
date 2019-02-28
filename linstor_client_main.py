@@ -22,10 +22,6 @@ import sys
 import os
 import traceback
 import itertools
-try:
-    import ConfigParser as configparser
-except ImportError:
-    import configparser
 
 import linstor
 from linstor import sharedconsts
@@ -223,33 +219,12 @@ class LinStorCLI(object):
         return parser
 
     @staticmethod
-    def read_config(config_file):
-        cp = configparser.SafeConfigParser()
-        cp.read(config_file)
-        config = {}
-        for section in cp.sections():
-            config[section] = cp.items(section)
-        return config
-
-    @staticmethod
     def merge_config_arguments(pargs):
-        home_dir = os.path.expanduser("~")
-        config_file_name = "linstor-client.conf"
-        user_conf = os.path.join(home_dir, ".config", "linstor", config_file_name)
-        sys_conf = os.path.join('/etc', 'linstor', config_file_name)
-
-        entries = None
-        if os.path.exists(user_conf):
-            entries = LinStorCLI.read_config(user_conf)
-        elif os.path.exists(sys_conf):
-            entries = LinStorCLI.read_config(sys_conf)
-
-        if entries:
-            global_entries = entries.get('global', [])
-            for key, val in global_entries:
-                pargs.insert(0, "--" + key)
-                if val:
-                    pargs.insert(1, val)
+        global_entries = linstor.Config.get_section('global')
+        for key, val in global_entries.items():
+            pargs.insert(0, "--" + key)
+            if val:
+                pargs.insert(1, val)
         return pargs
 
     def parse(self, pargs):
