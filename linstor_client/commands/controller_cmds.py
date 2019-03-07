@@ -13,7 +13,6 @@ class ControllerCommands(Commands):
         subcmds = [
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
-            Commands.Subcommands.Shutdown,
             Commands.Subcommands.DrbdOptions,
             Commands.Subcommands.Version
         ]
@@ -54,15 +53,7 @@ class ControllerCommands(Commands):
         DrbdOptions.add_arguments(c_drbd_opts, self.OBJECT_NAME)
         c_drbd_opts.set_defaults(func=self.cmd_controller_drbd_opts)
 
-        # Controller - shutdown
-        c_shutdown = con_subp.add_parser(
-            Commands.Subcommands.Shutdown.LONG,
-            aliases=[Commands.Subcommands.Shutdown.SHORT],
-            description='Shutdown the linstor controller'
-        )
-        c_shutdown.set_defaults(func=self.cmd_shutdown)
-
-        # Controller - shutdown
+        # Controller - version
         c_shutdown = con_subp.add_parser(
             Commands.Subcommands.Version.LONG,
             aliases=[Commands.Subcommands.Version.SHORT],
@@ -108,10 +99,6 @@ class ControllerCommands(Commands):
         for delkey in del_props:
             replies.extend(self._linstor.controller_del_prop(delkey))
 
-        return self.handle_replies(args, replies)
-
-    def cmd_shutdown(self, args):
-        replies = self._linstor.controller_shutdown()
         return self.handle_replies(args, replies)
 
     def cmd_version(self, args):
