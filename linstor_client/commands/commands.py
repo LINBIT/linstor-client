@@ -1,17 +1,16 @@
 import linstor_client.argparse.argparse as argparse
 import getpass
 import json
-import os
 import re
 from datetime import datetime, timedelta
 
 import linstor
-from linstor.sharedconsts import NAMESPC_AUXILIARY, EVENT_VOLUME_DISK_STATE, EVENT_RESOURCE_STATE
+from linstor.sharedconsts import NAMESPC_AUXILIARY
 from linstor.properties import properties
 from linstor.protobuf_to_dict import protobuf_to_dict
 import linstor_client
 from linstor_client.utils import LinstorClientError, Output
-from linstor_client.consts import ExitCode, KEY_LS_CONTROLLERS, Color
+from linstor_client.consts import ExitCode, Color
 
 
 class ArgumentError(Exception):
@@ -43,7 +42,6 @@ class Commands(object):
     DMMIGRATE = 'dm-migrate'
     EXIT = 'exit'
     GEN_ZSH_COMPLETER = 'gen-zsh-completer'
-    CREATE_WATCH = 'create-watch'
     HELP = 'help'
     INTERACTIVE = 'interactive'
     LIST_COMMANDS = 'list-commands'
@@ -78,8 +76,7 @@ class Commands(object):
     Hidden = [
         DMMIGRATE,
         EXIT,
-        GEN_ZSH_COMPLETER,
-        CREATE_WATCH
+        GEN_ZSH_COMPLETER
     ]
 
     def __init__(self):
@@ -542,17 +539,6 @@ class MiscCommands(Commands):
         super(MiscCommands, self).__init__()
 
     def setup_commands(self, parser):
-        # watch
-        c_create_watch = parser.add_parser(
-            Commands.CREATE_WATCH,
-            aliases=[],
-            description='Watch events'
-        )
-        c_create_watch.add_argument('--node-name', help='Name of the node').completer = self.node_completer
-        c_create_watch.add_argument('--resource-name', help='Name of the resource').completer = self.resource_completer
-        c_create_watch.add_argument('--volume-number', type=int, help='Volume number')
-        c_create_watch.set_defaults(func=self.cmd_create_watch)
-
         # Enryption subcommands
         crypt_subcmds = [
             Commands.Subcommands.EnterPassphrase,
@@ -660,50 +646,6 @@ class MiscCommands(Commands):
     @staticmethod
     def _summarize_api_call_responses(responses):
         return "; ".join([response.message for response in responses])
-
-    def cmd_create_watch(self, args):
-        def reply_handler(replies):
-            create_watch_rc = self.handle_replies(args, replies)
-            if create_watch_rc != ExitCode.OK:
-                return create_watch_rc
-            return None
-
-        event_formatter_table = {
-            EVENT_VOLUME_DISK_STATE: lambda event_data: "Disk state: " + event_data.disk_state,
-            EVENT_RESOURCE_STATE: lambda event_data:
-                "Resource ready: " + str(event_data.ready) +
-                ", in-use: " + str(event_data.in_use) +
-                ", up-to-date: " + str(event_data.up_to_date)
-        }
-
-        def event_handler(event_header, event_data):
-            event_header_display = \
-                event_header.event_name + \
-                " [" + event_header.event_action + "]" + \
-                " (" + event_header.node_name + \
-                "/" + event_header.resource_name + \
-                ("/" + str(event_header.volume_number) if event_header.HasField("volume_number") else "") + \
-                ("@" + str(event_header.snapshot_name) if event_header.HasField("snapshot_name") else "") + \
-                ")"
-
-            if event_data:
-                event_formatter = event_formatter_table.get(event_header.event_name)
-                if event_formatter is None:
-                    print(event_header_display)
-                else:
-                    event_data_display = event_formatter(event_data)
-                    print(event_header_display + " " + event_data_display)
-            else:
-                print(event_header_display)
-
-        self._linstor.watch_events(
-            reply_handler, event_handler,
-            linstor.ObjectIdentifier(
-                node_name=args.node_name,
-                resource_name=args.resource_name,
-                volume_number=args.volume_number
-            )
-        )
 
     def cmd_crypt_enter_passphrase(self, args):
         if args.passphrase:
