@@ -129,6 +129,12 @@ class ResourceCommands(Commands):
             help='Will add a diskless resource on all non replica nodes.'
         )
         p_new_res.add_argument(
+            '-l', '--layer-list',
+            type=self.layer_data_check,
+            help="Comma separated layer list, order is from right to left. "
+                 "This means the top most layer is on the left. "
+                 "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
+        p_new_res.add_argument(
             'node_name',
             type=namecheck(NODE_NAME),
             nargs='*',
@@ -399,7 +405,8 @@ class ResourceCommands(Commands):
                     args.resource_definition_name,
                     args.diskless,
                     args.storage_pool,
-                    args.node_id
+                    args.node_id,
+                    args.layer_list
                 )
                 for node_name in args.node_name
             ]
@@ -437,7 +444,8 @@ class ResourceCommands(Commands):
         for rsc in lstmsg.resources:
             rsc_dfn_port = ''
             if rsc.name in rsc_dfn_map:
-                rsc_dfn_port = rsc_dfn_map[rsc.name].rsc_dfn_port
+                drbd_data = self.drbd_layer_data(rsc_dfn_map[rsc.name])
+                rsc_dfn_port = drbd_data.port if drbd_data else ""
             marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
             rsc_state_proto = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_state = tbl.color_cell("Unknown", Color.YELLOW)
@@ -540,12 +548,13 @@ class ResourceCommands(Commands):
                 vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr) if rsc_state else None
                 state_txt, color = cls.volume_state_cell(vlm_state, rsc.rsc_flags, vlm.vlm_flags)
                 state = tbl.color_cell(state_txt, color) if color else state_txt
+                vlm_drbd_data = cls.drbd_layer_data(vlm)
                 tbl.add_row([
                     rsc.node_name,
                     rsc.name,
                     vlm.stor_pool_name,
                     str(vlm.vlm_nr),
-                    str(vlm.vlm_minor_nr),
+                    str(vlm_drbd_data.drbd_vlm_dfn.minor) if vlm_drbd_data else "",
                     vlm.device_path,
                     linstor.SizeCalc.approximate_size_string(vlm.allocated_size) if vlm.allocated_size else "",
                     rsc_usage,

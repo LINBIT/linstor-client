@@ -533,6 +533,30 @@ class Commands(object):
 
         return possible
 
+    @classmethod
+    def drbd_layer_data(cls, proto_msg):
+        for layer in proto_msg.layer_data:
+            data = layer.WhichOneof('data')
+            if data == 'drbd':
+                return layer.drbd
+        return None
+
+    @classmethod
+    def layer_data_check(cls, layer_data):
+        """
+        Checks and converts the comma separated layer names to a list.
+
+        :param str layer_data:
+        :return: List of layer names
+        :rtype: list[str]
+        """
+        layer_list = []
+        for layer in layer_data.split(','):
+            if layer not in linstor.Linstor.layer_list():
+                raise argparse.ArgumentTypeError('Layer name "{lay}" not valid'.format(lay=layer))
+            layer_list.append(layer)
+        return layer_list
+
 
 class MiscCommands(Commands):
     def __init__(self):

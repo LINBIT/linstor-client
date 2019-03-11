@@ -226,10 +226,11 @@ class VolumeDefinitionCommands(Commands):
                 elif FLAG_RESIZE in vlmdfn.vlm_flags:
                     state = tbl.color_cell("resizing", Color.DARKPINK)
 
+                drbd_data = cls.drbd_layer_data(vlmdfn)
                 tbl.add_row([
                     rsc_dfn.rsc_name,
                     vlmdfn.vlm_nr,
-                    vlmdfn.vlm_minor,
+                    drbd_data.minor if drbd_data else "",
                     SizeCalc.approximate_size_string(vlmdfn.vlm_size),
                     state
                 ])

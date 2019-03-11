@@ -49,6 +49,12 @@ class ResourceDefinitionCommands(Commands):
             description='Defines a Linstor resource definition for use with linstor.')
         p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
         # p_new_res_dfn.add_argument('-s', '--secret', type=str)
+        p_new_res_dfn.add_argument(
+            '-l', '--layer-list',
+            type=self.layer_data_check,
+            help="Comma separated layer list, order is from right to left. "
+                 "This means the top most layer is on the left. "
+                 "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
         p_new_res_dfn.add_argument('name', type=namecheck(RES_NAME), help='Name of the new resource definition')
         p_new_res_dfn.set_defaults(func=self.create)
 
@@ -126,7 +132,7 @@ class ResourceDefinitionCommands(Commands):
         self.check_subcommands(res_def_subp, subcmds)
 
     def create(self, args):
-        replies = self._linstor.resource_dfn_create(args.name, args.port)
+        replies = self._linstor.resource_dfn_create(args.name, args.port, layer_list=args.layer_list)
         return self.handle_replies(args, replies)
 
     def delete(self, args):
@@ -143,10 +149,12 @@ class ResourceDefinitionCommands(Commands):
             tbl.add_header(hdr)
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
+
         for rsc_dfn in cls.filter_rsc_dfn_list(lstmsg.rsc_dfns, args.resources):
+            drbd_data = cls.drbd_layer_data(rsc_dfn)
             tbl.add_row([
                 rsc_dfn.rsc_name,
-                rsc_dfn.rsc_dfn_port,
+                drbd_data.port if drbd_data else "",
                 tbl.color_cell("DELETING", Color.RED)
                 if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
             ])
