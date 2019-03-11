@@ -242,7 +242,7 @@ class VolumeDefinitionCommands(Commands):
 
     @classmethod
     def _get_volume_size(cls, size_str):
-        m = re.match('(\d+)(\D*)', size_str)
+        m = re.match(r'(\d+)(\D*)', size_str)
 
         size = 0
         try:
