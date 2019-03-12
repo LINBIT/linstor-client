@@ -228,7 +228,7 @@ class Commands(object):
     def handle_replies(cls, args, replies):
         rc = ExitCode.OK
         if args and args.machine_readable:
-            Commands._print_machine_readable(replies)
+            Commands._print_machine_readable(replies, args.output_version)
             return rc
 
         for call_resp in [x for x in replies
@@ -255,7 +255,7 @@ class Commands(object):
                 return cls.handle_replies(args, replies)
 
             if args.machine_readable:
-                cls._print_machine_readable(replies)
+                cls._print_machine_readable(replies, args.output_version)
             else:
                 output_func(args, replies[0].proto_msg if single_item else replies)
                 api_replies = linstor.Linstor.filter_api_call_response(replies[1:])
@@ -285,13 +285,16 @@ class Commands(object):
         return json.dumps(data, indent=2)
 
     @classmethod
-    def _print_machine_readable(cls, data):
+    def _print_machine_readable(cls, data, output_version):
         """
         serializes the given protobuf data and prints to stdout.
         """
         assert(isinstance(data, list))
-        d = [protobuf_to_dict(x.proto_msg) for x in data]
-        s = cls._to_json(d)
+        if output_version == 'v0':
+            s = json.dumps([x.data_v0 for x in data], indent=2)
+        else:
+            d = [protobuf_to_dict(x.proto_msg) for x in data]
+            s = cls._to_json(d)
 
         # try:
         #     s = ""
