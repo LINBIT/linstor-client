@@ -178,7 +178,8 @@ class TestCreateCommands(LinstorTestCase):
         vlmdfn = [x for x in vlmdfns if x['vlm_nr'] == vlmnr]
         self.assertEqual(1, len(vlmdfn), "volume definition not found")
         vlmdfn = vlmdfn[0]
-        self.assertEqual(minornr, vlmdfn['vlm_minor'])
+        if minornr is not None:
+            self.assertEqual(minornr, vlmdfn['vlm_minor'])
         self.assertEqual(size, vlmdfn['vlm_size'])
 
     def test_create_volume_dfn(self):
@@ -187,7 +188,7 @@ class TestCreateCommands(LinstorTestCase):
 
         vlm_dfn = self.execute_with_single_resp(['volume-definition', 'create', 'rscvlm', '128MiB'])
         self.assertTrue(vlm_dfn.is_success())
-        self.assert_volume_def('rscvlm', 0, 1000, SizeCalc.convert_round_up(128, SizeCalc.UNIT_MiB, SizeCalc.UNIT_KiB))
+        self.assert_volume_def('rscvlm', 0, None, SizeCalc.convert_round_up(128, SizeCalc.UNIT_MiB, SizeCalc.UNIT_KiB))
 
         vlm_dfn = self.execute_with_single_resp(['volume-definition', 'create', 'rscvlm', '0'])
         self.assertTrue(vlm_dfn.is_error())
@@ -196,7 +197,7 @@ class TestCreateCommands(LinstorTestCase):
         vlm_dfn = self.execute_with_single_resp(['volume-definition', 'create', 'rscvlm', '--vlmnr', '3', '256Mib'])
         self.assertTrue(vlm_dfn.is_success())
         self.assertEqual(MASK_VLM_DFN | MASK_CRT | CREATED, vlm_dfn.ret_code)
-        self.assert_volume_def('rscvlm', 3, 1002, SizeCalc.convert_round_up(256, SizeCalc.UNIT_MiB, SizeCalc.UNIT_KiB))
+        self.assert_volume_def('rscvlm', 3, None, SizeCalc.convert_round_up(256, SizeCalc.UNIT_MiB, SizeCalc.UNIT_KiB))
 
         with self.assertRaises(SystemExit):
             self.execute_with_single_resp(['volume-definition', 'create', 'rscvlm', '1Gi'])
