@@ -388,7 +388,8 @@ class ResourceCommands(Commands):
                 [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_same],
                 [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different],
                 diskless_on_remaining=args.diskless_on_remaining,
-                async_msg=async_flag
+                async_msg=async_flag,
+                layer_list=args.layer_list
             )
 
             return self.handle_replies(args, replies)
