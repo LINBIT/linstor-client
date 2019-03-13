@@ -28,8 +28,11 @@ from linstor_client.consts import (
     NODE_NAME_MAXLEN,
     NODE_NAME_MINLEN,
     RES_NAME,
-    RES_NAME_MAXLEN,
+    RES_EXT_NAME,
     RES_NAME_MINLEN,
+    RES_NAME_MAXLEN,
+    RES_EXT_NAME_MINLEN,
+    RES_EXT_NAME_MAXLEN,
     RES_NAME_VALID_CHARS,
     RES_NAME_VALID_INNER_CHARS,
     SNAPSHOT_NAME,
@@ -273,9 +276,9 @@ def check_node_name(name):
     idx = 0
     while idx < name_len:
         letter = name_b[idx]
-        if not ((letter >= ord('a') and letter <= ord('z')) or
-                (letter >= ord('A') and letter <= ord('Z')) or
-                (letter >= ord('0') and letter <= ord('9'))):
+        if not (ord('a') <= letter <= ord('z') or
+                ord('A') <= letter <= ord('Z') or
+                ord('0') <= letter <= ord('9')):
             # special characters allowed depending on position within the string
             if idx == 0 or idx + 1 == name_len:
                 return ""
@@ -321,7 +324,7 @@ def namecheck(checktype):
         else:
             name = check_name(name, min_length, max_length, valid_chars, valid_inner_chars)
         if not name:
-            raise argparse.ArgumentTypeError('Name: %s not valid' % (name))
+            raise argparse.ArgumentTypeError('Name: %s not valid' % name)
         return name
     return check
 

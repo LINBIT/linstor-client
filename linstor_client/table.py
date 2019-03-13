@@ -4,7 +4,6 @@ import sys
 import fcntl
 import errno
 import operator
-
 from linstor_client.consts import (
     DEFAULT_TERM_HEIGHT,
     DEFAULT_TERM_WIDTH,
@@ -346,11 +345,11 @@ class Table(object):
 
                         fstr += u' '
                         # add color, if set
-                        if self.coloroverride[data_idx][idx] or col["color"] and (self._header_colors or data_idx > 0):
+                        if self.coloroverride[data_idx][idx] or col['color'] and (self._header_colors or data_idx > 0):
                             if self.coloroverride[data_idx][idx]:
                                 color = self.coloroverride[data_idx][idx]
                             else:
-                                color = col["color"]
+                                color = col['color']
                             fstr += color + field_format + Color.NONE
                         else:
                             fstr += field_format

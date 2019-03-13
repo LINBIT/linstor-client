@@ -3,7 +3,7 @@ import linstor_client.argparse.argparse as argparse
 import linstor
 import linstor_client
 from linstor_client.commands import Commands, DrbdOptions
-from linstor_client.consts import RES_NAME, Color, ExitCode
+from linstor_client.consts import RES_NAME, RES_EXT_NAME, Color
 from linstor.sharedconsts import FLAG_DELETE
 from linstor_client.utils import namecheck, rangecheck
 
@@ -48,6 +48,7 @@ class ResourceDefinitionCommands(Commands):
             aliases=[Commands.Subcommands.Create.SHORT],
             description='Defines a Linstor resource definition for use with linstor.')
         p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
+        p_new_res_dfn.add_argument('-e', '--external-name', type=str, help='User specified name.')
         # p_new_res_dfn.add_argument('-s', '--secret', type=str)
         p_new_res_dfn.add_argument(
             '-l', '--layer-list',
@@ -55,7 +56,9 @@ class ResourceDefinitionCommands(Commands):
             help="Comma separated layer list, order is from right to left. "
                  "This means the top most layer is on the left. "
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
-        p_new_res_dfn.add_argument('name', type=namecheck(RES_NAME), help='Name of the new resource definition')
+        p_new_res_dfn.add_argument('name',
+                                   type=namecheck(RES_NAME),
+                                   help='Name of the new resource definition. Will be ignored if EXTERNAL_NAME is set.')
         p_new_res_dfn.set_defaults(func=self.create)
 
         # remove-resource definition
@@ -92,6 +95,7 @@ class ResourceDefinitionCommands(Commands):
                                choices=rsc_dfn_groupby).completer = rsc_dfn_group_completer
         p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
                                help='Filter by list of resources').completer = self.resource_dfn_completer
+        p_lrscdfs.add_argument('-e', '--external-name', action="store_true", help='Show user specified name.')
         p_lrscdfs.set_defaults(func=self.list)
 
         # show properties
@@ -132,7 +136,13 @@ class ResourceDefinitionCommands(Commands):
         self.check_subcommands(res_def_subp, subcmds)
 
     def create(self, args):
-        replies = self._linstor.resource_dfn_create(args.name, args.port, layer_list=args.layer_list)
+        replies = self._linstor.resource_dfn_create(
+            args.name,
+            args.port,
+            external_name=args.external_name
+            if not isinstance(args.external_name, bytes) else args.external_name.decode('utf-8'),  # py2-3
+            layer_list=args.layer_list
+        )
         return self.handle_replies(args, replies)
 
     def delete(self, args):
@@ -145,24 +155,33 @@ class ResourceDefinitionCommands(Commands):
     @classmethod
     def show(cls, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        for hdr in cls._rsc_dfn_headers:
+
+        rsc_dfn_hdr = list(cls._rsc_dfn_headers)
+
+        if args.external_name:
+            rsc_dfn_hdr.insert(1, linstor_client.TableHeader("External"))
+
+        for hdr in rsc_dfn_hdr:
             tbl.add_header(hdr)
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
         for rsc_dfn in cls.filter_rsc_dfn_list(lstmsg.rsc_dfns, args.resources):
             drbd_data = cls.drbd_layer_data(rsc_dfn)
-            tbl.add_row([
-                rsc_dfn.rsc_name,
-                drbd_data.port if drbd_data else "",
-                tbl.color_cell("DELETING", Color.RED)
-                if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN)
-            ])
+            row = [rsc_dfn.rsc_name]
+            if args.external_name:
+                if isinstance(rsc_dfn.external_name, str):
+                    row.append(rsc_dfn.external_name)
+                else:
+                    row.append(rsc_dfn.external_name.decode('utf-8'))
+            row.append(drbd_data.port if drbd_data else "")
+            row.append(tbl.color_cell("DELETING", Color.RED)
+                       if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN))
+            tbl.add_row(row)
         tbl.show()
 
     def list(self, args):
         lstmsg = self._linstor.resource_dfn_list()
-
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod
