@@ -7,6 +7,7 @@ from linstor_client.commands import ArgumentError, Commands
 from linstor_client.consts import NODE_NAME, STORPOOL_NAME
 from linstor.sharedconsts import KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
 from linstor_client.utils import namecheck
+from linstor.responses import StoragePoolListResponse
 
 
 class StoragePoolCommands(Commands):
@@ -314,28 +315,29 @@ class StoragePoolCommands(Commands):
         for hdr in self._stor_pool_headers:
             tbl.add_header(hdr)
 
+        storage_pool_resp = StoragePoolListResponse(lstmsg)
+
         tbl.set_groupby(args.groupby if args.groupby else [self._stor_pool_headers[0].name])
 
-        for storpool in lstmsg.stor_pools:
+        for storpool in storage_pool_resp.storage_pools:
             driver_device = linstor.StoragePoolDriver.storage_props_to_driver_pool(
-                storpool.driver,
-                storpool.props)
+                storpool.provider_kind,
+                storpool.properties)
 
-            supports_snapshots_prop = [x for x in storpool.static_traits if x.key == KEY_STOR_POOL_SUPPORTS_SNAPSHOTS]
-            supports_snapshots = supports_snapshots_prop[0].value if supports_snapshots_prop else ''
+            supports_snapshots = storpool.static_traits.get(KEY_STOR_POOL_SUPPORTS_SNAPSHOTS, '')
 
             free_capacity = ""
             total_capacity = ""
-            if storpool.driver not in [linstor.StoragePoolDriver.Diskless,
-                                       linstor.StoragePoolDriver.SwordfishInitiator] and \
-                    storpool.HasField("free_space"):
+            if storpool.provider_kind not in \
+                    [linstor.StoragePoolDriver.Diskless, linstor.StoragePoolDriver.SwordfishInitiator]\
+                    and storpool.free_space is not None:
                 free_capacity = SizeCalc.approximate_size_string(storpool.free_space.free_capacity)
                 total_capacity = SizeCalc.approximate_size_string(storpool.free_space.total_capacity)
 
             tbl.add_row([
-                storpool.stor_pool_name,
+                storpool.name,
                 storpool.node_name,
-                storpool.driver,
+                storpool.provider_kind,
                 driver_device,
                 free_capacity,
                 total_capacity,
