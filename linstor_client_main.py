@@ -50,6 +50,7 @@ from linstor_client.commands import (
 from linstor_client.consts import (
     GITHASH,
     KEY_LS_CONTROLLERS,
+    ENV_OUTPUT_VERSION,
     VERSION,
     ExitCode
 )
@@ -133,8 +134,9 @@ class LinStorCLI(object):
         parser.add_argument(
             '--output-version',
             choices=['v0', 'v1'],
-            default='v0',
-            help="Machine readable output format."
+            default=os.environ.get(ENV_OUTPUT_VERSION, "v0"),
+            help="Machine readable output format, default 'v0'. "
+                 "Can also be set via environment variable '{env}'".format(env=ENV_OUTPUT_VERSION)
         )
         parser.add_argument('--verbose', '-V', action='store_true')
         parser.add_argument('-t', '--timeout', default=300, type=int,

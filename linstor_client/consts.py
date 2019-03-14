@@ -63,6 +63,7 @@ BOOL_TRUE = "true"
 BOOL_FALSE = "false"
 
 KEY_LS_CONTROLLERS = 'LS_CONTROLLERS'
+ENV_OUTPUT_VERSION = "LS_OUTPUT_VERSION"
 
 
 class ExitCode(object):
