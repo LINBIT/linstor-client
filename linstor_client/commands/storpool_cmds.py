@@ -328,9 +328,7 @@ class StoragePoolCommands(Commands):
 
             free_capacity = ""
             total_capacity = ""
-            if storpool.provider_kind not in \
-                    [linstor.StoragePoolDriver.Diskless, linstor.StoragePoolDriver.SwordfishInitiator]\
-                    and storpool.free_space is not None:
+            if not storpool.is_diskless() and storpool.free_space is not None:
                 free_capacity = SizeCalc.approximate_size_string(storpool.free_space.free_capacity)
                 total_capacity = SizeCalc.approximate_size_string(storpool.free_space.total_capacity)
 
