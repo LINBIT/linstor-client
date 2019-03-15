@@ -8,6 +8,7 @@ import linstor
 from linstor.sharedconsts import NAMESPC_AUXILIARY
 from linstor.properties import properties
 from linstor.protobuf_to_dict import protobuf_to_dict
+import linstor.proto.common.LayerType_pb2 as LayerType
 import linstor_client
 from linstor_client.utils import LinstorClientError, Output
 from linstor_client.consts import ExitCode, Color
@@ -539,8 +540,7 @@ class Commands(object):
     @classmethod
     def drbd_layer_data(cls, proto_msg):
         for layer in proto_msg.layer_data:
-            data = layer.WhichOneof('data')
-            if data == 'drbd':
+            if layer.layer_type == LayerType.DRBD:
                 return layer.drbd
         return None
 
