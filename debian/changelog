@@ -1,3 +1,32 @@
+linstor-client (0.9.0-1) experimental; urgency=medium
+
+  [ Joel Colledge ]
+  * Protobuf volume allocated has been renamed to allocated_size
+
+  [ Gabor Hernadi ]
+  * Added "HOSTNAME MISMATCH" status to node list
+
+  [ Rene Peinthor ]
+  * rsc-conn: add commands to create/list/delete path connections
+  * remove shutdown controller command
+  * remove create-watch command
+  * vlmdfn: use regex string
+  * add layerstack functionality
+  * add option to specify the prefered machine readable output format version
+  * auto-place: add layer-list argument
+  * unitests: fix assert_volume_def
+  * storage-pool: use new storagepool.provider_kind
+  * storpool-list: fix diskless storage pool showing size
+  * output-version argument can now also be set via environment variable
+  * protobuf: remove oneof as we have to support protobuf 2.5
+
+  [ Roland Kammerer ]
+  * docker: set second registry
+  * config handling: use api-py
+  * docker: allow specific version tags
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Fri, 15 Mar 2019 13:35:48 +0100
+
 linstor-client (0.7.3-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
