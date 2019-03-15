@@ -10,6 +10,7 @@ DOCKERREGISTRY = drbd.io
 DOCKERREGISTRY_PUBLIC = quay.io
 DOCKERREGPATH = $(DOCKERREGISTRY)/linstor-client
 DOCKERREGPATH_PUBLIC = $(DOCKERREGISTRY_PUBLIC)/linbit/linstor-client
+DOCKER_TAG ?= latest
 
 all: doc
 	$(PYTHON) setup.py build
@@ -50,13 +51,15 @@ dockerimage: debrelease
 else
 dockerimage:
 endif
-	docker build -t $(DOCKERREGPATH) .
-	docker tag $(DOCKERREGPATH) $(DOCKERREGPATH_PUBLIC)
+	docker build -t $(DOCKERREGPATH):$(DOCKER_TAG) .
+	docker tag $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH):latest
+	docker tag $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH_PUBLIC):$(DOCKER_TAG)
+	docker tag $(DOCKERREGPATH_PUBLIC):$(DOCKER_TAG) $(DOCKERREGPATH_PUBLIC):latest
 	@echo && echo "Did you run distclean?"
 
 .PHONY: dockerpath
 dockerpath:
-	@echo $(DOCKERREGPATH) $(DOCKERREGPATH_PUBLIC)
+	@echo $(DOCKERREGPATH):latest $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH_PUBLIC):latest $(DOCKERREGPATH_PUBLIC):$(DOCKER_TAG)
 
 # no gensrc here, that is in debian/rules
 deb: up2date
