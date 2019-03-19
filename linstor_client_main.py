@@ -583,7 +583,10 @@ class LinStorCLI(object):
 
     def run(self):
         # TODO(rck): try/except
-        sys.exit(self.parse_and_execute(sys.argv[1:]))
+        rc = self.parse_and_execute(sys.argv[1:])
+        if self._linstorapi:
+            self._linstorapi.disconnect()
+        sys.exit(rc)
 
     def user_confirm(self, question):
         """
