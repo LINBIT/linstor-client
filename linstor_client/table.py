@@ -11,6 +11,12 @@ from linstor_client.consts import (
     Color
 )
 
+PYTHON2 = True
+
+if sys.version_info > (3, 0):
+    PYTHON2 = False
+    unicode = str
+
 
 # TODO(rck): still a hack
 class SyntaxException(Exception):
@@ -141,6 +147,21 @@ class Table(object):
         for hdr in headers:
             self.add_header(hdr)
 
+    @classmethod
+    def to_unicode(cls, t):
+        if isinstance(t, str):
+            if PYTHON2:
+                return unicode(t, 'UTF-8')
+            else:
+                return t
+        elif isinstance(t, unicode):
+            return t
+        else:
+            if PYTHON2:
+                return unicode(t)
+            else:
+                return str(t)
+
     def add_row(self, row):
         self.got_row = True
         if not self.got_column:
@@ -152,9 +173,11 @@ class Table(object):
         for idx, c in enumerate(row[:]):
             if isinstance(c, tuple):
                 color, text = c
-                row[idx] = text
+                row[idx] = self.to_unicode(text)
                 if self.colors:
                     coloroverride[idx] = color
+            else:
+                row[idx] = self.to_unicode(row[idx])
 
         self.table.append(row)
         self.coloroverride.append(coloroverride)
@@ -253,7 +276,7 @@ class Table(object):
             if row[0] is None:
                 continue
             for idx, col in enumerate(self.header):
-                columnmax[idx] = max(len(str(row[idx])), columnmax[idx])
+                columnmax[idx] = max(len(row[idx]), columnmax[idx])
 
         # insert frames
         self.table.insert(0, [None])
@@ -308,16 +331,16 @@ class Table(object):
                     sep = l + m * (sum(columnmax) + (3 * len(self.header)) - 1) + r
 
                     if self.r_just and len(sep) < maxwidth:
-                        sys.stdout.write(l + m * (maxwidth - 2) + r + u"\n")
+                        print(l + m * (maxwidth - 2) + r)
                     else:
-                        sys.stdout.write(sep + u"\n")
+                        print(sep)
                 else:
                     fstr = ctbl[enc]['pipe']  # prepare the format string per row, this allows colors per cell
                     for idx, col in enumerate(self.header):  # loop columns
                         if col['align_column'] == TableHeader.ALIGN_RIGHT:
                             space_and_overhead = space - (len(self.header) * 3) - 2
                             if space_and_overhead >= 0:
-                                fstr += ' ' * space_and_overhead + ctbl[enc]['pipe']
+                                fstr += u' ' * space_and_overhead + ctbl[enc]['pipe']
 
                         field_format = u'{' + str(idx) + u':' + col['just_txt'] + str(columnmax[idx]) + u'}'
 
@@ -334,7 +357,7 @@ class Table(object):
                         fstr += u' ' + ctbl[enc]['pipe']
 
                     data_idx += 1  # we wrote a data row, so increase the data_idx
-                    sys.stdout.write(fstr.format(*row) + u"\n")
+                    print(fstr.format(*row))
         except IOError as e:
             if e.errno == errno.EPIPE:
                 return
