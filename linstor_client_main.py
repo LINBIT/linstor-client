@@ -251,7 +251,7 @@ class LinStorCLI(object):
         for err in le.all_errors():
             sys.stderr.write(' ' * 2 + err.message + '\n')
 
-    def parse_and_execute(self, pargs):
+    def parse_and_execute(self, pargs, is_interactive=False):
         rc = ExitCode.OK
         try:
             args = self.parse(pargs)
@@ -324,6 +324,9 @@ class LinStorCLI(object):
         except linstor.LinstorError as le:
             self._report_linstor_error(le)
             rc = ExitCode.UNKNOWN_ERROR
+        finally:
+            if self._linstorapi and not is_interactive:
+                self._linstorapi.disconnect()
 
         return rc
 
@@ -490,7 +493,7 @@ class LinStorCLI(object):
                 cmds_ = cmds_[1:]
 
             try:
-                rc = self.parse_and_execute(cmds_)
+                rc = self.parse_and_execute(cmds_, is_interactive=True)
             except SystemExit as se:
                 cmd = cmds_[0]
                 if cmd in [Commands.EXIT, "quit"]:
@@ -584,8 +587,6 @@ class LinStorCLI(object):
     def run(self):
         # TODO(rck): try/except
         rc = self.parse_and_execute(sys.argv[1:])
-        if self._linstorapi:
-            self._linstorapi.disconnect()
         sys.exit(rc)
 
     def user_confirm(self, question):
