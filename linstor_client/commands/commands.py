@@ -293,6 +293,8 @@ class Commands(object):
         assert(isinstance(data, list))
         if output_version == 'v0':
             s = json.dumps([x.data_v0 for x in data], indent=2)
+        elif output_version == 'v1':
+            s = json.dumps([x.data_v1 for x in data], indent=2)
         else:
             d = [protobuf_to_dict(x.proto_msg) for x in data]
             s = cls._to_json(d)
