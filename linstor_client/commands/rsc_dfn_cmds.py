@@ -2,7 +2,7 @@ import linstor_client.argparse.argparse as argparse
 
 import linstor
 import linstor_client
-from linstor_client.commands import Commands, DrbdOptions
+from linstor_client.commands import Commands, DrbdOptions, ArgumentError
 from linstor_client.consts import RES_NAME, RES_EXT_NAME, Color
 from linstor.sharedconsts import FLAG_DELETE
 from linstor_client.utils import namecheck, rangecheck
@@ -57,6 +57,7 @@ class ResourceDefinitionCommands(Commands):
                  "This means the top most layer is on the left. "
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
         p_new_res_dfn.add_argument('name',
+                                   nargs="?",
                                    type=namecheck(RES_NAME),
                                    help='Name of the new resource definition. Will be ignored if EXTERNAL_NAME is set.')
         p_new_res_dfn.set_defaults(func=self.create)
@@ -136,6 +137,8 @@ class ResourceDefinitionCommands(Commands):
         self.check_subcommands(res_def_subp, subcmds)
 
     def create(self, args):
+        if not args.name and not args.external_name:
+            raise ArgumentError("ArgumentError: At least resource name or external name has to be specified.")
         replies = self._linstor.resource_dfn_create(
             args.name,
             args.port,
