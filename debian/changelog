@@ -1,3 +1,17 @@
+linstor-client (0.9.1-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * always disconnect linstorapi on exit
+  * table: fix utf-8 output on all python versions
+  * client: fix hanging client on error in python3
+  * rsc-dfn: allow create with external name but without name
+  * use v1 output format from responses
+
+  [ Rainer Laschober ]
+  * add functionality for external name in rsc_dfn create and list
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 21 Mar 2019 10:27:05 +0100
+
 linstor-client (0.9.0-1) experimental; urgency=medium
 
   [ Joel Colledge ]
