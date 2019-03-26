@@ -3,7 +3,7 @@ import linstor_client.argparse.argparse as argparse
 import linstor
 import linstor_client
 from linstor_client.commands import Commands, DrbdOptions, ArgumentError
-from linstor_client.consts import RES_NAME, RES_EXT_NAME, Color
+from linstor_client.consts import RES_NAME, Color
 from linstor.sharedconsts import FLAG_DELETE
 from linstor_client.utils import namecheck, rangecheck
 
