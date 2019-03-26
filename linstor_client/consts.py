@@ -25,7 +25,7 @@ VERSION = "0.9.1"
 
 try:
     from linstor.consts_githash import GITHASH
-except:
+except ImportError:
     GITHASH = 'GIT-hash: UNKNOWN'
 
 # Default terminal dimensions
