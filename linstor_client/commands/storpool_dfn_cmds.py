@@ -4,9 +4,7 @@ import linstor
 from linstor import SizeCalc
 import linstor_client
 from linstor_client.commands import Commands
-from linstor_client.consts import STORPOOL_NAME, RES_NAME
 from linstor.sharedconsts import KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO
-from linstor_client.utils import namecheck
 
 
 class StoragePoolDefinitionCommands(Commands):
@@ -42,7 +40,7 @@ class StoragePoolDefinitionCommands(Commands):
             description='Defines a Linstor storpool definition for use with linstor.')
         p_new_storpool_dfn.add_argument(
             'name',
-            type=namecheck(STORPOOL_NAME),
+            type=str,
             help='Name of the new storpool definition')
         p_new_storpool_dfn.set_defaults(func=self.create)
 
@@ -88,7 +86,7 @@ class StoragePoolDefinitionCommands(Commands):
             description='Sets properties for the given storage pool definition.')
         p_setprop.add_argument(
             'name',
-            type=namecheck(STORPOOL_NAME),
+            type=str,
             help='Name of the storage pool definition'
         ).competer = self.storage_pool_dfn_completer
         Commands.add_parser_keyvalue(p_setprop, "storagepool-definition")
@@ -101,11 +99,11 @@ class StoragePoolDefinitionCommands(Commands):
         p_query_max_vlm_size.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_query_max_vlm_size.add_argument(
             '--storage-pool', '-s',
-            type=namecheck(STORPOOL_NAME),
+            type=str,
             help="Storage pool name to query.").completer = self.storage_pool_dfn_completer
         p_query_max_vlm_size.add_argument(
             '--do-not-place-with',
-            type=namecheck(RES_NAME),
+            type=str,
             nargs='+',
             metavar="RESOURCE_NAME",
             help='Try to avoid nodes that already have a given resource deployed.'

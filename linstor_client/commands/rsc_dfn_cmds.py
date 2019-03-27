@@ -3,9 +3,9 @@ import linstor_client.argparse.argparse as argparse
 import linstor
 import linstor_client
 from linstor_client.commands import Commands, DrbdOptions, ArgumentError
-from linstor_client.consts import RES_NAME, Color
+from linstor_client.consts import Color
 from linstor.sharedconsts import FLAG_DELETE
-from linstor_client.utils import namecheck, rangecheck
+from linstor_client.utils import rangecheck
 
 
 class ResourceDefinitionCommands(Commands):
@@ -58,7 +58,7 @@ class ResourceDefinitionCommands(Commands):
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
         p_new_res_dfn.add_argument('name',
                                    nargs="?",
-                                   type=namecheck(RES_NAME),
+                                   type=str,
                                    help='Name of the new resource definition. Will be ignored if EXTERNAL_NAME is set.')
         p_new_res_dfn.set_defaults(func=self.create)
 
@@ -94,7 +94,7 @@ class ResourceDefinitionCommands(Commands):
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
                                choices=rsc_dfn_groupby).completer = rsc_dfn_group_completer
-        p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
+        p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=str,
                                help='Filter by list of resources').completer = self.resource_dfn_completer
         p_lrscdfs.add_argument('-e', '--external-name', action="store_true", help='Show user specified name.')
         p_lrscdfs.set_defaults(func=self.list)
@@ -116,7 +116,7 @@ class ResourceDefinitionCommands(Commands):
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
             description='Sets properties for the given resource definition.')
-        p_setprop.add_argument('name', type=namecheck(RES_NAME), help='Name of the resource definition')
+        p_setprop.add_argument('name', type=str, help='Name of the resource definition')
         Commands.add_parser_keyvalue(p_setprop, 'resource-definition')
         p_setprop.set_defaults(func=self.set_props)
 
@@ -128,7 +128,7 @@ class ResourceDefinitionCommands(Commands):
         )
         p_drbd_opts.add_argument(
             'resource_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help="Resource name"
         ).completer = self.resource_dfn_completer
         DrbdOptions.add_arguments(p_drbd_opts, self.OBJECT_NAME)

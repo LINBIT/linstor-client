@@ -6,8 +6,8 @@ import linstor
 import linstor_client
 import linstor.sharedconsts as apiconsts
 from linstor_client.commands import DefaultState, Commands, DrbdOptions, ArgumentError
-from linstor_client.consts import NODE_NAME, RES_NAME, STORPOOL_NAME, Color, ExitCode
-from linstor_client.utils import Output, namecheck
+from linstor_client.consts import Color, ExitCode
+from linstor_client.utils import Output
 
 
 class ResourceCreateTransactionState(object):
@@ -76,7 +76,7 @@ class ResourceCommands(Commands):
             description='Deploys a resource definition to a node.')
         p_new_res.add_argument(
             '--storage-pool', '-s',
-            type=namecheck(STORPOOL_NAME),
+            type=str,
             help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_res.add_argument('--diskless', '-d', action="store_true", help='Should the resource be diskless')
         p_new_res.add_argument(
@@ -97,7 +97,7 @@ class ResourceCommands(Commands):
         )
         p_new_res.add_argument(
             '--do-not-place-with',
-            type=namecheck(RES_NAME),
+            type=str,
             nargs='+',
             metavar="RESOURCE_NAME",
             help='Try to avoid nodes that already have a given resource deployed.'
@@ -136,12 +136,12 @@ class ResourceCommands(Commands):
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
         p_new_res.add_argument(
             'node_name',
-            type=namecheck(NODE_NAME),
+            type=str,
             nargs='*',
             help='Name of the node to deploy the resource').completer = self.node_completer
         p_new_res.add_argument(
             'resource_definition_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource definition').completer = self.resource_dfn_completer
         p_new_res.set_defaults(func=self.create, allowed_states=[DefaultState, ResourceCreateTransactionState])
 
@@ -182,12 +182,12 @@ class ResourceCommands(Commands):
         p_lreses.add_argument(
             '-r', '--resources',
             nargs='+',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Filter by list of resources').completer = self.resource_completer
         p_lreses.add_argument(
             '-n', '--nodes',
             nargs='+',
-            type=namecheck(NODE_NAME),
+            type=str,
             help='Filter by list of nodes').completer = self.node_completer
         p_lreses.set_defaults(func=self.list)
 
@@ -201,14 +201,14 @@ class ResourceCommands(Commands):
         p_lvlms.add_argument(
             '-n', '--nodes',
             nargs='+',
-            type=namecheck(NODE_NAME),
+            type=str,
             help='Filter by list of nodes').completer = self.node_completer
-        p_lvlms.add_argument('-s', '--storpools', nargs='+', type=namecheck(STORPOOL_NAME),
+        p_lvlms.add_argument('-s', '--storpools', nargs='+', type=str,
                              help='Filter by list of storage pools').completer = self.storage_pool_completer
         p_lvlms.add_argument(
             '-r', '--resources',
             nargs='+',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Filter by list of resources').completer = self.resource_completer
         p_lvlms.set_defaults(func=self.list_volumes)
 
@@ -233,11 +233,11 @@ class ResourceCommands(Commands):
             description='Sets properties for the given resource on the given node.')
         p_setprop.add_argument(
             'node_name',
-            type=namecheck(NODE_NAME),
+            type=str,
             help='Node name where resource is deployed.').completer = self.node_completer
         p_setprop.add_argument(
             'name',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource'
         ).completer = self.resource_completer
         Commands.add_parser_keyvalue(p_setprop, "resource")
@@ -251,17 +251,17 @@ class ResourceCommands(Commands):
         )
         p_drbd_peer_opts.add_argument(
             'node_a',
-            type=namecheck(NODE_NAME),
+            type=str,
             help="1. Node in the node connection"
         ).completer = self.node_completer
         p_drbd_peer_opts.add_argument(
             'node_b',
-            type=namecheck(NODE_NAME),
+            type=str,
             help="1. Node in the node connection"
         ).completer = self.node_completer
         p_drbd_peer_opts.add_argument(
             'resource_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help="Resource name"
         ).completer = self.resource_completer
 
@@ -276,7 +276,7 @@ class ResourceCommands(Commands):
         p_toggle_disk_group_storage = p_toggle_disk.add_mutually_exclusive_group(required=True)
         p_toggle_disk_group_storage.add_argument(
             '--storage-pool', '-s',
-            type=namecheck(STORPOOL_NAME),
+            type=str,
             help="Add disks to a diskless resource using this storage pool name"
         ).completer = self.storage_pool_dfn_completer
         p_toggle_disk_group_storage.add_argument(
@@ -297,7 +297,7 @@ class ResourceCommands(Commands):
         )
         p_toggle_disk.add_argument(
             '--migrate-from',
-            type=namecheck(NODE_NAME),
+            type=str,
             metavar="MIGRATION_SOURCE",
             help='Name of the node on which the resource should be deleted once the sync is complete. '
                  'Only applicable when adding a disk to a diskless resource. '
@@ -306,12 +306,12 @@ class ResourceCommands(Commands):
         ).completer = self.node_completer
         p_toggle_disk.add_argument(
             'node_name',
-            type=namecheck(NODE_NAME),
+            type=str,
             help='Node name where resource is deployed'
         ).completer = self.node_completer
         p_toggle_disk.add_argument(
             'name',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource'
         ).completer = self.resource_dfn_completer
         p_toggle_disk.set_defaults(func=self.toggle_disk, parser=p_toggle_disk)

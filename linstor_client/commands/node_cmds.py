@@ -5,9 +5,9 @@ import sys
 import linstor_client
 from linstor_client.commands import Commands
 from linstor_client.tree import TreeNode
-from linstor_client.consts import NODE_NAME, Color, ExitCode
+from linstor_client.consts import Color, ExitCode
 from linstor_client.utils import (LinstorClientError, ip_completer,
-                                  namecheck, rangecheck)
+                                  rangecheck)
 import linstor.sharedconsts as apiconsts
 from linstor import SizeCalc
 
@@ -101,7 +101,7 @@ class NodeCommands(Commands):
         p_new_node.add_argument(
             'name',
             help='Name of the new node, must match the nodes hostname',
-            type=namecheck(NODE_NAME))
+            type=str)
         p_new_node.add_argument('ip',
                                 help='IP address of the new node').completer = ip_completer("name")
         p_new_node.set_defaults(func=self.create)
@@ -114,7 +114,7 @@ class NodeCommands(Commands):
         p_create_sw_target.add_argument(
             'node_name',
             help='Name of the new swordfish target node',
-            type=namecheck(NODE_NAME)
+            type=str
         )
         p_create_sw_target.add_argument('storage_service', help='Storage service id')
         p_create_sw_target.set_defaults(func=self.create_sw_target)
@@ -294,7 +294,7 @@ class NodeCommands(Commands):
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lnodes.add_argument('-g', '--groupby', nargs='+',
                               choices=node_groupby).completer = node_group_completer
-        p_lnodes.add_argument('-N', '--nodes', nargs='+', type=namecheck(NODE_NAME),
+        p_lnodes.add_argument('-N', '--nodes', nargs='+', type=str,
                               help='Filter by list of nodes').completer = self.node_completer
         p_lnodes.set_defaults(func=self.list)
 

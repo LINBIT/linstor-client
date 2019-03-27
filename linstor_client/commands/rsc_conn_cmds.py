@@ -4,8 +4,6 @@ import os
 
 import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands, DrbdOptions
-from linstor_client.consts import NODE_NAME, RES_NAME
-from linstor_client.utils import namecheck
 from linstor_client import TableHeader, Table
 from linstor import consts as apiconsts
 
@@ -98,7 +96,7 @@ class ResourceConnectionCommands(Commands):
             help="Node name target of the connection.").completer = self.node_completer
         p_setprop.add_argument(
             'resource_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource'
         ).completer = self.resource_completer
         Commands.add_parser_keyvalue(p_setprop, "rsc-conn")
@@ -116,17 +114,17 @@ class ResourceConnectionCommands(Commands):
         )
         p_drbd_peer_opts.add_argument(
             'node_a',
-            type=namecheck(NODE_NAME),
+            type=str,
             help="1. Node in the node connection"
         ).completer = self.node_completer
         p_drbd_peer_opts.add_argument(
             'node_b',
-            type=namecheck(NODE_NAME),
+            type=str,
             help="2. Node in the node connection"
         ).completer = self.node_completer
         p_drbd_peer_opts.add_argument(
             'resource_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help="Resource name"
         ).completer = self.resource_completer
 
@@ -159,17 +157,17 @@ class ResourceConnectionCommands(Commands):
         )
         path_create.add_argument(
             "node_a",
-            type=namecheck(NODE_NAME),
+            type=str,
             help="1. Node of the connection"
         ).completer = self.node_completer
         path_create.add_argument(
             "node_b",
-            type=namecheck(NODE_NAME),
+            type=str,
             help="2. Node of the connection"
         ).completer = self.node_completer
         path_create.add_argument(
             "resource_name",
-            type=namecheck(RES_NAME),
+            type=str,
             help="Resource name"
         ).completer = self.resource_completer
         path_create.add_argument(
@@ -194,17 +192,17 @@ class ResourceConnectionCommands(Commands):
         )
         path_delete.add_argument(
             "node_a",
-            type=namecheck(NODE_NAME),
+            type=str,
             help="1. Node of the connection"
         ).completer = self.node_completer
         path_delete.add_argument(
             "node_b",
-            type=namecheck(NODE_NAME),
+            type=str,
             help="2. Node of the connection"
         ).completer = self.node_completer
         path_delete.add_argument(
             "resource_name",
-            type=namecheck(RES_NAME),
+            type=str,
             help="Resource name"
         ).completer = self.resource_completer
         path_delete.add_argument(
@@ -222,17 +220,17 @@ class ResourceConnectionCommands(Commands):
         path_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         path_list.add_argument(
             "node_a",
-            type=namecheck(NODE_NAME),
+            type=str,
             help="1. Node of the connection"
         ).completer = self.node_completer
         path_list.add_argument(
             "node_b",
-            type=namecheck(NODE_NAME),
+            type=str,
             help="2. Node of the connection"
         ).completer = self.node_completer
         path_list.add_argument(
             "resource_name",
-            type=namecheck(RES_NAME),
+            type=str,
             help="Resource name"
         ).completer = self.resource_completer
         path_list.set_defaults(func=self.path_list)

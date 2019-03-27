@@ -5,9 +5,8 @@ import sys
 from linstor import SizeCalc
 import linstor_client
 from linstor_client.commands import Commands, DrbdOptions
-from linstor_client.consts import RES_NAME, Color, ExitCode, STORPOOL_NAME
+from linstor_client.consts import Color, ExitCode
 from linstor.sharedconsts import FLAG_DELETE, FLAG_RESIZE
-from linstor_client.utils import namecheck
 
 
 class VolumeDefinitionCommands(Commands):
@@ -69,12 +68,12 @@ class VolumeDefinitionCommands(Commands):
             'linstor server.')
         p_new_vol.add_argument(
             '--storage-pool', '-s',
-            type=namecheck(STORPOOL_NAME),
+            type=str,
             help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_vol.add_argument('-n', '--vlmnr', type=int)
         p_new_vol.add_argument('-m', '--minor', type=int)
         p_new_vol.add_argument('--encrypt', action="store_true", help="Encrypt created volumes using cryptsetup.")
-        p_new_vol.add_argument('resource_name', type=namecheck(RES_NAME),
+        p_new_vol.add_argument('resource_name', type=str,
                                help='Name of an existing resource').completer = self.resource_dfn_completer
         p_new_vol.add_argument(
             'size',
@@ -118,7 +117,7 @@ class VolumeDefinitionCommands(Commands):
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvols.add_argument('-g', '--groupby', nargs='+',
                              choices=vlm_dfn_groupby).completer = vlm_dfn_group_completer
-        p_lvols.add_argument('-R', '--resources', nargs='+', type=namecheck(RES_NAME),
+        p_lvols.add_argument('-R', '--resources', nargs='+', type=str,
                              help='Filter by list of resources').completer = self.resource_dfn_completer
         p_lvols.set_defaults(func=self.list)
 
@@ -159,7 +158,7 @@ class VolumeDefinitionCommands(Commands):
         )
         p_drbd_opts.add_argument(
             'resource_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help="Resource name"
         ).completer = self.resource_dfn_completer
         p_drbd_opts.add_argument(
@@ -179,7 +178,7 @@ class VolumeDefinitionCommands(Commands):
                         'resources. '
                         'Increasing the size is supported even when the resource definition has resources. '
                         'Filesystems present on the volumes will not be resized.')
-        p_set_size.add_argument('resource_name', type=namecheck(RES_NAME),
+        p_set_size.add_argument('resource_name', type=str,
                                 help='Name of an existing resource').completer = self.resource_dfn_completer
         p_set_size.add_argument(
             'volume_nr',

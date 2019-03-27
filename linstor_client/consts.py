@@ -32,30 +32,6 @@ except ImportError:
 # Used by get_terminal_size()
 DEFAULT_TERM_WIDTH, DEFAULT_TERM_HEIGHT = 80, 25
 
-NODE_NAME = "node_name"
-RES_NAME = "res_name"
-SNAPSHOT_NAME = "snapshot_name"
-STORPOOL_NAME = "storpool_name"
-
-# RFC952 / RFC1035 / RFC1123 host name constraints; do not change
-NODE_NAME_MINLEN = 2
-NODE_NAME_MAXLEN = 255
-NODE_NAME_LABEL_MAXLEN = 63
-
-# linstor object name constraints
-RES_NAME_MINLEN = 1
-RES_NAME_MAXLEN = 48    # Enough for a UUID string plus prefix
-RES_NAME_VALID_CHARS = "_"
-RES_NAME_VALID_INNER_CHARS = "_-"
-SNAPSHOT_NAME_MINLEN = 1
-SNAPSHOT_NAME_MAXLEN = 100
-SNAPSHOT_NAME_VALID_CHARS = "_"
-SNAPSHOT_NAME_VALID_INNER_CHARS = "_-"
-STORPOOL_NAME_MINLEN = 3
-STORPOOL_NAME_MAXLEN = 48
-STORPOOL_NAME_VALID_CHARS = "_"
-STORPOOL_NAME_VALID_INNER_CHARS = "_-"
-
 FILE_GLOBAL_COMMON_CONF = "linstor_global_common.conf"
 
 # boolean expressions

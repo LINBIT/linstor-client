@@ -4,8 +4,7 @@ from linstor.sharedconsts import VAL_DRBD_PROXY_COMPRESSION_NONE, VAL_DRBD_PROXY
     VAL_DRBD_PROXY_COMPRESSION_LZMA, VAL_DRBD_PROXY_COMPRESSION_LZ4
 import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands, DrbdOptions, ArgumentError
-from linstor_client.consts import RES_NAME
-from linstor_client.utils import namecheck, rangecheck
+from linstor_client.utils import rangecheck
 
 
 class DrbdProxyCommands(Commands):
@@ -80,7 +79,7 @@ class DrbdProxyCommands(Commands):
             help="Node name target of the connection.").completer = self.node_completer
         p_proxy_enable.add_argument(
             'resource_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource'
         ).completer = self.resource_completer
         p_proxy_enable.add_argument('-p', '--port', type=rangecheck(1, 65535))
@@ -99,7 +98,7 @@ class DrbdProxyCommands(Commands):
             help="Node name target of the connection.").completer = self.node_completer
         p_proxy_disable.add_argument(
             'resource_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource'
         ).completer = self.resource_completer
         p_proxy_disable.set_defaults(func=self.disable)
@@ -175,7 +174,7 @@ class DrbdProxyCommands(Commands):
     def _add_resource_name_argument(self, parser):
         parser.add_argument(
             'resource_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help="Resource name"
         ).completer = self.resource_dfn_completer
 

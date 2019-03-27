@@ -2,9 +2,9 @@ import linstor_client.argparse.argparse as argparse
 
 import linstor_client
 from linstor_client.commands import Commands
-from linstor_client.consts import NODE_NAME, RES_NAME, SNAPSHOT_NAME, Color
+from linstor_client.consts import Color
 from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
-from linstor_client.utils import Output, namecheck
+from linstor_client.utils import Output
 from linstor import SizeCalc
 
 
@@ -50,7 +50,7 @@ class SnapshotCommands(Commands):
         )
         p_new_snapshot.add_argument(
             'node_name',
-            type=namecheck(NODE_NAME),
+            type=str,
             nargs='*',
             help='Names of the nodes where the snapshot should be created. '
                  'If none are given, the snapshot will be taken on all nodes '
@@ -58,11 +58,11 @@ class SnapshotCommands(Commands):
         ).completer = self.node_completer
         p_new_snapshot.add_argument(
             'resource_definition_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource definition').completer = self.resource_dfn_completer
         p_new_snapshot.add_argument(
             'snapshot_name',
-            type=namecheck(SNAPSHOT_NAME),
+            type=str,
             help='Name of the snapshot local to the resource definition')
         p_new_snapshot.set_defaults(func=self.create)
 
@@ -73,11 +73,11 @@ class SnapshotCommands(Commands):
             description='Deletes a snapshot.')
         p_delete_snapshot.add_argument(
             'resource_definition_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource definition').completer = self.resource_dfn_completer
         p_delete_snapshot.add_argument(
             'snapshot_name',
-            type=namecheck(SNAPSHOT_NAME),
+            type=str,
             help='Name of the snapshot local to the resource definition')
         p_delete_snapshot.set_defaults(func=self.delete)
 
@@ -92,11 +92,11 @@ class SnapshotCommands(Commands):
                         'to roll back to an earlier snapshot, the intermediate snapshots must first be deleted.')
         p_rollback_snapshot.add_argument(
             'resource_definition_name',
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource definition').completer = self.resource_dfn_completer
         p_rollback_snapshot.add_argument(
             'snapshot_name',
-            type=namecheck(SNAPSHOT_NAME),
+            type=str,
             help='Name of the snapshot local to the resource definition')
         p_rollback_snapshot.set_defaults(func=self.rollback)
 
@@ -135,17 +135,17 @@ class SnapshotCommands(Commands):
         p_restore_volume_definition.add_argument(
             '--from-resource', '--fr',
             required=True,
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource definition containing the snapshot').completer = self.resource_dfn_completer
         p_restore_volume_definition.add_argument(
             '--from-snapshot', '--fs',
             required=True,
-            type=namecheck(SNAPSHOT_NAME),
+            type=str,
             help='Name of the snapshot to restore from')
         p_restore_volume_definition.add_argument(
             '--to-resource', '--tr',
             required=True,
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource definition in which to create the volume definitions'
         ).completer = self.resource_dfn_completer
         p_restore_volume_definition.set_defaults(func=self.restore_volume_definition)
@@ -175,7 +175,7 @@ class SnapshotCommands(Commands):
                         'The volume definitions of the target resource must match those from the snapshot.')
         p_restore_snapshot.add_argument(
             'node_name',
-            type=namecheck(NODE_NAME),
+            type=str,
             nargs='*',
             help='Names of the nodes where the snapshot should be restored. '
                  'If none are given, resources will be created on all nodes where the snapshot is present.'
@@ -183,17 +183,17 @@ class SnapshotCommands(Commands):
         p_restore_snapshot.add_argument(
             '--from-resource', '--fr',
             required=True,
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource definition containing the snapshot').completer = self.resource_dfn_completer
         p_restore_snapshot.add_argument(
             '--from-snapshot', '--fs',
             required=True,
-            type=namecheck(SNAPSHOT_NAME),
+            type=str,
             help='Name of the snapshot to restore from')
         p_restore_snapshot.add_argument(
             '--to-resource', '--tr',
             required=True,
-            type=namecheck(RES_NAME),
+            type=str,
             help='Name of the resource definition in which to create the resource from this snapshot'
         ).completer = self.resource_dfn_completer
         p_restore_snapshot.set_defaults(func=self.restore)

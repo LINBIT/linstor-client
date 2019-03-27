@@ -23,25 +23,6 @@ import subprocess
 import sys
 
 from linstor_client.consts import (
-    NODE_NAME,
-    NODE_NAME_LABEL_MAXLEN,
-    NODE_NAME_MAXLEN,
-    NODE_NAME_MINLEN,
-    RES_NAME,
-    RES_NAME_MINLEN,
-    RES_NAME_MAXLEN,
-    RES_NAME_VALID_CHARS,
-    RES_NAME_VALID_INNER_CHARS,
-    SNAPSHOT_NAME,
-    SNAPSHOT_NAME_MAXLEN,
-    SNAPSHOT_NAME_MINLEN,
-    SNAPSHOT_NAME_VALID_CHARS,
-    SNAPSHOT_NAME_VALID_INNER_CHARS,
-    STORPOOL_NAME,
-    STORPOOL_NAME_MAXLEN,
-    STORPOOL_NAME_MINLEN,
-    STORPOOL_NAME_VALID_CHARS,
-    STORPOOL_NAME_VALID_INNER_CHARS,
     Color,
     ExitCode
 )
@@ -202,130 +183,6 @@ def rangecheck(i, j):
     return range
 
 
-def check_name(name, min_length, max_length, valid_chars, valid_inner_chars):
-    """
-    Check the validity of a string for use as a name for
-    objects like nodes or volumes.
-    A valid name must match these conditions:
-      * must at least be 1 byte long
-      * must not be longer than specified by the caller
-      * contains a-z, A-Z, 0-9, and the characters allowed
-        by the caller only
-      * contains at least one alpha character (a-z, A-Z)
-      * must not start with a numeric character
-      * must not start with a character allowed by the caller as
-        an inner character only (valid_inner_chars)
-    @param name         the name to check
-    @param max_length   the maximum permissible length of the name
-    @param valid_chars  list of characters allowed in addition to
-                        [a-zA-Z0-9]
-    @param valid_inner_chars    list of characters allowed in any
-                        position in the name other than the first,
-                        in addition to [a-zA-Z0-9] and the characters
-                        already specified in valid_chars
-    returns a valid string or "" (which can be if-checked)
-    """
-    checked_name = None
-    if min_length is None or max_length is None:
-        return ""
-    if name is None:
-        return ""
-    name_b = bytearray(str(name), "utf-8")
-    name_len = len(name_b)
-    if name_len < min_length or name_len > max_length:
-        return ""
-    alpha = False
-    idx = 0
-    while idx < name_len:
-        item = name_b[idx]
-        if item >= ord('a') and item <= ord('z'):
-            alpha = True
-        elif item >= ord('A') and item <= ord('Z'):
-            alpha = True
-        else:
-            if (not (item >= ord('0') and item <= ord('9') and idx >= 1)):
-                letter = chr(item)
-                if (not (letter in valid_chars or (letter in valid_inner_chars and idx >= 1))):
-                    # Illegal character in name
-                    return ""
-        idx += 1
-    if not alpha:
-        return ""
-    checked_name = name_b.decode("utf-8")
-    return checked_name
-
-
-def check_node_name(name):
-    """
-    RFC952 / RFC1123 internet host name validity check
-
-    @returns Valid host name or ""
-    """
-    if name is None:
-        return ""
-    name_b = bytearray(str(name), "utf-8")
-    name_len = len(name_b)
-    if name_len < NODE_NAME_MINLEN or name_len > NODE_NAME_MAXLEN:
-        return ""
-    for label in name_b.split(".".encode("utf-8")):
-        if len(label) > NODE_NAME_LABEL_MAXLEN:
-            return ""
-    idx = 0
-    while idx < name_len:
-        letter = name_b[idx]
-        if not (ord('a') <= letter <= ord('z') or
-                ord('A') <= letter <= ord('Z') or
-                ord('0') <= letter <= ord('9')):
-            # special characters allowed depending on position within the string
-            if idx == 0 or idx + 1 == name_len:
-                return ""
-            else:
-                if not (letter == ord('.') or letter == ord('-')):
-                    return ""
-        idx += 1
-    checked_name = name_b.decode("utf-8")
-    return checked_name
-
-
-# "type" used for argparse
-def namecheck(checktype):
-    # Define variables in this scope (Python 3.x compatibility)
-    min_length = 0
-    max_length = 0
-    valid_chars = ""
-    valid_inner_chars = ""
-
-    if checktype == RES_NAME:
-        min_length = RES_NAME_MINLEN
-        max_length = RES_NAME_MAXLEN
-        valid_chars = RES_NAME_VALID_CHARS
-        valid_inner_chars = RES_NAME_VALID_INNER_CHARS
-    elif checktype == SNAPSHOT_NAME:
-        min_length = SNAPSHOT_NAME_MINLEN
-        max_length = SNAPSHOT_NAME_MAXLEN
-        valid_chars = SNAPSHOT_NAME_VALID_CHARS
-        valid_inner_chars = SNAPSHOT_NAME_VALID_INNER_CHARS
-    elif checktype == STORPOOL_NAME:
-        min_length = STORPOOL_NAME_MINLEN
-        max_length = STORPOOL_NAME_MAXLEN
-        valid_chars = STORPOOL_NAME_VALID_CHARS
-        valid_inner_chars = STORPOOL_NAME_VALID_INNER_CHARS
-    else:  # checktype == NODE_NAME, use that as rather arbitrary default
-        min_length = NODE_NAME_MINLEN
-        max_length = NODE_NAME_MAXLEN
-
-    def check(name):
-        import linstor_client.argparse.argparse as argparse
-        if checktype == NODE_NAME:
-            name = check_node_name(name)
-        else:
-            name = check_name(name, min_length, max_length, valid_chars, valid_inner_chars)
-        if not name:
-            raise argparse.ArgumentTypeError('Name: %s not valid' % name)
-        return name
-    return check
-
-
 def get_uname():
     checked_node_name = ""
     try:
@@ -333,7 +190,7 @@ def get_uname():
         uname = os.uname()
         if len(uname) >= 2:
             node_name = uname[1]
-        checked_node_name = check_node_name(node_name)
+        checked_node_name = node_name
     except OSError:
         pass
     return checked_node_name

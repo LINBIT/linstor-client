@@ -4,9 +4,7 @@ import linstor
 from linstor import SizeCalc
 import linstor_client
 from linstor_client.commands import ArgumentError, Commands
-from linstor_client.consts import NODE_NAME, STORPOOL_NAME
 from linstor.sharedconsts import KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
-from linstor_client.utils import namecheck
 from linstor.responses import StoragePoolListResponse
 
 
@@ -56,13 +54,13 @@ class StoragePoolCommands(Commands):
     def _create_pool_args(cls, parser, shared_space=True):
         parser.add_argument(
             'node_name',
-            type=namecheck(NODE_NAME),
+            type=str,
             help='Name of the node for the new storage pool').completer = cls.node_completer
-        parser.add_argument('name', type=namecheck(STORPOOL_NAME), help='Name of the new storage pool')
+        parser.add_argument('name', type=str, help='Name of the new storage pool')
         if shared_space:
             parser.add_argument(
                 '--shared-space',
-                type=namecheck(STORPOOL_NAME),
+                type=str,
                 help='Name of used shared space'
             )
 
@@ -233,9 +231,9 @@ class StoragePoolCommands(Commands):
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
                                  choices=storpoolgroupby).completer = storpool_group_completer
-        p_lstorpool.add_argument('-s', '--storpools', nargs='+', type=namecheck(STORPOOL_NAME),
+        p_lstorpool.add_argument('-s', '--storpools', nargs='+', type=str,
                                  help='Filter by list of storage pools').completer = self.storage_pool_completer
-        p_lstorpool.add_argument('-n', '--nodes', nargs='+', type=namecheck(NODE_NAME),
+        p_lstorpool.add_argument('-n', '--nodes', nargs='+', type=str,
                                  help='Filter by list of nodes').completer = self.node_completer
         p_lstorpool.set_defaults(func=self.list)
 
@@ -247,7 +245,7 @@ class StoragePoolCommands(Commands):
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'node_name',
-            type=namecheck(NODE_NAME),
+            type=str,
             help='Name of the node for the storage pool').completer = self.node_completer
         p_sp.add_argument(
             'storage_pool_name',
@@ -261,11 +259,11 @@ class StoragePoolCommands(Commands):
             description='Sets properties for the given storage pool on the given node.')
         p_setprop.add_argument(
             'node_name',
-            type=namecheck(NODE_NAME),
+            type=str,
             help='Name of the node for the storage pool').completer = self.node_completer
         p_setprop.add_argument(
             'name',
-            type=namecheck(STORPOOL_NAME),
+            type=str,
             help='Name of the storage pool'
         ).completer = self.storage_pool_completer
         Commands.add_parser_keyvalue(p_setprop, 'storagepool')

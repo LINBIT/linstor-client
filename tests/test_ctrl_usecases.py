@@ -112,7 +112,7 @@ class TestCreateCommands(LinstorTestCase):
 
         # illegal name is already catched from argparse
         retcode = self.execute(['storage-pool-definition', 'create', '13394'])
-        self.assertEqual(2, retcode)
+        self.assertEqual(10, retcode)
 
     def test_create_node(self):
         node = self.execute_with_single_resp(['node', 'create', 'node1', '195.0.0.1'])
