@@ -1,6 +1,7 @@
 import linstor_client.argparse.argparse as argparse
 import collections
 import sys
+import socket
 
 import linstor_client
 from linstor_client.commands import Commands
@@ -102,8 +103,11 @@ class NodeCommands(Commands):
             'name',
             help='Name of the new node, must match the nodes hostname',
             type=str)
-        p_new_node.add_argument('ip',
-                                help='IP address of the new node').completer = ip_completer("name")
+        p_new_node.add_argument(
+            'ip',
+            nargs='?',
+            help='IP address of the new node, if not specified it will be resolved by the name.'
+        ).completer = ip_completer("name")
         p_new_node.set_defaults(func=self.create)
 
         p_create_sw_target = node_subp.add_parser(
@@ -339,10 +343,14 @@ class NodeCommands(Commands):
         self.check_subcommands(node_subp, subcmds)
 
     def create(self, args):
+        ip_addr = args.ip
+        if args.ip is None:
+            ip_addr = socket.gethostbyname(args.name)
+
         replies = self._linstor.node_create(
             args.name,
             args.node_type,
-            args.ip,
+            ip_addr,
             args.communication_type,
             args.port,
             args.interface_name
