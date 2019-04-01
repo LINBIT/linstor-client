@@ -23,6 +23,7 @@ class ResourceDefinitionCommands(Commands):
     def setup_commands(self, parser):
         subcmds = [
             Commands.Subcommands.Create,
+            Commands.Subcommands.Modify,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
             Commands.Subcommands.SetProperty,
@@ -30,7 +31,7 @@ class ResourceDefinitionCommands(Commands):
             Commands.Subcommands.DrbdOptions
         ]
 
-        # Resource subcommands
+        # Resource definition subcommands
         res_def_parser = parser.add_parser(
             Commands.RESOURCE_DEF,
             aliases=["rd"],
@@ -56,11 +57,23 @@ class ResourceDefinitionCommands(Commands):
             help="Comma separated layer list, order is from right to left. "
                  "This means the top most layer is on the left. "
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
+        p_new_res_dfn.add_argument('--peer-slots', type=rangecheck(1,31), help='(DRBD) peer slots for new resources')
         p_new_res_dfn.add_argument('name',
                                    nargs="?",
                                    type=str,
                                    help='Name of the new resource definition. Will be ignored if EXTERNAL_NAME is set.')
         p_new_res_dfn.set_defaults(func=self.create)
+
+        # modify-resource definition
+        p_mod_res_dfn = res_def_subp.add_parser(
+            Commands.Subcommands.Modify.LONG,
+            aliases=[Commands.Subcommands.Modify.SHORT],
+            description='Modifies a Linstor resource definition')
+        p_mod_res_dfn.add_argument('--peer-slots', type=rangecheck(1,31), help='(DRBD) peer slots for new resources')
+        p_mod_res_dfn.add_argument(
+            'name',
+            help='Name of the resource to delete').completer = self.resource_dfn_completer
+        p_mod_res_dfn.set_defaults(func=self.modify)
 
         # remove-resource definition
         # TODO description
@@ -145,6 +158,15 @@ class ResourceDefinitionCommands(Commands):
             external_name=args.external_name
             if not isinstance(args.external_name, bytes) else args.external_name.decode('utf-8'),  # py2-3
             layer_list=args.layer_list
+        )
+        return self.handle_replies(args, replies)
+
+    def modify(self, args):
+        replies = self._linstor.resource_dfn_modify(
+            args.name,
+            {},
+            [],
+            args.peer_slots
         )
         return self.handle_replies(args, replies)
 
