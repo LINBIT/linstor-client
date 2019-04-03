@@ -131,9 +131,15 @@ class ResourceCommands(Commands):
         p_new_res.add_argument(
             '-l', '--layer-list',
             type=self.layer_data_check,
-            help="Comma separated layer list, order is from right to left. "
+            help="Comma separated layer list, order is from left to right top-down "
                  "This means the top most layer is on the left. "
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
+        p_new_res.add_argument(
+            '-p', '--providers',
+            type=self.provider_check,
+            help="Comma separated providers list. Only storage pools with the given provider kind "
+                 "are considered as auto-place target. "
+                "Possible providers are: " + ",".join(linstor.Linstor.provider_list()))
         p_new_res.add_argument(
             'node_name',
             type=str,
@@ -389,7 +395,8 @@ class ResourceCommands(Commands):
                 [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different],
                 diskless_on_remaining=args.diskless_on_remaining,
                 async_msg=async_flag,
-                layer_list=args.layer_list
+                layer_list=args.layer_list,
+                provider_list=args.providers
             )
 
             return self.handle_replies(args, replies)

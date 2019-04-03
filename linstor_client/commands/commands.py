@@ -9,6 +9,7 @@ from linstor.sharedconsts import NAMESPC_AUXILIARY
 from linstor.properties import properties
 from linstor.protobuf_to_dict import protobuf_to_dict
 import linstor.proto.common.LayerType_pb2 as LayerType
+import linstor.proto.common.ProviderType_pb2 as ProviderType
 import linstor_client
 from linstor_client.utils import LinstorClientError, Output
 from linstor_client.consts import ExitCode, Color
@@ -562,6 +563,21 @@ class Commands(object):
             layer_list.append(layer)
         return layer_list
 
+    @classmethod
+    def provider_check(cls, providers):
+        """
+        Checks and converts the comma separated providers to a list.
+
+        :param str providers
+        :return: List of provider names
+        :rtype list[str]
+        """
+        provider_list = []
+        for provider in providers.split(","):
+            if provider not in linstor.Linstor.provider_list():
+                raise argparse.ArgumentTypeError('Provider "{prov}" not valid'.format(prov=provider))
+            provider_list.append(provider)
+        return provider_list
 
 class MiscCommands(Commands):
     def __init__(self):
