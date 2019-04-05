@@ -23,78 +23,6 @@ class TestUseCases(LinstorTestCase):
             print('-' * 120)
             self.assertEqual(0, self.execute([cmd, '--help']))
 
-    def test_create_volume(self):
-        cnode_resp = self.execute_with_single_resp(['node', 'create', 'node1', '192.168.100.1'])
-        self.assertTrue(cnode_resp.is_success())
-
-        node_list = self.execute_with_machine_output(['node', 'list'])
-        self.assertIsNotNone(node_list)
-        self.assertIs(len(node_list), 1)
-        node_list = node_list[0]
-        self.assertTrue('nodes' in node_list)
-        nodes = node_list['nodes']
-        self.assertGreater(len(nodes), 0)
-        self.assertTrue([n for n in nodes if n['name'] == 'node1'])
-
-        # create storagepool
-        storpool_resps = self.execute_with_resp(['storage-pool', 'create', 'lvm', 'node1', 'storage', 'lvmpool'])
-        self.assertTrue(storpool_resps[0].is_success())
-        self.assertTrue(storpool_resps[1].is_warning())
-        self.assertEqual(WARN_NOT_CONNECTED | MASK_STOR_POOL | MASK_CRT, storpool_resps[1].ret_code)
-
-        # check
-        storagepool_list = self.execute_with_machine_output(['storage-pool', 'list'])
-        self.assertIsNotNone(storagepool_list)
-        self.assertIs(len(storagepool_list), 1)
-        storagepool_list = storagepool_list[0]
-        self.assertIn('stor_pools', storagepool_list)
-        stor_pools = storagepool_list['stor_pools']
-        self.assertEqual(len(stor_pools), 1)
-        stor_pool = stor_pools[0]
-        self.assertEqual('node1', stor_pool['node_name'])
-        self.assertEqual('LvmDriver', stor_pool['driver'])
-        self.assertEqual('storage', stor_pool['stor_pool_name'])
-        self.assertHasProp(stor_pool['props'], NAMESPC_STORAGE_DRIVER + '/LvmVg', 'lvmpool')
-
-        # create resource def
-        rsc_dfn_resp = self.execute_with_single_resp(['resource-definition', 'create', 'rsc1'])
-        self.assertTrue(rsc_dfn_resp.is_success())
-
-        # create volume def
-        vlm_dfn_resp = self.execute_with_single_resp(['volume-definition', 'create', 'rsc1', '1Gib'])
-        self.assertTrue(vlm_dfn_resp.is_success())
-
-        # create resource on node1
-        # rsc_resps = self.execute_with_resp(['resource', 'create', '-s', 'storage', 'node1', 'rsc1'])
-        # self.assertEqual(3, len(rsc_resps))
-        # self.assertTrue(rsc_resps[0].is_success())  # resource created
-        # self.assertTrue(rsc_resps[1].is_success())  # volume created
-        # self.assertTrue(rsc_resps[2].is_warning())  # satellite not reachable
-        #
-        # # check resource
-        # resource_list = self.execute_with_machine_output(['resource', 'list'])
-        # self.assertIsNotNone(resource_list)
-        # self.assertIs(len(resource_list), 1)
-        # resource_list = resource_list[0]
-        # self.assertIn('resources', resource_list)
-        # resources = resource_list['resources']
-        # self.assertEqual(len(resources), 1)
-        # rsc1 = resources[0]
-        # self.assertEqual(rsc1['name'], 'rsc1')
-        # self.assertIn('vlms', rsc1)
-        # vlms = rsc1['vlms']
-        # self.assertEqual(len(vlms), 1)
-        # self.assertEqual(vlms[0]['vlm_nr'], 0)
-        # self.assertIn('vlm_minor_nr', vlms[0])
-        #
-        # # delete resource
-        # rsc_resps = self.execute_with_resp(['resource', 'delete', '--async', 'node1', 'rsc1'])
-        # self.assertEqual(2, len(rsc_resps))
-        # warn_resp = rsc_resps[1]
-        # self.assertTrue(warn_resp.is_warning(), str(warn_resp))
-        # self.assertEqual(WARN_NOT_CONNECTED | MASK_RSC | MASK_DEL, warn_resp.ret_code)
-        # self.assertTrue(rsc_resps[0].is_success())
-
 
 class TestCreateCommands(LinstorTestCase):
 
@@ -118,26 +46,6 @@ class TestCreateCommands(LinstorTestCase):
         node = self.execute_with_single_resp(['node', 'create', 'node1', '195.0.0.1'])
         self.assertTrue(node.is_success())
         self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node.ret_code)
-
-    def test_create_storage_pool(self):
-        node = self.execute_with_single_resp(['node', 'create', 'storpool.node1', '195.0.0.2'])
-        self.assertTrue(node.is_success())
-        self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node.ret_code)
-
-        storpool_responses = self.execute_with_resp(['storage-pool', 'create', 'lvm', 'storpool.node1', 'storpool', 'drbdpool'])
-        storpool = storpool_responses[0]
-        no_active = storpool_responses[1]
-        self.assertTrue(no_active.is_warning())
-        self.assertTrue(storpool.is_success())
-        self.assertEqual(MASK_STOR_POOL | MASK_CRT | CREATED, storpool.ret_code)
-
-        stor_pools = self.execute_with_machine_output(['storage-pool', 'list'])
-        self.assertEqual(1, len(stor_pools))
-        stor_pools = stor_pools[0]
-        self.assertIn('stor_pools', stor_pools)
-        stor_pools = stor_pools['stor_pools']
-        stor_pool = [sp for sp in stor_pools if sp['stor_pool_name'] == 'storpool']
-        self.assertEqual(1, len(stor_pool), "created storpool 'storpool' not in list")
 
     def test_create_storage_pool_missing_node(self):
         storpool = self.execute_with_single_resp(['storage-pool', 'create', 'lvm', 'storpool', 'nonode', 'drbdpool'])
