@@ -205,5 +205,5 @@ echo "migration disabled, review script and remove this line"; exit 1\n
             of.write('\n')
 
         of.close()
-        sys.stdout.write('Succefully wrote %s\n' % (args.script))
+        sys.stdout.write('Successfully wrote %s\n' % (args.script))
         return None
