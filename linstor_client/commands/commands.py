@@ -558,7 +558,7 @@ class Commands(object):
         """
         layer_list = []
         for layer in layer_data.split(','):
-            if layer not in linstor.Linstor.layer_list():
+            if layer.lower() not in linstor.Linstor.layer_list():
                 raise argparse.ArgumentTypeError('Layer name "{lay}" not valid'.format(lay=layer))
             layer_list.append(layer)
         return layer_list
@@ -568,16 +568,17 @@ class Commands(object):
         """
         Checks and converts the comma separated providers to a list.
 
-        :param str providers
+        :param str providers:
         :return: List of provider names
         :rtype list[str]
         """
         provider_list = []
         for provider in providers.split(","):
-            if provider not in linstor.Linstor.provider_list():
+            if provider.lower() not in linstor.Linstor.provider_list():
                 raise argparse.ArgumentTypeError('Provider "{prov}" not valid'.format(prov=provider))
             provider_list.append(provider)
         return provider_list
+
 
 class MiscCommands(Commands):
     def __init__(self):
