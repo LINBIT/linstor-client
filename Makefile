@@ -7,9 +7,10 @@ override GITHEAD := $(shell test -e .git && $(GIT) rev-parse HEAD)
 U := $(shell $(PYTHON) ./setup.py versionup2date >/dev/null 2>&1; echo $$?;)
 TESTS = $(wildcard unit-tests/*_test.py)
 DOCKERREGISTRY = drbd.io
-DOCKERREGISTRY_PUBLIC = quay.io
+DOCKERREGISTRY_QUAY = quay.io
 DOCKERREGPATH = $(DOCKERREGISTRY)/linstor-client
-DOCKERREGPATH_PUBLIC = $(DOCKERREGISTRY_PUBLIC)/linbit/linstor-client
+DOCKERREGPATH_QUAY = $(DOCKERREGISTRY_QUAY)/linbit/linstor-client
+DOCKERREGPATH_DOCKER = linbit/linstor-client
 DOCKER_TAG ?= latest
 
 all: doc
@@ -53,13 +54,17 @@ dockerimage:
 endif
 	docker build -t $(DOCKERREGPATH):$(DOCKER_TAG) .
 	docker tag $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH):latest
-	docker tag $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH_PUBLIC):$(DOCKER_TAG)
-	docker tag $(DOCKERREGPATH_PUBLIC):$(DOCKER_TAG) $(DOCKERREGPATH_PUBLIC):latest
+	docker tag $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH_QUAY):$(DOCKER_TAG)
+	docker tag $(DOCKERREGPATH_QUAY):$(DOCKER_TAG) $(DOCKERREGPATH_QUAY):latest
+	docker tag $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH_DOCKER):$(DOCKER_TAG)
+	docker tag $(DOCKERREGPATH_DOCKER):$(DOCKER_TAG) $(DOCKERREGPATH_DOCKER):latest
 	@echo && echo "Did you run distclean?"
 
 .PHONY: dockerpath
 dockerpath:
-	@echo $(DOCKERREGPATH):latest $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH_PUBLIC):latest $(DOCKERREGPATH_PUBLIC):$(DOCKER_TAG)
+	@echo $(DOCKERREGPATH):latest $(DOCKERREGPATH):$(DOCKER_TAG) \
+		$(DOCKERREGPATH_QUAY):latest $(DOCKERREGPATH_QUAY):$(DOCKER_TAG) \
+		$(DOCKERREGPATH_DOCKER):latest $(DOCKERREGPATH_DOCKER):$(DOCKER_TAG)
 
 # no gensrc here, that is in debian/rules
 deb: up2date
