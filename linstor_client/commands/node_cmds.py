@@ -399,7 +399,8 @@ class NodeCommands(Commands):
             apiconsts.CONN_STATUS_FULL_SYNC_FAILED: ("OFFLINE(FULL SYNC FAILED)", Color.RED),
             apiconsts.CONN_STATUS_AUTHENTICATION_ERROR: ("OFFLINE(AUTHENTICATION ERROR)", Color.RED),
             apiconsts.CONN_STATUS_UNKNOWN: ("Unknown", Color.YELLOW),
-            apiconsts.CONN_STATUS_HOSTNAME_MISMATCH: ("OFFLINE(HOSTNAME MISMATCH)", Color.RED)
+            apiconsts.CONN_STATUS_HOSTNAME_MISMATCH: ("OFFLINE(HOSTNAME MISMATCH)", Color.RED),
+            apiconsts.CONN_STATUS_OTHER_CONTROLLER: ("OFFLINE(OTHER_CONTROLLER)", Color.RED)
         }
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
