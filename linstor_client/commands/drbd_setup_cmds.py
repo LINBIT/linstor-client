@@ -13,6 +13,8 @@ def _drbd_options():
             opt_key = option.get('drbd_option_name')
             if opt_key is None or opt_key in ['help', '_name']:
                 continue
+            if option['key'].startswith('DrbdOptions/Handlers'):
+                opt_key = "handler-" + opt_key
             object_drbd_options[opt_key] = option
         drbd_options[object_name] = object_drbd_options
     return drbd_options
