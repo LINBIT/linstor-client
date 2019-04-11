@@ -18,7 +18,6 @@
     See <http://www.gnu.org/licenses/>.
 """
 
-import os
 import subprocess
 import sys
 
@@ -142,31 +141,6 @@ def check_output(*args, **kwargs):
         return _wrapcall_2_6(*args, **kwargs)
 
 
-def ssh_exec(cmdname, ip, name, cmdline, quiet=False, suppress_stderr=False):
-    try:
-        ssh_base = ["ssh", "-oBatchMode=yes",
-                    "-oConnectTimeout=2", "root@" + ip]
-        if subprocess.call(ssh_base + ["true"]) == 0:
-            sys.stdout.write(
-                "\nExecuting %s command using ssh.\n"
-                "IMPORTANT: The output you see comes from %s\n"
-                "IMPORTANT: Your input is executed on %s\n"
-                % (cmdname, name, name)
-            )
-            ssh_cmd = ssh_base + cmdline
-            if quiet:
-                ssh_cmd.append("-q")
-            if suppress_stderr:
-                ssh_cmd.append('2>/dev/null')
-            subprocess.check_call(ssh_cmd)
-            return True
-    except subprocess.CalledProcessError:
-        sys.stderr.write("Error: Attempt to execute the %s command remotely"
-                         "failed\n" % (cmdname))
-
-    return False
-
-
 # base range check
 def checkrange(v, i, j):
     return i <= v <= j
@@ -181,19 +155,6 @@ def rangecheck(i, j):
             raise argparse.ArgumentTypeError('%d not in range: [%d, %d]' % (v, i, j))
         return v
     return range
-
-
-def get_uname():
-    checked_node_name = ""
-    try:
-        node_name = None
-        uname = os.uname()
-        if len(uname) >= 2:
-            node_name = uname[1]
-        checked_node_name = node_name
-    except OSError:
-        pass
-    return checked_node_name
 
 
 def ip_completer(where):
