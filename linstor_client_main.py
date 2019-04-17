@@ -140,7 +140,7 @@ class LinStorCLI(object):
         )
         parser.add_argument('--verbose', '-V', action='store_true')
         parser.add_argument('-t', '--timeout', default=300, type=int,
-                            help="Connection timeout value.")
+                            help="Connection/Command timeout value in seconds.")
         parser.add_argument('--disable-config', action="store_true",
                             help="Disable config loading and only use commandline arguments.")
 
