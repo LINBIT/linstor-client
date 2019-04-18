@@ -1,3 +1,15 @@
+linstor-client (0.9.3-1) experimental; urgency=medium
+
+  [ Gabor Hernadi ]
+  * Added connection status OTHER_CONTROLLER
+
+  [ Rene Peinthor ]
+  * cleanup utils.py and add test_tables unittest
+  * use ApiCallRcResponse interface, instead of the proto message
+  * client_main: better help for timeout value
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 18 Apr 2019 11:32:29 +0200
+
 linstor-client (0.9.2-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
