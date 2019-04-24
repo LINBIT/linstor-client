@@ -191,9 +191,9 @@ class ResourceDefinitionCommands(Commands):
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
-        for rsc_dfn in cls.filter_rsc_dfn_list(lstmsg.rsc_dfns, args.resources):
-            drbd_data = cls.drbd_layer_data(rsc_dfn)
-            row = [rsc_dfn.rsc_name]
+        for rsc_dfn in cls.filter_rsc_dfn_list(lstmsg.resource_definitions, args.resources):
+            drbd_data = rsc_dfn.drbd_data
+            row = [rsc_dfn.name]
             if args.external_name:
                 if isinstance(rsc_dfn.external_name, str):
                     row.append(rsc_dfn.external_name)
@@ -201,26 +201,26 @@ class ResourceDefinitionCommands(Commands):
                     row.append(rsc_dfn.external_name.decode('utf-8'))
             row.append(drbd_data.port if drbd_data else "")
             row.append(tbl.color_cell("DELETING", Color.RED)
-                       if FLAG_DELETE in rsc_dfn.rsc_dfn_flags else tbl.color_cell("ok", Color.DARKGREEN))
+                       if FLAG_DELETE in rsc_dfn.flags else tbl.color_cell("ok", Color.DARKGREEN))
             tbl.add_row(row)
         tbl.show()
 
     def list(self, args):
-        lstmsg = self._linstor.resource_dfn_list()
+        lstmsg = self._linstor.resource_dfn_list(query_volume_definitions=False)
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod
     def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
-            for rsc_dfn in lstmsg.rsc_dfns:
-                if rsc_dfn.rsc_name.lower() == args.resource_name.lower():
-                    result.append(rsc_dfn.rsc_dfn_props)
+            for rsc_dfn in lstmsg.resource_definitions:
+                if rsc_dfn.name.lower() == args.resource_name.lower():
+                    result.append(rsc_dfn.properties)
                     break
         return result
 
     def print_props(self, args):
-        lstmsg = self._linstor.resource_dfn_list()
+        lstmsg = self._linstor.resource_dfn_list(query_volume_definitions=False)
 
         return self.output_props_list(args, lstmsg, self._props_list)
 

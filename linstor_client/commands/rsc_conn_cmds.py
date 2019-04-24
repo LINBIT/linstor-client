@@ -246,14 +246,14 @@ class ResourceConnectionCommands(Commands):
 
         props_str_size = 30
 
-        for rsc_con in [x for x in lstmsg.rsc_connections if "DELETED" not in x.rsc_conn_flags]:
-            opts = [os.path.basename(x.key) + '=' + x.value for x in rsc_con.rsc_conn_props]
+        for rsc_con in [x for x in lstmsg.resource_connections if "DELETED" not in x.flags]:
+            opts = [os.path.basename(x) + '=' + rsc_con.properties[x] for x in rsc_con.properties]
             props_str = ",".join(opts)
             tbl.add_row([
-                rsc_con.node_name_1,
-                rsc_con.node_name_2,
+                rsc_con.node_a,
+                rsc_con.node_b,
                 props_str if len(props_str) < props_str_size else props_str[:props_str_size] + '...',
-                rsc_con.port if rsc_con.HasField('port') else ''
+                rsc_con.port if rsc_con.port else ''
             ])
 
         tbl.show()
@@ -266,10 +266,12 @@ class ResourceConnectionCommands(Commands):
     def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
-            for rsc_con in lstmsg.rsc_connections:
-                if (rsc_con.node_name_1 == args.node_name_a and rsc_con.node_name_2 == args.node_name_b) or \
-                        (rsc_con.node_name_2 == args.node_name_a and rsc_con.node_name_1 == args.node_name_b):
-                    result.append(rsc_con.rsc_conn_props)
+            for rsc_con in lstmsg.resource_connections:
+                if (rsc_con.node_a.lower() == args.node_name_a.lower() and
+                    rsc_con.node_b.lower() == args.node_name_b.lower()) or \
+                        (rsc_con.node_b.lower() == args.node_name_a.lower() and
+                         rsc_con.node_a.lower() == args.node_name_b.lower()):
+                    result.append(rsc_con.properties)
                     break
         return result
 

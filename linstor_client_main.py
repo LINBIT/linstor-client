@@ -24,7 +24,6 @@ import traceback
 import itertools
 
 import linstor
-from linstor import sharedconsts
 import linstor_client.argparse.argparse as argparse
 import linstor_client.argcomplete as argcomplete
 import linstor_client.utils as utils
@@ -126,7 +125,10 @@ class LinStorCLI(object):
                             help='Do not use utf-8 characters in output (i.e., tables).')
         parser.add_argument('--warn-as-error', action="store_true",
                             help='Treat WARN return code as error (i.e., return code > 0).')
-        parser.add_argument('--controllers', default='localhost:%d' % sharedconsts.DFLT_CTRL_PORT_PLAIN,
+        parser.add_argument('--curl',
+                            action="store_true",
+                            help="Do not execute the action, only output a curl equivalent command.")
+        parser.add_argument('--controllers', default='localhost:%d' % linstor.Linstor.REST_PORT,
                             help='Comma separated list of controllers (e.g.: "host1:port,host2:port"). '
                             'If the environment variable %s is set, '
                             'the ones set via this argument get appended.' % KEY_LS_CONTROLLERS)

@@ -72,7 +72,11 @@ class LinstorTestCase(unittest.TestCase):
         controller_bin = os.path.join(linstor_bin, "Controller")
         print("executing: " + controller_bin)
         cls.controller = subprocess.Popen(
-            [controller_bin, "--memory-database=h2;" + str(controller_port) + ";" + cls.host()],
+            [
+                controller_bin,
+                "--memory-database=h2;" + str(cls.port()) + ";" + cls.host(),
+                "--rest-bind=" + cls.host() + ":" + str(cls.rest_port())
+            ],
             cwd=install_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
@@ -110,9 +114,17 @@ class LinstorTestCase(unittest.TestCase):
         return controller_port
 
     @classmethod
+    def rest_port(cls):
+        return controller_port + 10
+
+    @classmethod
+    def signed_mask(cls, mask):
+        return mask - 2**64
+
+    @classmethod
     def add_controller_arg(cls, cmd_args):
         cmd_args.insert(0, '--controllers')
-        cmd_args.insert(1, cls.host() + ':' + str(cls.port()))
+        cmd_args.insert(1, cls.host() + ':' + str(cls.rest_port()))
 
     @classmethod
     def execute(cls, cmd_args):

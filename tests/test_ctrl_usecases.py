@@ -50,7 +50,7 @@ class TestCreateCommands(LinstorTestCase):
     def test_create_storage_pool_missing_node(self):
         storpool = self.execute_with_single_resp(['storage-pool', 'create', 'lvm', 'storpool', 'nonode', 'drbdpool'])
         self.assertTrue(storpool.is_error())
-        self.assertEqual(MASK_STOR_POOL | MASK_CRT | FAIL_NOT_FOUND_NODE, storpool.ret_code)
+        self.assertEqual(self.signed_mask(MASK_STOR_POOL | MASK_CRT | FAIL_NOT_FOUND_NODE), storpool.ret_code)
 
     def test_create_delete_storage_pool_dfn(self):
         storpooldf = self.execute_with_single_resp(['storage-pool-definition', 'create', 'teststorpooldf'])
@@ -100,7 +100,7 @@ class TestCreateCommands(LinstorTestCase):
 
         vlm_dfn = self.execute_with_single_resp(['volume-definition', 'create', 'rscvlm', '0'])
         self.assertTrue(vlm_dfn.is_error())
-        self.assertEqual(MASK_VLM_DFN | MASK_CRT | FAIL_INVLD_VLM_SIZE, vlm_dfn.ret_code)
+        self.assertEqual(self.signed_mask(MASK_VLM_DFN | MASK_CRT | FAIL_INVLD_VLM_SIZE), vlm_dfn.ret_code)
 
         vlm_dfn = self.execute_with_single_resp(['volume-definition', 'create', 'rscvlm', '--vlmnr', '3', '256Mib'])
         self.assertTrue(vlm_dfn.is_success())
@@ -114,14 +114,14 @@ class TestCreateCommands(LinstorTestCase):
         vlm_dfn = self.execute_with_single_resp(['volume-definition', 'create', 'rsc-does-not-exist', '128MiB'])
         self.assertFalse(vlm_dfn.is_success())
         self.assertTrue(vlm_dfn.is_error())
-        self.assertEqual(FAIL_NOT_FOUND_RSC_DFN | MASK_CRT | MASK_VLM_DFN, vlm_dfn.ret_code)
+        self.assertEqual(self.signed_mask(FAIL_NOT_FOUND_RSC_DFN | MASK_CRT | MASK_VLM_DFN), vlm_dfn.ret_code)
 
     def test_delete_non_existing_rsc_dfn(self):
         rsc_dfn_del = self.execute_with_resp(['resource-definition', 'delete', 'non_existing_rsc_dfn'])
         self.assertGreater(len(rsc_dfn_del), 0)
         rsc_dfn_del_reply = rsc_dfn_del[0]
         self.assertTrue(rsc_dfn_del_reply.is_warning())
-        self.assertEqual(WARN_NOT_FOUND | MASK_RSC_DFN | MASK_DEL, rsc_dfn_del_reply.ret_code)
+        self.assertEqual(self.signed_mask(WARN_NOT_FOUND | MASK_RSC_DFN | MASK_DEL), rsc_dfn_del_reply.ret_code)
 
 
 if __name__ == '__main__':

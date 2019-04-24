@@ -398,15 +398,15 @@ class NodeCommands(Commands):
             tbl.add_header(hdr)
 
         conn_stat_dict = {
-            apiconsts.CONN_STATUS_OFFLINE: ("OFFLINE", Color.RED),
-            apiconsts.CONN_STATUS_CONNECTED: ("Connected", Color.YELLOW),
-            apiconsts.CONN_STATUS_ONLINE: ("Online", Color.GREEN),
-            apiconsts.CONN_STATUS_VERSION_MISMATCH: ("OFFLINE(VERSION MISMATCH)", Color.RED),
-            apiconsts.CONN_STATUS_FULL_SYNC_FAILED: ("OFFLINE(FULL SYNC FAILED)", Color.RED),
-            apiconsts.CONN_STATUS_AUTHENTICATION_ERROR: ("OFFLINE(AUTHENTICATION ERROR)", Color.RED),
-            apiconsts.CONN_STATUS_UNKNOWN: ("Unknown", Color.YELLOW),
-            apiconsts.CONN_STATUS_HOSTNAME_MISMATCH: ("OFFLINE(HOSTNAME MISMATCH)", Color.RED),
-            apiconsts.CONN_STATUS_OTHER_CONTROLLER: ("OFFLINE(OTHER_CONTROLLER)", Color.RED)
+            "OFFLINE": ("OFFLINE", Color.RED),
+            "CONNECTED": ("Connected", Color.YELLOW),
+            "ONLINE": ("Online", Color.GREEN),
+            "VERSION_MISMATCH": ("OFFLINE(VERSION MISMATCH)", Color.RED),
+            "FULL_SYNC_FAILED": ("OFFLINE(FULL SYNC FAILED)", Color.RED),
+            "AUTHENTICATION_ERROR": ("OFFLINE(AUTHENTICATION ERROR)", Color.RED),
+            "UNKNOWN": ("Unknown", Color.YELLOW),
+            "HOSTNAME_MISMATCH": ("OFFLINE(HOSTNAME MISMATCH)", Color.RED),
+            "OTHER_CONTROLLER": ("OFFLINE(OTHER_CONTROLLER)", Color.RED)
         }
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
@@ -446,19 +446,18 @@ class NodeCommands(Commands):
         try:
             node_list_replies = self._linstor.node_list()
             self.check_list_sanity(args, node_list_replies)
-            node_map = self.construct_node(node_list_replies[0].proto_msg)
+            node_map = self.construct_node(node_list_replies[0])
 
             storage_pool_list_replies = self._linstor.storage_pool_list()
             self.check_list_sanity(args, storage_pool_list_replies)
-            self.construct_storpool(node_map, storage_pool_list_replies[0].proto_msg)
+            self.construct_storpool(node_map, storage_pool_list_replies[0])
 
-            rsc_dfn_list_replies = self._linstor.resource_dfn_list()
+            rsc_dfn_list_replies = self._linstor.resource_dfn_list(query_volume_definitions=False)
             self.check_list_sanity(args, rsc_dfn_list_replies)
-            volume_def_map = self.get_volume_size(rsc_dfn_list_replies[0].proto_msg)
 
             rsc_list_replies = self._linstor.resource_list()
             self.check_list_sanity(args, rsc_list_replies)
-            self.construct_rsc(node_map, rsc_list_replies[0].proto_msg, volume_def_map)
+            self.construct_rsc(node_map, rsc_list_replies[0])
 
             outputted = False
             machine_data = []
@@ -500,24 +499,34 @@ class NodeCommands(Commands):
         :rtype: dict[int, int]
         """
         volume_def_map = {}  # type dict[int, int]
-        for rsc_dfn in rsc_dfn_list.rsc_dfns:
-            for vlmdfn in rsc_dfn.vlm_dfns:
-                volume_def_map[vlmdfn.vlm_minor] = vlmdfn.vlm_size
+        for rsc_dfn in rsc_dfn_list.resource_definitions:
+            for vlmdfn in rsc_dfn.volume_definitions:
+                if vlmdfn.drbd_data:
+                    minor = vlmdfn.drbd_data.minor
+                    volume_def_map[minor] = vlmdfn.size
         return volume_def_map
 
-    def make_volume_node(self, vlm, volume_def_map):
-        volume_node = TreeNode('volume' + str(vlm.vlm_nr), '', Color.DARKGREEN)
-        volume_node.set_description('minor number: ' + str(vlm.vlm_minor_nr))
+    @classmethod
+    def make_volume_node(cls, vlm):
+        """
+
+        :param responses.Volume vlm:
+        :param volume_def_map:
+        :return:
+        """
+        volume_node = TreeNode('volume' + str(vlm.number), '', Color.DARKGREEN)
+        volume_node.set_description('minor number: ' + str(vlm.drbd_data.drbd_volume_definition.minor)
+                                    if vlm.drbd_data else '')
         volume_node.add_description(
-            ', size: ' + str(SizeCalc.approximate_size_string(volume_def_map[vlm.vlm_minor_nr]))
+            ', size: ' + str(SizeCalc.approximate_size_string(vlm.allocated_size))
         )
         return volume_node
 
-    def construct_rsc(self, node_map, rsc_list, volume_map):
+    def construct_rsc(self, node_map, rsc_list):
         for rsc in rsc_list.resources:
             vlm_by_storpool = collections.defaultdict(list)
-            for vlm in rsc.vlms:
-                vlm_by_storpool[vlm.stor_pool_name].append(vlm)
+            for vlm in rsc.volumes:
+                vlm_by_storpool[vlm.storage_pool_name].append(vlm)
 
             for (storpool_name, vlms) in vlm_by_storpool.items():
                 rsc_node = TreeNode(rsc.name, '', Color.BLUE)
@@ -533,13 +542,13 @@ class NodeCommands(Commands):
                     storpool_node = node_map[rsc.node_name].find_child(storpool_name)
 
                 for vlm in vlms:
-                    rsc_node.add_child(self.make_volume_node(vlm, volume_map))
+                    rsc_node.add_child(self.make_volume_node(vlm))
 
                 storpool_node.add_child(rsc_node)
 
     def construct_storpool(self, node_map, storage_pool_list):
-        for storpool in storage_pool_list.stor_pools:
-            storpool_node = TreeNode(storpool.stor_pool_name, '', Color.PINK)
+        for storpool in storage_pool_list.storage_pools:
+            storpool_node = TreeNode(storpool.name, '', Color.PINK)
             storpool_node.set_description('storage pool')
             node_map[storpool.node_name].add_child(storpool_node)
 

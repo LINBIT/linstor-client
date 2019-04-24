@@ -1,5 +1,6 @@
 import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands, DrbdOptions
+import json
 
 
 class ControllerCommands(Commands):
@@ -67,7 +68,7 @@ class ControllerCommands(Commands):
     def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
-            result.append(lstmsg.props)
+            result.append(lstmsg.properties)
         return result
 
     def cmd_print_controller_props(self, args):
@@ -103,4 +104,7 @@ class ControllerCommands(Commands):
 
     def cmd_version(self, args):
         version_info = self.get_linstorapi().controller_info().split(',')
-        print("linstor controller " + version_info[2] + "; GIT-hash: " + version_info[3])
+        if args.machine_readable:
+            print(json.dumps(self.get_linstorapi().controller_version().data(args.output_version)))
+        else:
+            print("linstor controller " + version_info[2] + "; GIT-hash: " + version_info[3])

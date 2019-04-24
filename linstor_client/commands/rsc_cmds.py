@@ -435,13 +435,13 @@ class ResourceCommands(Commands):
         return self.handle_replies(args, replies)
 
     def show(self, args, lstmsg):
-        rsc_dfns = self._linstor.resource_dfn_list()
+        rsc_dfns = self._linstor.resource_dfn_list(query_volume_definitions=False)
         if isinstance(rsc_dfns[0], linstor.ApiCallResponse):
             return self.handle_replies(args, rsc_dfns)
-        rsc_dfns = rsc_dfns[0].proto_msg.rsc_dfns
+        rsc_dfns = rsc_dfns[0].resource_definitions
 
-        rsc_dfn_map = {x.rsc_name: x for x in rsc_dfns}
-        rsc_state_lkup = {x.node_name + x.rsc_name: x for x in lstmsg.resource_states}
+        rsc_dfn_map = {x.name: x for x in rsc_dfns}
+        rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
 
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         for hdr in ResourceCommands._resource_headers:
@@ -452,23 +452,23 @@ class ResourceCommands(Commands):
         for rsc in lstmsg.resources:
             rsc_dfn_port = ''
             if rsc.name in rsc_dfn_map:
-                drbd_data = self.drbd_layer_data(rsc_dfn_map[rsc.name])
+                drbd_data = rsc_dfn_map[rsc.name].drbd_data
                 rsc_dfn_port = drbd_data.port if drbd_data else ""
-            marked_delete = apiconsts.FLAG_DELETE in rsc.rsc_flags
-            rsc_state_proto = rsc_state_lkup.get(rsc.node_name + rsc.name)
+            marked_delete = apiconsts.FLAG_DELETE in rsc.flags
+            rsc_state_obj = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_state = tbl.color_cell("Unknown", Color.YELLOW)
             rsc_usage = ""
             if marked_delete:
                 rsc_state = tbl.color_cell("DELETING", Color.RED)
-            elif rsc_state_proto:
-                if rsc_state_proto.HasField('in_use') and rsc_state_proto.in_use:
+            elif rsc_state_obj:
+                if rsc_state_obj.in_use is not None and rsc_state_obj.in_use:
                     rsc_usage = tbl.color_cell("InUse", Color.GREEN)
                 else:
                     rsc_usage = "Unused"
-                for vlm in rsc.vlms:
-                    vlm_state = ResourceCommands.get_volume_state(rsc_state_proto.vlm_states,
-                                                                  vlm.vlm_nr) if rsc_state_proto else None
-                    state_txt, color = self.volume_state_cell(vlm_state, rsc.rsc_flags, vlm.vlm_flags)
+                for vlm in rsc.volumes:
+                    vlm_state = ResourceCommands.get_volume_state(rsc_state_obj.volume_states,
+                                                                  vlm.number) if rsc_state_obj else None
+                    state_txt, color = self.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
                     rsc_state = tbl.color_cell(state_txt, color)
                     if color is not None:
                         break
@@ -488,7 +488,7 @@ class ResourceCommands(Commands):
     @staticmethod
     def get_volume_state(volume_states, volume_nr):
         for volume_state in volume_states:
-            if volume_state.vlm_nr == volume_nr:
+            if volume_state.number == volume_nr:
                 return volume_state
         return None
 
@@ -505,7 +505,7 @@ class ResourceCommands(Commands):
         tbl_color = None
         state_prefix = 'Resizing, ' if apiconsts.FLAG_RESIZE in vlm_flags else ''
         state = state_prefix + "Unknown"
-        if vlm_state and vlm_state.HasField("disk_state") and vlm_state.disk_state:
+        if vlm_state and vlm_state.disk_state:
             disk_state = vlm_state.disk_state
 
             if disk_state == 'DUnknown':
@@ -542,27 +542,27 @@ class ResourceCommands(Commands):
         tbl.add_column("InUse", color=Output.color(Color.DARKGREEN, args.no_color))
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
-        rsc_state_lkup = {x.node_name + x.rsc_name: x for x in lstmsg.resource_states}
+        rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
 
         for rsc in lstmsg.resources:
             rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_usage = ""
             if rsc_state:
-                if rsc_state.HasField('in_use') and rsc_state.in_use:
+                if rsc_state.in_use:
                     rsc_usage = tbl.color_cell("InUse", Color.GREEN)
                 else:
                     rsc_usage = "Unused"
-            for vlm in rsc.vlms:
-                vlm_state = ResourceCommands.get_volume_state(rsc_state.vlm_states, vlm.vlm_nr) if rsc_state else None
-                state_txt, color = cls.volume_state_cell(vlm_state, rsc.rsc_flags, vlm.vlm_flags)
+            for vlm in rsc.volumes:
+                vlm_state = ResourceCommands.get_volume_state(rsc_state.volume_states, vlm.number) if rsc_state else None
+                state_txt, color = cls.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
                 state = tbl.color_cell(state_txt, color) if color else state_txt
-                vlm_drbd_data = cls.drbd_layer_data(vlm)
+                vlm_drbd_data = vlm.drbd_data
                 tbl.add_row([
                     rsc.node_name,
                     rsc.name,
-                    vlm.stor_pool_name,
-                    str(vlm.vlm_nr),
-                    str(vlm_drbd_data.drbd_vlm_dfn.minor) if vlm_drbd_data else "",
+                    vlm.storage_pool_name,
+                    str(vlm.number),
+                    str(vlm_drbd_data.drbd_volume_definition.minor) if vlm_drbd_data else "",
                     vlm.device_path,
                     linstor.SizeCalc.approximate_size_string(vlm.allocated_size) if vlm.allocated_size else "",
                     rsc_usage,
@@ -581,8 +581,8 @@ class ResourceCommands(Commands):
         result = []
         if lstmsg:
             for rsc in lstmsg.resources:
-                if rsc.name == args.resource_name and rsc.node_name.lower() == args.node_name.lower():
-                    result.append(rsc.props)
+                if rsc.name.lower() == args.resource_name.lower() and rsc.node_name.lower() == args.node_name.lower():
+                    result.append(rsc.properties)
                     break
         return result
 

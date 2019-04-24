@@ -152,9 +152,9 @@ class StoragePoolDefinitionCommands(Commands):
     def show(cls, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("StoragePool")
-        for storpool_dfn in lstmsg.stor_pool_dfns:
+        for storpool_dfn in lstmsg.storage_pool_definitions:
             tbl.add_row([
-                storpool_dfn.stor_pool_name
+                storpool_dfn.name
             ])
         tbl.show()
 
@@ -167,9 +167,9 @@ class StoragePoolDefinitionCommands(Commands):
     def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
-            for storpool_dfn in lstmsg.stor_pool_dfns:
-                if storpool_dfn.stor_pool_name.lower() == args.storage_pool_name.lower():
-                    result.append(storpool_dfn.props)
+            for storpool_dfn in lstmsg.storage_pool_definitions:
+                if storpool_dfn.name.lower() == args.storage_pool_name.lower():
+                    result.append(storpool_dfn.properties)
                     break
         return result
 
@@ -184,8 +184,7 @@ class StoragePoolDefinitionCommands(Commands):
         replies = self._linstor.storage_pool_dfn_modify(args.name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
         return self.handle_replies(args, replies)
 
-    @classmethod
-    def _show_query_max_volume(cls, args, lstmsg):
+    def _show_query_max_volume(self, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("StoragePool")
         tbl.add_column("MaxVolumeSize", just_txt='>')
@@ -204,18 +203,21 @@ class StoragePoolDefinitionCommands(Commands):
 
             return s
 
-        for candidate in lstmsg.candidates:
-            max_vlm_size = SizeCalc.approximate_size_string(candidate.max_vlm_size)
+        storage_pool_dfns = self.get_linstorapi().storage_pool_dfn_list()[0].storage_pool_definitions
 
+        for candidate in lstmsg.candidates:
+            max_vlm_size = SizeCalc.approximate_size_string(candidate.max_volume_size)
+
+            storage_pool_props = [x for x in storage_pool_dfns if x.name == candidate.storage_pool][0].properties
             max_oversubscription_ratio_props = \
-                [x for x in candidate.stor_pool_dfn.props if x.key == KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO]
+                [x for x in storage_pool_props if x.key == KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO]
             max_oversubscription_ratio_prop = max_oversubscription_ratio_props[0].value \
                 if max_oversubscription_ratio_props \
                 else lstmsg.default_max_oversubscription_ratio
             max_oversubscription_ratio = float(max_oversubscription_ratio_prop)
 
             tbl.add_row([
-                candidate.stor_pool_dfn.stor_pool_name,
+                candidate.storage_pool,
                 max_vlm_size,
                 "Thin, oversubscription ratio " + str(max_oversubscription_ratio) if candidate.all_thin else "Thick",
                 limited_string(candidate.node_names)

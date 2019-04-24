@@ -232,25 +232,25 @@ class SnapshotCommands(Commands):
         tbl.add_column("NodeNames")
         tbl.add_column("Volumes")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
-        for snapshot_dfn in lstmsg.snapshot_dfns:
-            if FLAG_DELETE in snapshot_dfn.snapshot_dfn_flags:
+        for snapshot_dfn in lstmsg.snapshots:
+            if FLAG_DELETE in snapshot_dfn.flags:
                 state_cell = tbl.color_cell("DELETING", Color.RED)
-            elif FLAG_FAILED_DEPLOYMENT in snapshot_dfn.snapshot_dfn_flags:
+            elif FLAG_FAILED_DEPLOYMENT in snapshot_dfn.flags:
                 state_cell = tbl.color_cell("Failed", Color.RED)
-            elif FLAG_FAILED_DISCONNECT in snapshot_dfn.snapshot_dfn_flags:
+            elif FLAG_FAILED_DISCONNECT in snapshot_dfn.flags:
                 state_cell = tbl.color_cell("Satellite disconnected", Color.RED)
-            elif FLAG_SUCCESSFUL in snapshot_dfn.snapshot_dfn_flags:
+            elif FLAG_SUCCESSFUL in snapshot_dfn.flags:
                 state_cell = tbl.color_cell("Successful", Color.DARKGREEN)
             else:
                 state_cell = tbl.color_cell("Incomplete", Color.DARKBLUE)
 
             tbl.add_row([
-                snapshot_dfn.rsc_name,
-                snapshot_dfn.snapshot_name,
-                ", ".join([snapshot.node_name for snapshot in snapshot_dfn.snapshots]),
+                snapshot_dfn.resource_name,
+                snapshot_dfn.name,
+                ", ".join([node_name for node_name in snapshot_dfn.nodes]),
                 ", ".join([
-                    str(snapshot_vlm_dfn.vlm_nr) + ": " + SizeCalc.approximate_size_string(snapshot_vlm_dfn.vlm_size)
-                    for snapshot_vlm_dfn in snapshot_dfn.snapshot_vlm_dfns]),
+                    str(snapshot_vlm_dfn.number) + ": " + SizeCalc.approximate_size_string(snapshot_vlm_dfn.size)
+                    for snapshot_vlm_dfn in snapshot_dfn.snapshot_volume_definitions]),
                 state_cell
             ])
         tbl.show()

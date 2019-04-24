@@ -217,26 +217,26 @@ class VolumeDefinitionCommands(Commands):
             tbl.add_header(hdr)
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
-        for rsc_dfn in cls.filter_rsc_dfn_list(lstmsg.rsc_dfns, args.resources):
-            for vlmdfn in rsc_dfn.vlm_dfns:
+        for rsc_dfn in cls.filter_rsc_dfn_list(lstmsg.resource_definitions, args.resources):
+            for vlmdfn in rsc_dfn.volume_definitions:
                 state = tbl.color_cell("ok", Color.DARKGREEN)
-                if FLAG_DELETE in rsc_dfn.rsc_dfn_flags:
+                if FLAG_DELETE in vlmdfn.flags:
                     state = tbl.color_cell("DELETING", Color.RED)
-                elif FLAG_RESIZE in vlmdfn.vlm_flags:
+                elif FLAG_RESIZE in vlmdfn.flags:
                     state = tbl.color_cell("resizing", Color.DARKPINK)
 
-                drbd_data = cls.drbd_layer_data(vlmdfn)
+                drbd_data = vlmdfn.drbd_data
                 tbl.add_row([
-                    rsc_dfn.rsc_name,
-                    vlmdfn.vlm_nr,
+                    rsc_dfn.name,
+                    vlmdfn.number,
                     drbd_data.minor if drbd_data else "",
-                    SizeCalc.approximate_size_string(vlmdfn.vlm_size),
+                    SizeCalc.approximate_size_string(vlmdfn.size),
                     state
                 ])
         tbl.show()
 
     def list(self, args):
-        lstmsg = self._linstor.resource_dfn_list()
+        lstmsg = self._linstor.resource_dfn_list(query_volume_definitions=True)
 
         return self.output_list(args, lstmsg, self.show)
 
@@ -288,15 +288,15 @@ class VolumeDefinitionCommands(Commands):
     def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
-            for rsc_dfn in [x for x in lstmsg.rsc_dfns if x.rsc_name.lower() == args.resource_name.lower()]:
-                for vlmdfn in rsc_dfn.vlm_dfns:
-                    if vlmdfn.vlm_nr == args.volume_nr:
-                        result.append(vlmdfn.vlm_props)
+            for rsc_dfn in [x for x in lstmsg.resource_definitions if x.name.lower() == args.resource_name.lower()]:
+                for vlmdfn in rsc_dfn.volume_definitions:
+                    if vlmdfn.number == args.volume_nr:
+                        result.append(vlmdfn.properties)
                         break
         return result
 
     def print_props(self, args):
-        lstmsg = self._linstor.resource_dfn_list()
+        lstmsg = self._linstor.resource_dfn_list(query_volume_definitions=True)
 
         return self.output_props_list(args, lstmsg, self._props_list)
 

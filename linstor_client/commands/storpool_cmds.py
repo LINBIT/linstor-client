@@ -313,7 +313,7 @@ class StoragePoolCommands(Commands):
         for hdr in self._stor_pool_headers:
             tbl.add_header(hdr)
 
-        storage_pool_resp = StoragePoolListResponse(lstmsg)
+        storage_pool_resp = lstmsg
 
         tbl.set_groupby(args.groupby if args.groupby else [self._stor_pool_headers[0].name])
 
@@ -343,7 +343,6 @@ class StoragePoolCommands(Commands):
 
     def list(self, args):
         lstmsg = self._linstor.storage_pool_list(args.nodes, args.storpools)
-
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod

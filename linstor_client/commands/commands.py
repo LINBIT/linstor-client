@@ -7,9 +7,6 @@ from datetime import datetime, timedelta
 import linstor
 from linstor.sharedconsts import NAMESPC_AUXILIARY
 from linstor.properties import properties
-from linstor.protobuf_to_dict import protobuf_to_dict
-import linstor.proto.common.LayerType_pb2 as LayerType
-import linstor.proto.common.ProviderType_pb2 as ProviderType
 import linstor_client
 from linstor_client.utils import LinstorClientError, Output
 from linstor_client.consts import ExitCode, Color
@@ -257,17 +254,23 @@ class Commands(object):
             if args.machine_readable:
                 cls._print_machine_readable(replies, args.output_version)
             else:
-                output_func(args, replies[0].proto_msg if single_item else replies)
+                output_func(args, replies[0] if single_item else replies)
                 api_replies = linstor.Linstor.filter_api_call_response(replies[1:])
                 cls.handle_replies(args, api_replies)
 
         return ExitCode.OK
 
     @classmethod
-    def filter_rsc_dfn_list(cls, rsc_dfn_raw, resources):
+    def filter_rsc_dfn_list(cls, rsc_dfn, resources):
+        """
+
+        :param list[linstor.responses.ResourceDefinition] rsc_dfn:
+        :param resources:
+        :return:
+        """
         res_list = [] if resources is None else resources
         lower_res = [x.lower() for x in res_list]
-        return [x for x in rsc_dfn_raw if x.rsc_name.lower() in lower_res] if resources else rsc_dfn_raw
+        return [x for x in rsc_dfn if x.name.lower() in lower_res] if resources else rsc_dfn
 
     @classmethod
     def output_props_list(cls, args, lstmsg, prop_show_func):
@@ -275,7 +278,7 @@ class Commands(object):
             return cls.handle_replies(args, lstmsg)
         lstmsg = lstmsg[0]
 
-        result = prop_show_func(args, lstmsg.proto_msg)
+        result = prop_show_func(args, lstmsg)
 
         Commands._print_props(result, args)
         return ExitCode.OK
@@ -294,9 +297,6 @@ class Commands(object):
             s = json.dumps([x.data_v0 for x in data], indent=2)
         elif output_version == 'v1':
             s = json.dumps([x.data_v1 for x in data], indent=2)
-        else:
-            d = [protobuf_to_dict(x.proto_msg) for x in data]
-            s = cls._to_json(d)
 
         # try:
         #     s = ""
@@ -363,7 +363,7 @@ class Commands(object):
         """Print properties in machine or human readable format"""
 
         if args.machine_readable:
-            d = [[protobuf_to_dict(y) for y in x] for x in prop_list_map]
+            d = [[{"key": x, "value": prop_list_map[0][x]} for x in prop_list_map[0]]]
             s = json.dumps(d, indent=2)
             print(s)
             return None
@@ -379,8 +379,8 @@ class Commands(object):
 
         if property_map_count > 0:
             prop_map = prop_list_map[0]
-            for p in prop_map:
-                tbl.add_row([p.key, p.value])
+            for p in sorted(prop_map.keys()):
+                tbl.add_row([p, prop_map[p]])
 
         tbl.show()
 
@@ -442,27 +442,26 @@ class Commands(object):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
 
-        lstmsg = lapi.node_list()[0]
+        lstmsg = lapi.node_list()[0]  # type: linstor.responses.NodeListResponse
         if lstmsg:
-            for node in lstmsg.proto_msg.nodes:
-                possible.add(node.name)
+            possible = {x.name for x in lstmsg.nodes}
 
             if prefix:
-                return [node for node in possible if node.startswith(prefix)]
+                return {node for node in possible if node.startswith(prefix)}
 
         return possible
 
     @classmethod
-    def find_node(cls, proto_node_list, node_name):
+    def find_node(cls, node_list, node_name):
         """
         Searches the node list for a given node name.
 
-        :param proto_node_list: a node list proto object
+        :param node_list: a node list proto object
         :param node_name: name of the node to find
         :return: The found node proto object or None if not found
         """
-        if proto_node_list:
-            for n in proto_node_list.nodes:
+        if node_list:
+            for n in node_list.nodes:
                 if n.name == node_name:
                     return n
         return None
@@ -470,9 +469,9 @@ class Commands(object):
     def netif_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
-        lstmsg = lapi.node_list()[0]
+        lstmsg = lapi.node_list()[0]  # type: linstor.responses.NodeListResponse
 
-        node = self.find_node(lstmsg.proto_msg, kwargs['parsed_args'].node_name)
+        node = self.find_node(lstmsg, kwargs['parsed_args'].node_name)
         if node:
             for netif in node.net_interfaces:
                 possible.add(netif.name)
@@ -485,11 +484,11 @@ class Commands(object):
     def storage_pool_dfn_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
-        lstmsg = lapi.storage_pool_dfn_list()[0]
+        lstmsg = lapi.storage_pool_dfn_list()[0]  # type: linstor.responses.StoragePoolDefinitionResponse
 
         if lstmsg:
-            for storpool_dfn in lstmsg.proto_msg.stor_pool_dfns:
-                possible.add(storpool_dfn.stor_pool_name)
+            for storpool_dfn in lstmsg.storage_pool_definitions:
+                possible.add(storpool_dfn.name)
 
             if prefix:
                 return [res for res in possible if res.startswith(prefix)]
@@ -499,11 +498,11 @@ class Commands(object):
     def storage_pool_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
-        lstmsg = lapi.storage_pool_list()[0]
+        lstmsg = lapi.storage_pool_list()[0]  # type: linstor.responses.StoragePoolListResponse
 
         if lstmsg:
-            for storpool in lstmsg.proto_msg.stor_pools:
-                possible.add(storpool.stor_pool_name)
+            for storpool in lstmsg.storage_pools:
+                possible.add(storpool.name)
 
             if prefix:
                 return [res for res in possible if res.startswith(prefix)]
@@ -513,11 +512,13 @@ class Commands(object):
     def resource_dfn_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
-        lstmsg = lapi.resource_dfn_list()[0]
+        lstmsg = lapi.resource_dfn_list(
+            query_volume_definitions=False
+        )[0]  # type: linstor.responses.ResourceDefinitionResponse
 
         if lstmsg:
-            for rsc_dfn in lstmsg.proto_msg.rsc_dfns:
-                possible.add(rsc_dfn.rsc_name)
+            for rsc_dfn in lstmsg.resource_definitions:
+                possible.add(rsc_dfn.name)
 
             if prefix:
                 return [res for res in possible if res.startswith(prefix)]
@@ -527,23 +528,16 @@ class Commands(object):
     def resource_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
         possible = set()
-        lstmsg = lapi.resource_list()[0]
+        lstmsg = lapi.resource_list()[0]  # type: linstor.responses.ResourceResponse
 
         if lstmsg:
-            for rsc in lstmsg.proto_msg.resources:
+            for rsc in lstmsg.resources:
                 possible.add(rsc.name)
 
             if prefix:
                 return [res for res in possible if res.startswith(prefix)]
 
         return possible
-
-    @classmethod
-    def drbd_layer_data(cls, proto_msg):
-        for layer in proto_msg.layer_data:
-            if layer.layer_type == LayerType.DRBD:
-                return layer.drbd
-        return None
 
     @classmethod
     def layer_data_check(cls, layer_data):
