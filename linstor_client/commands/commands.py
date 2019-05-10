@@ -247,7 +247,7 @@ class Commands(object):
 
     @classmethod
     def output_list(cls, args, replies, output_func, single_item=True):
-        if isinstance(replies, list):
+        if isinstance(replies, list) and not args.curl:
             if cls.check_for_api_replies(replies):
                 return cls.handle_replies(args, replies)
 

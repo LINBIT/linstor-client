@@ -277,6 +277,7 @@ class LinStorCLI(object):
                             timeout=args.timeout,
                             keep_alive=args.func == self.cmd_interactive
                         )
+                        self._linstorapi.curl = args.curl
                         self._controller_commands._linstor = self._linstorapi
                         self._node_commands._linstor = self._linstorapi
                         self._storage_pool_dfn_commands._linstor = self._linstorapi
