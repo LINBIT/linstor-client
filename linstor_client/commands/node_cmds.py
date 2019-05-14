@@ -345,7 +345,13 @@ class NodeCommands(Commands):
     def create(self, args):
         ip_addr = args.ip
         if args.ip is None:
-            ip_addr = socket.gethostbyname(args.name)
+            try:
+                ip_addr = socket.gethostbyname(args.name)
+            except socket.gaierror as err:
+                raise LinstorClientError(
+                    "Unable to resolve ip address for '" + args.name + "': " + str(err),
+                    ExitCode.ARGPARSE_ERROR
+                )
 
         replies = self._linstor.node_create(
             args.name,
