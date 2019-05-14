@@ -6,8 +6,8 @@ class TestProperties(LinstorTestCase):
 
     def test_set_properties(self):
         # create all object kinds
-        cnode_resp = self.execute_with_single_resp(['node', 'create', 'node1', '192.168.100.1'])
-        self.assertTrue(cnode_resp.is_success())
+        cnode_resp = self.execute_with_resp(['node', 'create', 'node1', '192.168.100.1'])
+        self.assertTrue(cnode_resp[0].is_success())
 
         # create resource def
         rsc_dfn_resp = self.execute_with_single_resp(['resource-definition', 'create', 'rsc1'])

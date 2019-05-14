@@ -43,9 +43,9 @@ class TestCreateCommands(LinstorTestCase):
         self.assertEqual(10, retcode)
 
     def test_create_node(self):
-        node = self.execute_with_single_resp(['node', 'create', 'node1', '195.0.0.1'])
-        self.assertTrue(node.is_success())
-        self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node.ret_code)
+        node = self.execute_with_resp(['node', 'create', 'node1', '195.0.0.1'])
+        self.assertTrue(node[0].is_success())
+        self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node[0].ret_code)
 
     def test_create_storage_pool_missing_node(self):
         storpool = self.execute_with_single_resp(['storage-pool', 'create', 'lvm', 'storpool', 'nonode', 'drbdpool'])

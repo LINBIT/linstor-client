@@ -51,9 +51,9 @@ class TestNodeCommands(LinstorTestCase):
             self.assert_netinterface(netifs[i], expected_netifs[i][0], expected_netifs[i][1])
 
     def test_add_netif(self):
-        node = self.execute_with_single_resp(['node', 'create', 'nodenetif', '195.0.0.1'])
-        self.assertTrue(node.is_success())
-        self.assertEqual(apiconsts.MASK_NODE | apiconsts.MASK_CRT | apiconsts.CREATED, node.ret_code)
+        node = self.execute_with_resp(['node', 'create', 'nodenetif', '195.0.0.1'])
+        self.assertTrue(node[0].is_success())
+        self.assertEqual(apiconsts.MASK_NODE | apiconsts.MASK_CRT | apiconsts.CREATED, node[0].ret_code)
 
         self.assert_netinterfaces('nodenetif', [("default", '195.0.0.1')])
 
