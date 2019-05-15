@@ -198,7 +198,7 @@ class ResourceDefinitionCommands(Commands):
                 if isinstance(rsc_dfn.external_name, str):
                     row.append(rsc_dfn.external_name)
                 else:
-                    row.append(rsc_dfn.external_name.decode('utf-8'))
+                    row.append(rsc_dfn.external_name)
             row.append(drbd_data.port if drbd_data else "")
             row.append(tbl.color_cell("DELETING", Color.RED)
                        if FLAG_DELETE in rsc_dfn.flags else tbl.color_cell("ok", Color.DARKGREEN))
