@@ -73,7 +73,7 @@ deb: up2date
 
 # it is up to you (or the buildenv) to provide a distri specific setup.cfg
 rpm: up2date
-	$(PYTHON) setup.py bdist_rpm
+	$(PYTHON) setup.py bdist_rpm --python /usr/bin/python2
 
 .PHONY: linstor_client/consts_githash.py
 ifdef GITHEAD
