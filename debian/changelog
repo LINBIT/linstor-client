@@ -1,3 +1,17 @@
+linstor-client (0.9.4-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * node-create: avoid stacktrace for ip resolve errors
+  * unittest: fix nodes create response change
+  * rest only client
+  * add curl mode
+  * rsc_dfn: decode not needed with rest-json
+
+  [ Roland Kammerer ]
+  * dm-migrate: add transactions
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 23 May 2019 08:41:49 +0200
+
 linstor-client (0.9.3-1) experimental; urgency=medium
 
   [ Gabor Hernadi ]
