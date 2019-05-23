@@ -209,6 +209,11 @@ echo "migration disabled, review script and remove this line"; exit 1\n
                                     'OverrideVlmId', bdname)
                 MigrateCommands.lsc(of, 'volume-definition', 'set-property', r, vnr_str,
                                     'AllowLargerVolumeSize', 'true')
+                cgi = vol.get('props', {}).get('current-gi', None)
+                if cgi is not None:
+                    MigrateCommands.lsc(of, 'volume-definition', 'set-property', r, vnr_str,
+                                        'DrbdCurrentGi', cgi)
+
             MigrateCommands._create_resource(of, r, assg)
             of.write('\n')
 
