@@ -1,3 +1,10 @@
+linstor-client (0.9.5-1) experimental; urgency=medium
+
+  [ Roland Kammerer ]
+  * migration: add current-gi
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 27 May 2019 11:21:22 +0200
+
 linstor-client (0.9.4-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
