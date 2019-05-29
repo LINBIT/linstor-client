@@ -6,6 +6,8 @@ import linstor_client
 from linstor_client.commands import ArgumentError, Commands
 from linstor.sharedconsts import KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
 from linstor.responses import StoragePoolListResponse
+from linstor_client.consts import Color
+from linstor_client.utils import Output
 
 
 class StoragePoolCommands(Commands):
@@ -44,7 +46,8 @@ class StoragePoolCommands(Commands):
         linstor_client.TableHeader("PoolName"),
         linstor_client.TableHeader("FreeCapacity", alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
         linstor_client.TableHeader("TotalCapacity", alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
-        linstor_client.TableHeader("SupportsSnapshots")
+        linstor_client.TableHeader("SupportsSnapshots"),
+        linstor_client.TableHeader("State")
     ]
 
     def __init__(self):
@@ -313,10 +316,11 @@ class StoragePoolCommands(Commands):
         for hdr in self._stor_pool_headers:
             tbl.add_header(hdr)
 
-        storage_pool_resp = lstmsg
+        storage_pool_resp = lstmsg  # type: StoragePoolListResponse
 
         tbl.set_groupby(args.groupby if args.groupby else [self._stor_pool_headers[0].name])
 
+        errors = []
         for storpool in storage_pool_resp.storage_pools:
             driver_device = linstor.StoragePoolDriver.storage_props_to_driver_pool(
                 storpool.provider_kind,
@@ -330,6 +334,11 @@ class StoragePoolCommands(Commands):
                 free_capacity = SizeCalc.approximate_size_string(storpool.free_space.free_capacity)
                 total_capacity = SizeCalc.approximate_size_string(storpool.free_space.total_capacity)
 
+            for error in storpool.reports:
+                if error not in errors:
+                    errors.append(error)
+
+            state_str, state_color = self.get_replies_state(storpool.reports)
             tbl.add_row([
                 storpool.name,
                 storpool.node_name,
@@ -337,9 +346,16 @@ class StoragePoolCommands(Commands):
                 driver_device,
                 free_capacity,
                 total_capacity,
-                supports_snapshots
+                supports_snapshots,
+                tbl.color_cell(state_str, state_color)
             ])
         tbl.show()
+        for err in errors:
+            Output.handle_ret(
+                err,
+                warn_as_error=args.warn_as_error,
+                no_color=args.no_color
+            )
 
     def list(self, args):
         lstmsg = self._linstor.storage_pool_list(args.nodes, args.storpools)

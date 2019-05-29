@@ -242,6 +242,28 @@ class Commands(object):
         return rc
 
     @classmethod
+    def get_replies_state(cls, replies):
+        """
+
+        :param list[ApiCallResponse] replies:
+        :return:
+        :rtype: (str, int)
+        """
+        errors = 0
+        warnings = 0
+        for reply in replies:
+            if reply.is_error():
+                errors += 1
+            if reply.is_warning():
+                warnings += 1
+        if errors:
+            return "Error", Color.RED
+        elif warnings:
+            return "Warning", Color.YELLOW
+
+        return "Ok", Color.GREEN
+
+    @classmethod
     def check_for_api_replies(cls, replies):
         return replies and isinstance(replies[0], linstor.ApiCallResponse)
 
