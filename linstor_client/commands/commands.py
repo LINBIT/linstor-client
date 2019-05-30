@@ -566,7 +566,7 @@ class Commands(object):
         """
         provider_list = []
         for provider in providers.split(","):
-            if provider.lower() not in linstor.Linstor.provider_list():
+            if provider.upper() not in linstor.Linstor.provider_list():
                 raise argparse.ArgumentTypeError('Provider "{prov}" not valid'.format(prov=provider))
             provider_list.append(provider)
         return provider_list
