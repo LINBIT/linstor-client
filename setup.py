@@ -55,15 +55,14 @@ class CheckUpToDate(Command):
                     # returning false is not promoted
                     sys.exit(1)
             with open("Dockerfile") as f:
-                found = False
+                found = 0
                 content = [l.strip() for l in f.readlines()]
                 for l in content:
                     fields = [f.strip() for f in l.split()]
                     if len(fields) == 3 and fields[0] == 'ENV' and \
                        fields[1] == 'LINSTOR_CLI_VERSION' and fields[2] == version:
-                        found = True
-                        break
-                if not found:
+                        found += 1
+                if found != 2:
                     # returning false is not promoted
                     sys.exit(1)
         except IOError:
