@@ -1,3 +1,13 @@
+linstor-client (0.9.7-1) experimental; urgency=medium
+
+  [ Roland Kammerer ]
+  * docker: base images on UBI
+
+  [ Rene Peinthor ]
+  * code cleanup
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 18 Jun 2019 11:26:29 +0200
+
 linstor-client (0.9.6-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
