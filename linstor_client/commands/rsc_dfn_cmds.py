@@ -57,7 +57,7 @@ class ResourceDefinitionCommands(Commands):
             help="Comma separated layer list, order is from right to left. "
                  "This means the top most layer is on the left. "
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
-        p_new_res_dfn.add_argument('--peer-slots', type=rangecheck(1,31), help='(DRBD) peer slots for new resources')
+        p_new_res_dfn.add_argument('--peer-slots', type=rangecheck(1, 31), help='(DRBD) peer slots for new resources')
         p_new_res_dfn.add_argument('name',
                                    nargs="?",
                                    type=str,
@@ -69,7 +69,7 @@ class ResourceDefinitionCommands(Commands):
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
             description='Modifies a Linstor resource definition')
-        p_mod_res_dfn.add_argument('--peer-slots', type=rangecheck(1,31), help='(DRBD) peer slots for new resources')
+        p_mod_res_dfn.add_argument('--peer-slots', type=rangecheck(1, 31), help='(DRBD) peer slots for new resources')
         p_mod_res_dfn.add_argument(
             'name',
             help='Name of the resource to delete').completer = self.resource_dfn_completer

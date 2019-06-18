@@ -129,7 +129,7 @@ class ZshGenerator(object):
         c += self.describe_cmds(cmd, indent=14)
         c += "            ;;\n"
         c += "          esac\n"
-        #c += self.arguments_str(argparse_cmd)
+        # c += self.arguments_str(argparse_cmd)
         c += "        ;;"
         return c
 

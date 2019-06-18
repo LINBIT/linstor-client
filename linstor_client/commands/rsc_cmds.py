@@ -93,7 +93,7 @@ class ResourceCommands(Commands):
             '--auto-place',
             type=int,
             metavar="REPLICA_COUNT",
-            help = 'Auto place a resource to a specified number of nodes'
+            help='Auto place a resource to a specified number of nodes'
         )
         p_new_res.add_argument(
             '--do-not-place-with',
@@ -139,7 +139,7 @@ class ResourceCommands(Commands):
             type=self.provider_check,
             help="Comma separated providers list. Only storage pools with the given provider kind "
                  "are considered as auto-place target. "
-                "Possible providers are: " + ",".join(linstor.Linstor.provider_list()))
+                 "Possible providers are: " + ",".join(linstor.Linstor.provider_list()))
         p_new_res.add_argument(
             'node_name',
             type=str,
@@ -553,7 +553,10 @@ class ResourceCommands(Commands):
                 else:
                     rsc_usage = "Unused"
             for vlm in rsc.volumes:
-                vlm_state = ResourceCommands.get_volume_state(rsc_state.volume_states, vlm.number) if rsc_state else None
+                vlm_state = ResourceCommands.get_volume_state(
+                    rsc_state.volume_states,
+                    vlm.number
+                ) if rsc_state else None
                 state_txt, color = cls.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
                 state = tbl.color_cell(state_txt, color) if color else state_txt
                 vlm_drbd_data = vlm.drbd_data

@@ -272,7 +272,7 @@ class VolumeDefinitionCommands(Commands):
     @staticmethod
     def size_completer(prefix, **kwargs):
         choices = [unit_str for unit_str, _ in SizeCalc.UNITS_MAP.values()]
-        m = re.match('(\d+)(\D*)', prefix)
+        m = re.match(r'(\d+)(\D*)', prefix)
 
         digits = m.group(1)
         unit = m.group(2)

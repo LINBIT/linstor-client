@@ -511,7 +511,6 @@ class NodeCommands(Commands):
         """
 
         :param responses.Volume vlm:
-        :param volume_def_map:
         :return:
         """
         volume_node = TreeNode('volume' + str(vlm.number), '', Color.DARKGREEN)
