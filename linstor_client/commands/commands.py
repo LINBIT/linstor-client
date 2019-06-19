@@ -296,6 +296,9 @@ class Commands(object):
 
     @classmethod
     def output_props_list(cls, args, lstmsg, prop_show_func):
+        if args.curl:
+            return ExitCode.OK
+
         if cls.check_for_api_replies(lstmsg):
             return cls.handle_replies(args, lstmsg)
         lstmsg = lstmsg[0]
