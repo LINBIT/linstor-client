@@ -365,10 +365,10 @@ class StoragePoolCommands(Commands):
     def _props_list(cls, args, lstmsg):
         result = []
         if lstmsg:
-            for stp in lstmsg.stor_pools:
-                if stp.stor_pool_name.lower() == args.storage_pool_name.lower() \
+            for stp in lstmsg.storage_pools:
+                if stp.name.lower() == args.storage_pool_name.lower() \
                         and stp.node_name.lower() == args.node_name.lower():
-                    result.append(stp.props)
+                    result.append(stp.properties)
                     break
         return result
 
