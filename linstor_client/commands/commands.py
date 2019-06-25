@@ -46,6 +46,7 @@ class Commands(object):
     LIST_COMMANDS = 'list-commands'
     NODE = 'node'
     RESOURCE = 'resource'
+    VOLUME = 'volume'
     RESOURCE_CONN = 'resource-connection'
     RESOURCE_DEF = 'resource-definition'
     ERROR_REPORTS = 'error-reports'
@@ -68,6 +69,7 @@ class Commands(object):
         ERROR_REPORTS,
         STORAGE_POOL,
         STORAGE_POOL_DEF,
+        VOLUME,
         VOLUME_DEF,
         SNAPSHOT,
         DRBD_PROXY
@@ -220,7 +222,8 @@ class Commands(object):
     def check_subcommands(cls, subp, subcmds):
         parser_keys = set(subp.choices.keys())
         subcmd_keys = set([key for subcmd in subcmds for key in [subcmd.LONG, subcmd.SHORT]])
-        assert parser_keys == subcmd_keys, "not all subcommands are defined"
+        assert parser_keys == subcmd_keys, "not all subcommands are defined:\n"\
+                                           + str(parser_keys) + "\n" + str(subcmd_keys)
         subp.metavar = "{%s}" % ", ".join(sorted([x.LONG for x in subcmds]))
 
     @classmethod

@@ -35,6 +35,7 @@ from linstor_client.commands import (
     ResourceDefinitionCommands,
     ResourceCommands,
     ResourceConnectionCommands,
+    VolumeCommands,
     NodeCommands,
     SnapshotCommands,
     DrbdProxyCommands,
@@ -100,6 +101,7 @@ class LinStorCLI(object):
         self._volume_dfn_commands = VolumeDefinitionCommands()
         self._resource_commands = ResourceCommands(self._state_service)
         self._resource_conn_commands = ResourceConnectionCommands()
+        self._volume_commands = VolumeCommands()
         self._snapshot_commands = SnapshotCommands()
         self._drbd_proxy_commands = DrbdProxyCommands()
         self._misc_commands = MiscCommands()
@@ -186,6 +188,8 @@ class LinStorCLI(object):
         self._resource_commands.setup_commands(subp)
 
         self._resource_conn_commands.setup_commands(subp)
+
+        self._volume_commands.setup_commands(subp)
 
         # add all snapshot commands
         self._snapshot_commands.setup_commands(subp)
@@ -286,6 +290,7 @@ class LinStorCLI(object):
                         self._volume_dfn_commands._linstor = self._linstorapi
                         self._resource_commands._linstor = self._linstorapi
                         self._resource_conn_commands._linstor = self._linstorapi
+                        self._volume_commands._linstor = self._linstorapi
                         self._snapshot_commands._linstor = self._linstorapi
                         self._drbd_proxy_commands._linstor = self._linstorapi
                         self._misc_commands._linstor = self._linstorapi

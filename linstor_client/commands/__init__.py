@@ -7,6 +7,7 @@ from .storpool_dfn_cmds import StoragePoolDefinitionCommands
 from .storpool_cmds import StoragePoolCommands
 from .rsc_cmds import ResourceCommands
 from .rsc_conn_cmds import ResourceConnectionCommands
+from .vlm_cmds import VolumeCommands
 from .vlm_dfn_cmds import VolumeDefinitionCommands
 from .snapshot_cmds import SnapshotCommands
 from .drbd_proxy_cmds import DrbdProxyCommands

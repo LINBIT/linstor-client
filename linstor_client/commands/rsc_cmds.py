@@ -6,8 +6,8 @@ import linstor
 import linstor_client
 import linstor.sharedconsts as apiconsts
 from linstor_client.commands import DefaultState, Commands, DrbdOptions, ArgumentError
+from linstor_client.commands.vlm_cmds import VolumeCommands
 from linstor_client.consts import Color, ExitCode
-from linstor_client.utils import Output
 
 
 class ResourceCreateTransactionState(object):
@@ -466,9 +466,9 @@ class ResourceCommands(Commands):
                 else:
                     rsc_usage = "Unused"
                 for vlm in rsc.volumes:
-                    vlm_state = ResourceCommands.get_volume_state(rsc_state_obj.volume_states,
+                    vlm_state = VolumeCommands.get_volume_state(rsc_state_obj.volume_states,
                                                                   vlm.number) if rsc_state_obj else None
-                    state_txt, color = self.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
+                    state_txt, color = VolumeCommands.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
                     rsc_state = tbl.color_cell(state_txt, color)
                     if color is not None:
                         break
@@ -485,99 +485,10 @@ class ResourceCommands(Commands):
         lstmsg = self._linstor.resource_list(filter_by_nodes=args.nodes, filter_by_resources=args.resources)
         return self.output_list(args, lstmsg, self.show)
 
-    @staticmethod
-    def get_volume_state(volume_states, volume_nr):
-        for volume_state in volume_states:
-            if volume_state.number == volume_nr:
-                return volume_state
-        return None
-
-    @staticmethod
-    def volume_state_cell(vlm_state, rsc_flags, vlm_flags):
-        """
-        Determains the status of a drbd volume for table display.
-
-        :param vlm_state: vlm_state proto
-        :param rsc_flags: rsc flags
-        :param vlm_flags: vlm flags
-        :return: A tuple (state_text, color)
-        """
-        tbl_color = None
-        state_prefix = 'Resizing, ' if apiconsts.FLAG_RESIZE in vlm_flags else ''
-        state = state_prefix + "Unknown"
-        if vlm_state and vlm_state.disk_state:
-            disk_state = vlm_state.disk_state
-
-            if disk_state == 'DUnknown':
-                state = state_prefix + "Unknown"
-                tbl_color = Color.YELLOW
-            elif disk_state == 'Diskless':
-                if apiconsts.FLAG_DISKLESS not in rsc_flags:  # unintentional diskless
-                    state = state_prefix + disk_state
-                    tbl_color = Color.RED
-                else:
-                    state = state_prefix + disk_state  # green text
-            elif disk_state in ['Inconsistent', 'Failed', 'To: Creating', 'To: Attachable', 'To: Attaching']:
-                state = state_prefix + disk_state
-                tbl_color = Color.RED
-            elif disk_state in ['UpToDate', 'Created', 'Attached']:
-                state = state_prefix + disk_state  # green text
-            else:
-                state = state_prefix + disk_state
-                tbl_color = Color.YELLOW
-        else:
-            tbl_color = Color.YELLOW
-        return state, tbl_color
-
-    @classmethod
-    def show_volumes(cls, args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        tbl.add_column("Node")
-        tbl.add_column("Resource")
-        tbl.add_column("StoragePool")
-        tbl.add_column("VolumeNr")
-        tbl.add_column("MinorNr")
-        tbl.add_column("DeviceName")
-        tbl.add_column("Allocated")
-        tbl.add_column("InUse", color=Output.color(Color.DARKGREEN, args.no_color))
-        tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
-
-        rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
-
-        for rsc in lstmsg.resources:
-            rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)
-            rsc_usage = ""
-            if rsc_state:
-                if rsc_state.in_use:
-                    rsc_usage = tbl.color_cell("InUse", Color.GREEN)
-                else:
-                    rsc_usage = "Unused"
-            for vlm in rsc.volumes:
-                vlm_state = ResourceCommands.get_volume_state(
-                    rsc_state.volume_states,
-                    vlm.number
-                ) if rsc_state else None
-                state_txt, color = cls.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
-                state = tbl.color_cell(state_txt, color) if color else state_txt
-                vlm_drbd_data = vlm.drbd_data
-                tbl.add_row([
-                    rsc.node_name,
-                    rsc.name,
-                    vlm.storage_pool_name,
-                    str(vlm.number),
-                    str(vlm_drbd_data.drbd_volume_definition.minor) if vlm_drbd_data else "",
-                    vlm.device_path,
-                    linstor.SizeCalc.approximate_size_string(vlm.allocated_size) if vlm.allocated_size else "",
-                    rsc_usage,
-                    state
-                ])
-
-        tbl.show()
-
     def list_volumes(self, args):
         lstmsg = self._linstor.volume_list(args.nodes, args.storpools, args.resources)
 
-        return self.output_list(args, lstmsg, self.show_volumes)
+        return self.output_list(args, lstmsg, VolumeCommands.show_volumes)
 
     @classmethod
     def _props_list(cls, args, lstmsg):
