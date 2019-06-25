@@ -1,3 +1,12 @@
+linstor-client (0.9.8-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * storpool-listprops: fix list properties output
+  * curl-mode: fix error on list-property commands
+  * volume/commands: add own subparser for volumes
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 25 Jun 2019 10:39:43 +0200
+
 linstor-client (0.9.7-1) experimental; urgency=medium
 
   [ Roland Kammerer ]
