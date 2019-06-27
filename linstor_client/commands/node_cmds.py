@@ -403,7 +403,8 @@ class NodeCommands(Commands):
             "AUTHENTICATION_ERROR": ("OFFLINE(AUTHENTICATION ERROR)", Color.RED),
             "UNKNOWN": ("Unknown", Color.YELLOW),
             "HOSTNAME_MISMATCH": ("OFFLINE(HOSTNAME MISMATCH)", Color.RED),
-            "OTHER_CONTROLLER": ("OFFLINE(OTHER_CONTROLLER)", Color.RED)
+            "OTHER_CONTROLLER": ("OFFLINE(OTHER_CONTROLLER)", Color.RED),
+            "NO_STLT_CONN": ("OFFLINE(NO CONNECTION TO SATELLITE)", Color.RED)
         }
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
