@@ -64,7 +64,9 @@ class TestNodeCommands(LinstorTestCase):
         self.assert_netinterfaces('nodenetif', [("default", '195.0.0.1'), ("othernic", '10.0.0.1')])
 
         # modify netif
-        netif = self.execute_with_single_resp(['node', 'interface', 'modify', 'nodenetif', 'othernic', '192.168.0.1'])
+        netif = self.execute_with_single_resp(
+            ['node', 'interface', 'modify', 'nodenetif', 'othernic', '--ip', '192.168.0.1']
+        )
         self.assertTrue(netif.is_success())
         self.assertEqual(apiconsts.MASK_NET_IF | apiconsts.MASK_MOD | apiconsts.MODIFIED, netif.ret_code)
 

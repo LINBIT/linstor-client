@@ -261,12 +261,9 @@ class NodeCommands(Commands):
                                  choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN, apiconsts.VAL_NETCOM_TYPE_SSL),
                                  default=ctype_def,
                                  help='Communication type (default: %s)' % ctype_def)
-        p_mod_netif.add_argument(
-            "node_name",
-            help="Name of the node"
-        ).completer = self.node_completer
-        p_mod_netif.add_argument("interface_name", help="Interface name to change").completer = self.netif_completer
-        p_mod_netif.add_argument('ip', help='New IP address for the network interface')
+        p_mod_netif.add_argument('--ip', help='New IP address for the network interface')
+        p_mod_netif.add_argument("node_name", help="Name of the node").completer = self.node_completer
+        p_mod_netif.add_argument("interface_name", help="Interface to change").completer = self.netif_completer
         p_mod_netif.set_defaults(func=self.modify_netif)
 
         # delete net interface
