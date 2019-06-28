@@ -227,8 +227,8 @@ class NodeCommands(Commands):
         p_create_netinterface = interface_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Creates and adds a new netinterface to a given node. If port is specified this netinterface '
-                        'is used as satellite port'
+            description='Creates and adds a new netinterface to a given node.'
+                        ' If port is specified this net interface is used as satellite port'
         )
         p_create_netinterface.add_argument(
             '-p', '--port',
@@ -240,6 +240,11 @@ class NodeCommands(Commands):
             choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN, apiconsts.VAL_NETCOM_TYPE_SSL),
             default=ctype_def,
             help='Communication type (default: %s)' % ctype_def
+        )
+        p_create_netinterface.add_argument(
+            '--active',
+            action='store_true',
+            help='Create this net interface as the active satellite connection'
         )
         p_create_netinterface.add_argument(
             "node_name",
@@ -255,12 +260,21 @@ class NodeCommands(Commands):
             aliases=[Commands.Subcommands.Modify.SHORT],
             description='Change the ip listen address of a netinterface on the given node.'
         )
-        p_mod_netif.add_argument('-p', '--port', type=rangecheck(1, 65535),
-                                 help='Port to use for satellite connections')
-        p_mod_netif.add_argument('--communication-type',
-                                 choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN, apiconsts.VAL_NETCOM_TYPE_SSL),
-                                 default=ctype_def,
-                                 help='Communication type (default: %s)' % ctype_def)
+        p_mod_netif.add_argument(
+            '-p', '--port', type=rangecheck(1, 65535),
+            help='Port to use for satellite connections'
+        )
+        p_mod_netif.add_argument(
+            '--communication-type',
+            choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN, apiconsts.VAL_NETCOM_TYPE_SSL),
+            default=ctype_def,
+            help='Communication type (default: %s)' % ctype_def
+        )
+        p_mod_netif.add_argument(
+            '--active',
+            action='store_true',
+            help='Set this net interface as the active satellite connection'
+        )
         p_mod_netif.add_argument('--ip', help='New IP address for the network interface')
         p_mod_netif.add_argument("node_name", help="Name of the node").completer = self.node_completer
         p_mod_netif.add_argument("interface_name", help="Interface to change").completer = self.netif_completer
@@ -622,7 +636,8 @@ class NodeCommands(Commands):
             args.interface_name,
             args.ip,
             args.port,
-            args.communication_type
+            args.communication_type,
+            args.active
         )
 
         return self.handle_replies(args, replies)
@@ -633,7 +648,8 @@ class NodeCommands(Commands):
             args.interface_name,
             args.ip,
             args.port,
-            args.communication_type
+            args.communication_type,
+            args.active
         )
 
         return self.handle_replies(args, replies)
