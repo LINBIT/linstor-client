@@ -424,18 +424,17 @@ class NodeCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
         node_list = [x for x in lstmsg.nodes if x.name in args.nodes] if args.nodes else lstmsg.nodes
-        for n in node_list:
+        for node in node_list:
             # concat a ip list with satellite connection indicator
-            ips = [
-                if_.address +
-                (":" + str(if_.stlt_port) + " (" + if_.stlt_encryption_type + ")" if if_.stlt_port else "")
-                for if_ in n.net_interfaces
-            ]
-            conn_stat = conn_stat_dict[n.connection_status]
+            active_ip = ""
+            for net_if in node.net_interfaces:
+                if net_if.is_active and net_if.stlt_port:
+                    active_ip = net_if.address + ":" + str(net_if.stlt_port) + " (" + net_if.stlt_encryption_type + ")"
+            conn_stat = conn_stat_dict[node.connection_status]
             tbl.add_row([
-                n.name,
-                n.type,
-                ",".join(ips),
+                node.name,
+                node.type,
+                active_ip,
                 tbl.color_cell(conn_stat[0], conn_stat[1])
             ])
         tbl.show()
@@ -581,17 +580,22 @@ class NodeCommands(Commands):
 
     @classmethod
     def show_netinterfaces(cls, args, lstnodes):
-        node = NodeCommands.find_node(lstnodes, args.node_name)
+        node = lstnodes.node(args.node_name)
         if node:
             tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_column(node.name, color=Color.GREEN)
             tbl.add_column("NetInterface")
             tbl.add_column("IP")
-            for netif in node.net_interfaces:
+            tbl.add_column("Port")
+            tbl.add_column("EncryptionType")
+            # warning: system test depends on alphabetical ordering
+            for net_if in node.net_interfaces:
                 tbl.add_row([
-                    "+",
-                    netif.name,
-                    netif.address
+                    "+ StltCon" if net_if.is_active else "+",
+                    net_if.name,
+                    net_if.address,
+                    net_if.stlt_port if net_if.stlt_port else "",
+                    net_if.stlt_encryption_type if net_if.stlt_encryption_type else ""
                 ])
             tbl.show()
         else:
@@ -599,9 +603,7 @@ class NodeCommands(Commands):
                                      ExitCode.OBJECT_NOT_FOUND)
 
     def list_netinterfaces(self, args):
-        lstnodes = self._linstor.node_list()
-
-        return self.output_list(args, lstnodes, self.show_netinterfaces)
+        return self.output_list(args, self._linstor.node_list(), self.show_netinterfaces)
 
     @classmethod
     def _props_list(cls, args, lstmsg):
