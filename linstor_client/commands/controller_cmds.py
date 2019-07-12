@@ -103,8 +103,10 @@ class ControllerCommands(Commands):
         return self.handle_replies(args, replies)
 
     def cmd_version(self, args):
-        version_info = self.get_linstorapi().controller_info().split(',')
-        if args.machine_readable:
-            print(json.dumps(self.get_linstorapi().controller_version().data(args.output_version)))
-        else:
-            print("linstor controller " + version_info[2] + "; GIT-hash: " + version_info[3])
+        controller_info = self.get_linstorapi().controller_info()
+        if controller_info:
+            version_info = controller_info.split(',')
+            if args.machine_readable:
+                print(json.dumps(self.get_linstorapi().controller_version().data(args.output_version)))
+            else:
+                print("linstor controller " + version_info[2] + "; GIT-hash: " + version_info[3])
