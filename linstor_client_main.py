@@ -22,6 +22,7 @@ import sys
 import os
 import traceback
 import itertools
+import getpass
 
 import linstor
 import linstor_client.argparse.argparse as argparse
@@ -147,6 +148,13 @@ class LinStorCLI(object):
                             help="Connection/Command timeout value in seconds.")
         parser.add_argument('--disable-config', action="store_true",
                             help="Disable config loading and only use commandline arguments.")
+        parser.add_argument('--user', '-u', help="Linstor username to use")
+        parser.add_argument('--password', '-P', help="Linstor user password")
+        parser.add_argument(
+            '--allow-insecure-auth',
+            action='store_true',
+            help="Allow password authentication with HTTP"
+        )
 
         subp = parser.add_subparsers(title='subcommands',
                                      description='valid subcommands',
@@ -274,6 +282,15 @@ class LinStorCLI(object):
             contrl_list = linstor.MultiLinstor.controller_uri_list(
                 os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + args.controllers)
             if self._linstorapi is None and args.func not in local_only_cmds:
+                username = None
+                password = None
+                if args.user:
+                    username = args.user
+                    if args.password:
+                        password = args.password
+                    else:
+                        password = getpass.getpass("Enter Linstor password:")
+
                 for contrl in contrl_list:
                     try:
                         self._linstorapi = linstor.Linstor(
@@ -281,6 +298,9 @@ class LinStorCLI(object):
                             timeout=args.timeout,
                             keep_alive=args.func == self.cmd_interactive
                         )
+                        self._linstorapi.username = username
+                        self._linstorapi.password = password
+                        self._linstorapi.allow_insecure = args.allow_insecure_auth
                         self._linstorapi.curl = args.curl
                         self._controller_commands._linstor = self._linstorapi
                         self._node_commands._linstor = self._linstorapi
@@ -298,6 +318,7 @@ class LinStorCLI(object):
                         break
                     except linstor.LinstorNetworkError as le:
                         conn_errors.append(le)
+
             if len(conn_errors) == len(contrl_list):
                 for x in conn_errors:
                     self._report_linstor_error(x)
