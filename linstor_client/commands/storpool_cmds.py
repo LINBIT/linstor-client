@@ -39,6 +39,14 @@ class StoragePoolCommands(Commands):
         LONG = "diskless"
         SHORT = "diskless"
 
+    class File(object):
+        LONG = "file"
+        SHORT = "file"
+
+    class FileThin(object):
+        LONG = "filethin"
+        SHORT = "filethin"
+
     _stor_pool_headers = [
         linstor_client.TableHeader("StoragePool"),
         linstor_client.TableHeader("Node"),
@@ -173,6 +181,32 @@ class StoragePoolCommands(Commands):
             driver=linstor.StoragePoolDriver.Diskless,
             driver_pool_name=None
         )
+
+        p_new_file_pool = create_subp.add_parser(
+            StoragePoolCommands.File.LONG,
+            aliases=[StoragePoolCommands.File.SHORT],
+            description='Create a file storage pool'
+        )
+        self._create_pool_args(p_new_file_pool)
+        p_new_file_pool.add_argument(
+            'driver_pool_name',
+            type=str,
+            help='The directory to use.'
+        )
+        p_new_file_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.FILE)
+
+        p_new_file_thin_pool = create_subp.add_parser(
+            StoragePoolCommands.FileThin.LONG,
+            aliases=[StoragePoolCommands.FileThin.SHORT],
+            description='Create a file thin storage pool'
+        )
+        self._create_pool_args(p_new_file_thin_pool)
+        p_new_file_thin_pool.add_argument(
+            'driver_pool_name',
+            type=str,
+            help='The directory to use.'
+        )
+        p_new_file_thin_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.FILEThin)
 
         p_new_swordfish_target_pool = create_subp.add_parser(
             StoragePoolCommands.SwordfishTarget.LONG,
