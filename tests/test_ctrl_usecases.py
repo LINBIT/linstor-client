@@ -28,7 +28,7 @@ class TestCreateCommands(LinstorTestCase):
 
     def test_create_storage_pool_dfn(self):
         storpooldfn = self.execute_with_single_resp(['storage-pool-definition', 'create', 'mystorpool'])
-        self.assertTrue(storpooldfn.is_success())
+        self.assert_api_succuess(storpooldfn)
         self.assertEqual(MASK_STOR_POOL_DFN | MASK_CRT | CREATED, storpooldfn.ret_code)
 
         storpooldfns = self.execute_with_machine_output(['storage-pool-definition', 'list'])
@@ -44,7 +44,7 @@ class TestCreateCommands(LinstorTestCase):
 
     def test_create_node(self):
         node = self.execute_with_resp(['node', 'create', 'node1', '195.0.0.1'])
-        self.assertTrue(node[0].is_success())
+        self.assert_api_succuess(node[0])
         self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node[0].ret_code)
 
     def test_create_storage_pool_missing_node(self):
@@ -54,16 +54,16 @@ class TestCreateCommands(LinstorTestCase):
 
     def test_create_delete_storage_pool_dfn(self):
         storpooldf = self.execute_with_single_resp(['storage-pool-definition', 'create', 'teststorpooldf'])
-        self.assertTrue(storpooldf.is_success())
+        self.assert_api_succuess(storpooldf)
         self.assertEqual(MASK_STOR_POOL_DFN | MASK_CRT | CREATED, storpooldf.ret_code)
 
         storpooldf = self.execute_with_single_resp(['storage-pool-definition', 'delete', 'teststorpooldf'])
-        self.assertTrue(storpooldf.is_success())
+        self.assert_api_succuess(storpooldf)
         self.assertEqual(MASK_STOR_POOL_DFN | MASK_DEL | DELETED, storpooldf.ret_code)
 
     def test_create_resource_dfn(self):
         rsc_dfn = self.execute_with_single_resp(['resource-definition', 'create', 'rsc1'])
-        self.assertTrue(rsc_dfn.is_success())
+        self.assert_api_succuess(rsc_dfn)
 
         rsc_dfns = self.execute_with_machine_output(['resource-definition', 'list'])
         self.assertEqual(1, len(rsc_dfns))
@@ -92,10 +92,10 @@ class TestCreateCommands(LinstorTestCase):
 
     def test_create_volume_dfn(self):
         rsc_dfn = self.execute_with_single_resp(['resource-definition', 'create', 'rscvlm'])
-        self.assertTrue(rsc_dfn.is_success())
+        self.assert_api_succuess(rsc_dfn)
 
         vlm_dfn = self.execute_with_single_resp(['volume-definition', 'create', 'rscvlm', '128MiB'])
-        self.assertTrue(vlm_dfn.is_success())
+        self.assert_api_succuess(vlm_dfn)
         self.assert_volume_def('rscvlm', 0, None, SizeCalc.convert_round_up(128, SizeCalc.UNIT_MiB, SizeCalc.UNIT_KiB))
 
         vlm_dfn = self.execute_with_single_resp(['volume-definition', 'create', 'rscvlm', '0'])
@@ -103,7 +103,7 @@ class TestCreateCommands(LinstorTestCase):
         self.assertEqual(self.signed_mask(MASK_VLM_DFN | MASK_CRT | FAIL_INVLD_VLM_SIZE), vlm_dfn.ret_code)
 
         vlm_dfn = self.execute_with_single_resp(['volume-definition', 'create', 'rscvlm', '--vlmnr', '3', '256Mib'])
-        self.assertTrue(vlm_dfn.is_success())
+        self.assert_api_succuess(vlm_dfn)
         self.assertEqual(MASK_VLM_DFN | MASK_CRT | CREATED, vlm_dfn.ret_code)
         self.assert_volume_def('rscvlm', 3, None, SizeCalc.convert_round_up(256, SizeCalc.UNIT_MiB, SizeCalc.UNIT_KiB))
 

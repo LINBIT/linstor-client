@@ -7,15 +7,15 @@ class TestProperties(LinstorTestCase):
     def test_set_properties(self):
         # create all object kinds
         cnode_resp = self.execute_with_resp(['node', 'create', 'node1', '192.168.100.1'])
-        self.assertTrue(cnode_resp[0].is_success())
+        self.assert_api_succuess(cnode_resp[0])
 
         # create resource def
         rsc_dfn_resp = self.execute_with_single_resp(['resource-definition', 'create', 'rsc1'])
-        self.assertTrue(rsc_dfn_resp.is_success())
+        self.assert_api_succuess(rsc_dfn_resp)
 
         # create volume def
         vlm_dfn_resp = self.execute_with_single_resp(['volume-definition', 'create', 'rsc1', '1Gib'])
-        self.assertTrue(vlm_dfn_resp.is_success())
+        self.assert_api_succuess(vlm_dfn_resp)
 
         # create resource on node1
         # rsc_resps = self.execute_with_resp(['resource', 'create', '-s', 'storage', 'node1', 'rsc1'])
@@ -28,7 +28,7 @@ class TestProperties(LinstorTestCase):
         node_resp = self.execute_with_single_resp(
             ['node', 'set-property', 'node1', '--aux', 'test_prop', 'val']
         )
-        self.assertTrue(node_resp.is_success())
+        self.assert_api_succuess(node_resp)
 
         node_props = self.execute_with_machine_output(['node', 'list-properties', 'node1'])
         self.assertEqual(1, len(node_props))
@@ -40,7 +40,7 @@ class TestProperties(LinstorTestCase):
         node_resp = self.execute_with_single_resp(
             ['node', 'set-property', 'node1', '--aux', 'another_prop', 'value with spaces']
         )
-        self.assertTrue(node_resp.is_success())
+        self.assert_api_succuess(node_resp)
 
         node_props = self.execute_with_machine_output(['node', 'list-properties', 'node1'])
         self.assertEqual(1, len(node_props))
@@ -56,7 +56,7 @@ class TestProperties(LinstorTestCase):
         storage_resp = self.execute_with_single_resp(
             ['storage-pool-definition', 'set-property', 'DfltStorPool', '--aux', 'stor', 'lvmcomplex']
         )
-        self.assertTrue(storage_resp.is_success())
+        self.assert_api_succuess(storage_resp)
 
         storage_props = self.execute_with_machine_output(['storage-pool-definition', 'list-properties', 'DfltStorPool'])
         self.assertEqual(1, len(storage_props))
@@ -71,7 +71,7 @@ class TestProperties(LinstorTestCase):
         )
         print(resourcedef_resp)
         self.assertEqual(1, len(resourcedef_resp))
-        self.assertTrue(resourcedef_resp[0].is_success())
+        self.assert_api_succuess(resourcedef_resp[0])
 
         resourcedef_props = self.execute_with_machine_output(['resource-definition', 'list-properties', 'rsc1'])
         self.assertEqual(1, len(resourcedef_props))

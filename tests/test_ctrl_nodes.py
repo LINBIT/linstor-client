@@ -1,5 +1,5 @@
 import unittest
-from .linstor_testcase import LinstorTestCase, LinstorTestCaseWithData
+from .linstor_testcase import LinstorTestCase
 import linstor.sharedconsts as apiconsts
 
 
@@ -52,13 +52,13 @@ class TestNodeCommands(LinstorTestCase):
 
     def test_add_netif(self):
         node = self.execute_with_resp(['node', 'create', 'nodenetif', '195.0.0.1'])
-        self.assertTrue(node[0].is_success())
+        self.assert_api_succuess(node[0])
         self.assertEqual(apiconsts.MASK_NODE | apiconsts.MASK_CRT | apiconsts.CREATED, node[0].ret_code)
 
         self.assert_netinterfaces('nodenetif', [("default", '195.0.0.1')])
 
         netif = self.execute_with_single_resp(['node', 'interface', 'create', 'nodenetif', 'othernic', '10.0.0.1'])
-        self.assertTrue(netif.is_success())
+        self.assert_api_succuess(netif)
         self.assertEqual(apiconsts.MASK_NET_IF | apiconsts.MASK_CRT | apiconsts.CREATED, netif.ret_code)
 
         self.assert_netinterfaces('nodenetif', [("default", '195.0.0.1'), ("othernic", '10.0.0.1')])
@@ -67,14 +67,14 @@ class TestNodeCommands(LinstorTestCase):
         netif = self.execute_with_single_resp(
             ['node', 'interface', 'modify', 'nodenetif', 'othernic', '--ip', '192.168.0.1']
         )
-        self.assertTrue(netif.is_success())
+        self.assert_api_succuess(netif)
         self.assertEqual(apiconsts.MASK_NET_IF | apiconsts.MASK_MOD | apiconsts.MODIFIED, netif.ret_code)
 
         self.assert_netinterfaces('nodenetif', [("default", '195.0.0.1'), ("othernic", '192.168.0.1')])
 
         # delete netif
         netif = self.execute_with_single_resp(['node', 'interface', 'delete', 'nodenetif', 'othernic'])
-        self.assertTrue(netif.is_success())
+        self.assert_api_succuess(netif)
         self.assertEqual(apiconsts.MASK_NET_IF | apiconsts.MASK_DEL | apiconsts.DELETED, netif.ret_code)
 
         self.assert_netinterfaces('nodenetif', [("default", '195.0.0.1')])

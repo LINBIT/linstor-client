@@ -213,6 +213,17 @@ class LinstorTestCase(unittest.TestCase):
                 return True
         raise AssertionError("Prop {prop} with value {val} not in container.".format(prop=key, val=val))
 
+    @classmethod
+    def assert_api_succuess(cls, apicall_rc):
+        """
+
+        :param ApiCallResponse apicall_rc: apicall rc to check
+        :return:
+        """
+        if not apicall_rc.is_success():
+            raise AssertionError("ApiCall no success: " + str(apicall_rc))
+        return True
+
     def find_prop(self, props, key):
         for prop in props:
             self.assertIn('key', prop)
