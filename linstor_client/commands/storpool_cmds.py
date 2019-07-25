@@ -102,6 +102,8 @@ class StoragePoolCommands(Commands):
             StoragePoolCommands.Zfs,
             StoragePoolCommands.ZfsThin,
             StoragePoolCommands.Diskless,
+            StoragePoolCommands.File,
+            StoragePoolCommands.FileThin,
             StoragePoolCommands.SwordfishTarget,
             StoragePoolCommands.SwordfishInitiator
         ]
