@@ -1,3 +1,22 @@
+linstor-client (0.9.9-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * controller/version: fix --curl mode
+  * add linstor authentication arguments
+  * add allow-insecure-auth to global args filter
+  * tests: better assert for api success
+
+  [ Gabor Hernadi ]
+  * Add file and filethin providers
+
+  [ Rainer Laschober ]
+  * Make argument 'ip' of 'n i m' optional
+  * Add new conn status for node without stlt conn
+  * Allow node to set active stlt conn on netIf crt or mod
+  * node_cmds: display only active ip in 'n l'
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 25 Jul 2019 09:20:05 +0200
+
 linstor-client (0.9.8-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
