@@ -308,6 +308,7 @@ class StoragePoolCommands(Commands):
         Commands.add_parser_keyvalue(p_setprop, 'storagepool')
         p_setprop.set_defaults(func=self.set_props)
 
+        self.check_subcommands(create_subp, subcmd_create)
         self.check_subcommands(sp_subp, subcmds)
 
     def create(self, args):
