@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import os
 import sys
 import fcntl
@@ -195,10 +196,68 @@ class Table(object):
             assert(isinstance(groups, list))
             self.groups = groups
 
-    def show(self, machine_readable=False, overwrite=False):
-        if machine_readable:
-            overwrite = False
+    @classmethod
+    def _determine_column_width(cls, column_text):
+        """
+        Returns the longest line in the column_text.
 
+        :param str column_text: column text
+        :return: Lenght of the longest line in the text
+        :rtype: int
+        """
+        maxline = 0
+        for line in str(column_text).splitlines():
+            maxline = max(len(line), maxline)
+        return maxline
+
+    @classmethod
+    def _str_print(cls, output):
+        """
+        Print and return output with attached new line.
+
+        :param str output:
+        :return: output + '\n'
+        :rtype: str
+        """
+        print(output)
+        return output + '\n'
+
+    @classmethod
+    def _row_expand(cls, row):
+        """
+        Expands a row with columns e.g.:
+        ["column1_line1\ncolumn1_line2", "column2_line1", "column3_line1\ncolumn3_line2\ncolumn3_line3"]
+
+        to the following format:
+        [
+            ["column1_line1", "column2_line1", "column3_line1"],
+            ["column1_line2", "", "column3_line2"],
+            ["", "", "column3_line3"]
+        ]
+        :param list[str] row:
+        :return:
+        :rtype: list[list[str]]
+        """
+        max_rows = 1
+
+        # pre calculate table dimensions
+        for column in row:
+            max_rows = max(str(column).count('\n') + 1, max_rows)
+
+        if max_rows == 1:  # small optimization
+            return [row]
+
+        multirow = [[""] * len(row) for x in range(max_rows)]  # create a pre filled table
+
+        for cidx, column in enumerate(row):
+            lines = str(column).splitlines()
+            for idx, line in enumerate(lines):
+                multirow[idx][cidx] = line
+
+        return multirow
+
+    def show(self, row_separator=True):
+        output_table_str = ''
         # no view set, use all headers
         if not self.view:
             self.view = [h['name'] for h in self.header]
@@ -255,10 +314,7 @@ class Table(object):
                 cur = self.table[0][c]
                 for idx, l in enumerate(self.table):
                     if idx < lstlen - 1:
-                        if self.table[idx + 1][c] == cur:
-                            if overwrite:
-                                self.table[idx + 1][c] = ' '
-                        else:
+                        if self.table[idx + 1][c] != cur:
                             cur = self.table[idx + 1][c]
                             seps.add(idx + 1)
 
@@ -271,11 +327,14 @@ class Table(object):
         self.coloroverride.insert(0, [None] * len(self.header))
 
         # precalculate maximum column width
+        multi_line_row = False
         for ridx, row in enumerate(self.table):
             if row[0] is None:
                 continue
             for idx, col in enumerate(self.header):
-                columnmax[idx] = max(len(str(row[idx])), columnmax[idx])
+                if not multi_line_row:
+                    multi_line_row = str(row[idx]).find("\n") >= 0
+                columnmax[idx] = max(self._determine_column_width(row[idx]), columnmax[idx])
 
         # insert frames
         self.table.insert(0, [None])
@@ -293,7 +352,8 @@ class Table(object):
                 'ml': u'╞',   # middle left
                 'mdc': u'┄',  # middle dotted connector
                 'msc': u'─',  # middle straight connector
-                'pipe': u'┊'
+                'pipe': u'┊',
+                'hr': u'═'
             },
             'ascii': {
                 'tl': u'+',
@@ -304,7 +364,8 @@ class Table(object):
                 'ml': u'|',
                 'mdc': u'-',
                 'msc': u'-',
-                'pipe': u'|'
+                'pipe': u'|',
+                'hr': u'='
             }
         }
 
@@ -313,31 +374,35 @@ class Table(object):
             import locale
             if locale.getdefaultlocale()[1].lower() == 'utf-8' and self.utf8:
                 enc = 'utf8'
-        except:
+        except ImportError:
             pass
 
         try:
             data_idx = 0  # index of the actual data table, self.table was inserted with table separators
             space = maxwidth - sum(columnmax)
+            header_size = len(self.header)
+            table_size = len(self.table)
             for ridx, row in enumerate(self.table):
                 if row[0] is None:  # print a separator
                     if ridx == 0:  # top line
                         l, m, r = ctbl[enc]['tl'], ctbl[enc]['msc'], ctbl[enc]['tr']
-                    elif ridx == len(self.table) - 1:  # header/body separator
+                    elif ridx == table_size - 1:  # bottom line
                         l, m, r = ctbl[enc]['bl'], ctbl[enc]['msc'], ctbl[enc]['br']
-                    else:  # bottom line
+                    elif ridx == 2:
+                        l, m, r = ctbl[enc]['ml'], ctbl[enc]['hr'], ctbl[enc]['mr']
+                    else:  # mid separators
                         l, m, r = ctbl[enc]['ml'], ctbl[enc]['mdc'], ctbl[enc]['mr']
-                    sep = l + m * (sum(columnmax) + (3 * len(self.header)) - 1) + r
+                    row_sep = l + m * (sum(columnmax) + (3 * header_size) - 1) + r
 
-                    if self.r_just and len(sep) < maxwidth:
-                        print(l + m * (maxwidth - 2) + r)
+                    if self.r_just and len(row_sep) < maxwidth:
+                        output_table_str += self._str_print(l + m * (maxwidth - 2) + r)
                     else:
-                        print(sep)
+                        output_table_str += self._str_print(row_sep)
                 else:
                     fstr = ctbl[enc]['pipe']  # prepare the format string per row, this allows colors per cell
                     for idx, col in enumerate(self.header):  # loop columns
                         if col['align_column'] == TableHeader.ALIGN_RIGHT:
-                            space_and_overhead = space - (len(self.header) * 3) - 2
+                            space_and_overhead = space - (header_size * 3) - 2
                             if space_and_overhead >= 0:
                                 fstr += u' ' * space_and_overhead + ctbl[enc]['pipe']
 
@@ -356,7 +421,17 @@ class Table(object):
                         fstr += u' ' + ctbl[enc]['pipe']
 
                     data_idx += 1  # we wrote a data row, so increase the data_idx
-                    print(fstr.format(*row))
+                    # split rows into row lines (for multiline support)
+                    for singlerow in self._row_expand(row):
+                        output_table_str += self._str_print(fstr.format(*singlerow))
+
+                    # if multiline rows and not disabled draw row separators between real rows
+                    if 2 < ridx < table_size - 2:
+                        if multi_line_row and row_separator:
+                            row_sep = ctbl[enc]['ml'] + ctbl[enc]['mdc']\
+                                      * (sum(columnmax) + (3 * header_size) - 1) + ctbl[enc]['mr']
+                            output_table_str += self._str_print(row_sep)
+            return output_table_str
         except IOError as e:
             if e.errno == errno.EPIPE:
                 return
