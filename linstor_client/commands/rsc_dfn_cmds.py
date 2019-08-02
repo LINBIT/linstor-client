@@ -72,7 +72,7 @@ class ResourceDefinitionCommands(Commands):
         p_mod_res_dfn.add_argument('--peer-slots', type=rangecheck(1, 31), help='(DRBD) peer slots for new resources')
         p_mod_res_dfn.add_argument(
             'name',
-            help='Name of the resource to delete').completer = self.resource_dfn_completer
+            help='Name of the resource definition').completer = self.resource_dfn_completer
         p_mod_res_dfn.set_defaults(func=self.modify)
 
         # remove-resource definition
