@@ -275,7 +275,7 @@ class Table(object):
             if row[0] is None:
                 continue
             for idx, col in enumerate(self.header):
-                columnmax[idx] = max(len(row[idx]), columnmax[idx])
+                columnmax[idx] = max(len(str(row[idx])), columnmax[idx])
 
         # insert frames
         self.table.insert(0, [None])
