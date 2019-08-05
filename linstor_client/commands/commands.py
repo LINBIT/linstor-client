@@ -49,6 +49,8 @@ class Commands(object):
     VOLUME = 'volume'
     RESOURCE_CONN = 'resource-connection'
     RESOURCE_DEF = 'resource-definition'
+    RESOURCE_GRP = 'resource-group'
+    VOLUME_GRP = 'volume-group'
     ERROR_REPORTS = 'error-reports'
     STORAGE_POOL = 'storage-pool'
     STORAGE_POOL_DEF = 'storage-pool-definition'
@@ -63,6 +65,8 @@ class Commands(object):
         INTERACTIVE,
         LIST_COMMANDS,
         NODE,
+        RESOURCE_GRP,
+        VOLUME_GRP,
         RESOURCE,
         RESOURCE_CONN,
         RESOURCE_DEF,
@@ -202,6 +206,10 @@ class Commands(object):
         class Version(object):
             LONG = "version"
             SHORT = "v"
+
+        class Spawn(object):
+            LONG = "spawn-resources"
+            SHORT = "spawn"
 
         @staticmethod
         def generate_desc(subcommands):
@@ -429,6 +437,73 @@ class Commands(object):
             args.key = NAMESPC_AUXILIARY + '/' + args.key
         return args
 
+    @classmethod
+    def add_auto_select_argparse_arguments(cls, parser, use_place_count=False):
+        parser.add_argument(
+            '--storage-pool', '-s',
+            type=str,
+            help="Storage pool name to use.").completer = cls.storage_pool_dfn_completer
+        if use_place_count:
+            parser.add_argument(
+                '--place-count',
+                type=int,
+                metavar="REPLICA_COUNT",
+                help='Auto place a resource to a specified number of nodes'
+            )
+        else:
+            parser.add_argument(
+                '--auto-place',
+                type=int,
+                metavar="REPLICA_COUNT",
+                help='Auto place a resource to a specified number of nodes'
+            )
+        parser.add_argument(
+            '--do-not-place-with',
+            type=str,
+            nargs='+',
+            metavar="RESOURCE_NAME",
+            help='Try to avoid nodes that already have a given resource deployed.'
+        ).completer = cls.resource_completer
+        parser.add_argument(
+            '--do-not-place-with-regex',
+            type=str,
+            metavar="RESOURCE_REGEX",
+            help='Try to avoid nodes that already have a resource ' +
+                 'deployed whos name is matching the given regular expression.'
+        )
+        parser.add_argument(
+            '--replicas-on-same',
+            nargs='+',
+            default=[],
+            metavar="AUX_NODE_PROPERTY",
+            help='Tries to place resources on nodes with the same given auxiliary node property values.'
+        )
+        parser.add_argument(
+            '--replicas-on-different',
+            nargs='+',
+            default=[],
+            metavar="AUX_NODE_PROPERTY",
+            help='Tries to place resources on nodes with a different value for the given auxiliary node property.'
+        )
+        parser.add_argument(
+            '--diskless-on-remaining',
+            action="store_true",
+            default=None,
+            help='Will add a diskless resource on all non replica nodes.'
+        )
+        parser.add_argument(
+            '-l', '--layer-list',
+            type=cls.layer_data_check,
+            help="Comma separated layer list, order is from left to right top-down "
+                 "This means the top most layer is on the left. "
+                 "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
+        parser.add_argument(
+            '-p', '--providers',
+            type=cls.provider_check,
+            help="Comma separated providers list. Only storage pools with the given provider kind "
+                 "are considered as auto-place target. "
+                 "Possible providers are: " + ",".join(linstor.Linstor.provider_list()))
+
     @staticmethod
     def show_group_completer(lst, where):
         def completer(prefix, parsed_args, **kwargs):
@@ -550,6 +625,23 @@ class Commands(object):
 
             if prefix:
                 return [res for res in possible if res.startswith(prefix)]
+
+        return possible
+
+    def resource_grp_completer(self, prefix, **kwargs):
+        lapi = self.get_linstorapi(**kwargs)
+        possible = set()
+        try:
+            lstmsg = lapi.resource_group_list_raise()  # type: linstor.responses.ResourceGroupResponse
+
+            if lstmsg:
+                for rsc_grp in lstmsg.resource_groups:
+                    possible.add(rsc_grp.name)
+
+                if prefix:
+                    return [res for res in possible if res.startswith(prefix)]
+        except linstor.LinstorError:
+            pass
 
         return possible
 

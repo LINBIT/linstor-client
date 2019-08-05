@@ -74,10 +74,6 @@ class ResourceCommands(Commands):
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
             description='Deploys a resource definition to a node.')
-        p_new_res.add_argument(
-            '--storage-pool', '-s',
-            type=str,
-            help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_res.add_argument('--diskless', '-d', action="store_true", help='Should the resource be diskless')
         p_new_res.add_argument(
             '--node-id',
@@ -89,57 +85,7 @@ class ResourceCommands(Commands):
             action='store_true',
             help='Do not wait for deployment on satellites before returning'
         )
-        p_new_res.add_argument(
-            '--auto-place',
-            type=int,
-            metavar="REPLICA_COUNT",
-            help='Auto place a resource to a specified number of nodes'
-        )
-        p_new_res.add_argument(
-            '--do-not-place-with',
-            type=str,
-            nargs='+',
-            metavar="RESOURCE_NAME",
-            help='Try to avoid nodes that already have a given resource deployed.'
-        ).completer = self.resource_completer
-        p_new_res.add_argument(
-            '--do-not-place-with-regex',
-            type=str,
-            metavar="RESOURCE_REGEX",
-            help='Try to avoid nodes that already have a resource ' +
-                 'deployed whos name is matching the given regular expression.'
-        )
-        p_new_res.add_argument(
-            '--replicas-on-same',
-            nargs='+',
-            default=[],
-            metavar="AUX_NODE_PROPERTY",
-            help='Tries to place resources on nodes with the same given auxiliary node property values.'
-        )
-        p_new_res.add_argument(
-            '--replicas-on-different',
-            nargs='+',
-            default=[],
-            metavar="AUX_NODE_PROPERTY",
-            help='Tries to place resources on nodes with a different value for the given auxiliary node property.'
-        )
-        p_new_res.add_argument(
-            '--diskless-on-remaining',
-            action="store_true",
-            help='Will add a diskless resource on all non replica nodes.'
-        )
-        p_new_res.add_argument(
-            '-l', '--layer-list',
-            type=self.layer_data_check,
-            help="Comma separated layer list, order is from left to right top-down "
-                 "This means the top most layer is on the left. "
-                 "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
-        p_new_res.add_argument(
-            '-p', '--providers',
-            type=self.provider_check,
-            help="Comma separated providers list. Only storage pools with the given provider kind "
-                 "are considered as auto-place target. "
-                 "Possible providers are: " + ",".join(linstor.Linstor.provider_list()))
+        self.add_auto_select_argparse_arguments(p_new_res)
         p_new_res.add_argument(
             'node_name',
             type=str,
