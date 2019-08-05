@@ -334,7 +334,7 @@ class LinStorCLI(object):
                 else:
                     sys.stderr.write("Error: Command not allowed in state '{state.name}'\n".format(state=current_state))
                     rc = ExitCode.ILLEGAL_STATE
-        except (ArgumentError, argparse.ArgumentTypeError) as ae:
+        except (ArgumentError, argparse.ArgumentTypeError, linstor.LinstorArgumentError) as ae:
             try:
                 self.parse(list(itertools.takewhile(lambda x: not x.startswith('-'), pargs)) + ['-h'])
             except SystemExit:
