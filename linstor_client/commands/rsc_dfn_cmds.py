@@ -14,6 +14,7 @@ class ResourceDefinitionCommands(Commands):
     _rsc_dfn_headers = [
         linstor_client.TableHeader("ResourceName"),
         linstor_client.TableHeader("Port"),
+        linstor_client.TableHeader("ResourceGroup"),
         linstor_client.TableHeader("State", color=Color.DARKGREEN)
     ]
 
@@ -200,6 +201,7 @@ class ResourceDefinitionCommands(Commands):
                 else:
                     row.append(rsc_dfn.external_name)
             row.append(drbd_data.port if drbd_data else "")
+            row.append(rsc_dfn.resource_group_name)
             row.append(tbl.color_cell("DELETING", Color.RED)
                        if FLAG_DELETE in rsc_dfn.flags else tbl.color_cell("ok", Color.DARKGREEN))
             tbl.add_row(row)
