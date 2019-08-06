@@ -248,7 +248,11 @@ class ResourceGroupCommands(Commands):
     def set_props(self, args):
         args = self._attach_aux_prop(args)
         mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
-        replies = self._linstor.resource_group_modify(args.name, mod_prop_dict['pairs'], mod_prop_dict['delete'])
+        replies = self._linstor.resource_group_modify(
+            args.name,
+            property_dict=mod_prop_dict['pairs'],
+            delete_props=mod_prop_dict['delete']
+        )
         return self.handle_replies(args, replies)
 
     def set_drbd_opts(self, args):
