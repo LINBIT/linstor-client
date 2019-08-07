@@ -46,7 +46,7 @@ class Output(object):
                 ret = ExitCode.API_ERROR
             category = Output.color_str('WARNING:\n', Color.YELLOW, no_color)
         elif rc & MASK_INFO == MASK_INFO:
-            category = 'INFO: '
+            category = Output.color_str('INFO:\n', Color.BLUE, no_color)
         else:  # do not use MASK_SUCCESS
             category = Output.color_str('SUCCESS:\n', Color.GREEN, no_color)
 
