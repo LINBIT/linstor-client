@@ -5,6 +5,7 @@ import sys
 import fcntl
 import errno
 import operator
+import locale
 from linstor_client.consts import (
     DEFAULT_TERM_HEIGHT,
     DEFAULT_TERM_WIDTH,
@@ -370,12 +371,10 @@ class Table(object):
         }
 
         enc = 'ascii'
-        try:
-            import locale
-            if locale.getdefaultlocale()[1].lower() == 'utf-8' and self.utf8:
+        if self.utf8:
+            locales = locale.getdefaultlocale()
+            if len(locales) > 1 and locales[1].lower() == 'utf-8':
                 enc = 'utf8'
-        except ImportError:
-            pass
 
         try:
             data_idx = 0  # index of the actual data table, self.table was inserted with table separators
