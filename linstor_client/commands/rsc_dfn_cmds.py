@@ -59,6 +59,10 @@ class ResourceDefinitionCommands(Commands):
                  "This means the top most layer is on the left. "
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
         p_new_res_dfn.add_argument('--peer-slots', type=rangecheck(1, 31), help='(DRBD) peer slots for new resources')
+        p_new_res_dfn.add_argument(
+            '--resource-group',
+            help="Attach the resource definition to this resource group"
+        ).completer = self.resource_grp_completer
         p_new_res_dfn.add_argument('name',
                                    nargs="?",
                                    type=str,
@@ -158,7 +162,8 @@ class ResourceDefinitionCommands(Commands):
             args.port,
             external_name=args.external_name
             if not isinstance(args.external_name, bytes) else args.external_name.decode('utf-8'),  # py2-3
-            layer_list=args.layer_list
+            layer_list=args.layer_list,
+            resource_group=args.resource_group
         )
         return self.handle_replies(args, replies)
 
