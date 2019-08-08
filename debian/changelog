@@ -1,3 +1,20 @@
+linstor-client (1.0.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * storpool_cmds: Check storage pool create subparser
+  * table: fix table colums with non str type
+  * rsc_dfn_cmds: fix typo
+  * table: Add support for multline rows/columns
+  * linstor_client: Special handling of LinstorArgumentError
+  * resourcegrp/volumegrp: Add commands to create/modify/delete
+  * rsc_grp_cmds: fix set property
+  * rsc_dfn_cmds: show linked resource group in resource definition list
+  * table: fix utf-8 support detection
+  * util/apircoutput: color INFO blue
+  * rsc_dfn_cmds: create allow resource group linking
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 08 Aug 2019 10:57:53 +0200
+
 linstor-client (0.9.9-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
