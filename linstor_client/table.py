@@ -373,7 +373,7 @@ class Table(object):
         enc = 'ascii'
         if self.utf8:
             locales = locale.getdefaultlocale()
-            if len(locales) > 1 and locales[1].lower() == 'utf-8':
+            if len(locales) > 1 and locales[1] and isinstance(locales[1], str) and locales[1].lower() == 'utf-8':
                 enc = 'utf8'
 
         try:
