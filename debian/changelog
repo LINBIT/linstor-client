@@ -1,3 +1,10 @@
+linstor-client (1.0.1-1) experimental; urgency=medium
+
+  [ Roland Kammerer ]
+  * table: fix utf-8 problem
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 12 Aug 2019 07:55:55 +0200
+
 linstor-client (1.0.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
