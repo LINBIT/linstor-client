@@ -328,11 +328,11 @@ class ResourceConnectionCommands(Commands):
     def _path_list(cls, args, lstmsg):
         result = []
         if lstmsg:
-            for rsc_con in lstmsg.rsc_connections:
-                if (rsc_con.node_name_1 == args.node_a and rsc_con.node_name_2 == args.node_b) or \
-                        (rsc_con.node_name_2 == args.node_a and rsc_con.node_name_1 == args.node_b):
-                    result.append([x for x in rsc_con.rsc_conn_props
-                                   if x.key.startswith(apiconsts.NAMESPC_CONNECTION_PATHS + '/')])
+            for rsc_con in lstmsg.resource_connections:
+                if (rsc_con.node_a == args.node_a and rsc_con.node_b == args.node_b) or \
+                        (rsc_con.node_b == args.node_a and rsc_con.node_a == args.node_b):
+                    result.append({x: rsc_con.properties[x] for x in rsc_con.properties
+                                   if x.startswith(apiconsts.NAMESPC_CONNECTION_PATHS + '/')})
                     break
         return result
 
