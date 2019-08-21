@@ -154,6 +154,9 @@ class LinStorCLI(object):
                             help="Disable config loading and only use commandline arguments.")
         parser.add_argument('--user', '-u', help="Linstor username to use")
         parser.add_argument('--password', '-P', help="Linstor user password")
+        parser.add_argument('--certfile', help="SSL certificate file")
+        parser.add_argument('--keyfile', help="SSL key file")
+        parser.add_argument('--cafile', help="SSL CA certificate file")
         parser.add_argument(
             '--allow-insecure-auth',
             action='store_true',
@@ -307,6 +310,9 @@ class LinStorCLI(object):
                         )
                         self._linstorapi.username = username
                         self._linstorapi.password = password
+                        self._linstorapi.certfile = args.certfile
+                        self._linstorapi.keyfile = args.keyfile
+                        self._linstorapi.cafile = args.cafile
                         self._linstorapi.allow_insecure = args.allow_insecure_auth
                         self._linstorapi.curl = args.curl
                         self._controller_commands._linstor = self._linstorapi
