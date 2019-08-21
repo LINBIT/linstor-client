@@ -363,8 +363,6 @@ class StoragePoolCommands(Commands):
                 storpool.provider_kind,
                 storpool.properties)
 
-            supports_snapshots = storpool.static_traits.get(KEY_STOR_POOL_SUPPORTS_SNAPSHOTS, '')
-
             free_capacity = ""
             total_capacity = ""
             if not storpool.is_diskless() and storpool.free_space is not None:
@@ -383,7 +381,7 @@ class StoragePoolCommands(Commands):
                 driver_device,
                 free_capacity,
                 total_capacity,
-                supports_snapshots,
+                storpool.supports_snapshots(),
                 tbl.color_cell(state_str, state_color)
             ])
         tbl.show()
