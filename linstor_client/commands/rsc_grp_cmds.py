@@ -6,7 +6,7 @@ from linstor_client.commands import Commands, DrbdOptions
 
 
 class ResourceGroupCommands(Commands):
-    OBJECT_NAME = 'resource-definition'
+    OBJECT_NAME = 'resource-definition'  # resource-definition is used here for properties
 
     _rsc_grp_headers = [
         linstor_client.TableHeader("ResourceGroup"),
@@ -35,10 +35,10 @@ class ResourceGroupCommands(Commands):
             Commands.RESOURCE_GRP,
             aliases=["rg"],
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Resource definition subcommands")
+            description="Resource group subcommands")
 
         res_grp_subp = res_grp_parser.add_subparsers(
-            title="resource definition subcommands",
+            title="resource group subcommands",
             metavar="",
             description=Commands.Subcommands.generate_desc(subcmds)
         )
@@ -93,7 +93,7 @@ class ResourceGroupCommands(Commands):
         p_lrscgrps = res_grp_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of all resource definitions known to '
+            description='Prints a list of all resource groups known to '
             'linstor. By default, the list is printed as a human readable table.')
         p_lrscgrps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscgrps.add_argument('-g', '--groupby', nargs='+',
