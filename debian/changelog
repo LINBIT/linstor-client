@@ -1,3 +1,18 @@
+linstor-client (1.0.2-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * rsc_conn_cmds: fix broken path list
+  * storpool_cmds: use supports_snapshots() method
+  * argparse: fix argparse writing --version to stderr
+
+  [ Beorn Facchini ]
+  * Add arguments for SSL certificates
+
+  [ Rainer Laschober ]
+  * Fix copy/paste-typos
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 10 Sep 2019 14:23:47 +0200
+
 linstor-client (1.0.1-1) experimental; urgency=medium
 
   [ Roland Kammerer ]
