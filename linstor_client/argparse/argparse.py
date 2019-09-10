@@ -1043,7 +1043,11 @@ class _VersionAction(Action):
             version = parser.version
         formatter = parser._get_formatter()
         formatter.add_text(version)
-        parser.exit(message=formatter.format_help())
+
+        # fix stderr print
+        parser._print_message(formatter.format_help(), _sys.stdout)
+        _sys.exit(0)
+        # parser.exit(message=formatter.format_help())
 
 
 class _SubParsersAction(Action):
