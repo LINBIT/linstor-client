@@ -1,3 +1,10 @@
+linstor-client (1.0.3-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * update Dockerfiles to use python-linstor 1.0.3 
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 11 Sep 2019 11:35:40 +0200
+
 linstor-client (1.0.2-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
