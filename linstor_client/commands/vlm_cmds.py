@@ -139,6 +139,12 @@ class VolumeCommands(Commands):
 
     @classmethod
     def show_volumes(cls, args, lstmsg):
+        """
+
+        :param args:
+        :param responses.ResourceResponse lstmsg: resource response data to display
+        :return: None
+        """
         tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("Node")
         tbl.add_column("Resource")
@@ -152,6 +158,7 @@ class VolumeCommands(Commands):
 
         rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
 
+        reports = []
         for rsc in lstmsg.resources:
             rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_usage = ""
@@ -167,6 +174,11 @@ class VolumeCommands(Commands):
                 ) if rsc_state else None
                 state_txt, color = cls.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
                 state = tbl.color_cell(state_txt, color) if color else state_txt
+                has_errors = any([x.is_error() for x in vlm.reports])
+                if has_errors:
+                    state = tbl.color_cell("Error", Color.RED)
+                for x in vlm.reports:
+                    reports.append(x)
                 vlm_drbd_data = vlm.drbd_data
                 tbl.add_row([
                     rsc.node_name,
@@ -181,6 +193,8 @@ class VolumeCommands(Commands):
                 ])
 
         tbl.show()
+        for x in reports:
+            Output.handle_ret(x, args.no_color, warn_as_error=args.warn_as_error)
 
     def list_volumes(self, args):
         lstmsg = self._linstor.volume_list(args.nodes, args.storpools, args.resources)
