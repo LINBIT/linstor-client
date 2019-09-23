@@ -39,9 +39,9 @@ class ResourceConnectionCommands(Commands):
             Commands.RESOURCE_CONN,
             aliases=["rc"],
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Resouce subcommands")
+            description="Resouce connection subcommands")
         subp = res_conn_parser.add_subparsers(
-            title="resource commands",
+            title="resource connection commands",
             metavar="",
             description=Commands.Subcommands.generate_desc(subcmds)
         )
