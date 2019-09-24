@@ -1,12 +1,11 @@
-import linstor_client.argparse.argparse as argparse
 import re
-import sys
 
-from linstor import SizeCalc
 import linstor_client
-from linstor_client.commands import Commands, DrbdOptions
-from linstor_client.consts import Color, ExitCode
+import linstor_client.argparse.argparse as argparse
+from linstor import SizeCalc
 from linstor.sharedconsts import FLAG_DELETE, FLAG_RESIZE
+from linstor_client.commands import Commands, DrbdOptions
+from linstor_client.consts import Color
 
 
 class VolumeDefinitionCommands(Commands):
@@ -117,8 +116,9 @@ class VolumeDefinitionCommands(Commands):
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvols.add_argument('-g', '--groupby', nargs='+',
                              choices=vlm_dfn_groupby).completer = vlm_dfn_group_completer
-        p_lvols.add_argument('-R', '--resources', nargs='+', type=str,
-                             help='Filter by list of resources').completer = self.resource_dfn_completer
+        p_lvols.add_argument('-r', '--resource-definitions', nargs='+', type=str,
+                             help='Filter by list of resource definitions').completer = self.resource_dfn_completer
+        p_lvols.add_argument('-e', '--external-name', action="store_true", help='Show user specified name.')
         p_lvols.set_defaults(func=self.list)
 
         # show properties
@@ -128,8 +128,8 @@ class VolumeDefinitionCommands(Commands):
             description="Prints all properties of the given volume definition.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
-            'resource_name',
-            help="Resource name").completer = self.resource_dfn_completer
+            'resource_definition',
+            help="Resource definition").completer = self.resource_dfn_completer
         p_sp.add_argument(
             'volume_nr',
             type=int,
@@ -213,11 +213,15 @@ class VolumeDefinitionCommands(Commands):
     @classmethod
     def show(cls, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        for hdr in cls._vlm_dfn_headers:
+
+        vlm_dfn_hdrs = list(cls._vlm_dfn_headers)
+        if args.external_name:
+            vlm_dfn_hdrs.insert(1, linstor_client.TableHeader("External"))
+        for hdr in vlm_dfn_hdrs:
             tbl.add_header(hdr)
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
-        for rsc_dfn in cls.filter_rsc_dfn_list(lstmsg.resource_definitions, args.resources):
+        for rsc_dfn in lstmsg.resource_definitions:
             for vlmdfn in rsc_dfn.volume_definitions:
                 state = tbl.color_cell("ok", Color.DARKGREEN)
                 if FLAG_DELETE in vlmdfn.flags:
@@ -236,8 +240,10 @@ class VolumeDefinitionCommands(Commands):
         tbl.show()
 
     def list(self, args):
-        lstmsg = self._linstor.resource_dfn_list(query_volume_definitions=True)
-
+        lstmsg = self._linstor.resource_dfn_list(
+            query_volume_definitions=True,
+            filter_by_resource_definitions=args.resource_definitions
+        )
         return self.output_list(args, lstmsg, self.show)
 
     @staticmethod
@@ -256,20 +262,22 @@ class VolumeDefinitionCommands(Commands):
         return [digits + u for u in p_units]
 
     @classmethod
-    def _props_list(cls, args, lstmsg):
+    def _props_show(cls, args, lstmsg):
         result = []
-        if lstmsg:
-            for rsc_dfn in [x for x in lstmsg.resource_definitions if x.name.lower() == args.resource_name.lower()]:
-                for vlmdfn in rsc_dfn.volume_definitions:
-                    if vlmdfn.number == args.volume_nr:
-                        result.append(vlmdfn.properties)
-                        break
+        if lstmsg and lstmsg.resource_definitions:
+            for vlmdfn in lstmsg.resource_definitions[0].volume_definitions:
+                if vlmdfn.number == args.volume_nr:
+                    result.append(vlmdfn.properties)
+                    break
         return result
 
     def print_props(self, args):
-        lstmsg = self._linstor.resource_dfn_list(query_volume_definitions=True)
+        lstmsg = self._linstor.resource_dfn_list(
+            query_volume_definitions=True,
+            filter_by_resource_definitions=[args.resource_definition]
+        )
 
-        return self.output_props_list(args, lstmsg, self._props_list)
+        return self.output_props_list(args, lstmsg, self._props_show)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)

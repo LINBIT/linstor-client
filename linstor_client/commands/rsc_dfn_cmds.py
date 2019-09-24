@@ -112,8 +112,8 @@ class ResourceDefinitionCommands(Commands):
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
                                choices=rsc_dfn_groupby).completer = rsc_dfn_group_completer
-        p_lrscdfs.add_argument('-R', '--resources', nargs='+', type=str,
-                               help='Filter by list of resources').completer = self.resource_dfn_completer
+        p_lrscdfs.add_argument('-r', '--resource-definitions', nargs='+', type=str,
+                               help='Filter by list of resource definitions').completer = self.resource_dfn_completer
         p_lrscdfs.add_argument('-e', '--external-name', action="store_true", help='Show user specified name.')
         p_lrscdfs.set_defaults(func=self.list)
 
@@ -197,14 +197,11 @@ class ResourceDefinitionCommands(Commands):
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
-        for rsc_dfn in cls.filter_rsc_dfn_list(lstmsg.resource_definitions, args.resources):
+        for rsc_dfn in lstmsg.resource_definitions:
             drbd_data = rsc_dfn.drbd_data
             row = [rsc_dfn.name]
-            if args.external_name:
-                if isinstance(rsc_dfn.external_name, str):
-                    row.append(rsc_dfn.external_name)
-                else:
-                    row.append(rsc_dfn.external_name)
+            if args.external_name and isinstance(rsc_dfn.external_name, str):
+                row.append(rsc_dfn.external_name)
             row.append(drbd_data.port if drbd_data else "")
             row.append(rsc_dfn.resource_group_name)
             row.append(tbl.color_cell("DELETING", Color.RED)
@@ -213,23 +210,26 @@ class ResourceDefinitionCommands(Commands):
         tbl.show()
 
     def list(self, args):
-        lstmsg = self._linstor.resource_dfn_list(query_volume_definitions=False)
+        lstmsg = self._linstor.resource_dfn_list(
+            query_volume_definitions=False,
+            filter_by_resource_definitions=args.resource_definitions
+        )
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod
-    def _props_list(cls, args, lstmsg):
+    def _props_show(cls, args, lstmsg):
         result = []
         if lstmsg:
             for rsc_dfn in lstmsg.resource_definitions:
-                if rsc_dfn.name.lower() == args.resource_name.lower():
-                    result.append(rsc_dfn.properties)
-                    break
+                result.append(rsc_dfn.properties)
         return result
 
     def print_props(self, args):
-        lstmsg = self._linstor.resource_dfn_list(query_volume_definitions=False)
-
-        return self.output_props_list(args, lstmsg, self._props_list)
+        lstmsg = self._linstor.resource_dfn_list(
+            query_volume_definitions=False,
+            filter_by_resource_definitions=[args.resource_name]
+        )
+        return self.output_props_list(args, lstmsg, self._props_show)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)
