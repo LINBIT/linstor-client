@@ -2,6 +2,7 @@ import linstor_client.argparse.argparse as argparse
 
 import linstor
 import linstor_client
+from linstor.responses import ResourceGroupResponse
 from linstor_client.commands import Commands, DrbdOptions
 
 
@@ -98,7 +99,7 @@ class ResourceGroupCommands(Commands):
         p_lrscgrps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscgrps.add_argument('-g', '--groupby', nargs='+',
                                 choices=rsc_grp_groupby).completer = rsc_grp_group_completer
-        p_lrscgrps.add_argument('-R', '--resources', nargs='+', type=str,
+        p_lrscgrps.add_argument('-r', '--resource-groups', nargs='+', type=str,
                                 help='Filter by list of resource groups').completer = self.resource_grp_completer
         p_lrscgrps.set_defaults(func=self.list)
         #  ------------ LIST END
@@ -207,11 +208,12 @@ class ResourceGroupCommands(Commands):
         return self.handle_replies(args, replies)
 
     def show(self, args, lstmsg):
-        rsc_grps = lstmsg  # type: linstor.responses.ResourceGroupResponse
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
 
         for hdr in self._rsc_grp_headers:
             tbl.add_header(hdr)
+
+        rsc_grps = lstmsg  # type: ResourceGroupResponse
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
@@ -227,7 +229,7 @@ class ResourceGroupCommands(Commands):
         tbl.show()
 
     def list(self, args):
-        lstmsg = [self._linstor.resource_group_list_raise()]
+        lstmsg = [self._linstor.resource_group_list_raise(args.resource_groups)]
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod
