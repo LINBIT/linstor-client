@@ -1,12 +1,9 @@
-import linstor_client.argparse.argparse as argparse
-
 import linstor
-from linstor import SizeCalc
 import linstor_client
-from linstor_client.commands import ArgumentError, Commands
-from linstor.sharedconsts import KEY_STOR_POOL_SUPPORTS_SNAPSHOTS
+import linstor_client.argparse.argparse as argparse
+from linstor import SizeCalc
 from linstor.responses import StoragePoolListResponse
-from linstor_client.consts import Color
+from linstor_client.commands import ArgumentError, Commands
 from linstor_client.utils import Output
 
 
@@ -270,7 +267,7 @@ class StoragePoolCommands(Commands):
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
                                  choices=storpoolgroupby).completer = storpool_group_completer
-        p_lstorpool.add_argument('-s', '--storpools', nargs='+', type=str,
+        p_lstorpool.add_argument('-s', '--storage-pools', nargs='+', type=str,
                                  help='Filter by list of storage pools').completer = self.storage_pool_completer
         p_lstorpool.add_argument('-n', '--nodes', nargs='+', type=str,
                                  help='Filter by list of nodes').completer = self.node_completer
@@ -393,7 +390,7 @@ class StoragePoolCommands(Commands):
             )
 
     def list(self, args):
-        lstmsg = self._linstor.storage_pool_list(args.nodes, args.storpools)
+        lstmsg = self._linstor.storage_pool_list(args.nodes, args.storage_pools)
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod
@@ -409,8 +406,7 @@ class StoragePoolCommands(Commands):
         return result
 
     def print_props(self, args):
-        lstmsg = self._linstor.storage_pool_list()
-
+        lstmsg = self._linstor.storage_pool_list([args.node_name], [args.storage_pool_name])
         return self.output_props_list(args, lstmsg, self._props_list)
 
     def set_props(self, args):

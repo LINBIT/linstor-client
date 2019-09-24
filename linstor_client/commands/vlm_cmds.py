@@ -49,7 +49,7 @@ class VolumeCommands(Commands):
             nargs='+',
             type=str,
             help='Filter by list of nodes').completer = self.node_completer
-        p_lvlms.add_argument('-s', '--storpools', nargs='+', type=str,
+        p_lvlms.add_argument('-s', '--storage-pools', nargs='+', type=str,
                              help='Filter by list of storage pools').completer = self.storage_pool_completer
         p_lvlms.add_argument(
             '-r', '--resources',
@@ -208,7 +208,7 @@ class VolumeCommands(Commands):
             Output.handle_ret(x, args.no_color, warn_as_error=args.warn_as_error)
 
     def list_volumes(self, args):
-        lstmsg = self._linstor.volume_list(args.nodes, args.storpools, args.resources)
+        lstmsg = self._linstor.volume_list(args.nodes, args.storage_pools, args.resources)
 
         return self.output_list(args, lstmsg, VolumeCommands.show_volumes)
 
@@ -222,7 +222,7 @@ class VolumeCommands(Commands):
         return []
 
     def print_props(self, args):
-        lstmsg = self._linstor.volume_list(filter_by_nodes=[args.node_name], filter_by_resources=[args.resource_name])
+        lstmsg = self._linstor.volume_list([args.node_name], [args.resource_name])
 
         return self.output_props_list(args, lstmsg, self._props_list)
 
