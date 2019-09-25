@@ -309,7 +309,7 @@ class NodeCommands(Commands):
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lnodes.add_argument('-g', '--groupby', nargs='+',
                               choices=node_groupby).completer = node_group_completer
-        p_lnodes.add_argument('-N', '--nodes', nargs='+', type=str,
+        p_lnodes.add_argument('-n', '--nodes', nargs='+', type=str,
                               help='Filter by list of nodes').completer = self.node_completer
         p_lnodes.set_defaults(func=self.list)
 
@@ -423,7 +423,7 @@ class NodeCommands(Commands):
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
-        node_list = [x for x in lstmsg.nodes if x.name in args.nodes] if args.nodes else lstmsg.nodes
+        node_list = lstmsg.nodes
         for node in node_list:
             # concat a ip list with satellite connection indicator
             active_ip = ""
@@ -440,8 +440,7 @@ class NodeCommands(Commands):
         tbl.show()
 
     def list(self, args):
-        lstmsg = self._linstor.node_list()
-
+        lstmsg = self._linstor.node_list(args.nodes)
         return self.output_list(args, lstmsg, self.show_nodes)
 
     def describe(self, args=None):
@@ -603,7 +602,7 @@ class NodeCommands(Commands):
                                      ExitCode.OBJECT_NOT_FOUND)
 
     def list_netinterfaces(self, args):
-        return self.output_list(args, self._linstor.node_list(), self.show_netinterfaces)
+        return self.output_list(args, self._linstor.node_list([args.node_name]), self.show_netinterfaces)
 
     @classmethod
     def _props_list(cls, args, lstmsg):
@@ -618,8 +617,7 @@ class NodeCommands(Commands):
         return result
 
     def print_props(self, args):
-        lstmsg = self._linstor.node_list()
-
+        lstmsg = self._linstor.node_list([args.node_name])
         return self.output_props_list(args, lstmsg, self._props_list)
 
     def set_props(self, args):

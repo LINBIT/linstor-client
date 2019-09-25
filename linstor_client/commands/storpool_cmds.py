@@ -394,20 +394,17 @@ class StoragePoolCommands(Commands):
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod
-    def _props_list(cls, args, lstmsg):
+    def _props_show(cls, args, lstmsg):
         result = []
         if lstmsg:
             response = lstmsg  # type: StoragePoolListResponse
-            for stp in response.storage_pools:
-                if stp.name.lower() == args.storage_pool_name.lower() \
-                        and stp.node_name.lower() == args.node_name.lower():
-                    result.append(stp.properties)
-                    break
+            for stor_pool in response.storage_pools:
+                result.append(stor_pool.properties)
         return result
 
     def print_props(self, args):
         lstmsg = self._linstor.storage_pool_list([args.node_name], [args.storage_pool_name])
-        return self.output_props_list(args, lstmsg, self._props_list)
+        return self.output_props_list(args, lstmsg, self._props_show)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)

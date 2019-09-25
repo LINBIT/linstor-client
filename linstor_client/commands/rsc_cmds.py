@@ -452,23 +452,19 @@ class ResourceCommands(Commands):
 
     def list_volumes(self, args):
         lstmsg = self._linstor.volume_list(args.nodes, args.storage_pools, args.resources)
-
         return self.output_list(args, lstmsg, VolumeCommands.show_volumes)
 
     @classmethod
-    def _props_list(cls, args, lstmsg):
+    def _props_show(cls, args, lstmsg):
         result = []
         if lstmsg:
             for rsc in lstmsg.resources:
-                if rsc.name.lower() == args.resource_name.lower() and rsc.node_name.lower() == args.node_name.lower():
-                    result.append(rsc.properties)
-                    break
+                result.append(rsc.properties)
         return result
 
     def print_props(self, args):
-        lstmsg = self._linstor.resource_list()
-
-        return self.output_props_list(args, lstmsg, self._props_list)
+        lstmsg = self._linstor.resource_list([args.node_name], [args.resource_name])
+        return self.output_props_list(args, lstmsg, self._props_show)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)

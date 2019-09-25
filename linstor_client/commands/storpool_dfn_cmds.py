@@ -160,23 +160,19 @@ class StoragePoolDefinitionCommands(Commands):
 
     def list(self, args):
         lstmsg = self._linstor.storage_pool_dfn_list()
-
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod
-    def _props_list(cls, args, lstmsg):
+    def _props_show(cls, args, lstmsg):
         result = []
         if lstmsg:
             for storpool_dfn in lstmsg.storage_pool_definitions:
-                if storpool_dfn.name.lower() == args.storage_pool_name.lower():
-                    result.append(storpool_dfn.properties)
-                    break
+                result.append(storpool_dfn.properties)
         return result
 
     def print_props(self, args):
         lstmsg = self._linstor.storage_pool_dfn_list()
-
-        return self.output_props_list(args, lstmsg, self._props_list)
+        return self.output_props_list(args, lstmsg, self._props_show)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)
