@@ -59,6 +59,7 @@ class Commands(object):
     VOLUME_DEF = 'volume-definition'
     SNAPSHOT = 'snapshot'
     DRBD_PROXY = 'drbd-proxy'
+    PHYSICAL_STORAGE = 'physical-storage'
 
     MainList = [
         CONTROLLER,
@@ -78,7 +79,8 @@ class Commands(object):
         VOLUME,
         VOLUME_DEF,
         SNAPSHOT,
-        DRBD_PROXY
+        DRBD_PROXY,
+        PHYSICAL_STORAGE
     ]
     Hidden = [
         DMMIGRATE,
@@ -112,6 +114,10 @@ class Commands(object):
         class Create(object):
             LONG = "create"
             SHORT = "c"
+
+        class CreateDevicePool(object):
+            LONG = "create-device-pool"
+            SHORT = "cdp"
 
         class Modify(object):
             LONG = "modify"

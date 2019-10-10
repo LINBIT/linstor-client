@@ -1,0 +1,109 @@
+import linstor_client.argparse.argparse as argparse
+
+from linstor_client.commands import Commands
+from linstor_client import Table, TableHeader
+from linstor.responses import PhysicalStorageList
+
+
+class PhysicalStorageCommands(Commands):
+    _phys_storage_headers = [
+        TableHeader("Size"),
+        TableHeader("Rotational"),
+        TableHeader("Nodes")
+    ]
+
+    def setup_commands(self, parser):
+        subcmds = [
+            Commands.Subcommands.List,
+            Commands.Subcommands.CreateDevicePool
+        ]
+
+        phys_parser = parser.add_parser(
+            Commands.PHYSICAL_STORAGE,
+            aliases=["ps"],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description="Physical-storage subcommands"
+        )
+
+        phys_subp = phys_parser.add_subparsers(
+            title="Physical-storage commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(subcmds)
+        )
+
+        p_lphys = phys_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
+            description='Prints a list of all usable physical storage '
+            'By default, the list is printed as a human readable table.')
+        p_lphys.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_lphys.set_defaults(func=self.list)
+
+        p_create = phys_subp.add_parser(
+            Commands.Subcommands.CreateDevicePool.LONG,
+            aliases=[Commands.Subcommands.CreateDevicePool.SHORT],
+            description='Creates a LVM/ZFS(thin) pool with an optional VDO on the device'
+        )
+        p_create.add_argument('provider_kind', choices=["LVM", "LVMTHIN", "ZFS"], help='Provider kind')
+        p_create.add_argument('node_name', help="Node name").completer = self.node_completer
+        p_create.add_argument('device_path', help="Device path to use.")
+        p_create.add_argument(
+            'pool_name',
+            nargs='?',
+            help="Name of the new pool, if not specified a name will be generated."
+        )
+        p_create.add_argument('--vdo-enable', action="store_true", help="Use VDO.(only Centos/RHEL)")
+        p_create.add_argument('--vdo-logical-size', help="VDO logical size.")
+        p_create.add_argument('--vdo-slab-size', help="VDO slab size.")
+        p_create.set_defaults(func=self.create_device_pool)
+
+        self.check_subcommands(phys_subp, subcmds)
+
+    @classmethod
+    def show_physical_storage(cls, args, physical_storage_list):
+        """
+
+        :param args:
+        :param PhysicalStorageList physical_storage_list:
+        :return:
+        """
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        for hdr in cls._phys_storage_headers:
+            tbl.add_header(hdr)
+
+        for devices in physical_storage_list.physical_devices:
+            node_rows = []
+            for node, data in devices.nodes.items():
+                s = node + '(' + data.device + ')'
+                node_data = []
+                if data.serial:
+                    node_data.append(data.serial)
+                if data.wwn:
+                    node_data.append(data.wwn)
+                if node_data:
+                    s += ': ' + ','.join(node_data)
+                node_rows.append(s)
+            tbl.add_row([
+                devices.size,
+                devices.rotational,
+                "\n".join(node_rows)
+            ])
+
+        tbl.show()
+
+    def list(self, args):
+        lstmsg = self._linstor.physical_storage_list()
+
+        return self.output_list(args, [lstmsg], self.show_physical_storage)
+
+    def create_device_pool(self, args):
+        replies = self.get_linstorapi().physical_storage_create_device_pool(
+            node_name=args.node_name,
+            provider_kind=args.provider_kind,
+            device_path=args.device_path,
+            pool_name=args.pool_name,
+            vdo_enable=args.vdo_enable,
+            vdo_logical_size_kib=Commands.parse_size_str(args.vdo_logical_size, "KiB"),
+            vdo_slab_size_kib=Commands.parse_size_str(args.vdo_slab_size, "KiB")
+        )
+        return self.handle_replies(args, replies)

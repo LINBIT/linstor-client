@@ -15,3 +15,4 @@ from .snapshot_cmds import SnapshotCommands
 from .drbd_proxy_cmds import DrbdProxyCommands
 from .migrate_cmds import MigrateCommands
 from .zsh_completer import ZshGenerator
+from .physical_storage_cmds import PhysicalStorageCommands
