@@ -399,8 +399,10 @@ class Commands(object):
         """Print properties in machine or human readable format"""
 
         if args.machine_readable:
-            d = [[{"key": x, "value": prop_list_map[0][x]} for x in prop_list_map[0]]]
-            s = json.dumps(d, indent=2)
+            s = ''
+            if prop_list_map:
+                d = [[{"key": x, "value": prop_list_map[0][x]} for x in prop_list_map[0]]]
+                s = json.dumps(d, indent=2)
             print(s)
             return None
 
