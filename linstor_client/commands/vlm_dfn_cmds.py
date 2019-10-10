@@ -196,7 +196,7 @@ class VolumeDefinitionCommands(Commands):
     def create(self, args):
         replies = self._linstor.volume_dfn_create(
             args.resource_name,
-            self._get_volume_size(args.size),
+            Commands.parse_size_str(args.size),
             args.vlmnr,
             args.minor,
             args.encrypt,
@@ -239,35 +239,6 @@ class VolumeDefinitionCommands(Commands):
         lstmsg = self._linstor.resource_dfn_list(query_volume_definitions=True)
 
         return self.output_list(args, lstmsg, self.show)
-
-    @classmethod
-    def _get_volume_size(cls, size_str):
-        m = re.match(r'(\d+)(\D*)', size_str)
-
-        size = 0
-        try:
-            size = int(m.group(1))
-        except AttributeError:
-            sys.stderr.write('Size is not a valid number\n')
-            sys.exit(ExitCode.ARGPARSE_ERROR)
-
-        unit_str = m.group(2)
-        if unit_str == "":
-            unit_str = "GiB"
-        try:
-            _, unit = SizeCalc.UNITS_MAP[unit_str.lower()]
-        except KeyError:
-            sys.stderr.write('"%s" is not a valid unit!\n' % (unit_str))
-            sys.stderr.write('Valid units: %s\n' % SizeCalc.UNITS_LIST_STR)
-            sys.exit(ExitCode.ARGPARSE_ERROR)
-
-        _, unit = SizeCalc.UNITS_MAP[unit_str.lower()]
-
-        if unit != SizeCalc.UNIT_KiB:
-            size = SizeCalc.convert_round_up(size, unit,
-                                             SizeCalc.UNIT_KiB)
-
-        return size
 
     @staticmethod
     def size_completer(prefix, **kwargs):
@@ -330,6 +301,6 @@ class VolumeDefinitionCommands(Commands):
         replies = self._linstor.volume_dfn_modify(
             args.resource_name,
             args.volume_nr,
-            size=self._get_volume_size(args.size)
+            size=self.parse_size_str(args.size)
         )
         return self.handle_replies(args, replies)

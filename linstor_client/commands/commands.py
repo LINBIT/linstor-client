@@ -2,11 +2,13 @@ import linstor_client.argparse.argparse as argparse
 import getpass
 import json
 import re
+import sys
 from datetime import datetime, timedelta
 
 import linstor
 from linstor.sharedconsts import NAMESPC_AUXILIARY
 from linstor.properties import properties
+from linstor import SizeCalc
 import linstor_client
 from linstor_client.utils import LinstorClientError, Output
 from linstor_client.consts import ExitCode, Color
@@ -692,6 +694,37 @@ class Commands(object):
                 raise argparse.ArgumentTypeError('Provider "{prov}" not valid'.format(prov=provider))
             provider_list.append(provider)
         return provider_list
+
+    @classmethod
+    def parse_size_str(cls, size_str, default_unit="GiB"):
+        if size_str is None:
+            return None
+        m = re.match(r'(\d+)(\D*)', size_str)
+
+        size = 0
+        try:
+            size = int(m.group(1))
+        except AttributeError:
+            sys.stderr.write('Size is not a valid number\n')
+            sys.exit(ExitCode.ARGPARSE_ERROR)
+
+        unit_str = m.group(2)
+        if unit_str == "":
+            unit_str = default_unit
+        try:
+            _, unit = SizeCalc.UNITS_MAP[unit_str.lower()]
+        except KeyError:
+            sys.stderr.write('"%s" is not a valid unit!\n' % unit_str)
+            sys.stderr.write('Valid units: %s\n' % SizeCalc.UNITS_LIST_STR)
+            sys.exit(ExitCode.ARGPARSE_ERROR)
+
+        _, unit = SizeCalc.UNITS_MAP[unit_str.lower()]
+
+        if unit != SizeCalc.UNIT_KiB:
+            size = SizeCalc.convert_round_up(size, unit,
+                                             SizeCalc.UNIT_KiB)
+
+        return size
 
 
 class MiscCommands(Commands):
