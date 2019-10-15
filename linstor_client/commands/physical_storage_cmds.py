@@ -46,11 +46,11 @@ class PhysicalStorageCommands(Commands):
         )
         p_create.add_argument('provider_kind', choices=["LVM", "LVMTHIN", "ZFS"], help='Provider kind')
         p_create.add_argument('node_name', help="Node name").completer = self.node_completer
-        p_create.add_argument('device_path', help="Device path to use.")
+        p_create.add_argument('device_paths', nargs='+', help="List of full device paths to use")
         p_create.add_argument(
-            'pool_name',
-            nargs='?',
-            help="Name of the new pool, if not specified a name will be generated."
+            '--pool-name',
+            required=True,
+            help="Name of the new pool"
         )
         p_create.add_argument('--vdo-enable', action="store_true", help="Use VDO.(only Centos/RHEL)")
         p_create.add_argument('--vdo-logical-size', help="VDO logical size.")
@@ -73,15 +73,20 @@ class PhysicalStorageCommands(Commands):
 
         for devices in physical_storage_list.physical_devices:
             node_rows = []
-            for node, data in devices.nodes.items():
-                s = node + '(' + data.device + ')'
-                node_data = []
-                if data.serial:
-                    node_data.append(data.serial)
-                if data.wwn:
-                    node_data.append(data.wwn)
-                if node_data:
-                    s += ': ' + ','.join(node_data)
+            for node, node_devices in devices.nodes.items():
+                s = node + '['
+                node_out_devs = []
+                for device_obj in node_devices:
+                    ns = device_obj.device
+                    node_data = []
+                    if device_obj.serial:
+                        node_data.append(device_obj.serial)
+                    if device_obj.wwn:
+                        node_data.append(device_obj.wwn)
+                    if node_data:
+                        ns += '(' + ','.join(node_data) + ')'
+                    node_out_devs.append(ns)
+                s += ','.join(node_out_devs) + ']'
                 node_rows.append(s)
             tbl.add_row([
                 devices.size,
@@ -100,7 +105,7 @@ class PhysicalStorageCommands(Commands):
         replies = self.get_linstorapi().physical_storage_create_device_pool(
             node_name=args.node_name,
             provider_kind=args.provider_kind,
-            device_path=args.device_path,
+            device_paths=args.device_paths,
             pool_name=args.pool_name,
             vdo_enable=args.vdo_enable,
             vdo_logical_size_kib=Commands.parse_size_str(args.vdo_logical_size, "KiB"),
