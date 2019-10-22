@@ -56,6 +56,11 @@ class VolumeCommands(Commands):
             nargs='+',
             type=str,
             help='Filter by list of resources').completer = self.resource_completer
+        p_lvlms.add_argument(
+            '-a', '--all',
+            action="store_true",
+            help='Show all resources, otherwise e.g. auto-qorum resources will be hidden.'
+        )
         p_lvlms.set_defaults(func=self.list_volumes)
 
         # show properties
@@ -123,6 +128,9 @@ class VolumeCommands(Commands):
                 if apiconsts.FLAG_DISKLESS not in rsc_flags:  # unintentional diskless
                     state = state_prefix + disk_state
                     tbl_color = Color.RED
+                elif apiconsts.FLAG_TIE_BREAKER in rsc_flags:
+                    state = 'TieBreaker'
+                    tbl_color = Color.DARKGREEN
                 else:
                     state = state_prefix + disk_state  # green text
             elif disk_state in ['Inconsistent', 'Failed', 'To: Creating', 'To: Attachable', 'To: Attaching']:
@@ -160,6 +168,9 @@ class VolumeCommands(Commands):
 
         reports = []
         for rsc in lstmsg.resources:
+            if not args.all and 'TIE_BREAKER' in rsc.flags:
+                continue  # skip tie breaker resources
+
             rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_usage = ""
             if rsc_state:

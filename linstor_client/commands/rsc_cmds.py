@@ -141,6 +141,11 @@ class ResourceCommands(Commands):
             nargs='+',
             type=str,
             help='Filter by list of nodes').completer = self.node_completer
+        p_lreses.add_argument(
+            '-a', '--all',
+            action="store_true",
+            help='Show all resources, otherwise e.g. auto-qorum resources will be hidden.'
+        )
         p_lreses.set_defaults(func=self.list)
 
         # list volumes
@@ -162,6 +167,11 @@ class ResourceCommands(Commands):
             nargs='+',
             type=str,
             help='Filter by list of resources').completer = self.resource_completer
+        p_lvlms.add_argument(
+            '-a', '--all',
+            action="store_true",
+            help='Show all resources, otherwise e.g. auto-qorum resources will be hidden.'
+        )
         p_lvlms.set_defaults(func=self.list_volumes)
 
         # show properties
@@ -381,6 +391,12 @@ class ResourceCommands(Commands):
         return self.handle_replies(args, replies)
 
     def show(self, args, lstmsg):
+        """
+
+        :param args:
+        :param linstor.responses.ResourceResponse lstmsg:
+        :return:
+        """
         rsc_dfns = self._linstor.resource_dfn_list(query_volume_definitions=False)
         if isinstance(rsc_dfns[0], linstor.ApiCallResponse):
             return self.handle_replies(args, rsc_dfns)
@@ -396,6 +412,9 @@ class ResourceCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
 
         for rsc in lstmsg.resources:
+            if not args.all and 'TIE_BREAKER' in rsc.flags:
+                continue  # skip tie breaker resources
+
             rsc_dfn_port = ''
             if rsc.name in rsc_dfn_map:
                 drbd_data = rsc_dfn_map[rsc.name].drbd_data
