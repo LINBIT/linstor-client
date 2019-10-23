@@ -39,7 +39,7 @@ class ResourceConnectionCommands(Commands):
             Commands.RESOURCE_CONN,
             aliases=["rc"],
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Resouce connection subcommands")
+            description="Resource connection subcommands")
         subp = res_conn_parser.add_subparsers(
             title="resource connection commands",
             metavar="",
@@ -52,7 +52,7 @@ class ResourceConnectionCommands(Commands):
         p_lresconn = subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of all resource connnections for the given resource.' +
+            description='Prints a list of all resource connections for the given resource. ' +
                         'By default, the list is printed as a human readable table.'
         )
         p_lresconn.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
@@ -177,11 +177,11 @@ class ResourceConnectionCommands(Commands):
         path_create.add_argument(
             "netinterface_a",
             help="Netinterface name to use for 1. node"
-        )
+        ).completer = self.netif_completer
         path_create.add_argument(
             "netinterface_b",
             help="Netinterface name to use for the 2. node"
-        )
+        ).completer = self.netif_completer
         path_create.set_defaults(func=self.path_create)
 
         # delete path
@@ -238,7 +238,8 @@ class ResourceConnectionCommands(Commands):
         self.check_subcommands(path_subp, path_subcmds)
         self.check_subcommands(subp, subcmds)
 
-    def show(self, args, lstmsg):
+    @classmethod
+    def show(cls, args, lstmsg):
         tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_headers(ResourceConnectionCommands._headers)
 
@@ -255,7 +256,6 @@ class ResourceConnectionCommands(Commands):
                 props_str if len(props_str) < props_str_size else props_str[:props_str_size] + '...',
                 rsc_con.port if rsc_con.port else ''
             ])
-
         tbl.show()
 
     def list(self, args):
@@ -263,22 +263,21 @@ class ResourceConnectionCommands(Commands):
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod
-    def _props_list(cls, args, lstmsg):
+    def _props_show(cls, args, lstmsg):
+        """
+
+        :param args:
+        :param linstor.responses.ResourceConnection lstmsg:
+        :return:
+        """
         result = []
         if lstmsg:
-            for rsc_con in lstmsg.resource_connections:
-                if (rsc_con.node_a.lower() == args.node_name_a.lower() and
-                    rsc_con.node_b.lower() == args.node_name_b.lower()) or \
-                        (rsc_con.node_b.lower() == args.node_name_a.lower() and
-                         rsc_con.node_a.lower() == args.node_name_b.lower()):
-                    result.append(rsc_con.properties)
-                    break
+            result.append(lstmsg.properties)
         return result
 
     def print_props(self, args):
-        lstmsg = self._linstor.resource_conn_list(args.resource_name)
-
-        return self.output_props_list(args, lstmsg, self._props_list)
+        lstmsg = self._linstor.resource_conn_node_list_raise(args.resource_name, args.node_name_a, args.node_name_b)
+        return self.output_props_list(args, [lstmsg], self._props_show)
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)
