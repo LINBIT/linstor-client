@@ -79,13 +79,13 @@ class Commands(object):
         VOLUME,
         VOLUME_DEF,
         SNAPSHOT,
-        DRBD_PROXY,
-        PHYSICAL_STORAGE
+        DRBD_PROXY
     ]
     Hidden = [
         DMMIGRATE,
         EXIT,
-        GEN_ZSH_COMPLETER
+        GEN_ZSH_COMPLETER,
+        PHYSICAL_STORAGE
     ]
 
     def __init__(self):
