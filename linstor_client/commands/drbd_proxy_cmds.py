@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from linstor.sharedconsts import VAL_DRBD_PROXY_COMPRESSION_NONE, VAL_DRBD_PROXY_COMPRESSION_ZLIB, \
-    VAL_DRBD_PROXY_COMPRESSION_LZMA, VAL_DRBD_PROXY_COMPRESSION_LZ4
+    VAL_DRBD_PROXY_COMPRESSION_LZMA, VAL_DRBD_PROXY_COMPRESSION_LZ4, VAL_DRBD_PROXY_COMPRESSION_ZSTD
 import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands, DrbdOptions, ArgumentError
 from linstor_client.utils import rangecheck
@@ -11,6 +11,7 @@ class DrbdProxyCommands(Commands):
     OBJECT_NAME = 'drbd-proxy'
     OBJECT_NAME_LZMA = 'drbd-proxy-lzma'
     OBJECT_NAME_ZLIB = 'drbd-proxy-zlib'
+    OBJECT_NAME_ZSTD = 'drbd-proxy-zstd'
 
     class Enable(object):
         LONG = "enable"
@@ -43,6 +44,10 @@ class DrbdProxyCommands(Commands):
     class Lz4(object):
         LONG = "lz4"
         SHORT = "lz4"
+
+    class Zstd(object):
+        LONG = "zstd"
+        SHORT = "zstd"
 
     def __init__(self):
         super(DrbdProxyCommands, self).__init__()
@@ -117,7 +122,8 @@ class DrbdProxyCommands(Commands):
             self.NoCompression,
             self.Zlib,
             self.Lzma,
-            self.Lz4
+            self.Lz4,
+            self.Zstd
         ]
 
         p_compression = subp.add_parser(
@@ -166,6 +172,14 @@ class DrbdProxyCommands(Commands):
         )
         self._add_resource_name_argument(p_compression_lz4)
         p_compression_lz4.set_defaults(func=self.set_compression, compression_type=VAL_DRBD_PROXY_COMPRESSION_LZ4)
+
+        p_compression_zstd = compression_subp.add_parser(
+            self.Zstd.LONG,
+            aliases=[self.Zstd.SHORT],
+            description='Use ZStandard compression.'
+        )
+        self._add_resource_name_argument(p_compression_zstd)
+        p_compression_zstd.set_defaults(func=self.set_compression, compression_type=VAL_DRBD_PROXY_COMPRESSION_ZSTD)
 
         self.check_subcommands(compression_subp, compression_subcmds)
 
@@ -219,6 +233,8 @@ class DrbdProxyCommands(Commands):
             set_props, _ = DrbdOptions.parse_opts(a, self.OBJECT_NAME_ZLIB)
         elif args.compression_type == VAL_DRBD_PROXY_COMPRESSION_LZMA:
             set_props, _ = DrbdOptions.parse_opts(a, self.OBJECT_NAME_LZMA)
+        elif args.compression_type == VAL_DRBD_PROXY_COMPRESSION_ZSTD:
+            set_props, _ = DrbdOptions.parse_opts(a, self.OBJECT_NAME_ZSTD)
         elif args.compression_type == VAL_DRBD_PROXY_COMPRESSION_LZ4:
             set_props = {}
         else:
