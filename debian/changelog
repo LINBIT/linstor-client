@@ -1,3 +1,11 @@
+linstor-client (1.0.5-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * fix missing missing keyword filters
+  * proxy-cmds: add zstd compression type
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Fri, 25 Oct 2019 12:53:56 +0200
+
 linstor-client (1.0.4-1) experimental; urgency=medium
 
   [ Rainer Laschober ]
