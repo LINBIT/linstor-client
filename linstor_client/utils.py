@@ -181,7 +181,9 @@ def filter_new_args(unsetprefix, args):
     reserved_keys = [
         "func", "optsobj", "common", "command",
         "controllers", "warn_as_error", "no_utf8", "no_color",
-        "machine_readable", "disable_config", "timeout", "verbose", "output_version", "curl", "allow_insecure_auth"
+        "machine_readable", "disable_config", "timeout",
+        "verbose", "output_version", "curl", "allow_insecure_auth",
+        "certfile", "keyfile", "cafile"
     ]
     for k, v in args.__dict__.items():
         if v is not None and k not in reserved_keys:
