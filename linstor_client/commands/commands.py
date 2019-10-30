@@ -127,6 +127,10 @@ class Commands(object):
             LONG = "interface"
             SHORT = "i"
 
+        class Info(object):
+            LONG = "info"
+            SHORT = "info"
+
         class CreateDef(object):
             LONG = "create-definition"
             SHORT = "cd"
