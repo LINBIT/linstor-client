@@ -222,7 +222,7 @@ class VolumeCommands(Commands):
         return []
 
     def print_props(self, args):
-        lstmsg = self._linstor.volume_list([args.node_name], [args.resource_name])
+        lstmsg = self._linstor.volume_list([args.node_name], filter_by_resources=[args.resource_name])
 
         return self.output_props_list(args, lstmsg, self._props_list)
 
