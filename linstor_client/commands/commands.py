@@ -55,7 +55,6 @@ class Commands(object):
     VOLUME_GRP = 'volume-group'
     ERROR_REPORTS = 'error-reports'
     STORAGE_POOL = 'storage-pool'
-    STORAGE_POOL_DEF = 'storage-pool-definition'
     VOLUME_DEF = 'volume-definition'
     SNAPSHOT = 'snapshot'
     DRBD_PROXY = 'drbd-proxy'
@@ -75,7 +74,6 @@ class Commands(object):
         RESOURCE_DEF,
         ERROR_REPORTS,
         STORAGE_POOL,
-        STORAGE_POOL_DEF,
         VOLUME,
         VOLUME_DEF,
         SNAPSHOT,

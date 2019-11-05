@@ -10,7 +10,7 @@ class TestUseCases(LinstorTestCase):
     def test_help(self):
         objs = [
             'node', 'resource-definition', 'resource',
-            'storage-pool', 'storage-pool-definition', 'volume-definition'
+            'storage-pool', 'volume-definition'
         ]
 
         create_cmds = ['create-' + x for x in objs]
@@ -26,22 +26,6 @@ class TestUseCases(LinstorTestCase):
 
 class TestCreateCommands(LinstorTestCase):
 
-    def test_create_storage_pool_dfn(self):
-        storpooldfn = self.execute_with_single_resp(['storage-pool-definition', 'create', 'mystorpool'])
-        self.assert_api_succuess(storpooldfn)
-        self.assertEqual(MASK_STOR_POOL_DFN | MASK_CRT | CREATED, storpooldfn.ret_code)
-
-        storpooldfns = self.execute_with_machine_output(['storage-pool-definition', 'list'])
-        self.assertEqual(1, len(storpooldfns))
-        self.assertIn('stor_pool_dfns', storpooldfns[0])
-        storpooldfns = storpooldfns[0]['stor_pool_dfns']
-        mystorpool = [spd for spd in storpooldfns if spd['stor_pool_name'] == 'mystorpool']
-        self.assertEqual(1, len(mystorpool), "storpool definition 'mystorpool' not found")
-
-        # illegal name is already catched from argparse
-        retcode = self.execute(['storage-pool-definition', 'create', '13394'])
-        self.assertEqual(10, retcode)
-
     def test_create_node(self):
         node = self.execute_with_resp(['node', 'create', 'node1', '195.0.0.1'])
         self.assert_api_succuess(node[0])
@@ -51,15 +35,6 @@ class TestCreateCommands(LinstorTestCase):
         storpool = self.execute_with_single_resp(['storage-pool', 'create', 'lvm', 'storpool', 'nonode', 'drbdpool'])
         self.assertTrue(storpool.is_error())
         self.assertEqual(self.signed_mask(MASK_STOR_POOL | MASK_CRT | FAIL_NOT_FOUND_NODE), storpool.ret_code)
-
-    def test_create_delete_storage_pool_dfn(self):
-        storpooldf = self.execute_with_single_resp(['storage-pool-definition', 'create', 'teststorpooldf'])
-        self.assert_api_succuess(storpooldf)
-        self.assertEqual(MASK_STOR_POOL_DFN | MASK_CRT | CREATED, storpooldf.ret_code)
-
-        storpooldf = self.execute_with_single_resp(['storage-pool-definition', 'delete', 'teststorpooldf'])
-        self.assert_api_succuess(storpooldf)
-        self.assertEqual(MASK_STOR_POOL_DFN | MASK_DEL | DELETED, storpooldf.ret_code)
 
     def test_create_resource_dfn(self):
         rsc_dfn = self.execute_with_single_resp(['resource-definition', 'create', 'rsc1'])

@@ -52,19 +52,6 @@ class TestProperties(LinstorTestCase):
         prop = self.find_prop(node_props, NAMESPC_AUXILIARY + '/another_prop')
         self.check_prop(prop, NAMESPC_AUXILIARY + '/another_prop', 'value with spaces')
 
-        # storage pool definition props
-        storage_resp = self.execute_with_single_resp(
-            ['storage-pool-definition', 'set-property', 'DfltStorPool', '--aux', 'stor', 'lvmcomplex']
-        )
-        self.assert_api_succuess(storage_resp)
-
-        storage_props = self.execute_with_machine_output(['storage-pool-definition', 'list-properties', 'DfltStorPool'])
-        self.assertEqual(1, len(storage_props))
-        storage_props = storage_props[0]
-        self.assertEqual(1, len(storage_props))
-        prop = self.find_prop(storage_props, NAMESPC_AUXILIARY + '/stor')
-        self.check_prop(prop, NAMESPC_AUXILIARY + '/stor', 'lvmcomplex')
-
         # resource definition
         resourcedef_resp = self.execute_with_resp(
             ['resource-definition', 'set-property', 'rsc1', '--aux', 'user', 'alexa']

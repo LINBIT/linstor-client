@@ -31,7 +31,6 @@ import linstor_client.utils as utils
 from linstor_client.commands import (
     ControllerCommands,
     VolumeDefinitionCommands,
-    StoragePoolDefinitionCommands,
     StoragePoolCommands,
     ResourceDefinitionCommands,
     ResourceGroupCommands,
@@ -99,7 +98,6 @@ class LinStorCLI(object):
 
         self._controller_commands = ControllerCommands()
         self._node_commands = NodeCommands()
-        self._storage_pool_dfn_commands = StoragePoolDefinitionCommands()
         self._storage_pool_commands = StoragePoolCommands()
         self._resource_dfn_commands = ResourceDefinitionCommands()
         self._resource_grp_commands = ResourceGroupCommands()
@@ -217,9 +215,6 @@ class LinStorCLI(object):
         # add all DRBD proxy commands
         self._drbd_proxy_commands.setup_commands(subp)
 
-        # add all storage pool definition commands
-        self._storage_pool_dfn_commands.setup_commands(subp)
-
         # add all storage pools commands
         self._storage_pool_commands.setup_commands(subp)
 
@@ -321,7 +316,6 @@ class LinStorCLI(object):
                         self._linstorapi.curl = args.curl
                         self._controller_commands._linstor = self._linstorapi
                         self._node_commands._linstor = self._linstorapi
-                        self._storage_pool_dfn_commands._linstor = self._linstorapi
                         self._storage_pool_commands._linstor = self._linstorapi
                         self._resource_dfn_commands._linstor = self._linstorapi
                         self._resource_grp_commands._linstor = self._linstorapi

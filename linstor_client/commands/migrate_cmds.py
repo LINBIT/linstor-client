@@ -152,7 +152,6 @@ echo "migration disabled, review script and remove this line"; exit 1\n
             'if unsure, just go for the default',
             {}, 'drbdpool'
         )
-        MigrateCommands.lsc(of, 'storage-pool-definition', 'create', MigrateCommands._pool)
 
         NONE = 'NONE'
         storage_types = {
