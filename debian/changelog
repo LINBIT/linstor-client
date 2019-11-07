@@ -1,3 +1,14 @@
+linstor-client (1.0.6-1) experimental; urgency=medium
+
+  [ Rainer Laschober ]
+  * vlm_cmds: Add named parameter when listing props (bug)
+  * Add command node info which lists layer- and provider-data and their u [...]
+
+  [ Rene Peinthor ]
+  * move query-max-volume-size to controller and mark it deprecated on spd
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 07 Nov 2019 13:20:24 +0100
+
 linstor-client (1.0.5-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
