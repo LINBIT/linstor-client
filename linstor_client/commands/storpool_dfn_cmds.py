@@ -3,6 +3,7 @@ import linstor_client.argparse.argparse as argparse
 import linstor
 from linstor import SizeCalc
 import linstor_client
+from ..utils import Output, Color
 from linstor_client.commands import Commands
 from linstor.sharedconsts import KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO
 
@@ -181,6 +182,16 @@ class StoragePoolDefinitionCommands(Commands):
         return self.handle_replies(args, replies)
 
     def _show_query_max_volume(self, args, lstmsg):
+        """
+        DEPRECATED will be removed
+        :param args:
+        :param lstmsg:
+        :return:
+        """
+        print(
+            Output.color_str("DEPRECATED:", Color.YELLOW, args.no_color) +
+            " use `linstor controller query-max-volume-size`"
+        )
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_column("StoragePool")
         tbl.add_column("MaxVolumeSize", just_txt='>')
