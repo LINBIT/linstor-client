@@ -48,6 +48,7 @@ class ControllerCommands(Commands):
         c_set_ctrl_props = con_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Set a controller config property.')
         Commands.add_parser_keyvalue(c_set_ctrl_props, "controller")
         c_set_ctrl_props.set_defaults(func=self.set_props)

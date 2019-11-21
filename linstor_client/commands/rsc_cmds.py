@@ -74,7 +74,11 @@ class ResourceCommands(Commands):
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
             description='Deploys a resource definition to a node.')
-        p_new_res.add_argument('--diskless', '-d', action="store_true", help='DEPRECATED. Use --nvme-initiator or --drbd-diskless instead')
+        p_new_res.add_argument(
+            '--diskless', '-d',
+            action="store_true",
+            help='DEPRECATED. Use --nvme-initiator or --drbd-diskless instead'
+        )
         p_new_res.add_argument(
             '--node-id',
             type=int,
@@ -202,6 +206,7 @@ class ResourceCommands(Commands):
         p_setprop = res_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given resource on the given node.')
         p_setprop.add_argument(
             'node_name',

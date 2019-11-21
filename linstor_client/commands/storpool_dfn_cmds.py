@@ -84,6 +84,7 @@ class StoragePoolDefinitionCommands(Commands):
         p_setprop = spd_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given storage pool definition.')
         p_setprop.add_argument(
             'name',

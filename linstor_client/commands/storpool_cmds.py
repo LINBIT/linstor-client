@@ -292,6 +292,7 @@ class StoragePoolCommands(Commands):
         p_setprop = sp_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given storage pool on the given node.')
         p_setprop.add_argument(
             'node_name',

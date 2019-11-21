@@ -82,6 +82,7 @@ class VolumeCommands(Commands):
         p_setprop = vlm_sub.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given volume on the given resource.')
         p_setprop.add_argument(
             'node_name',

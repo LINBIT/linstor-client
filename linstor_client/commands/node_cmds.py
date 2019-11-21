@@ -376,6 +376,7 @@ class NodeCommands(Commands):
         p_setp = node_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description="Set a property on the given node."
         )
         p_setp.add_argument(
