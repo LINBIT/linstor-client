@@ -542,21 +542,22 @@ class LinStorCLI(object):
                 cmds_ = cmds_[1:]
 
             try:
+                cmds_clone = list(cmds_)
                 rc = self.parse_and_execute(cmds_, is_interactive=True)
             except SystemExit as se:
-                cmd = cmds_[0]
+                cmd = cmds_clone[0]
                 if cmd in [Commands.EXIT, "quit"]:
                     sys.exit(ExitCode.OK)
                 elif cmd == "help":
-                    if len(cmds_) == 1:
+                    if len(cmds_clone) == 1:
                         self.print_cmds()
                         return
                     else:
-                        cmd = " ".join(cmds_[1:])
+                        cmd = " ".join(cmds_clone[1:])
                         if cmd not in all_cmds:
                             unknown(cmd)
                 elif cmd in all_cmds:
-                    if '-h' in cmds_ or '--help' in cmds:
+                    if '-h' in cmds_clone or '--help' in cmds:
                         return
                     if se.code == ExitCode.ARGPARSE_ERROR:
                         sys.stdout.write("\nIncorrect syntax. Use 'help {cmd}' for more information:\n".format(cmd=cmd))
