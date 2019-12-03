@@ -1,3 +1,17 @@
+linstor-client (1.0.8-1) experimental; urgency=medium
+
+  [ Gabor Hernadi ]
+  * rsc_cmds: added --nvme-initiator and --drbd-diskless to resource creat [...]
+
+  [ Rene Peinthor ]
+  * set-property-help: correctly escape and have better formatting
+  * Fix interactive mode if config parameters are present
+
+  [ Tomasz Bykowski ]
+  * Added initial support for SPDK
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 03 Dec 2019 12:10:31 +0100
+
 linstor-client (1.0.6-1) experimental; urgency=medium
 
   [ Rainer Laschober ]
