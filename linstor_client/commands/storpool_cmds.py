@@ -24,14 +24,6 @@ class StoragePoolCommands(Commands):
         LONG = "zfsthin"
         SHORT = "zfsthin"
 
-    class SwordfishTarget(object):
-        LONG = "swordfish_target"
-        SHORT = "sft"
-
-    class SwordfishInitiator(object):
-        LONG = "swordfish_initiator"
-        SHORT = "sfi"
-
     class Diskless(object):
         LONG = "diskless"
         SHORT = "diskless"
@@ -105,8 +97,6 @@ class StoragePoolCommands(Commands):
             StoragePoolCommands.Diskless,
             StoragePoolCommands.File,
             StoragePoolCommands.FileThin,
-            StoragePoolCommands.SwordfishTarget,
-            StoragePoolCommands.SwordfishInitiator,
             StoragePoolCommands.SPDK
         ]
 
@@ -227,34 +217,6 @@ class StoragePoolCommands(Commands):
         )
         p_new_file_thin_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.FILEThin)
 
-        p_new_swordfish_target_pool = create_subp.add_parser(
-            StoragePoolCommands.SwordfishTarget.LONG,
-            aliases=[StoragePoolCommands.SwordfishTarget.SHORT],
-            description='Create a swordfish target'
-        )
-        self._create_pool_args(p_new_swordfish_target_pool)
-        p_new_swordfish_target_pool.add_argument(
-            'swordfish_storage_pool',
-            type=str,
-            help="Swordfish storage pool"
-        )
-        p_new_swordfish_target_pool.set_defaults(
-            func=self.create_swordfish,
-            driver=linstor.StoragePoolDriver.SwordfishTarget
-        )
-
-        p_new_swordfish_initiator_pool = create_subp.add_parser(
-            StoragePoolCommands.SwordfishInitiator.LONG,
-            aliases=[StoragePoolCommands.SwordfishInitiator.SHORT],
-            description='Create a swordfish initiator'
-        )
-        self._create_pool_args(p_new_swordfish_initiator_pool)
-        p_new_swordfish_initiator_pool.set_defaults(
-            func=self.create,
-            driver=linstor.StoragePoolDriver.SwordfishInitiator,
-            driver_pool_name=None
-        )
-
         # END CREATE SUBCMDS
 
         # remove-storpool
@@ -338,24 +300,6 @@ class StoragePoolCommands(Commands):
                 args.driver,
                 args.driver_pool_name,
                 shared_space=shrd_space
-            )
-        except linstor.LinstorError as e:
-            raise ArgumentError(e.message)
-        return self.handle_replies(args, replies)
-
-    def create_swordfish(self, args):
-        prefix_key = linstor.consts.NAMESPC_STORAGE_DRIVER + '/'
-        properties = {
-            prefix_key + linstor.consts.KEY_STOR_POOL_SF_STOR_POOL: args.swordfish_storage_pool
-        }
-        try:
-            replies = self.get_linstorapi().storage_pool_create(
-                args.node_name,
-                args.name,
-                args.driver,
-                None,
-                shared_space=args.shared_space,
-                property_dict=properties
             )
         except linstor.LinstorError as e:
             raise ArgumentError(e.message)

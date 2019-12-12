@@ -45,10 +45,6 @@ class NodeCommands(Commands):
         ]
     ]
 
-    class CreateSwordfishTarget:
-        LONG = "create-swordfish-target"
-        SHORT = "cswt"
-
     class Reconnect:
         LONG = "reconnect"
         SHORT = "rc"
@@ -60,7 +56,6 @@ class NodeCommands(Commands):
         # Node subcommands
         subcmds = [
             Commands.Subcommands.Create,
-            NodeCommands.CreateSwordfishTarget,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
             Commands.Subcommands.Lost,
@@ -131,19 +126,6 @@ class NodeCommands(Commands):
             help='IP address of the new node, if not specified it will be resolved by the name.'
         ).completer = ip_completer("name")
         p_new_node.set_defaults(func=self.create)
-
-        p_create_sw_target = node_subp.add_parser(
-            NodeCommands.CreateSwordfishTarget.LONG,
-            aliases=[NodeCommands.CreateSwordfishTarget.SHORT],
-            description='Creates a virtual on controller swordfish target node.'
-        )
-        p_create_sw_target.add_argument(
-            'node_name',
-            help='Name of the new swordfish target node',
-            type=str
-        )
-        p_create_sw_target.add_argument('storage_service', help='Storage service id')
-        p_create_sw_target.set_defaults(func=self.create_sw_target)
 
         # modify node
         p_modify_node = node_subp.add_parser(
@@ -409,10 +391,6 @@ class NodeCommands(Commands):
             args.interface_name
         )
 
-        return self.handle_replies(args, replies)
-
-    def create_sw_target(self, args):
-        replies = self.get_linstorapi().node_create_swordfish_target(args.node_name, args.storage_service)
         return self.handle_replies(args, replies)
 
     def modify_node(self, args):
