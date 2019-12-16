@@ -1,6 +1,6 @@
 GIT = git
 INSTALLFILES=.installfiles
-PYTHON = python2
+PYTHON ?= python3
 LINSTORAPI = ../linstor-api-py
 override GITHEAD := $(shell test -e .git && $(GIT) rev-parse HEAD)
 
@@ -73,7 +73,7 @@ deb: up2date
 
 # it is up to you (or the buildenv) to provide a distri specific setup.cfg
 rpm: up2date
-	$(PYTHON) setup.py bdist_rpm --python /usr/bin/python2
+	$(PYTHON) setup.py bdist_rpm --python /usr/bin/$(PYTHON)
 
 .PHONY: linstor_client/consts_githash.py
 ifdef GITHEAD
