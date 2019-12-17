@@ -1,5 +1,5 @@
 import unittest
-from .linstor_testcase import LinstorTestCase
+from tests import LinstorTestCase
 import linstor.sharedconsts as apiconsts
 
 

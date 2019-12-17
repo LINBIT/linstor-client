@@ -1,4 +1,4 @@
-from .linstor_testcase import LinstorTestCaseWithData
+from tests import LinstorTestCaseWithData
 import linstor.sharedconsts as apiconsts
 
 

@@ -1,4 +1,4 @@
-from .linstor_testcase import LinstorTestCase
+from tests import LinstorTestCase
 from linstor.sharedconsts import *
 
 

@@ -1,6 +1,5 @@
 import unittest
-from .linstor_testcase import LinstorTestCase, LinstorTestCaseWithData
-import linstor_client_main
+from tests import LinstorTestCase
 
 
 class TestListCommands(LinstorTestCase):

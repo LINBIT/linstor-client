@@ -1,4 +1,5 @@
 import unittest
+from .linstor_testcase import LinstorTestCase, LinstorTestCaseWithData
 from . import test_ctrl_list_commands, test_ctrl_nodes, test_ctrl_usecases
 from . import test_ctrl_props, test_drbd_options
 
@@ -14,13 +15,6 @@ _std_tests = [
     "tests.test_client_commands",
     "tests.test_tables"
 ]
-
-
-def load_tests(loader, tests, pattern):
-    suite = unittest.TestSuite()
-    loaded_tests = loader.loadTestsFromNames(_controller_tests + _std_tests)
-    suite.addTest(loaded_tests)
-    return suite
 
 
 def load_all():

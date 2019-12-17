@@ -2,4 +2,7 @@ import unittest
 
 if __name__ == '__main__':
     import xmlrunner
-    unittest.main(module='tests', testRunner=xmlrunner.XMLTestRunner(output='test-reports'))
+    loader = unittest.TestLoader()
+    suite = loader.discover(start_dir='tests')
+    runner = xmlrunner.XMLTestRunner(output='test-reports')
+    runner.run(suite)
