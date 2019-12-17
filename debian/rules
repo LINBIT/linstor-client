@@ -1,9 +1,12 @@
 #!/usr/bin/make -f
 
+export PYBUILD_NAME = linstor-client
+export PYBUILD_DISABLE=test
+
 WITH_BASHCOMPL=$(shell dh --list 2>/dev/null | sed -ne 's/^bash-completion$$/--with bash-completion/p')
 
 %:
-	dh $@ --with python2 --buildsystem=python_distutils $(WITH_BASHCOMPL)
+	dh $@ --with python3 --buildsystem=pybuild $(WITH_BASHCOMPL)
 
 override_dh_auto_build:
 	dh_auto_build

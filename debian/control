@@ -8,8 +8,8 @@ Build-Depends: bash-completion,
                dh-python,
                docbook-xsl,
                help2man,
-               python-all (>= 2.7),
-               python-setuptools,
+               python3-all (>= 3.5),
+               python3-setuptools,
                xsltproc
 Standards-Version: 3.9.6
 
@@ -17,9 +17,9 @@ Package: linstor-client
 Architecture: all
 # keep python-natsort on its own line!
 Depends: ${misc:Depends},
-         python-natsort,
+         python3-natsort,
          python-linstor (>=1.0.8),
-         ${python:Depends}
+         ${python3:Depends}
 Description: Linstor client command line tool
  This is a command client that communicates with the Linstor controller
  and gives a userfriendly command line syntax to add/remove/query

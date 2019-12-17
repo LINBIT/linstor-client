@@ -6,3 +6,4 @@ include COPYING
 include README.md
 include Makefile
 include Dockerfile
+include setup.cfg.py2

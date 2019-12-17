@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """
     linstor - management of distributed DRBD9 resources
     Copyright (C) 2013 - 2017  LINBIT HA-Solutions GmbH
@@ -159,14 +159,14 @@ class BuildManCommand(Command):
                       '"./linstor_client_main.py %s"' % (toplevel)]
 
             toexec = " ".join(mangen)
-            manpage = check_output(toexec, shell=True)
+            manpage = check_output(toexec, shell=True).decode()
             manpage = manpage.replace(replace[0], replace[1])
             manpage = manpage.replace(replace[0].upper(), replace[1].upper())
             manpage = manpage.replace(toplevel.upper(), mansection)
             manpage = manpage.replace("%s %s" % (replace[1], toplevel),
                                       "%s_%s" % (replace[1], toplevel))
             with gzip.open(outfile, 'wb') as f:
-                f.write(manpage)
+                f.write(manpage.encode())
 
 
 def gen_data_files():

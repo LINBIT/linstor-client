@@ -30,13 +30,15 @@ RUN cd ${HOME} && \
 		 cp /tmp/${PYTHON_LINSTOR_TGZ} ${HOME} && \
 		 tar xvf ${PYTHON_LINSTOR_TGZ} && \
 		 cd ${PYTHON_LINSTOR_PKGNAME}-${PYTHON_LINSTOR_VERSION} && \
-		 make gensrc && \
-		 make rpm && mv ./dist/*.rpm /tmp/
+		 make PYTHON=python2 gensrc && \
+		 mv setup.cfg.py2 setup.cfg && \
+		 make PYTHON=python2 rpm && mv ./dist/*.rpm /tmp/
 RUN cd ${HOME} && \
 		 cp /tmp/${LINSTOR_CLI_TGZ} ${HOME} && \
 		 tar xvf ${LINSTOR_CLI_TGZ} && \
 		 cd ${LINSTOR_CLI_PKGNAME}-${LINSTOR_CLI_VERSION} && \
-		 make rpm && mv ./dist/*.rpm /tmp/
+		 mv setup.cfg.py2 setup.cfg && \
+		 make PYTHON=python2 rpm && mv ./dist/*.rpm /tmp/
 
 FROM registry.access.redhat.com/ubi7/ubi
 MAINTAINER Roland Kammerer <roland.kammerer@linbit.com>

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 """
     LINSTOR - management of distributed storage/DRBD9 resources
     Copyright (C) 2013 - 2018  LINBIT HA-Solutions GmbH
