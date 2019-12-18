@@ -1,16 +1,16 @@
-import linstor_client.argparse.argparse as argparse
 import collections
-import sys
 import socket
+import sys
 
+import linstor.sharedconsts as apiconsts
 import linstor_client
+import linstor_client.argparse.argparse as argparse
+from linstor import SizeCalc
 from linstor_client.commands import Commands
-from linstor_client.tree import TreeNode
 from linstor_client.consts import Color, ExitCode
+from linstor_client.tree import TreeNode
 from linstor_client.utils import (LinstorClientError, ip_completer,
                                   rangecheck)
-import linstor.sharedconsts as apiconsts
-from linstor import SizeCalc
 
 
 class NodeCommands(Commands):
@@ -22,6 +22,27 @@ class NodeCommands(Commands):
         linstor_client.TableHeader("NodeType"),
         linstor_client.TableHeader("Addresses"),
         linstor_client.TableHeader("State", color=Color.DARKGREEN)
+    ]
+
+    _info_headers_provs = [
+        linstor_client.TableHeader("Node"),
+        [
+            linstor_client.TableHeader("Diskless"),
+            linstor_client.TableHeader("LVM"),
+            linstor_client.TableHeader("LVMThin"),
+            linstor_client.TableHeader("ZFS/Thin"),
+            linstor_client.TableHeader("File/Thin")
+        ]
+    ]
+
+    _info_headers_lrs = [
+        linstor_client.TableHeader("Node"),
+        [
+            linstor_client.TableHeader("DRBD"),
+            linstor_client.TableHeader("LUKS"),
+            linstor_client.TableHeader("NVMe"),
+            linstor_client.TableHeader("Storage")
+        ]
     ]
 
     class CreateSwordfishTarget:
@@ -45,6 +66,7 @@ class NodeCommands(Commands):
             Commands.Subcommands.Lost,
             Commands.Subcommands.Describe,
             Commands.Subcommands.Interface,
+            Commands.Subcommands.Info,
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.Modify,
@@ -313,11 +335,24 @@ class NodeCommands(Commands):
                               help='Filter by list of nodes').completer = self.node_completer
         p_lnodes.set_defaults(func=self.list)
 
+        # list info
+        p_info_node = node_subp.add_parser(
+            Commands.Subcommands.Info.LONG,
+            aliases=[Commands.Subcommands.Info.SHORT],
+            description='Prints detailed info for all cluster nodes known to linstor. '
+                        'By default, the list is printed as a human readable table.'
+        )
+        p_info_node.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_info_node.add_argument(
+            '-n', '--nodes', nargs='+', type=str, help='Filter by list of nodes'
+        ).completer = self.node_completer
+        p_info_node.set_defaults(func=self.info)
+
         # list netinterface
         p_lnetif = interface_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of netinterfaces from a node.'
+            description='Prints a list of netinterfaces of a node.'
         )
         p_lnetif.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lnetif.add_argument(
@@ -341,6 +376,7 @@ class NodeCommands(Commands):
         p_setp = node_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description="Set a property on the given node."
         )
         p_setp.add_argument(
@@ -423,8 +459,7 @@ class NodeCommands(Commands):
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
-        node_list = lstmsg.nodes
-        for node in node_list:
+        for node in lstmsg.nodes:
             # concat a ip list with satellite connection indicator
             active_ip = ""
             for net_if in node.net_interfaces:
@@ -603,6 +638,88 @@ class NodeCommands(Commands):
 
     def list_netinterfaces(self, args):
         return self.output_list(args, self._linstor.node_list([args.node_name]), self.show_netinterfaces)
+
+    @classmethod
+    def show_info(cls, args, lstmsg):
+        tbl_provs = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl_lrs = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+
+        tbl_provs.add_header(cls._info_headers_provs[0])
+        tbl_lrs.add_header(cls._info_headers_lrs[0])
+
+        stor_prov_hdrs = cls._info_headers_provs[1]
+        rsc_layer_hdrs = cls._info_headers_lrs[1]
+
+        for stor_prov_hdr in stor_prov_hdrs:
+            tbl_provs.add_header(stor_prov_hdr)
+        for rsc_layer_hdr in rsc_layer_hdrs:
+            tbl_lrs.add_header(rsc_layer_hdr)
+
+        unsp_provs_msgs = {}
+        unsp_lrs_msgs = {}
+
+        for node in lstmsg.nodes:
+            if node.connection_status != "ONLINE":
+                node_offline_msg = "NODE IS OFFLINE!"
+                unsp_provs_msgs.update({node.name: node_offline_msg})
+                unsp_lrs_msgs.update({node.name: node_offline_msg})
+            else:
+                if node.unsupported_providers:
+                    unsp_provs_msgs.update({node.name: node.unsupported_providers})
+                if node.unsupported_layers:
+                    unsp_lrs_msgs.update({node.name: node.unsupported_layers})
+
+            row_provs = [node.name]
+            row_lrs = [node.name]
+
+            # fill table for supported storage providers
+            stor_provs = [x.replace("_", "") for x in node.storage_providers]
+            for stor_prov_hdr in stor_prov_hdrs:
+                stor_prov_hdr_name = stor_prov_hdr.name.upper()
+                if "/" in stor_prov_hdr_name:
+                    stor_prov_hdr_name = stor_prov_hdr_name.replace("/", "").upper()
+                if stor_prov_hdr_name in stor_provs:
+                    row_provs.append(tbl_provs.color_cell("+", Color.GREEN))
+                else:
+                    row_provs.append(tbl_provs.color_cell("-", Color.RED))
+            tbl_provs.add_row(row_provs)
+
+            # fill table for supported resource layers
+            rsc_layers = [x.replace("_", "") for x in node.resource_layers]
+            for rsc_layer_hdr in rsc_layer_hdrs:
+                if rsc_layer_hdr.name.upper() in rsc_layers:
+                    row_lrs.append(tbl_provs.color_cell("+", Color.GREEN))
+                else:
+                    row_lrs.append(tbl_provs.color_cell("-", Color.RED))
+            tbl_lrs.add_row(row_lrs)
+
+        # print storage providers
+        tbl_provs.show()
+        if unsp_provs_msgs:
+            print("Unsupported storage providers:")
+            for node_name, unsp_provs_msg in unsp_provs_msgs.items():
+                is_node_online = isinstance(unsp_provs_msg, dict)
+                print(" " + node_name + ": " + (unsp_provs_msg if not is_node_online else ""))
+                if is_node_online:
+                    for prov_name, reasons in unsp_provs_msg.items():
+                        for reason in reasons:
+                            print("  " + prov_name + ": " + reason)
+
+        # print resource layers
+        print("")
+        tbl_lrs.show()
+        if unsp_lrs_msgs:
+            print("Unsupported resource layers:")
+            for node_name, unsp_lrs_msg in unsp_lrs_msgs.items():
+                is_node_online = isinstance(unsp_lrs_msg, dict)
+                print(" " + node_name + ": " + (unsp_lrs_msg if not is_node_online else ""))
+                if is_node_online:
+                    for lr_name, reasons in unsp_lrs_msg.items():
+                        for reason in reasons:
+                            print("  " + lr_name + ": " + reason)
+
+    def info(self, args):
+        return self.output_list(args, self._linstor.node_list(args.nodes), self.show_info)
 
     @classmethod
     def _props_list(cls, args, lstmsg):

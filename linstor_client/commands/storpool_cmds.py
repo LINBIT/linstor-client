@@ -44,6 +44,10 @@ class StoragePoolCommands(Commands):
         LONG = "filethin"
         SHORT = "filethin"
 
+    class SPDK(object):
+        LONG = "spdk"
+        SHORT = "spdk"
+
     _stor_pool_headers = [
         linstor_client.TableHeader("StoragePool"),
         linstor_client.TableHeader("Node"),
@@ -102,7 +106,8 @@ class StoragePoolCommands(Commands):
             StoragePoolCommands.File,
             StoragePoolCommands.FileThin,
             StoragePoolCommands.SwordfishTarget,
-            StoragePoolCommands.SwordfishInitiator
+            StoragePoolCommands.SwordfishInitiator,
+            StoragePoolCommands.SPDK
         ]
 
         sp_c_parser = sp_subp.add_parser(
@@ -129,6 +134,21 @@ class StoragePoolCommands(Commands):
             help='The Lvm volume group to use.'
         )
         p_new_lvm_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.LVM)
+
+        p_new_spdk_pool = create_subp.add_parser(
+            StoragePoolCommands.SPDK.LONG,
+            aliases=[StoragePoolCommands.SPDK.SHORT],
+            description='Create a spdk storage pool'
+        )
+        self._create_pool_args(p_new_spdk_pool)
+        p_new_spdk_pool.add_argument(
+            'driver_pool_name',
+            type=str,
+            help='The Spdk volume group to use.'
+        )
+        p_new_spdk_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.SPDK)
+
+
 
         p_new_lvm_thin_pool = create_subp.add_parser(
             StoragePoolCommands.LvmThin.LONG,
@@ -292,6 +312,7 @@ class StoragePoolCommands(Commands):
         p_setprop = sp_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given storage pool on the given node.')
         p_setprop.add_argument(
             'node_name',

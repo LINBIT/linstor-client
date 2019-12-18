@@ -104,6 +104,7 @@ class VolumeGroupCommands(Commands):
         p_setprop = vlm_grp_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given volume group.')
         p_setprop.add_argument('name', type=str, help='Name of the resource group')
         p_setprop.add_argument(

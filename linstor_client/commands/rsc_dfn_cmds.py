@@ -133,6 +133,7 @@ class ResourceDefinitionCommands(Commands):
         p_setprop = res_def_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given resource definition.')
         p_setprop.add_argument('name', type=str, help='Name of the resource definition')
         Commands.add_parser_keyvalue(p_setprop, 'resource-definition')

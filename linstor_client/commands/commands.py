@@ -127,6 +127,10 @@ class Commands(object):
             LONG = "interface"
             SHORT = "i"
 
+        class Info(object):
+            LONG = "info"
+            SHORT = "info"
+
         class CreateDef(object):
             LONG = "create-definition"
             SHORT = "cd"
@@ -376,7 +380,7 @@ class Commands(object):
             props = Commands.get_allowed_props(property_object)
             parser.add_argument(
                 'key',
-                help='; '.join([x['key'] + ': ' + x['info'] for x in props if 'info' in x])
+                help='\n'.join(["'" + x['key'] + "': " + x['info'].replace("%", "%%") for x in props if 'info' in x])
             ).completer = Commands.get_allowed_prop_keys(property_object)
         else:
             parser.add_argument(

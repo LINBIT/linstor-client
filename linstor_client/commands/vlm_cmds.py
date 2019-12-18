@@ -82,6 +82,7 @@ class VolumeCommands(Commands):
         p_setprop = vlm_sub.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given volume on the given resource.')
         p_setprop.add_argument(
             'node_name',
@@ -222,7 +223,7 @@ class VolumeCommands(Commands):
         return []
 
     def print_props(self, args):
-        lstmsg = self._linstor.volume_list([args.node_name], [args.resource_name])
+        lstmsg = self._linstor.volume_list([args.node_name], filter_by_resources=[args.resource_name])
 
         return self.output_props_list(args, lstmsg, self._props_list)
 

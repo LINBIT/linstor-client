@@ -74,7 +74,11 @@ class ResourceCommands(Commands):
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
             description='Deploys a resource definition to a node.')
-        p_new_res.add_argument('--diskless', '-d', action="store_true", help='Should the resource be diskless')
+        p_new_res.add_argument(
+            '--diskless', '-d',
+            action="store_true",
+            help='DEPRECATED. Use --nvme-initiator or --drbd-diskless instead'
+        )
         p_new_res.add_argument(
             '--node-id',
             type=int,
@@ -84,6 +88,16 @@ class ResourceCommands(Commands):
             '--async',
             action='store_true',
             help='Do not wait for deployment on satellites before returning'
+        )
+        p_new_res.add_argument(
+            '--nvme-initiator',
+            action="store_true",
+            help='Mark this resource as initiator'
+        )
+        p_new_res.add_argument(
+            '--drbd-diskless',
+            action="store_true",
+            help='Mark this resource as drbd diskless'
         )
         self.add_auto_select_argparse_arguments(p_new_res)
         p_new_res.add_argument(
@@ -192,6 +206,7 @@ class ResourceCommands(Commands):
         p_setprop = res_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given resource on the given node.')
         p_setprop.add_argument(
             'node_name',
@@ -250,7 +265,7 @@ class ResourceCommands(Commands):
         p_toggle_disk_group_storage.add_argument(
             '--diskless', '-d',
             action='store_true',
-            help="Remove the disks from a resource"
+            help="Remove the disks from a resource (toggles --drbd-diskless)"
         )
         p_toggle_disk.add_argument(
             '--async',
@@ -370,7 +385,9 @@ class ResourceCommands(Commands):
                     args.diskless,
                     args.storage_pool,
                     args.node_id,
-                    args.layer_list
+                    args.layer_list,
+                    args.drbd_diskless,
+                    args.nvme_initiator
                 )
                 for node_name in args.node_name
             ]

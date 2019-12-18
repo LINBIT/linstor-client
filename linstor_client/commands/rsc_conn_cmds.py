@@ -87,6 +87,7 @@ class ResourceConnectionCommands(Commands):
         p_setprop = subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given resource connection.')
         p_setprop.add_argument(
             'node_name_a',

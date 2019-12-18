@@ -140,6 +140,7 @@ class VolumeDefinitionCommands(Commands):
         p_setprop = vol_def_subp.add_parser(
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given volume definition.')
         p_setprop.add_argument(
             'resource_name',
