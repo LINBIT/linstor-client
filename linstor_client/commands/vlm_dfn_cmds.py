@@ -19,7 +19,7 @@ class VolumeDefinitionCommands(Commands):
         linstor_client.TableHeader("State", color=Color.DARKGREEN)
     ]
 
-    VOLUME_SIZE_HELP =\
+    VOLUME_SIZE_HELP = \
         'Size of the volume. ' \
         'Valid units: ' + SizeCalc.UNITS_LIST_STR + '. ' \
         'The default unit is GiB (2 ^ 30 bytes). ' \
@@ -71,7 +71,9 @@ class VolumeDefinitionCommands(Commands):
             help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_vol.add_argument('-n', '--vlmnr', type=int)
         p_new_vol.add_argument('-m', '--minor', type=int)
-        p_new_vol.add_argument('--encrypt', action="store_true", help="Encrypt created volumes using cryptsetup.")
+        p_new_vol.add_argument('--encrypt', action="store_true",
+                               help="DEPCRECATED - use --layer-list ...,LUKS,... instead (when creating resource /-definition)")
+        p_new_vol.add_argument('--gross', action="store_true")
         p_new_vol.add_argument('resource_name', type=str,
                                help='Name of an existing resource').completer = self.resource_dfn_completer
         p_new_vol.add_argument(
@@ -190,6 +192,7 @@ class VolumeDefinitionCommands(Commands):
             'size',
             help=VolumeDefinitionCommands.VOLUME_SIZE_HELP
         ).completer = VolumeDefinitionCommands.size_completer
+        p_set_size.add_argument('--gross', action="store_true")
         p_set_size.set_defaults(func=self.set_volume_size)
 
         self.check_subcommands(vol_def_subp, subcmds)
@@ -201,7 +204,8 @@ class VolumeDefinitionCommands(Commands):
             args.vlmnr,
             args.minor,
             args.encrypt,
-            args.storage_pool
+            args.storage_pool,
+            args.gross
         )
         return self.handle_replies(args, replies)
 
@@ -310,6 +314,7 @@ class VolumeDefinitionCommands(Commands):
         replies = self._linstor.volume_dfn_modify(
             args.resource_name,
             args.volume_nr,
-            size=self.parse_size_str(args.size)
+            size=self.parse_size_str(args.size),
+            gross=args.gross
         )
         return self.handle_replies(args, replies)
