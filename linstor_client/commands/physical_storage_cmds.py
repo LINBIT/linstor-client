@@ -44,7 +44,7 @@ class PhysicalStorageCommands(Commands):
             aliases=[Commands.Subcommands.CreateDevicePool.SHORT],
             description='Creates a LVM/ZFS(thin) pool with an optional VDO on the device'
         )
-        p_create.add_argument('provider_kind', choices=["LVM", "LVMTHIN", "ZFS"], help='Provider kind')
+        p_create.add_argument('provider_kind', choices=["LVM", "LVMTHIN", "ZFS", "SPDK"], help='Provider kind')
         p_create.add_argument('node_name', help="Node name").completer = self.node_completer
         p_create.add_argument('device_paths', nargs='+', help="List of full device paths to use")
         p_create.add_argument(
