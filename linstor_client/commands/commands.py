@@ -12,6 +12,7 @@ from linstor import SizeCalc
 import linstor_client
 from linstor_client.utils import LinstorClientError, Output
 from linstor_client.consts import ExitCode, Color
+from linstor.sharedconsts import KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO
 
 
 class ArgumentError(Exception):
@@ -722,6 +723,45 @@ class Commands(object):
 
         return size
 
+    def _show_query_max_volume(self, args, lstmsg):
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl.add_column("StoragePool")
+        tbl.add_column("MaxVolumeSize", just_txt='>')
+        tbl.add_column("Provisioning")
+        tbl.add_column("Nodes")
+
+        def limited_string(obj_list):
+            limit = 40
+            s = ""
+            list_length = len(obj_list)
+            for i in range(0, len(obj_list)):
+                obj = obj_list[i]
+                s += obj + (", " if i != list_length - 1 else "")
+                if len(s) > limit:
+                    s = s[:limit - 3] + "..."
+
+            return s
+
+        storage_pool_dfns = self.get_linstorapi().storage_pool_dfn_list()[0].storage_pool_definitions
+
+        for candidate in lstmsg.candidates:
+            max_vlm_size = SizeCalc.approximate_size_string(candidate.max_volume_size)
+
+            storage_pool_props = [x for x in storage_pool_dfns if x.name == candidate.storage_pool][0].properties
+            max_oversubscription_ratio_props = \
+                [x for x in storage_pool_props if x.key == KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO]
+            max_oversubscription_ratio_prop = max_oversubscription_ratio_props[0].value \
+                if max_oversubscription_ratio_props \
+                else lstmsg.default_max_oversubscription_ratio
+            max_oversubscription_ratio = float(max_oversubscription_ratio_prop)
+
+            tbl.add_row([
+                candidate.storage_pool,
+                max_vlm_size,
+                "Thin, oversubscription ratio " + str(max_oversubscription_ratio) if candidate.all_thin else "Thick",
+                limited_string(candidate.node_names)
+            ])
+        tbl.show()
 
 class MiscCommands(Commands):
     def __init__(self):

@@ -4,6 +4,7 @@ import linstor
 import linstor_client
 from linstor.responses import ResourceGroupResponse
 from linstor_client.commands import Commands, DrbdOptions
+from _ast import alias
 
 
 class ResourceGroupCommands(Commands):
@@ -28,7 +29,8 @@ class ResourceGroupCommands(Commands):
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.DrbdOptions,
-            Commands.Subcommands.Spawn
+            Commands.Subcommands.Spawn,
+            Commands.Subcommands.QueryMaxVlmSize
         ]
 
         # Resource group subcommands
@@ -168,6 +170,19 @@ class ResourceGroupCommands(Commands):
         p_spawn.set_defaults(func=self.spawn)
         #  ------------ SPAWN END
 
+        #  ------------ QMVS START
+        p_qmvs = res_grp_subp.add_parser(
+            Commands.Subcommands.QueryMaxVlmSize.LONG,
+            aliases=[Commands.Subcommands.QueryMaxVlmSize.SHORT],
+            description="Queries maximum volume size for a given resource-group"
+        )
+        p_qmvs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_qmvs.add_argument(
+            'resource_group_name', help="Resource group name to read auto-config settings from"
+        )
+        p_qmvs.set_defaults(func=self.qmvs)
+        #  ------------ QMVS END
+
         self.check_subcommands(res_grp_subp, subcmds)
 
     def create(self, args):
@@ -278,3 +293,13 @@ class ResourceGroupCommands(Commands):
             definitions_only=args.definition_only
         )
         return self.handle_replies(args, replies)
+
+    def qmvs(self, args):
+        replies = self.get_linstorapi().resource_group_qmvs(
+            args.resource_group_name
+        )
+        api_responses = self.get_linstorapi().filter_api_call_response(replies)
+        if api_responses:
+            return self.handle_replies(args, api_responses)
+
+        return self.output_list(args, replies, self._show_query_max_volume)
