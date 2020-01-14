@@ -1,3 +1,24 @@
+linstor-client (1.0.9-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * commands: unhide physical storage commands
+  * physical-storage: allow storage pool creation
+  * commands: remove swordfish support
+  * unittest: fix test execution in py3.6 >=
+  * packaging: use python3 per default
+
+  [ Rainer Laschober ]
+  * StoragePoolDefinition: completely remove this object from the client
+
+  [ Roland Kammerer ]
+  * prepare py2/3 pkg split
+
+  [ Gabor Hernadi ]
+  * Added gross flag for vlmDfn (create and modify)
+  * Added command: rg qmvs rscGrpName
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 14 Jan 2020 08:25:40 +0000
+
 linstor-client (1.0.8-1) experimental; urgency=medium
 
   [ Gabor Hernadi ]
