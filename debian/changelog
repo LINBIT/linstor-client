@@ -1,3 +1,9 @@
+linstor-client (1.0.10-1) experimental; urgency=medium
+
+  * Added support for SPDK in Physical Storage commands
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 15 Jan 2020 07:33:21 +0000
+
 linstor-client (1.0.9-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
