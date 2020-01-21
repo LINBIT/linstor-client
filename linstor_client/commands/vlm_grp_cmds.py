@@ -9,7 +9,8 @@ class VolumeGroupCommands(Commands):
     OBJECT_NAME = 'volume-definition'
 
     _vlm_grp_headers = [
-        linstor_client.TableHeader("VolumeNr")
+        linstor_client.TableHeader("VolumeNr"),
+        linstor_client.TableHeader("Flags")
     ]
 
     def __init__(self):
@@ -47,6 +48,7 @@ class VolumeGroupCommands(Commands):
                                    type=str,
                                    help='Name of the resource group.')
         p_new_vlm_grp.add_argument('-n', '--vlmnr', type=int)
+        p_new_vlm_grp.add_argument('--gross', action="store_true", help="Size for this volume is gross size.")
         p_new_vlm_grp.set_defaults(func=self.create)
         #  ------------ CREATE END
 
@@ -139,7 +141,8 @@ class VolumeGroupCommands(Commands):
     def create(self, args):
         replies = self._linstor.volume_group_create(
             args.name,
-            volume_nr=args.vlmnr
+            volume_nr=args.vlmnr,
+            gross=args.gross
         )
         return self.handle_replies(args, replies)
 
@@ -158,7 +161,7 @@ class VolumeGroupCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
         for vlm_grp in vlm_grps.volume_groups:
-            row = [str(vlm_grp.number)]
+            row = [str(vlm_grp.number), ", ".join(vlm_grp.flags)]
             tbl.add_row(row)
         tbl.show()
 
