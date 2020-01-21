@@ -554,7 +554,7 @@ class LinStorCLI(object):
                     if '-h' in cmds_clone or '--help' in cmds:
                         return
                     if se.code == ExitCode.ARGPARSE_ERROR:
-                        sys.stdout.write("\nIncorrect syntax. Use 'help {cmd}' for more information:\n".format(cmd=cmd))
+                        sys.stderr.write("\nIncorrect syntax. Use 'help {cmd}' for more information:\n".format(cmd=cmd))
                         rc = ExitCode.ARGPARSE_ERROR
                 else:
                     unknown(cmd)
@@ -562,7 +562,7 @@ class LinStorCLI(object):
             except KeyboardInterrupt:
                 pass
             except BaseException:
-                traceback.print_exc(file=sys.stdout)
+                traceback.print_exc(file=sys.stderr)
 
             if rc == ExitCode.CONNECTION_ERROR:
                 sys.exit(rc)
