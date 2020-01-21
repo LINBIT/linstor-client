@@ -3,7 +3,7 @@ import re
 import linstor_client
 import linstor_client.argparse.argparse as argparse
 from linstor import SizeCalc
-from linstor.sharedconsts import FLAG_DELETE, FLAG_RESIZE
+from linstor.sharedconsts import FLAG_DELETE, FLAG_RESIZE, FLAG_GROSS_SIZE
 from linstor_client.commands import Commands, DrbdOptions
 from linstor_client.consts import Color
 
@@ -16,6 +16,7 @@ class VolumeDefinitionCommands(Commands):
         linstor_client.TableHeader("VolumeNr"),
         linstor_client.TableHeader("VolumeMinor"),
         linstor_client.TableHeader("Size"),
+        linstor_client.TableHeader("Gross"),
         linstor_client.TableHeader("State", color=Color.DARKGREEN)
     ]
 
@@ -71,8 +72,10 @@ class VolumeDefinitionCommands(Commands):
             help="Storage pool name to use.").completer = self.storage_pool_dfn_completer
         p_new_vol.add_argument('-n', '--vlmnr', type=int)
         p_new_vol.add_argument('-m', '--minor', type=int)
-        p_new_vol.add_argument('--encrypt', action="store_true",
-                               help="DEPCRECATED - use --layer-list ...,LUKS,... instead (when creating resource /-definition)")
+        p_new_vol.add_argument(
+            '--encrypt',
+            action="store_true",
+            help="DEPCRECATED - use --layer-list ...,LUKS,... instead (when creating resource /-definition)")
         p_new_vol.add_argument('--gross', action="store_true")
         p_new_vol.add_argument('resource_name', type=str,
                                help='Name of an existing resource').completer = self.resource_dfn_completer
@@ -240,6 +243,7 @@ class VolumeDefinitionCommands(Commands):
                     vlmdfn.number,
                     drbd_data.minor if drbd_data else "",
                     SizeCalc.approximate_size_string(vlmdfn.size),
+                    "+" if FLAG_GROSS_SIZE in vlmdfn.flags else "",
                     state
                 ])
         tbl.show()
