@@ -174,7 +174,7 @@ class VolumeCommands(Commands):
 
             rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_usage = ""
-            if rsc_state:
+            if rsc_state and rsc_state.in_use is not None:
                 if rsc_state.in_use:
                     rsc_usage = tbl.color_cell("InUse", Color.GREEN)
                 else:

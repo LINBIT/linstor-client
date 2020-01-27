@@ -443,10 +443,11 @@ class ResourceCommands(Commands):
             if marked_delete:
                 rsc_state = tbl.color_cell("DELETING", Color.RED)
             elif rsc_state_obj:
-                if rsc_state_obj.in_use is not None and rsc_state_obj.in_use:
-                    rsc_usage = tbl.color_cell("InUse", Color.GREEN)
-                else:
-                    rsc_usage = "Unused"
+                if rsc_state_obj.in_use is not None:
+                    if rsc_state_obj.in_use:
+                        rsc_usage = tbl.color_cell("InUse", Color.GREEN)
+                    else:
+                        rsc_usage = "Unused"
                 for vlm in rsc.volumes:
                     vlm_state = VolumeCommands.get_volume_state(rsc_state_obj.volume_states,
                                                                   vlm.number) if rsc_state_obj else None
