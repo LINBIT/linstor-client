@@ -1,3 +1,12 @@
+linstor-client (1.0.11-1) experimental; urgency=medium
+
+  * write interactive errors to stderr
+  * vlm_dfn: show gross size in list
+  * vlm_grp: support gross sizes
+  * rsc/vlm-list: do not show unused if state is unknown
+
+ -- Rene Peinthor <peinthor@gmail.com>  Mon, 27 Jan 2020 13:36:50 +0000
+
 linstor-client (1.0.10-1) experimental; urgency=medium
 
   * Added support for SPDK in Physical Storage commands
