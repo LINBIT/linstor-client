@@ -113,7 +113,7 @@ echo "migration disabled, review script and remove this line"; exit 1\n
             MigrateCommands.lsc(of, 'resource', 'create-transactional',
                                 'begin', '--terminate-on-error', '<<EOF')
         for args in overall_args:
-                MigrateCommands.lsc(of, 'resource', 'create', *args)
+            MigrateCommands.lsc(of, 'resource', 'create', *args)
         if needs_transaction:
             MigrateCommands.lsc(of, 'resource', 'create-transactional', 'commit')
             of.write('EOF\n')
