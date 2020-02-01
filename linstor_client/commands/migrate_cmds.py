@@ -42,15 +42,15 @@ echo "migration disabled, review script and remove this line"; exit 1\n
     @staticmethod
     def _get_selection(question, options, default=''):
         # py2/3
-        try:
-            input = raw_input
-        except NameError:
-            pass
+        if sys.version_info < (3,):
+            my_input = raw_input
+        else:
+            my_input = input
 
         def ask(prefix):
             if default:
                 prefix += ' or <Enter> for "%s"' % (default)
-            ans = input('%s: ' % (prefix))
+            ans = my_input('%s: ' % (prefix))
             if ans == '':  # <Enter>
                 return default  # which is the set default or ''
             return ans
