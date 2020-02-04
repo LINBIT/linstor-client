@@ -1,6 +1,6 @@
 FROM centos:centos7 as builder
 
-ENV LINSTOR_CLI_VERSION 1.0.11
+ENV LINSTOR_CLI_VERSION 1.0.12
 ENV PYTHON_LINSTOR_VERSION 1.0.11
 
 ENV LINSTOR_CLI_PKGNAME linstor-client
@@ -44,7 +44,7 @@ FROM registry.access.redhat.com/ubi7/ubi
 MAINTAINER Roland Kammerer <roland.kammerer@linbit.com>
 
 # ENV can not be shared between builder and "main"
-ENV LINSTOR_CLI_VERSION 1.0.11
+ENV LINSTOR_CLI_VERSION 1.0.12
 ARG release=1
 
 LABEL name="linstor-client" \

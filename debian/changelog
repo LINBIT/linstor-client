@@ -1,3 +1,12 @@
+linstor-client (1.0.12-1) experimental; urgency=medium
+
+  [ Roland Kammerer ]
+  * dm-migrate: fix py2/3 input()
+  * dm-migrate: 0-pad current GI
+  * dm-migrate: fix overindentation
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 04 Feb 2020 09:53:59 +0000
+
 linstor-client (1.0.11-1) experimental; urgency=medium
 
   * write interactive errors to stderr
@@ -5,7 +14,7 @@ linstor-client (1.0.11-1) experimental; urgency=medium
   * vlm_grp: support gross sizes
   * rsc/vlm-list: do not show unused if state is unknown
 
- -- Rene Peinthor <peinthor@gmail.com>  Mon, 27 Jan 2020 13:36:50 +0000
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 27 Jan 2020 13:36:50 +0000
 
 linstor-client (1.0.10-1) experimental; urgency=medium
 
