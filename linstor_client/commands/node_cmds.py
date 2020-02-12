@@ -423,16 +423,16 @@ class NodeCommands(Commands):
             tbl.add_header(hdr)
 
         conn_stat_dict = {
-            "OFFLINE": ("OFFLINE", Color.RED),
-            "CONNECTED": ("Connected", Color.YELLOW),
-            "ONLINE": ("Online", Color.GREEN),
-            "VERSION_MISMATCH": ("OFFLINE(VERSION MISMATCH)", Color.RED),
-            "FULL_SYNC_FAILED": ("OFFLINE(FULL SYNC FAILED)", Color.RED),
-            "AUTHENTICATION_ERROR": ("OFFLINE(AUTHENTICATION ERROR)", Color.RED),
-            "UNKNOWN": ("Unknown", Color.YELLOW),
-            "HOSTNAME_MISMATCH": ("OFFLINE(HOSTNAME MISMATCH)", Color.RED),
-            "OTHER_CONTROLLER": ("OFFLINE(OTHER_CONTROLLER)", Color.RED),
-            "NO_STLT_CONN": ("OFFLINE(NO CONNECTION TO SATELLITE)", Color.RED)
+            apiconsts.ConnectionStatus.OFFLINE.name: ("OFFLINE", Color.RED),
+            apiconsts.ConnectionStatus.CONNECTED.name: ("Connected", Color.YELLOW),
+            apiconsts.ConnectionStatus.ONLINE.name: ("Online", Color.GREEN),
+            apiconsts.ConnectionStatus.VERSION_MISMATCH.name: ("OFFLINE(VERSION MISMATCH)", Color.RED),
+            apiconsts.ConnectionStatus.FULL_SYNC_FAILED.name: ("OFFLINE(FULL SYNC FAILED)", Color.RED),
+            apiconsts.ConnectionStatus.AUTHENTICATION_ERROR.name: ("OFFLINE(AUTHENTICATION ERROR)", Color.RED),
+            apiconsts.ConnectionStatus.UNKNOWN.name: ("Unknown", Color.YELLOW),
+            apiconsts.ConnectionStatus.HOSTNAME_MISMATCH.name: ("OFFLINE(HOSTNAME MISMATCH)", Color.RED),
+            apiconsts.ConnectionStatus.OTHER_CONTROLLER.name: ("OFFLINE(OTHER_CONTROLLER)", Color.RED),
+            apiconsts.ConnectionStatus.NO_STLT_CONN.name: ("OFFLINE(NO CONNECTION TO SATELLITE)", Color.RED)
         }
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
