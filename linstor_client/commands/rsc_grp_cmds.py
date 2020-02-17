@@ -263,7 +263,7 @@ class ResourceGroupCommands(Commands):
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)
-        mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        mod_prop_dict = Commands.parse_key_value_pairs([(args.key, args.value)])
         replies = self._linstor.resource_group_modify(
             args.name,
             property_dict=mod_prop_dict['pairs'],

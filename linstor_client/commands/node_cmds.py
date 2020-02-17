@@ -717,7 +717,7 @@ class NodeCommands(Commands):
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)
-        mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        mod_prop_dict = Commands.parse_key_value_pairs([(args.key, args.value)])
         replies = self.get_linstorapi().node_modify(
             args.node_name,
             property_dict=mod_prop_dict['pairs'],

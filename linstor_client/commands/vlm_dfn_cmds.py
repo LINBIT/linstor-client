@@ -290,7 +290,7 @@ class VolumeDefinitionCommands(Commands):
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)
-        mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        mod_prop_dict = Commands.parse_key_value_pairs([(args.key, args.value)])
         replies = self._linstor.volume_dfn_modify(
             args.resource_name,
             args.volume_nr,

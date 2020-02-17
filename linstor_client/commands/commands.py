@@ -351,18 +351,14 @@ class Commands(object):
         Parses a key value pair pairs in an easier to use dict.
         If a key has no value it will be put on the delete list.
 
-        :param list[str] kv_pairs: a list of key value pair strings. ['key=val', 'key2=val2']
-        :return dict[str, str]:
+        :param list[Tuple[str,str]] kv_pairs: a list of key value pair strings. [('key','val'), ('key2','val2')]
+        :return: dict with key 'pairs': [key: value] and 'delete': [array]
+        :rtype Dict[str, str]
         """
         pairs = {}
         delete = []
         for kv in kv_pairs:
-            if '=' not in kv:
-                raise LinstorClientError(
-                    "KeyValueParseError: Key value '{kv}' pair does not contain a '='".format(kv=kv),
-                    ExitCode.ARGPARSE_ERROR
-                )
-            key, value = kv.split('=', 1)
+            key, value = kv
             if value:
                 pairs[key] = value
             else:

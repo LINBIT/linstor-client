@@ -129,7 +129,7 @@ class ControllerCommands(Commands):
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)
-        props = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        props = Commands.parse_key_value_pairs([(args.key, args.value)])
 
         replies = []
         for prop_key, prop_value in props['pairs'].items():

@@ -229,7 +229,7 @@ class VolumeCommands(Commands):
 
     def set_props(self, args):
         args = self._attach_aux_prop(args)
-        mod_prop_dict = Commands.parse_key_value_pairs([args.key + '=' + args.value])
+        mod_prop_dict = Commands.parse_key_value_pairs([(args.key, args.value)])
         replies = self._linstor.volume_modify(
             args.node_name,
             args.resource_name,
