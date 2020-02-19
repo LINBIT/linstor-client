@@ -24,6 +24,7 @@ class ResourceDefinitionCommands(Commands):
     def setup_commands(self, parser):
         subcmds = [
             Commands.Subcommands.Create,
+            Commands.Subcommands.AutoPlace,
             Commands.Subcommands.Modify,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
@@ -68,6 +69,17 @@ class ResourceDefinitionCommands(Commands):
                                    type=str,
                                    help='Name of the new resource definition. Will be ignored if EXTERNAL_NAME is set.')
         p_new_res_dfn.set_defaults(func=self.create)
+
+        p_auto_place = res_def_subp.add_parser(
+            Commands.Subcommands.AutoPlace.LONG,
+            aliases=[Commands.Subcommands.AutoPlace.SHORT],
+            description='Auto place a resource definition')
+        self.add_auto_select_argparse_arguments(p_auto_place, use_place_count=True)
+        p_auto_place.add_argument(
+            'resource_definition_name',
+            help='Name of the resource definition to auto place'
+        )
+        p_auto_place.set_defaults(func=self.auto_place)
 
         # modify-resource definition
         p_mod_res_dfn = res_def_subp.add_parser(
@@ -166,6 +178,20 @@ class ResourceDefinitionCommands(Commands):
             layer_list=args.layer_list,
             resource_group=args.resource_group
         )
+        return self.handle_replies(args, replies)
+
+    def auto_place(self, args):
+        replies = self.get_linstorapi().resource_auto_place(
+            rsc_name=args.resource_definition_name,
+            place_count=args.place_count,
+            storage_pool=args.storage_pool,
+            do_not_place_with=args.do_not_place_with,
+            do_not_place_with_regex=args.do_not_place_with_regex,
+            replicas_on_same=[linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_same],
+            replicas_on_different=[linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different],
+            diskless_on_remaining=args.diskless_on_remaining,
+            layer_list=args.layer_list,
+            provider_list=args.providers)
         return self.handle_replies(args, replies)
 
     def modify(self, args):

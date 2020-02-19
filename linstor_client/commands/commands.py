@@ -114,6 +114,10 @@ class Commands(object):
             LONG = "create"
             SHORT = "c"
 
+        class AutoPlace(object):
+            LONG = "auto-place"
+            SHORT = "ap"
+
         class CreateDevicePool(object):
             LONG = "create-device-pool"
             SHORT = "cdp"
