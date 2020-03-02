@@ -25,10 +25,10 @@ class TestProperties(LinstorTestCase):
         # self.assertTrue(rsc_resps[2].is_warning())  # satellite not reachable
 
         # start prop tests
-        node_resp = self.execute_with_single_resp(
+        node_resp = self.execute_with_resp(
             ['node', 'set-property', 'node1', '--aux', 'test_prop', 'val']
         )
-        self.assert_api_succuess(node_resp)
+        self.assert_apis_success(node_resp)
 
         node_props = self.execute_with_machine_output(['node', 'list-properties', 'node1'])
         self.assertEqual(1, len(node_props))
@@ -37,10 +37,10 @@ class TestProperties(LinstorTestCase):
         prop = self.find_prop(node_props, NAMESPC_AUXILIARY + '/test_prop')
         self.check_prop(prop, NAMESPC_AUXILIARY + '/test_prop', 'val')
 
-        node_resp = self.execute_with_single_resp(
+        node_resp = self.execute_with_resp(
             ['node', 'set-property', 'node1', '--aux', 'another_prop', 'value with spaces']
         )
-        self.assert_api_succuess(node_resp)
+        self.assert_apis_success(node_resp)
 
         node_props = self.execute_with_machine_output(['node', 'list-properties', 'node1'])
         self.assertEqual(1, len(node_props))
@@ -57,8 +57,7 @@ class TestProperties(LinstorTestCase):
             ['resource-definition', 'set-property', 'rsc1', '--aux', 'user', 'alexa']
         )
         print(resourcedef_resp)
-        self.assertEqual(1, len(resourcedef_resp))
-        self.assert_api_succuess(resourcedef_resp[0])
+        self.assert_apis_success(resourcedef_resp)
 
         resourcedef_props = self.execute_with_machine_output(['resource-definition', 'list-properties', 'rsc1'])
         self.assertEqual(1, len(resourcedef_props))
@@ -71,7 +70,7 @@ class TestProperties(LinstorTestCase):
         volumedef_resp = self.execute_with_resp(
             ['volume-definition', 'set-property', 'rsc1', '0', '--aux', 'volumespec', 'cascading']
         )
-        self.assertEqual(1, len(volumedef_resp))
+        self.assertEqual(2, len(volumedef_resp))
 
         volumedef_props = self.execute_with_machine_output(['volume-definition', 'list-properties', 'rsc1', '0'])
         self.assertEqual(1, len(volumedef_props))

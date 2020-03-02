@@ -224,6 +224,17 @@ class LinstorTestCase(unittest.TestCase):
             raise AssertionError("ApiCall no success: " + str(apicall_rc))
         return True
 
+    @classmethod
+    def assert_apis_success(cls, apicalls):
+        """
+
+        :param list[ApiCallResponse] apicalls:
+        :return:
+        """
+        if not all([not x.is_error() for x in apicalls]):
+            raise AssertionError("ApiCall no success: " + str([x for x in apicalls if x.is_error()][0]))
+        return True
+
     def find_prop(self, props, key):
         for prop in props:
             self.assertIn('key', prop)
