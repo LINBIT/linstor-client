@@ -1,3 +1,12 @@
+linstor-client (1.0.13-1) experimental; urgency=medium
+
+  * use new ConnectionStatus enum const
+  * Fix set property if key with '=' is given
+  * rsc-dfn: add auto-place command
+  * tests: fix client unittests
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 03 Mar 2020 14:21:19 +0000
+
 linstor-client (1.0.12-1) experimental; urgency=medium
 
   [ Roland Kammerer ]
