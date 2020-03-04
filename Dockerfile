@@ -32,6 +32,7 @@ RUN cd ${HOME} && \
 		 cd ${PYTHON_LINSTOR_PKGNAME}-${PYTHON_LINSTOR_VERSION} && \
 		 make PYTHON=python2 gensrc && \
 		 mv setup.cfg.py2 setup.cfg && \
+		 sed -i -e "s/:python_version<'3'/python-enum34/" setup.py && \
 		 make PYTHON=python2 rpm && mv ./dist/*.rpm /tmp/
 RUN cd ${HOME} && \
 		 cp /tmp/${LINSTOR_CLI_TGZ} ${HOME} && \
