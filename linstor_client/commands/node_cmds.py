@@ -371,16 +371,32 @@ class NodeCommands(Commands):
         self.check_subcommands(interface_subp, netif_subcmds)
         self.check_subcommands(node_subp, subcmds)
 
+    @classmethod
+    def _resolve_remote_ip(cls, hostname):
+        """
+        Tries to resolve a non local ip address of the given hostname
+        :param str hostname: hostname to resolve
+        :return: ip address as string or None if it couldn't be resolved
+        :rtype: str
+        :raise: LinstorClientError if unable to determine an address
+        """
+        try:
+            addrinfo = socket.getaddrinfo(hostname, None)
+
+            non_local = [y for y in addrinfo if y[0] == 2 and not y[4][0].startswith('127.')]
+            if non_local:
+                return non_local[0][4][0]
+            raise LinstorClientError(
+                "Unable determine a valid ip address '" + hostname + "'", ExitCode.ARGPARSE_ERROR)
+
+        except socket.gaierror as err:
+            raise LinstorClientError(
+                "Unable to resolve ip address for '" + hostname + "': " + str(err), ExitCode.ARGPARSE_ERROR)
+
     def create(self, args):
         ip_addr = args.ip
         if args.ip is None:
-            try:
-                ip_addr = socket.gethostbyname(args.name)
-            except socket.gaierror as err:
-                raise LinstorClientError(
-                    "Unable to resolve ip address for '" + args.name + "': " + str(err),
-                    ExitCode.ARGPARSE_ERROR
-                )
+            ip_addr = self._resolve_remote_ip(args.name)
 
         replies = self._linstor.node_create(
             args.name,
