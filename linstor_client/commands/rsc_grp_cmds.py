@@ -4,7 +4,6 @@ import linstor
 import linstor_client
 from linstor.responses import ResourceGroupResponse
 from linstor_client.commands import Commands, DrbdOptions
-from _ast import alias
 
 
 class ResourceGroupCommands(Commands):
@@ -125,7 +124,10 @@ class ResourceGroupCommands(Commands):
             aliases=[Commands.Subcommands.SetProperty.SHORT],
             formatter_class=argparse.RawTextHelpFormatter,
             description='Sets properties for the given resource group.')
-        p_setprop.add_argument('name', type=str, help='Name of the resource group')
+        p_setprop.add_argument(
+            'name',
+            type=str,
+            help='Name of the resource group').completer = self.resource_grp_completer
         Commands.add_parser_keyvalue(p_setprop, self.OBJECT_NAME)
         p_setprop.set_defaults(func=self.set_props)
         #  ------------ SETPROPS END
@@ -159,7 +161,7 @@ class ResourceGroupCommands(Commands):
         )
         p_spawn.add_argument(
             'resource_group_name', help="Resource group name to spawn from."
-        )
+        ).completer = self.resource_grp_completer
         p_spawn.add_argument(
             'resource_definition_name', help="New Resource definition name to create"
         )
@@ -179,7 +181,7 @@ class ResourceGroupCommands(Commands):
         p_qmvs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_qmvs.add_argument(
             'resource_group_name', help="Resource group name to read auto-config settings from"
-        )
+        ).completer = self.resource_grp_completer
         p_qmvs.set_defaults(func=self.qmvs)
         #  ------------ QMVS END
 
