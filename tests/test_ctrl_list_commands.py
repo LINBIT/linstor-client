@@ -30,7 +30,7 @@ class TestListCommands(LinstorTestCase):
 
     def test_volume_text(self):
         text_out = self.execute_with_text_output(["resource", "list-volumes"])
-        self.assertIn("VolumeNr", text_out)
+        self.assertIn("VolNr", text_out)
 
     def test_storage_pools(self):
         jout = self.execute_with_machine_output(["storage-pool", "list"])

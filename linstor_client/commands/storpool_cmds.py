@@ -47,7 +47,7 @@ class StoragePoolCommands(Commands):
         linstor_client.TableHeader("PoolName"),
         linstor_client.TableHeader("FreeCapacity", alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
         linstor_client.TableHeader("TotalCapacity", alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
-        linstor_client.TableHeader("SupportsSnapshots"),
+        linstor_client.TableHeader("CanSnapshots"),
         linstor_client.TableHeader("State")
     ]
 

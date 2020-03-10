@@ -158,10 +158,10 @@ class VolumeCommands(Commands):
         tbl.add_column("Node")
         tbl.add_column("Resource")
         tbl.add_column("StoragePool")
-        tbl.add_column("VolumeNr")
-        tbl.add_column("MinorNr")
+        tbl.add_column("VolNr", just_txt='>')
+        tbl.add_column("MinorNr", just_txt='>')
         tbl.add_column("DeviceName")
-        tbl.add_column("Allocated")
+        tbl.add_column("Allocated", just_txt='>')
         tbl.add_column("InUse", color=Output.color(Color.DARKGREEN, args.no_color))
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
