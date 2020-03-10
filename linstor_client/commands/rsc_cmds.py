@@ -36,7 +36,8 @@ class ResourceCommands(Commands):
         linstor_client.TableHeader("Node"),
         linstor_client.TableHeader("Port"),
         linstor_client.TableHeader("Usage", Color.DARKGREEN),
-        linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text=linstor_client.TableHeader.ALIGN_RIGHT)
+        linstor_client.TableHeader("Conns", Color.DARKGREEN),
+        linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
     ]
 
     def __init__(self, state_service):
@@ -414,12 +415,9 @@ class ResourceCommands(Commands):
         :param linstor.responses.ResourceResponse lstmsg:
         :return:
         """
-        rsc_dfns = self._linstor.resource_dfn_list(query_volume_definitions=False)
-        if isinstance(rsc_dfns[0], linstor.ApiCallResponse):
-            return self.handle_replies(args, rsc_dfns)
-        rsc_dfns = rsc_dfns[0].resource_definitions
+        rsc_dfns = self._linstor.resource_dfn_list_raise(query_volume_definitions=False)
 
-        rsc_dfn_map = {x.name: x for x in rsc_dfns}
+        rsc_dfn_map = {x.name: x for x in rsc_dfns.resource_definitions}
         rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
 
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
@@ -438,29 +436,48 @@ class ResourceCommands(Commands):
                 rsc_dfn_port = drbd_data.port if drbd_data else ""
             marked_delete = apiconsts.FLAG_DELETE in rsc.flags
             rsc_state_obj = rsc_state_lkup.get(rsc.node_name + rsc.name)
-            rsc_state = tbl.color_cell("Unknown", Color.YELLOW)
+            rsc_state_color = Color.YELLOW
+            rsc_state = "Unknown"
             rsc_usage = ""
             if marked_delete:
-                rsc_state = tbl.color_cell("DELETING", Color.RED)
+                rsc_state_color = Color.RED
+                rsc_state = "DELETING"
             elif rsc_state_obj:
                 if rsc_state_obj.in_use is not None:
                     if rsc_state_obj.in_use:
-                        rsc_usage = tbl.color_cell("InUse", Color.GREEN)
+                        rsc_state_color = Color.GREEN
+                        rsc_usage = "InUse"
                     else:
                         rsc_usage = "Unused"
                 for vlm in rsc.volumes:
-                    vlm_state = VolumeCommands.get_volume_state(rsc_state_obj.volume_states,
-                                                                  vlm.number) if rsc_state_obj else None
-                    state_txt, color = VolumeCommands.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
-                    rsc_state = tbl.color_cell(state_txt, color)
-                    if color is not None:
+                    vlm_state = VolumeCommands.get_volume_state(rsc_state_obj.volume_states, vlm.number) \
+                        if rsc_state_obj else None
+                    rsc_state, rsc_state_color = VolumeCommands.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
+                    if rsc_state_color is not None:
                         break
+
+            # check if connections failed
+            conns_col = ""
+            conns_col_entries = None
+            if rsc_state != "Unknown" and not self.get_linstorapi().api_version_smaller("1.0.15"):
+                failed_conns = {}
+                if rsc.layer_data.drbd_resource is not None:
+                    connections = rsc.layer_data.drbd_resource.connections
+                    for k, v in connections.items():
+                        if not v.connected:
+                            if v.message not in failed_conns:
+                                failed_conns[v.message] = []
+                            failed_conns[v.message].append(k)
+                conns_col_entries = ["{s}({n})".format(s=k, n=",".join(v)) for k, v in failed_conns.items()]
+                conns_col = tbl.color_cell(",".join(conns_col_entries), Color.RED) if conns_col_entries else "Ok"
+
             tbl.add_row([
                 rsc.name,
                 rsc.node_name,
                 rsc_dfn_port,
                 rsc_usage,
-                rsc_state
+                conns_col,
+                tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color)
             ])
         tbl.show()
 
