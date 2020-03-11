@@ -1,3 +1,15 @@
+linstor-client (1.0.14-1) experimental; urgency=medium
+
+  * resource-groups: fix missing completers
+  * node: improve node ip resolving
+  * node: only show satellite nodes info
+  * improve: table column headers
+  * Add drbd-connection info to resource and volume list output
+  * add openflex node create and storage pool create
+  * tests: fix suite not returning correct exit code
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 11 Mar 2020 13:24:11 +0000
+
 linstor-client (1.0.13-1) experimental; urgency=medium
 
   * use new ConnectionStatus enum const
