@@ -45,6 +45,10 @@ class NodeCommands(Commands):
         ]
     ]
 
+    class CreateOpenFlexTarget:
+        LONG = "create-openflex-target"
+        SHORT = "coft"
+
     class Reconnect:
         LONG = "reconnect"
         SHORT = "rc"
@@ -56,6 +60,7 @@ class NodeCommands(Commands):
         # Node subcommands
         subcmds = [
             Commands.Subcommands.Create,
+            NodeCommands.CreateOpenFlexTarget,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
             Commands.Subcommands.Lost,
@@ -126,6 +131,21 @@ class NodeCommands(Commands):
             help='IP address of the new node, if not specified it will be resolved by the name.'
         ).completer = ip_completer("name")
         p_new_node.set_defaults(func=self.create)
+
+        # openflex create
+        p_create_of_target = node_subp.add_parser(
+            NodeCommands.CreateOpenFlexTarget.LONG,
+            aliases=[NodeCommands.CreateOpenFlexTarget.SHORT],
+            description='Creates a virtual on controller openflex target node.'
+        )
+        p_create_of_target.add_argument(
+            'node_name',
+            help='Name of the new openflex target node',
+            type=str
+        )
+        p_create_of_target.add_argument('stor_dev_host', help='OpenFlex storage device host')
+        p_create_of_target.add_argument('stor_dev', help='OpenFlex storage device id')
+        p_create_of_target.set_defaults(func=self.create_of_target)
 
         # modify node
         p_modify_node = node_subp.add_parser(
@@ -407,6 +427,19 @@ class NodeCommands(Commands):
             args.interface_name
         )
 
+        return self.handle_replies(args, replies)
+
+    def create_of_target(self, args):
+        props = {
+            apiconsts.NAMESPC_STORAGE_DRIVER + '/' + apiconsts.KEY_STOR_POOL_OPENFLEX_STOR_DEV_HOST: args.stor_dev_host,
+            apiconsts.NAMESPC_STORAGE_DRIVER + '/' + apiconsts.KEY_STOR_POOL_OPENFLEX_STOR_DEV: args.stor_dev
+        }
+        replies = self.get_linstorapi().node_create(
+            args.node_name,
+            apiconsts.VAL_NODE_TYPE_OPENFLEX_TARGET,
+            "127.0.0.1",
+            property_dict=props
+        )
         return self.handle_replies(args, replies)
 
     def modify_node(self, args):

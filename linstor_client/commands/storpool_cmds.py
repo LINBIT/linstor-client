@@ -40,6 +40,10 @@ class StoragePoolCommands(Commands):
         LONG = "spdk"
         SHORT = "spdk"
 
+    class OpenFlex(object):
+        LONG = "openflex"
+        SHORT = "openflex"
+
     _stor_pool_headers = [
         linstor_client.TableHeader("StoragePool"),
         linstor_client.TableHeader("Node"),
@@ -97,7 +101,8 @@ class StoragePoolCommands(Commands):
             StoragePoolCommands.Diskless,
             StoragePoolCommands.File,
             StoragePoolCommands.FileThin,
-            StoragePoolCommands.SPDK
+            StoragePoolCommands.SPDK,
+            StoragePoolCommands.OpenFlex
         ]
 
         sp_c_parser = sp_subp.add_parser(
@@ -137,8 +142,6 @@ class StoragePoolCommands(Commands):
             help='The Spdk volume group to use.'
         )
         p_new_spdk_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.SPDK)
-
-
 
         p_new_lvm_thin_pool = create_subp.add_parser(
             StoragePoolCommands.LvmThin.LONG,
@@ -217,6 +220,19 @@ class StoragePoolCommands(Commands):
         )
         p_new_file_thin_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.FILEThin)
 
+        p_new_openflex_pool = create_subp.add_parser(
+            StoragePoolCommands.OpenFlex.LONG,
+            aliases=[StoragePoolCommands.OpenFlex.SHORT],
+            description='Create an openflex storage pool'
+        )
+        self._create_pool_args(p_new_openflex_pool, shared_space=False)
+        p_new_openflex_pool.add_argument(
+            'driver_pool_name',
+            type=str,
+            help='OpenFlex pool index'
+        )
+        p_new_openflex_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.OPENFLEX_TARGET)
+
         # END CREATE SUBCMDS
 
         # remove-storpool
@@ -293,7 +309,7 @@ class StoragePoolCommands(Commands):
 
     def create(self, args):
         try:
-            shrd_space = None if args.driver == linstor.StoragePoolDriver.Diskless else args.shared_space
+            shrd_space = None if "shared_space" not in args else args.shared_space
             replies = self.get_linstorapi().storage_pool_create(
                 args.node_name,
                 args.name,
