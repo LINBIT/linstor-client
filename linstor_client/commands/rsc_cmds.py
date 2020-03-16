@@ -439,13 +439,14 @@ class ResourceCommands(Commands):
             rsc_state_color = Color.YELLOW
             rsc_state = "Unknown"
             rsc_usage = ""
+            rsc_usage_color = None
             if marked_delete:
                 rsc_state_color = Color.RED
                 rsc_state = "DELETING"
             elif rsc_state_obj:
                 if rsc_state_obj.in_use is not None:
                     if rsc_state_obj.in_use:
-                        rsc_state_color = Color.GREEN
+                        rsc_usage_color = Color.GREEN
                         rsc_usage = "InUse"
                     else:
                         rsc_usage = "Unused"
@@ -475,7 +476,7 @@ class ResourceCommands(Commands):
                 rsc.name,
                 rsc.node_name,
                 rsc_dfn_port,
-                rsc_usage,
+                tbl.color_cell(rsc_usage, rsc_usage_color) if rsc_usage_color else rsc_usage,
                 conns_col,
                 tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color)
             ])
