@@ -82,7 +82,7 @@ class DrbdOptions(object):
                 #                 default=default, help="Range: [%d, %d]; Default: %d" %(min_, max_, default))
                 # setting a default sets the option to != None, which makes
                 # filterNew relatively complex
-                if 'unit' in option and option['unit'] == 'bytes':
+                if DrbdOptions._is_byte_unit(option):
                     parser.add_argument(
                         '--' + opt_key,
                         type=str,
@@ -105,6 +105,12 @@ class DrbdOptions(object):
         return filter_new_args(cls.unsetprefix, args)
 
     @classmethod
+    def _is_byte_unit(cls, option):
+        return option.get('unit') in ['bytes', 'bytes/second'] or option['drbd_option_name'] in [
+            'al-extents', 'max-io-depth', 'congestion-extents', 'max-buffers'
+        ]  # the named options are thought to make sense here, even they are not directly bytes
+
+    @classmethod
     def parse_opts(cls, new_args, object_name):
         modify = {}
         deletes = []
@@ -118,9 +124,10 @@ class DrbdOptions(object):
             if is_unset:
                 deletes.append(key)
             else:
-                if 'bytes' in option and option['unit'] == 'bytes':
-                    value = SizeCalc.auto_convert(value, SizeCalc.UNIT_B)
-                    if option['min'] < value < option['max']:
+                if DrbdOptions._is_byte_unit(option):
+                    unit = SizeCalc.UNIT_KiB if option.get('unit_prefix') == 'k' else SizeCalc.UNIT_B
+                    value = SizeCalc.auto_convert(value, unit)
+                    if option['min'] <= value <= option['max']:
                         value = str(value)
                     else:
                         raise argparse.ArgumentTypeError(
