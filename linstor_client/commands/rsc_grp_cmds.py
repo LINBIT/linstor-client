@@ -259,7 +259,7 @@ class ResourceGroupCommands(Commands):
         return result
 
     def print_props(self, args):
-        lstmsg = [self._linstor.resource_group_list_raise()]
+        lstmsg = [self._linstor.resource_group_list_raise(filter_by_resource_groups=[args.name])]
 
         return self.output_props_list(args, lstmsg, self._props_show)
 
