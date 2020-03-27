@@ -105,7 +105,7 @@ class ResourceDefinitionCommands(Commands):
         p_rm_res_dfn.add_argument(
             '--async',
             action='store_true',
-            help='Do not wait for actual deletion on satellites before returning'
+            help='Deprecated, kept for compatibility'
         )
         p_rm_res_dfn.add_argument(
             'name',

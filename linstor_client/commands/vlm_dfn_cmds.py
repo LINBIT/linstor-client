@@ -98,7 +98,7 @@ class VolumeDefinitionCommands(Commands):
         p_rm_vol.add_argument(
             '--async',
             action='store_true',
-            help='Do not wait for actual deletion on satellites before returning'
+            help='Deprecated, kept for compatibility'
         )
         p_rm_vol.add_argument('resource_name',
                               help='Resource name of the volume definition'

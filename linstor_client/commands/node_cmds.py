@@ -192,7 +192,7 @@ class NodeCommands(Commands):
         p_rm_node.add_argument(
             '--async',
             action='store_true',
-            help='Do not wait for actual deletion on satellites before returning'
+            help='Deprecated, kept for compatibility'
         )
         p_rm_node.add_argument('name',
                                help='Name of the node to remove').completer = self.node_completer
@@ -208,7 +208,7 @@ class NodeCommands(Commands):
         p_lost_node.add_argument(
             '--async',
             action='store_true',
-            help='Do not wait for actual deletion on peers before returning'
+            help='Deprecated, kept for compatibility'
         )
         p_lost_node.add_argument(
             'name',

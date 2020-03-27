@@ -46,7 +46,7 @@ class SnapshotCommands(Commands):
         p_new_snapshot.add_argument(
             '--async',
             action='store_true',
-            help='Do not wait for deployment on satellites before returning'
+            help='Deprecated, kept for compatibility'
         )
         p_new_snapshot.add_argument(
             'node_name',

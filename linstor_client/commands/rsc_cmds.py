@@ -88,7 +88,7 @@ class ResourceCommands(Commands):
         p_new_res.add_argument(
             '--async',
             action='store_true',
-            help='Do not wait for deployment on satellites before returning'
+            help='Deprecated, kept for compatibility'
         )
         p_new_res.add_argument(
             '--nvme-initiator',
@@ -124,7 +124,7 @@ class ResourceCommands(Commands):
         p_rm_res.add_argument(
             '--async',
             action='store_true',
-            help='Do not wait for actual deletion on satellites before returning'
+            help='Deprecated, kept for compatibility'
         )
         p_rm_res.add_argument('node_name',
                               nargs="+",
@@ -271,7 +271,7 @@ class ResourceCommands(Commands):
         p_toggle_disk.add_argument(
             '--async',
             action='store_true',
-            help='Do not wait to apply changes on satellites before returning'
+            help='Deprecated, kept for compatibility'
         )
         p_toggle_disk.add_argument(
             '--migrate-from',
@@ -339,7 +339,7 @@ class ResourceCommands(Commands):
         p_transactional_create_commit.add_argument(
             '--async',
             action='store_true',
-            help='Do not wait for deployment on satellites before returning'
+            help='Deprecated, kept for compatibility'
         )
         p_transactional_create_commit.set_defaults(
             func=self.transactional_create_commit, allowed_states=[ResourceCreateTransactionState])
