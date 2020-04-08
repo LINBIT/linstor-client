@@ -1,3 +1,16 @@
+linstor-client (1.0.15-1) experimental; urgency=medium
+
+  * fix resource usage color output
+  * drbd-opts: fix byte like string options
+  * rsc_grp: fix resource group list properties
+  * document --async flag as deprecated
+  * rsc_groups: fix modifying resource groups
+  * node-describe: fix locale/utf8 check
+  * add auto-select test and improve diskless on remaining description
+  * rsc-grp-spawn: support external name
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 08 Apr 2020 14:00:43 +0000
+
 linstor-client (1.0.14-1) experimental; urgency=medium
 
   * resource-groups: fix missing completers
