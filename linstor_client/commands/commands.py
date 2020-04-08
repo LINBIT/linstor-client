@@ -489,7 +489,8 @@ class Commands(object):
             '--diskless-on-remaining',
             nargs='?',
             default=argparse.SUPPRESS,
-            help='Will add a diskless resource on all non replica nodes.'
+            help='Will add a diskless resource on all non replica nodes. '
+                 'Setting can be unset if "false" is given as argument'
         )
         parser.add_argument(
             '-l', '--layer-list',

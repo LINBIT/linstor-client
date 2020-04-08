@@ -178,6 +178,15 @@ class TestCreateCommands(LinstorTestCase):
         self.assertEqual('mypool', mygrp['select_filter']['storage_pool'])
         self.assertTrue('layer_stack' not in mygrp['select_filter'])
 
+        # remove storage pool
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'modify', grp_name, '--storage-pool='])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertTrue('storage_pool' not in mygrp['select_filter'])
+        self.assertTrue('layer_stack' not in mygrp['select_filter'])
+
         # delete mygrp
         rsc_grp = self.execute_with_single_resp(
             ['resource-group', 'delete', grp_name])
