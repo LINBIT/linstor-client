@@ -163,7 +163,11 @@ class ResourceGroupCommands(Commands):
             'resource_group_name', help="Resource group name to spawn from."
         ).completer = self.resource_grp_completer
         p_spawn.add_argument(
-            'resource_definition_name', help="New Resource definition name to create"
+            'resource_definition_name',
+            help="New Resource definition name to create. Will be ignored if EXTERNAL_NAME is set."
+        )
+        p_spawn.add_argument(
+            '--external-name', type=str, help="User specified name"
         )
         p_spawn.add_argument(
             'volume_sizes',
@@ -294,7 +298,8 @@ class ResourceGroupCommands(Commands):
             args.resource_definition_name,
             vlm_sizes=args.volume_sizes,
             partial=args.partial,
-            definitions_only=args.definition_only
+            definitions_only=args.definition_only,
+            external_name=args.external_name
         )
         return self.handle_replies(args, replies)
 
