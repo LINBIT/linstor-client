@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 from linstor_client.consts import Color
+import locale
 
 
 class TreeFormatter:
@@ -21,12 +22,10 @@ class TreeFormatter:
 
     def __init__(self, no_utf8, no_color):
         enc = 'ascii'
-        try:
-            import locale
-            if (locale.getdefaultlocale()[1].lower() == 'utf-8') and not no_utf8:
+        if not no_utf8:
+            locales = locale.getdefaultlocale()
+            if len(locales) > 1 and locales[1] and isinstance(locales[1], str) and locales[1].lower() == 'utf-8':
                 enc = 'utf8'
-        except ImportError:
-            pass
 
         self.tree_drawing_strings = TreeFormatter.TREE_DRAWING_TABLE[enc]
         self.no_color = no_color
