@@ -187,9 +187,10 @@ class ResourceDefinitionCommands(Commands):
             storage_pool=args.storage_pool,
             do_not_place_with=args.do_not_place_with,
             do_not_place_with_regex=args.do_not_place_with_regex,
-            replicas_on_same=[linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_same],
-            replicas_on_different=[linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different],
-            diskless_on_remaining=args.diskless_on_remaining,
+            replicas_on_same=self.prepare_argparse_list(args.replicas_on_same, linstor.consts.NAMESPC_AUXILIARY + '/'),
+            replicas_on_different=self.prepare_argparse_list(
+                args.replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
+            diskless_on_remaining=self.parse_diskless_on_remaining(args),
             layer_list=args.layer_list,
             provider_list=args.providers)
         return self.handle_replies(args, replies)

@@ -363,9 +363,11 @@ class ResourceCommands(Commands):
                 args.storage_pool,
                 args.do_not_place_with,
                 args.do_not_place_with_regex,
-                [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_same],
-                [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different],
-                diskless_on_remaining=args.diskless_on_remaining,
+                replicas_on_same=self.prepare_argparse_list(args.replicas_on_same,
+                                                            linstor.consts.NAMESPC_AUXILIARY + '/'),
+                replicas_on_different=self.prepare_argparse_list(
+                    args.replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
+                diskless_on_remaining=self.parse_diskless_on_remaining(args),
                 async_msg=async_flag,
                 layer_list=args.layer_list,
                 provider_list=args.providers

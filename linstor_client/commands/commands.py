@@ -443,13 +443,13 @@ class Commands(object):
         parser.add_argument(
             '--storage-pool', '-s',
             type=str,
-            help="Storage pool name to use.").completer = cls.storage_pool_dfn_completer
+            help="Storage pool name to use, set empty string to remove.").completer = cls.storage_pool_dfn_completer
         if use_place_count:
             parser.add_argument(
                 '--place-count',
                 type=int,
                 metavar="REPLICA_COUNT",
-                help='Auto place a resource to a specified number of nodes'
+                help='Auto place a resource to a specified number of nodes, set 0 to remove'
             )
         else:
             parser.add_argument(
@@ -461,35 +461,34 @@ class Commands(object):
         parser.add_argument(
             '--do-not-place-with',
             type=str,
-            nargs='+',
+            nargs='*',
             metavar="RESOURCE_NAME",
             help='Try to avoid nodes that already have a given resource deployed.'
         ).completer = cls.resource_completer
         parser.add_argument(
             '--do-not-place-with-regex',
+            nargs='?',
             type=str,
             metavar="RESOURCE_REGEX",
             help='Try to avoid nodes that already have a resource ' +
-                 'deployed whos name is matching the given regular expression.'
+                 "deployed who's name is matching the given regular expression."
         )
         parser.add_argument(
             '--replicas-on-same',
-            nargs='+',
-            default=[],
-            metavar="AUX_NODE_PROPERTY",
+            nargs='*',
+            metavar="REPLICAS_ON_SAME",
             help='Tries to place resources on nodes with the same given auxiliary node property values.'
         )
         parser.add_argument(
             '--replicas-on-different',
-            nargs='+',
-            default=[],
-            metavar="AUX_NODE_PROPERTY",
+            nargs='*',
+            metavar="REPLICAS_ON_DIFFERENT",
             help='Tries to place resources on nodes with a different value for the given auxiliary node property.'
         )
         parser.add_argument(
             '--diskless-on-remaining',
-            action="store_true",
-            default=None,
+            nargs='?',
+            default=argparse.SUPPRESS,
             help='Will add a diskless resource on all non replica nodes.'
         )
         parser.add_argument(
@@ -504,6 +503,15 @@ class Commands(object):
             help="Comma separated providers list. Only storage pools with the given provider kind "
                  "are considered as auto-place target. "
                  "Possible providers are: " + ",".join(linstor.Linstor.provider_list()))
+
+    @classmethod
+    def parse_diskless_on_remaining(cls, args):
+        if hasattr(args, 'diskless_on_remaining'):
+            if args.diskless_on_remaining is None:
+                return True
+            else:
+                return args.diskless_on_remaining.lower() not in ['false']
+        return None
 
     @staticmethod
     def show_group_completer(lst, where):
@@ -669,6 +677,12 @@ class Commands(object):
         :return: List of layer names
         :rtype: list[str]
         """
+        if layer_data is None:
+            return None
+
+        if not layer_data:
+            return []
+
         layer_list = []
         for layer in layer_data.split(','):
             if layer.lower() not in linstor.Linstor.layer_list():
@@ -685,12 +699,36 @@ class Commands(object):
         :return: List of provider names
         :rtype list[str]
         """
+        if providers is None:
+            return None
+
+        if not providers:
+            return []
+
         provider_list = []
         for provider in providers.split(","):
             if provider.upper() not in linstor.Linstor.provider_list():
                 raise argparse.ArgumentTypeError('Provider "{prov}" not valid'.format(prov=provider))
             provider_list.append(provider)
         return provider_list
+
+    @classmethod
+    def prepare_argparse_list(cls, l, prefix=''):
+        """
+        argparse returns either None or a list with values,
+        but to unset a fields you have to use field= or field='' as argparse syntax.
+        that will return following list [''], we have to convert such lists to empty lists
+        :param list[str] l: list to prefix ith Aux/ and convert
+        :param str prefix: will prefix every list value with this str
+        :return: converted list
+        :rtype: Optional[list[str]]
+        """
+        if l:
+            if l[0]:
+                return [prefix + x for x in l]
+            else:
+                return []
+        return None
 
     @classmethod
     def parse_size_str(cls, size_str, default_unit="GiB"):

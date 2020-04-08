@@ -98,6 +98,120 @@ class TestCreateCommands(LinstorTestCase):
         self.assertTrue(rsc_dfn_del_reply.is_warning())
         self.assertEqual(self.signed_mask(WARN_NOT_FOUND | MASK_RSC_DFN | MASK_DEL), rsc_dfn_del_reply.ret_code)
 
+    def get_resource_group(self, rsc_grp_name):
+        data = self.execute_with_machine_output(['resource-group', 'list'])[0]
+        mygrp = [x for x in data if x['name'] == rsc_grp_name][0]
+        self.assertTrue(mygrp)
+        return mygrp
+
+    def test_resource_groups_replicas_on_same(self):
+        grp_name = 'grp_replicas'
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'create', grp_name, '--place-count=2', '--replicas-on-same', 'x', 'y'])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertEqual(['Aux/x', 'Aux/y'], mygrp['select_filter']['replicas_on_same'])
+
+        # noop modify
+        rsc_grp = self.execute_with_single_resp(['resource-group', 'modify', grp_name])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertEqual(['Aux/x', 'Aux/y'], mygrp['select_filter']['replicas_on_same'])
+
+        # add more replicas on same
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'modify', grp_name, '--replicas-on-same', 'x', 'y', 'z'])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertEqual(['Aux/x', 'Aux/y', 'Aux/z'], mygrp['select_filter']['replicas_on_same'])
+
+        # remove replicas on same
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'modify', grp_name, '--replicas-on-same='])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertTrue('replicas_on_same' not in mygrp['select_filter'])
+
+        # delete mygrp
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'delete', grp_name])
+        self.assertTrue(rsc_grp.is_success())
+
+    def test_resource_groups_layer_list(self):
+        grp_name = 'grp_layer_list'
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'create', grp_name, '--place-count=2',
+             '--storage-pool', 'mypool', '--layer-list', 'storage'])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertEqual('mypool', mygrp['select_filter']['storage_pool'])
+        self.assertEqual(['storage'.upper()], mygrp['select_filter']['layer_stack'])
+
+        # noop modify
+        rsc_grp = self.execute_with_single_resp(['resource-group', 'modify', grp_name])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertEqual('mypool', mygrp['select_filter']['storage_pool'])
+        self.assertEqual(['storage'.upper()], mygrp['select_filter']['layer_stack'])
+
+        # add layerstack
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'modify', grp_name, '--layer-list', 'drbd,storage'])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertEqual('mypool', mygrp['select_filter']['storage_pool'])
+        self.assertEqual(['drbd'.upper(), 'storage'.upper()], mygrp['select_filter']['layer_stack'])
+
+        # remove layerstack
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'modify', grp_name, '--layer-list='])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertEqual('mypool', mygrp['select_filter']['storage_pool'])
+        self.assertTrue('layer_stack' not in mygrp['select_filter'])
+
+        # delete mygrp
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'delete', grp_name])
+        self.assertTrue(rsc_grp.is_success())
+
+    def test_resource_groups_diskless_on_remaining(self):
+        grp_name = 'grp_remaining'
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'create', grp_name, '--place-count=4', '--diskless-on-remaining'])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(4, mygrp['select_filter']['place_count'])
+        self.assertTrue(mygrp['select_filter']['diskless_on_remaining'])
+
+        # noop modify
+        rsc_grp = self.execute_with_single_resp(['resource-group', 'modify', grp_name])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(4, mygrp['select_filter']['place_count'])
+        self.assertTrue(mygrp['select_filter']['diskless_on_remaining'])
+
+        # modify diskless on remaining
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'modify', grp_name, '--diskless-on-remaining', 'false'])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(4, mygrp['select_filter']['place_count'])
+        self.assertFalse(mygrp['select_filter']['diskless_on_remaining'])
+
+        # delete mygrp
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'delete', grp_name])
+        self.assertTrue(rsc_grp.is_success())
+
 
 if __name__ == '__main__':
     unittest.main()
