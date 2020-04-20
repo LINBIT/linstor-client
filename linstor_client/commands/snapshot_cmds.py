@@ -107,6 +107,16 @@ class SnapshotCommands(Commands):
             description=' Prints a list of all snapshots known to linstor. '
                         'By default, the list is printed as a human readable table.')
         p_lsnapshots.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_lsnapshots.add_argument(
+            '-r', '--resources',
+            nargs='+',
+            type=str,
+            help='Filter by list of resources').completer = self.resource_completer
+        p_lsnapshots.add_argument(
+            '-n', '--nodes',
+            nargs='+',
+            type=str,
+            help='Filter by list of nodes').completer = self.node_completer
         p_lsnapshots.set_defaults(func=self.list)
 
         # volume definition commands
@@ -256,6 +266,6 @@ class SnapshotCommands(Commands):
         tbl.show()
 
     def list(self, args):
-        lstmsg = self._linstor.snapshot_dfn_list()
+        lstmsg = self._linstor.snapshot_dfn_list(filter_by_nodes=args.nodes, filter_by_resources=args.resources)
 
         return self.output_list(args, lstmsg, self.show)
