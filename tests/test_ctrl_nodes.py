@@ -6,7 +6,8 @@ import linstor.sharedconsts as apiconsts
 class TestNodeCommands(LinstorTestCase):
 
     def test_create_node(self):
-        retcode = self.execute(['node', 'create', 'node1', '192.168.100.1'])
+        node_name = 'nodeCommands1'
+        retcode = self.execute(['node', 'create', node_name, '192.168.100.1'])
         self.assertEqual(0, retcode)
 
         node_list = self.execute_with_machine_output(['node', 'list'])
@@ -16,13 +17,13 @@ class TestNodeCommands(LinstorTestCase):
         self.assertTrue('nodes' in node_list)
         nodes = node_list['nodes']
         self.assertGreater(len(nodes), 0)
-        self.assertTrue([n for n in nodes if n['name'] == 'node1'])
+        self.assertTrue([n for n in nodes if n['name'] == node_name])
 
         # args = self.parse_args(['node', 'list'])  # any valid command, just need the parsed args object
         # completer_nodes = NodeCommands.node_completer('node1', parsed_args=args)
         # self.assertTrue('node1' in completer_nodes)
 
-        retcode = self.execute(['node', 'delete', 'node1'])
+        retcode = self.execute(['node', 'delete', node_name])
         self.assertEqual(0, retcode)
 
     def find_node(self, nodelist, node_name):

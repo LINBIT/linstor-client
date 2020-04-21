@@ -27,7 +27,7 @@ class TestUseCases(LinstorTestCase):
 class TestCreateCommands(LinstorTestCase):
 
     def test_create_node(self):
-        node = self.execute_with_resp(['node', 'create', 'node1', '195.0.0.1'])
+        node = self.execute_with_resp(['node', 'create', 'nodeCreate1', '195.0.0.1'])
         self.assert_api_succuess(node[0])
         self.assertEqual(MASK_NODE | MASK_CRT | CREATED, node[0].ret_code)
 
@@ -37,14 +37,14 @@ class TestCreateCommands(LinstorTestCase):
         self.assertEqual(self.signed_mask(MASK_STOR_POOL | MASK_CRT | FAIL_NOT_FOUND_NODE), storpool.ret_code)
 
     def test_create_resource_dfn(self):
-        rsc_dfn = self.execute_with_single_resp(['resource-definition', 'create', 'rsc1'])
+        rsc_dfn = self.execute_with_single_resp(['resource-definition', 'create', 'rsccreate1'])
         self.assert_api_succuess(rsc_dfn)
 
         rsc_dfns = self.execute_with_machine_output(['resource-definition', 'list'])
         self.assertEqual(1, len(rsc_dfns))
         self.assertIn('rsc_dfns', rsc_dfns[0])
         rsc_dfns = rsc_dfns[0]['rsc_dfns']
-        rsc1 = [spd for spd in rsc_dfns if spd['rsc_name'] == 'rsc1']
+        rsc1 = [spd for spd in rsc_dfns if spd['rsc_name'] == 'rsccreate1']
         self.assertEqual(1, len(rsc1), "resource definition 'rsc1' not found")
 
     def assert_volume_def(self, rsc_name, vlmnr, minornr, size):

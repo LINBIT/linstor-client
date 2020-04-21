@@ -12,7 +12,7 @@ import subprocess
 from linstor.linstorapi import ApiCallResponse
 
 
-controller_port = 63374 + sys.version_info[0]
+controller_port = os.environ.get('LINSTOR_CONTROLLER_PORT', 63370)
 
 # update_port_sql = """
 # UPDATE PROPS_CONTAINERS SET PROP_VALUE='{port}'
@@ -35,6 +35,10 @@ class LinstorTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        pass
+
+    @classmethod
+    def oldsetup(cls):
         install_path = os.path.abspath('build/_linstor_unittests')
         linstor_tar_search_paths = [
             os.path.abspath(os.path.join('./')),
@@ -92,6 +96,10 @@ class LinstorTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        pass
+
+    @classmethod
+    def oldtearDownClass(cls):
         cls.controller.poll()
         if cls.controller.returncode:
             sys.stderr.write("Controller already down!!!.\n")
@@ -107,7 +115,7 @@ class LinstorTestCase(unittest.TestCase):
 
     @classmethod
     def host(cls):
-        return '127.0.0.1'
+        return os.environ.get('LINSTOR_CONTROLLER_HOST', 'localhost')
 
     @classmethod
     def port(cls):
@@ -115,7 +123,7 @@ class LinstorTestCase(unittest.TestCase):
 
     @classmethod
     def rest_port(cls):
-        return controller_port + 10
+        return controller_port
 
     @classmethod
     def signed_mask(cls, mask):
