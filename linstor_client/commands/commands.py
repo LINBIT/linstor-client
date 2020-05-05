@@ -802,6 +802,7 @@ class Commands(object):
             ])
         tbl.show()
 
+
 class MiscCommands(Commands):
     def __init__(self):
         super(MiscCommands, self).__init__()
@@ -930,6 +931,9 @@ class MiscCommands(Commands):
         else:
             # read from keyboard
             passphrase = getpass.getpass("Passphrase: ")
+            re_passphrase = getpass.getpass("Reenter passphrase: ")
+            if passphrase != re_passphrase:
+                raise LinstorClientError("Passphrase doesn't match.", ExitCode.ARGPARSE_ERROR)
         replies = self._linstor.crypt_create_passphrase(passphrase)
         return self.handle_replies(args, replies)
 
