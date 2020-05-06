@@ -46,6 +46,18 @@ class DrbdOptions(object):
         return foo
 
     @classmethod
+    def unit_str(cls, unit, unit_prefix):
+        """
+
+        :param str unit:
+        :param str unit_prefix:
+        :return: String correctly describing the unit
+        """
+        if unit_prefix == 'k' and unit == "bytes/second":
+            return 'KiB/s'
+        return unit
+
+    @classmethod
     def add_arguments(cls, parser, object_name, allow_unset=True):
         for opt_key, option in sorted(cls.drbd_options[object_name].items(), key=lambda k: k[0]):
             if option['type'] == 'symbol':
@@ -74,10 +86,9 @@ class DrbdOptions(object):
                 min_ = option['min']
                 max_ = option['max']
                 default = option['default']
+                unit = ""
                 if "unit" in option:
-                    unit = "; Unit: " + option['unit']
-                else:
-                    unit = ""
+                    unit = "; Unit: " + cls.unit_str(option['unit'], option['unit_prefix'])
                 # sp.add_argument('--' + opt, type=rangecheck(min_, max_),
                 #                 default=default, help="Range: [%d, %d]; Default: %d" %(min_, max_, default))
                 # setting a default sets the option to != None, which makes
