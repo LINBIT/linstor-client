@@ -480,7 +480,7 @@ class LinStorCLI(object):
             aliases, sub_cmds = entry[fullcmd]
             p_str = cmd
             if len(aliases) > 1:
-                p_str += " ({al})".format(cmd=cmd, al=sorted(aliases, key=len)[0])
+                p_str += " ({al})".format(al=sorted(aliases, key=len)[0])
             print(" " * indent + "- " + p_str)
             LinStorCLI.print_cmd_tree(sub_cmds, indent + 2)
 
