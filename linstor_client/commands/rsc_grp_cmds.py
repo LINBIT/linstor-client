@@ -102,6 +102,7 @@ class ResourceGroupCommands(Commands):
                                 choices=rsc_grp_groupby).completer = rsc_grp_group_completer
         p_lrscgrps.add_argument('-r', '--resource-groups', nargs='+', type=str,
                                 help='Filter by list of resource groups').completer = self.resource_grp_completer
+        p_lrscgrps.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
         p_lrscgrps.set_defaults(func=self.list)
         #  ------------ LIST END
 
@@ -253,7 +254,7 @@ class ResourceGroupCommands(Commands):
         tbl.show()
 
     def list(self, args):
-        lstmsg = [self._linstor.resource_group_list_raise(args.resource_groups)]
+        lstmsg = [self._linstor.resource_group_list_raise(args.resource_groups, filter_by_props=args.props)]
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod

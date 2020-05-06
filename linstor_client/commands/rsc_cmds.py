@@ -161,6 +161,7 @@ class ResourceCommands(Commands):
             action="store_true",
             help='Show all resources, otherwise e.g. auto-qorum resources will be hidden.'
         )
+        p_lreses.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
         p_lreses.set_defaults(func=self.list)
 
         # list volumes
@@ -485,7 +486,8 @@ class ResourceCommands(Commands):
         tbl.show()
 
     def list(self, args):
-        lstmsg = self._linstor.resource_list(filter_by_nodes=args.nodes, filter_by_resources=args.resources)
+        lstmsg = self._linstor.resource_list(
+            filter_by_nodes=args.nodes, filter_by_resources=args.resources, filter_by_props=args.props)
         return self.output_list(args, lstmsg, self.show)
 
     def list_volumes(self, args):

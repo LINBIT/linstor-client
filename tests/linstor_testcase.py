@@ -211,7 +211,9 @@ class LinstorTestCase(unittest.TestCase):
 
     def execute_with_single_resp(self, cmd_args):
         responses = self.execute_with_resp(cmd_args)
-        self.assertEqual(len(responses), 1, "Zero or more than 1 api call responses")
+        if len(responses) != 1:
+            print(responses)
+            self.assertEqual(len(responses), 1, "Zero or more than 1 api call responses")
         return responses[0]
 
     @classmethod

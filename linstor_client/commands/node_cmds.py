@@ -335,6 +335,7 @@ class NodeCommands(Commands):
                               choices=node_groupby).completer = node_group_completer
         p_lnodes.add_argument('-n', '--nodes', nargs='+', type=str,
                               help='Filter by list of nodes').completer = self.node_completer
+        p_lnodes.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
         p_lnodes.set_defaults(func=self.list)
 
         # list info
@@ -502,7 +503,7 @@ class NodeCommands(Commands):
         tbl.show()
 
     def list(self, args):
-        lstmsg = self._linstor.node_list(args.nodes)
+        lstmsg = self._linstor.node_list(args.nodes, args.props)
         return self.output_list(args, lstmsg, self.show_nodes)
 
     def describe(self, args=None):

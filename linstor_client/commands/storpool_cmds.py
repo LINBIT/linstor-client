@@ -269,6 +269,7 @@ class StoragePoolCommands(Commands):
                                  help='Filter by list of storage pools').completer = self.storage_pool_completer
         p_lstorpool.add_argument('-n', '--nodes', nargs='+', type=str,
                                  help='Filter by list of nodes').completer = self.node_completer
+        p_lstorpool.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
         p_lstorpool.set_defaults(func=self.list)
 
         # show properties
@@ -371,7 +372,7 @@ class StoragePoolCommands(Commands):
             )
 
     def list(self, args):
-        lstmsg = self._linstor.storage_pool_list(args.nodes, args.storage_pools)
+        lstmsg = self._linstor.storage_pool_list(args.nodes, args.storage_pools, args.props)
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod

@@ -127,6 +127,7 @@ class ResourceDefinitionCommands(Commands):
         p_lrscdfs.add_argument('-r', '--resource-definitions', nargs='+', type=str,
                                help='Filter by list of resource definitions').completer = self.resource_dfn_completer
         p_lrscdfs.add_argument('-e', '--external-name', action="store_true", help='Show user specified name.')
+        p_lrscdfs.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
         p_lrscdfs.set_defaults(func=self.list)
 
         # show properties
@@ -240,7 +241,8 @@ class ResourceDefinitionCommands(Commands):
     def list(self, args):
         lstmsg = self._linstor.resource_dfn_list(
             query_volume_definitions=False,
-            filter_by_resource_definitions=args.resource_definitions
+            filter_by_resource_definitions=args.resource_definitions,
+            filter_by_props=args.props
         )
         return self.output_list(args, lstmsg, self.show)
 
