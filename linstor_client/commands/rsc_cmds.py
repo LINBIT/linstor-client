@@ -159,8 +159,11 @@ class ResourceCommands(Commands):
         p_lreses.add_argument(
             '-a', '--all',
             action="store_true",
-            help='Show all resources, otherwise e.g. auto-qorum resources will be hidden.'
-        )
+            help='Show all resources, otherwise e.g. auto-quorum resources will be hidden.')
+        p_lreses.add_argument(
+            '--faulty',
+            action="store_true",
+            help='Only show faulty resource.')
         p_lreses.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
         p_lreses.set_defaults(func=self.list)
 
@@ -475,14 +478,19 @@ class ResourceCommands(Commands):
                 conns_col_entries = ["{s}({n})".format(s=k, n=",".join(v)) for k, v in failed_conns.items()]
                 conns_col = tbl.color_cell(",".join(conns_col_entries), Color.RED) if conns_col_entries else "Ok"
 
-            tbl.add_row([
-                rsc.name,
-                rsc.node_name,
-                rsc_dfn_port,
-                tbl.color_cell(rsc_usage, rsc_usage_color) if rsc_usage_color else rsc_usage,
-                conns_col,
-                tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color)
-            ])
+            show_row = True
+            if args.faulty:
+                show_row = rsc_state_color is not None or not (conns_col == 'Ok' or conns_col == "")
+
+            if show_row:
+                tbl.add_row([
+                    rsc.name,
+                    rsc.node_name,
+                    rsc_dfn_port,
+                    tbl.color_cell(rsc_usage, rsc_usage_color) if rsc_usage_color else rsc_usage,
+                    conns_col,
+                    tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color)
+                ])
         tbl.show()
 
     def list(self, args):
