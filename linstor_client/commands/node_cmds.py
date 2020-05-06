@@ -335,6 +335,7 @@ class NodeCommands(Commands):
                               choices=node_groupby).completer = node_group_completer
         p_lnodes.add_argument('-n', '--nodes', nargs='+', type=str,
                               help='Filter by list of nodes').completer = self.node_completer
+        p_lnodes.add_argument('--show-aux-props', action="store_true", help='Show aux properties for nodes')
         p_lnodes.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
         p_lnodes.set_defaults(func=self.list)
 
@@ -469,7 +470,12 @@ class NodeCommands(Commands):
     @classmethod
     def show_nodes(cls, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        for hdr in cls._node_headers:
+
+        node_hdr = list(cls._node_headers)
+        if args.show_aux_props:
+            node_hdr.insert(-1, linstor_client.TableHeader("AuxProps"))
+
+        for hdr in node_hdr:
             tbl.add_header(hdr)
 
         conn_stat_dict = {
@@ -493,13 +499,15 @@ class NodeCommands(Commands):
             for net_if in node.net_interfaces:
                 if net_if.is_active and net_if.stlt_port:
                     active_ip = net_if.address + ":" + str(net_if.stlt_port) + " (" + net_if.stlt_encryption_type + ")"
+
+            aux_props = ["{k}={v}".format(k=k, v=v) for k, v in node.properties.items() if k.startswith(apiconsts.NAMESPC_AUXILIARY + '/')]
             conn_stat = conn_stat_dict[node.connection_status]
-            tbl.add_row([
-                node.name,
-                node.type,
-                active_ip,
-                tbl.color_cell(conn_stat[0], conn_stat[1])
-            ])
+
+            row = [node.name, node.type, active_ip]
+            if args.show_aux_props:
+                row.append("\n".join(aux_props))
+            row += [tbl.color_cell(conn_stat[0], conn_stat[1])]
+            tbl.add_row(row)
         tbl.show()
 
     def list(self, args):
