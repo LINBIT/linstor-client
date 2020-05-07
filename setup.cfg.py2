@@ -6,4 +6,4 @@ vendor = LINBIT HA-Solutions GmbH
 build-requires =
   python2-setuptools
 requires =
-  python-linstor >= 1.0.15
+  python-linstor >= 1.1.0
