@@ -221,6 +221,55 @@ class TestCreateCommands(LinstorTestCase):
             ['resource-group', 'delete', grp_name])
         self.assertTrue(rsc_grp.is_success())
 
+    def test_resource_groups_storage_pools(self):
+        grp_name = 'grp_storpool'
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'create', grp_name, '--place-count=2', '--storage-pool', 'xxx', 'yyy'])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertEqual(['xxx', 'yyy'], mygrp['select_filter']['storage_pool_list'])
+
+        # noop modify
+        rsc_grp = self.execute_with_single_resp(['resource-group', 'modify', grp_name])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertEqual(['xxx', 'yyy'], mygrp['select_filter']['storage_pool_list'])
+
+        # modify storagepools
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'modify', grp_name, '--storage-pool', 'xxx'])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertEqual('xxx', mygrp['select_filter']['storage_pool'])
+        self.assertEqual(['xxx'], mygrp['select_filter']['storage_pool_list'])
+
+        # modify storagepools
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'modify', grp_name, '--storage-pool', 'xxx', 'yyy', 'zzz'])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertFalse('storage_pool' in mygrp['select_filter'])
+        self.assertEqual(['xxx', 'yyy', 'zzz'], mygrp['select_filter']['storage_pool_list'])
+
+        # remove all storage pools
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'modify', grp_name, '--storage-pool='])
+        self.assertTrue(rsc_grp.is_success())
+        mygrp = self.get_resource_group(grp_name)
+        print(mygrp['select_filter'])
+        self.assertEqual(2, mygrp['select_filter']['place_count'])
+        self.assertFalse('storage_pool' in mygrp['select_filter'])
+        self.assertFalse('storage_pool_list' in mygrp['select_filter'])
+
+        # delete mygrp
+        rsc_grp = self.execute_with_single_resp(
+            ['resource-group', 'delete', grp_name])
+        self.assertTrue(rsc_grp.is_success())
+
 
 if __name__ == '__main__':
     unittest.main()
