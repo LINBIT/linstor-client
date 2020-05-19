@@ -390,7 +390,7 @@ class ResourceCommands(Commands):
                     node_name,
                     args.resource_definition_name,
                     args.diskless,
-                    args.storage_pool,
+                    args.storage_pool[0] if args.storage_pool else None,
                     args.node_id,
                     args.layer_list,
                     args.drbd_diskless,
