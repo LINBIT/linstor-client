@@ -1,3 +1,10 @@
+linstor-client (1.1.1-1) experimental; urgency=medium
+
+  * api: support storage-pool list argument for auto select filters
+  * rsc-create: fix storage pool argument
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 20 May 2020 10:57:09 +0000
+
 linstor-client (1.1.0-1) experimental; urgency=medium
 
   * snapshot list: add resources and nodes filter
