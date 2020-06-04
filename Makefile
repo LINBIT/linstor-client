@@ -19,7 +19,7 @@ all: doc
 doc:
 	PYTHONPATH=$(LINSTORAPI):. $(PYTHON) setup.py build_man
 
-install: linstor_client/consts_githash.py
+install:
 	$(PYTHON) setup.py install --record $(INSTALLFILES)
 
 uninstall:
