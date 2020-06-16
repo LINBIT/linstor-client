@@ -60,6 +60,7 @@ class Commands(object):
     SNAPSHOT = 'snapshot'
     DRBD_PROXY = 'drbd-proxy'
     PHYSICAL_STORAGE = 'physical-storage'
+    SOS_REPORT = 'sos-report'
 
     MainList = [
         CONTROLLER,
@@ -79,7 +80,8 @@ class Commands(object):
         VOLUME_DEF,
         SNAPSHOT,
         DRBD_PROXY,
-        PHYSICAL_STORAGE
+        PHYSICAL_STORAGE,
+        SOS_REPORT
     ]
     Hidden = [
         DMMIGRATE,
@@ -225,6 +227,10 @@ class Commands(object):
         class Spawn(object):
             LONG = "spawn-resources"
             SHORT = "spawn"
+
+        class Download(object):
+            LONG = "download"
+            SHORT = "dl"
 
         @staticmethod
         def generate_desc(subcommands):
@@ -913,6 +919,41 @@ class MiscCommands(Commands):
 
         self.check_subcommands(error_subp, error_subcmds)
 
+        sos_subcommands = [
+            Commands.Subcommands.Create,
+            Commands.Subcommands.Download
+        ]
+        sos_parser = parser.add_parser(
+            Commands.SOS_REPORT,
+            aliases=["sos"],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description="SOS report subcommands")
+
+        sos_subp = sos_parser.add_subparsers(
+            title="SOS report commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(sos_subcommands)
+        )
+
+        c_sos_create = sos_subp.add_parser(
+            Commands.Subcommands.Create.LONG,
+            aliases=[Commands.Subcommands.Create.SHORT],
+            description='Create a sos report on the controller'
+        )
+        c_sos_create.add_argument('-s', '--since', help='Create sos-report with logs since n days. e.g. "3days"')
+        c_sos_create.set_defaults(func=self.cmd_sos_report_create)
+
+        c_sos_download = sos_subp.add_parser(
+            Commands.Subcommands.Download.LONG,
+            aliases=[Commands.Subcommands.Download.SHORT],
+            description='Create a sos report and downloads it'
+        )
+        c_sos_download.add_argument('-s', '--since', help='Create sos-report with logs since n days. e.g. "3days"')
+        c_sos_download.add_argument(
+            'path', nargs='?', help='Directory where to download the sos report')
+        c_sos_download.set_defaults(func=self.cmd_sos_report_download)
+        self.check_subcommands(sos_subp, sos_subcommands)
+
     @staticmethod
     def _summarize_api_call_responses(responses):
         return "; ".join([response.message for response in responses])
@@ -973,22 +1014,34 @@ class MiscCommands(Commands):
             i += 1
         tbl.show()
 
+    @staticmethod
+    def parse_time_str(timestr):
+        """
+        Parses a day and hour string to a datetime from the current time.
+        e.g.: `1d10h or 3h`
+        :param str timestr: string to parse
+        :return: datetime of the timestr
+        :rtype: datetime
+        """
+        m = re.match(r'(\d+\W*d)?(\d+\W*h)?', timestr)
+        if m:
+            since_dt = datetime.now()
+            if m.group(1):
+                since_dt -= timedelta(days=int(m.group(1)[:-1]))
+            if m.group(2):
+                since_dt -= timedelta(hours=int(m.group(2)[:-1]))
+            return since_dt
+        else:
+            raise LinstorClientError(
+                "Unable to parse since string: '{s_str}'. e.g.: 1d10h or 3h'".format(s_str=timestr),
+                ExitCode.ARGPARSE_ERROR
+            )
+
     def cmd_list_error_reports(self, args):
         since = args.since
         since_dt = None
         if since:
-            m = re.match(r'(\d+\W*d)?(\d+\W*h)?', since)
-            if m:
-                since_dt = datetime.now()
-                if m.group(1):
-                    since_dt -= timedelta(days=int(m.group(1)[:-1]))
-                if m.group(2):
-                    since_dt -= timedelta(hours=int(m.group(2)[:-1]))
-            else:
-                raise LinstorClientError(
-                    "Unable to parse since string: '{s_str}'. e.g.: 1d10h or 3h'".format(s_str=since),
-                    ExitCode.ARGPARSE_ERROR
-                )
+            since_dt = MiscCommands.parse_time_str(since)
 
         to_dt = None
         if args.to:
@@ -1005,3 +1058,16 @@ class MiscCommands(Commands):
     def cmd_error_report(self, args):
         lstmsg = self._linstor.error_report_list(with_content=True, ids=args.report_id)
         return self.output_list(args, lstmsg, self.show_error_report, single_item=False)
+
+    def cmd_sos_report_create(self, args):
+        since_dt = None
+        if args.since:
+            since_dt = MiscCommands.parse_time_str(args.since)
+        replies = self.get_linstorapi().sos_report_create(since=since_dt)
+        return self.handle_replies(args, replies)
+
+    def cmd_sos_report_download(self, args):
+        since_dt = None
+        if args.since:
+            since_dt = MiscCommands.parse_time_str(args.since)
+        return self.handle_replies(args, self.get_linstorapi().sos_report_download(since=since_dt, to_file=args.path))
