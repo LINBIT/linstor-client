@@ -907,6 +907,7 @@ class MiscCommands(Commands):
             nargs='+',
             help="Restrict to id's that begin with the given ones."
         )
+        c_list_error_reports.add_argument('-f', '--full', action="store_true", help='Show all error info fields')
         c_list_error_reports.set_defaults(func=self.cmd_list_error_reports)
 
         c_error_report = error_subp.add_parser(
@@ -997,21 +998,32 @@ class MiscCommands(Commands):
 
     @classmethod
     def show_error_report_list(cls, args, lstmsg):
+        """
+
+        :param args:
+        :param list[linstor.responses.ErrorReport] lstmsg:
+        :return:
+        """
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        tbl.add_header(linstor_client.TableHeader("Nr.", alignment_text=linstor_client.TableHeader.ALIGN_RIGHT))
         tbl.add_header(linstor_client.TableHeader("Id"))
         tbl.add_header(linstor_client.TableHeader("Datetime"))
         tbl.add_header(linstor_client.TableHeader("Node"))
+        tbl.add_header(linstor_client.TableHeader("Exception"))
+        if args.full:
+            tbl.add_header(linstor_client.TableHeader("Location"))
+            tbl.add_header(linstor_client.TableHeader("Version"))
 
-        i = 1
         for error in lstmsg:
-            tbl.add_row([
-                str(i),
+            msg = error.exception_message if len(error.exception_message) < 60 else error.exception_message[0:57]+'...'
+            row = [
                 error.id,
                 str(error.datetime)[:19],
-                error.node_names
-            ])
-            i += 1
+                error.node_names + ('[' + error.module[0] + ']' if error.module else ""),
+                error.exception + (": " + msg if msg else "")]
+            if args.full:
+                row += ["{f}:{l}".format(f=error.origin_file, l=error.origin_line) if error.origin_file else "",
+                        error.version]
+            tbl.add_row(row)
         tbl.show()
 
     @staticmethod
