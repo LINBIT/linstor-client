@@ -6,7 +6,11 @@ override GITHEAD := $(shell test -e .git && $(GIT) rev-parse HEAD)
 
 U := $(shell $(PYTHON) ./setup.py versionup2date >/dev/null 2>&1; echo $$?;)
 TESTS = $(wildcard unit-tests/*_test.py)
-DOCKERREGISTRY = drbd.io
+DOCKERREGISTRY := drbd.io
+ARCH ?= amd64
+ifneq ($(strip $(ARCH)),)
+DOCKERREGISTRY := $(DOCKERREGISTRY)/$(ARCH)
+endif
 DOCKERREGISTRY_QUAY = quay.io
 DOCKERREGPATH = $(DOCKERREGISTRY)/linstor-client
 DOCKERREGPATH_QUAY = $(DOCKERREGISTRY_QUAY)/linbit/linstor-client
