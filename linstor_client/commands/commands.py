@@ -1018,7 +1018,7 @@ class MiscCommands(Commands):
             row = [
                 error.id,
                 str(error.datetime)[:19],
-                error.node_names + ('[' + error.module[0] + ']' if error.module else ""),
+                (error.module[0] + '|' if error.module else "") + error.node_names,
                 error.exception + (": " + msg if msg else "")]
             if args.full:
                 row += ["{f}:{l}".format(f=error.origin_file, l=error.origin_line) if error.origin_file else "",
