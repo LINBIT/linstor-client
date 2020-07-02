@@ -232,6 +232,14 @@ class Commands(object):
             LONG = "download"
             SHORT = "dl"
 
+        class Activate(object):
+            LONG = "activate"
+            SHORT = "act"
+
+        class Deactivate(object):
+            LONG = "deactivate"
+            SHORT = "deact"
+
         @staticmethod
         def generate_desc(subcommands):
             """

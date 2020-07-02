@@ -55,7 +55,9 @@ class ResourceCommands(Commands):
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.DrbdPeerDeviceOptions,
             Commands.Subcommands.ToggleDisk,
-            Commands.Subcommands.CreateTransactional
+            Commands.Subcommands.CreateTransactional,
+            Commands.Subcommands.Activate,
+            Commands.Subcommands.Deactivate
         ]
 
         # Resource subcommands
@@ -297,6 +299,35 @@ class ResourceCommands(Commands):
             help='Name of the resource'
         ).completer = self.resource_dfn_completer
         p_toggle_disk.set_defaults(func=self.toggle_disk, parser=p_toggle_disk)
+
+        # activate/deactivate resource commands
+        p_activate = res_subp.add_parser(
+            Commands.Subcommands.Activate.LONG,
+            aliases=[Commands.Subcommands.Activate.SHORT],
+            description='Activate a resource.')
+        p_activate.add_argument(
+            'node_name',
+            type=str,
+            help='Node name of the resource').completer = self.node_completer
+        p_activate.add_argument(
+            'resource_name',
+            type=str,
+            help='Name of the resource').completer = self.resource_dfn_completer
+        p_activate.set_defaults(func=self.activate)
+
+        p_deactivate = res_subp.add_parser(
+            Commands.Subcommands.Deactivate.LONG,
+            aliases=[Commands.Subcommands.Deactivate.SHORT],
+            description='Deactivate a resource.')
+        p_deactivate.add_argument(
+            'node_name',
+            type=str,
+            help='Node name of the resource').completer = self.node_completer
+        p_deactivate.add_argument(
+            'resource_name',
+            type=str,
+            help='Name of the resource').completer = self.resource_dfn_completer
+        p_deactivate.set_defaults(func=self.deactivate)
 
         # resource creation transaction commands
         transactional_create_subcmds = [
@@ -572,4 +603,18 @@ class ResourceCommands(Commands):
         async_flag = vars(args)["async"]
         replies = self._linstor.resource_create(self._state_service.get_state().rscs, async_flag)
         self._state_service.pop_state()
+        return self.handle_replies(args, replies)
+
+    def activate(self, args):
+        replies = self.get_linstorapi().resource_activate(
+            node_name=args.node_name,
+            rsc_name=args.resource_name
+        )
+        return self.handle_replies(args, replies)
+
+    def deactivate(self, args):
+        replies = self.get_linstorapi().resource_deactivate(
+            node_name=args.node_name,
+            rsc_name=args.resource_name
+        )
         return self.handle_replies(args, replies)
