@@ -240,6 +240,14 @@ class Commands(object):
             LONG = "deactivate"
             SHORT = "deact"
 
+        class Rollback(object):
+            LONG = "rollback"
+            SHORT = "rb"
+
+        class Ship(object):
+            LONG = "ship"
+            SHORT = "sh"
+
         @staticmethod
         def generate_desc(subcommands):
             """

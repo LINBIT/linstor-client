@@ -9,10 +9,6 @@ from linstor import SizeCalc
 
 
 class SnapshotCommands(Commands):
-    class Rollback(object):
-        LONG = "rollback"
-        SHORT = "rb"
-
     def __init__(self):
         super(SnapshotCommands, self).__init__()
 
@@ -21,9 +17,10 @@ class SnapshotCommands(Commands):
             Commands.Subcommands.Create,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
-            self.Rollback,
+            Commands.Subcommands.Rollback,
             Commands.Subcommands.Resource,
-            Commands.Subcommands.VolumeDefinition
+            Commands.Subcommands.VolumeDefinition,
+            Commands.Subcommands.Ship
         ]
 
         # Snapshot subcommands
@@ -81,10 +78,31 @@ class SnapshotCommands(Commands):
             help='Name of the snapshot local to the resource definition')
         p_delete_snapshot.set_defaults(func=self.delete)
 
+        p_ship = snapshot_subp.add_parser(
+            Commands.Subcommands.Ship.LONG,
+            aliases=[Commands.Subcommands.Ship.SHORT],
+            description='Ship a snapshot to another node.')
+        p_ship.add_argument(
+            '--from-node',
+            required=True,
+            type=str,
+            help='Source node name').completer = self.node_completer
+        p_ship.add_argument(
+            '--to-node',
+            required=True,
+            type=str,
+            help='Destination node name').completer = self.node_completer
+        p_ship.add_argument(
+            '--resource',
+            required=True,
+            type=str,
+            help='Name of the resource to ship').completer = self.resource_dfn_completer
+        p_ship.set_defaults(func=self.ship)
+
         # roll back to snapshot
         p_rollback_snapshot = snapshot_subp.add_parser(
-            self.Rollback.LONG,
-            aliases=[self.Rollback.SHORT],
+            Commands.Subcommands.Rollback.LONG,
+            aliases=[Commands.Subcommands.Rollback.SHORT],
             description='Rolls resource data back to snapshot state. '
                         'The resource must not be in use. '
                         'The snapshot will not be removed and can be used for subsequent rollbacks. '
@@ -269,3 +287,10 @@ class SnapshotCommands(Commands):
         lstmsg = self._linstor.snapshot_dfn_list(filter_by_nodes=args.nodes, filter_by_resources=args.resources)
 
         return self.output_list(args, lstmsg, self.show)
+
+    def ship(self, args):
+        replies = self.get_linstorapi().snapshot_ship(
+            rsc_name=args.resource,
+            from_node=args.from_node,
+            to_node=args.to_node)
+        return self.handle_replies(args, replies)
