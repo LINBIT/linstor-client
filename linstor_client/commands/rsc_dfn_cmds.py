@@ -88,6 +88,9 @@ class ResourceDefinitionCommands(Commands):
             description='Modifies a Linstor resource definition')
         p_mod_res_dfn.add_argument('--peer-slots', type=rangecheck(1, 31), help='(DRBD) peer slots for new resources')
         p_mod_res_dfn.add_argument(
+            '--resource-group',
+            help='Change resource group to the given one.').completer = self.resource_grp_completer
+        p_mod_res_dfn.add_argument(
             'name',
             help='Name of the resource definition').completer = self.resource_dfn_completer
         p_mod_res_dfn.set_defaults(func=self.modify)
@@ -201,7 +204,8 @@ class ResourceDefinitionCommands(Commands):
             args.name,
             {},
             [],
-            args.peer_slots
+            args.peer_slots,
+            resource_group=args.resource_group
         )
         return self.handle_replies(args, replies)
 
