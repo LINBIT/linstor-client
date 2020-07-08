@@ -102,6 +102,11 @@ class ResourceCommands(Commands):
             action="store_true",
             help='Mark this resource as drbd diskless'
         )
+        p_new_res.add_argument(
+            '--inactive',
+            action="store_true",
+            help="Marks the resource created as inactive"
+        )
         self.add_auto_select_argparse_arguments(p_new_res)
         p_new_res.add_argument(
             'node_name',
@@ -425,7 +430,8 @@ class ResourceCommands(Commands):
                     args.node_id,
                     args.layer_list,
                     args.drbd_diskless,
-                    args.nvme_initiator
+                    args.nvme_initiator,
+                    not args.inactive
                 )
                 for node_name in args.node_name
             ]
