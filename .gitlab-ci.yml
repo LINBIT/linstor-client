@@ -22,7 +22,7 @@ before_script:
   - popd
 
 services:
-  - name: gitlab.linbit:5050/linstor/linstor-server/controller
+  - name: $CI_REGISTRY/linstor/linstor-server/controller
     alias: linstor-controller
 
 test:2.7:
