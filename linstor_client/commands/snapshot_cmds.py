@@ -259,6 +259,7 @@ class SnapshotCommands(Commands):
         tbl.add_column("SnapshotName")
         tbl.add_column("NodeNames")
         tbl.add_column("Volumes")
+        tbl.add_column("CreatedOn")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color))
         for snapshot_dfn in lstmsg.snapshots:
             if FLAG_DELETE in snapshot_dfn.flags:
@@ -272,6 +273,10 @@ class SnapshotCommands(Commands):
             else:
                 state_cell = tbl.color_cell("Incomplete", Color.DARKBLUE)
 
+            snapshot_date = ""
+            if snapshot_dfn.snapshots and snapshot_dfn.snapshots[0].create_datetime:
+                snapshot_date = str(snapshot_dfn.snapshots[0].create_datetime)[:19]
+
             tbl.add_row([
                 snapshot_dfn.resource_name,
                 snapshot_dfn.name,
@@ -279,6 +284,7 @@ class SnapshotCommands(Commands):
                 ", ".join([
                     str(snapshot_vlm_dfn.number) + ": " + SizeCalc.approximate_size_string(snapshot_vlm_dfn.size)
                     for snapshot_vlm_dfn in snapshot_dfn.snapshot_volume_definitions]),
+                snapshot_date,
                 state_cell
             ])
         tbl.show()

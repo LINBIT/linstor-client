@@ -38,6 +38,7 @@ class ResourceCommands(Commands):
         linstor_client.TableHeader("Usage", Color.DARKGREEN),
         linstor_client.TableHeader("Conns", Color.DARKGREEN),
         linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
+        linstor_client.TableHeader("CreatedOn")
     ]
 
     def __init__(self, state_service):
@@ -526,7 +527,8 @@ class ResourceCommands(Commands):
                     rsc_dfn_port,
                     tbl.color_cell(rsc_usage, rsc_usage_color) if rsc_usage_color else rsc_usage,
                     conns_col,
-                    tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color)
+                    tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color),
+                    str(rsc.create_datetime)[:19] if rsc.create_datetime else ""
                 ])
         tbl.show()
 
