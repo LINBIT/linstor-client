@@ -383,9 +383,15 @@ class Commands(object):
         parser.add_argument('--aux', action="store_true", help="Property is an auxiliary user property.")
         if property_object:
             props = Commands.get_allowed_props(property_object)
+            help_list = []
+            for prop in props:
+                prop_help = "'" + prop['key'] + "': " + prop.get('info', '-').replace("%", "%%")
+                if 'values' in prop:
+                    prop_help += '; Allowed: ' + str(prop['values'])
+                help_list.append(prop_help)
             parser.add_argument(
                 'key',
-                help='\n'.join(["'" + x['key'] + "': " + x['info'].replace("%", "%%") for x in props if 'info' in x])
+                help='\n'.join(help_list)
             ).completer = Commands.get_allowed_prop_keys(property_object)
         else:
             parser.add_argument(
