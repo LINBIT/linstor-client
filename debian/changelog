@@ -1,3 +1,23 @@
+linstor-client (1.2.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * make: remove const_githash.py as install dependency
+  * add sos-report support
+  * err-list: show extended error info
+  * error-list: improve module-node output
+  * rsc-dfn: support modify resource group
+  * gitlab-ci: use registry env variable
+  * argparse-help: show all properties and their enum values
+  * rsc-cmds: add activate and deactive commands
+  * snapshot-cmds: add ship command
+  * rsc-create: add --inactive argument
+  * show create date on resource and snapshot
+
+  [ Roland Kammerer ]
+  * containers: add support for multiarch
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 03 Aug 2020 10:25:43 +0000
+
 linstor-client (1.1.2-1) experimental; urgency=medium
 
   * refere to new python-linstor 1.1.2 library
