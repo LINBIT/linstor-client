@@ -169,7 +169,7 @@ class VolumeCommands(Commands):
 
         reports = []
         for rsc in lstmsg.resources:
-            if not args.all and 'TIE_BREAKER' in rsc.flags:
+            if not args.all and apiconsts.FLAG_TIE_BREAKER in rsc.flags:
                 continue  # skip tie breaker resources
 
             rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)

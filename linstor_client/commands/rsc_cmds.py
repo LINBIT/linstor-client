@@ -471,7 +471,7 @@ class ResourceCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
 
         for rsc in lstmsg.resources:
-            if not args.all and 'TIE_BREAKER' in rsc.flags:
+            if not args.all and apiconsts.FLAG_TIE_BREAKER in rsc.flags:
                 continue  # skip tie breaker resources
 
             rsc_dfn_port = ''
