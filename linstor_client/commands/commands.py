@@ -248,6 +248,10 @@ class Commands(object):
             LONG = "ship"
             SHORT = "sh"
 
+        class ShipList(object):
+            LONG = "ship-list"
+            SHORT = "shl"
+
         @staticmethod
         def generate_desc(subcommands):
             """
