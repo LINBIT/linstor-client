@@ -487,6 +487,8 @@ class ResourceCommands(Commands):
             if marked_delete:
                 rsc_state_color = Color.RED
                 rsc_state = "DELETING"
+            elif apiconsts.FLAG_RSC_INACTIVE in rsc.flags:
+                rsc_state = apiconsts.FLAG_RSC_INACTIVE
             elif rsc_state_obj:
                 if rsc_state_obj.in_use is not None:
                     if rsc_state_obj.in_use:

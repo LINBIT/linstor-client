@@ -172,6 +172,9 @@ class VolumeCommands(Commands):
             if not args.all and apiconsts.FLAG_TIE_BREAKER in rsc.flags:
                 continue  # skip tie breaker resources
 
+            if apiconsts.FLAG_RSC_INACTIVE in rsc.flags:
+                continue  # do not show non existing volumes for inactive resources
+
             rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_usage = ""
             if rsc_state and rsc_state.in_use is not None:
