@@ -1,3 +1,11 @@
+linstor-client (1.3.0-1) experimental; urgency=medium
+
+  * use apiconsts flags for TIE_BREAKER check
+  * correctly hide/indicate inactive resources
+  * snapshots: add shipping list command (ship-list)
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 17 Aug 2020 12:23:54 +0000
+
 linstor-client (1.2.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
