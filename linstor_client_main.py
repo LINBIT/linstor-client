@@ -258,7 +258,19 @@ class LinStorCLI(object):
                 pargs.insert(1, val)
         return pargs
 
+    @staticmethod
+    def merge_environ_arguments(pargs):
+        for key, val in os.environ.items():
+            if key.startswith("LS_CLIENT_"):
+                arg = key[10:].lower().replace("_", "-")
+                pargs.insert(0, "--" + arg)
+                if val:
+                    pargs.insert(1, val)
+        return pargs
+
     def parse(self, pargs):
+        # read global environment options
+        pargs = LinStorCLI.merge_environ_arguments(pargs)
         # read global options from config file
         if '--disable-config' not in pargs:
             pargs = LinStorCLI.merge_config_arguments(pargs)
