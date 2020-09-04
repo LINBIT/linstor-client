@@ -16,7 +16,8 @@ class ErrorReportCommands(Commands):
         # Error subcommands
         error_subcmds = [
             Commands.Subcommands.List,
-            Commands.Subcommands.Show
+            Commands.Subcommands.Show,
+            Commands.Subcommands.Delete
         ]
         error_parser = parser.add_parser(
             Commands.ERROR_REPORTS,
@@ -59,6 +60,20 @@ class ErrorReportCommands(Commands):
         )
         c_error_report.add_argument("report_id", nargs='+')
         c_error_report.set_defaults(func=self.cmd_error_report)
+
+        c_del_err_report = error_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
+            description='Delete one or more error reports.'
+        )
+        c_del_err_report.add_argument("--nodes", nargs="+", help="Only delete error reports from the given nodes")
+        c_del_err_report.add_argument(
+            "--since", help="Datetime since when to delete error reports. Date format: 2020-08-30 13:40:00")
+        c_del_err_report.add_argument(
+            "--to", type=str, help="Datetime until to delete error reports. Date format: 2020-08-30 13:40:00")
+        c_del_err_report.add_argument("--exception", help="Only delete error reports matching the exception")
+        c_del_err_report.add_argument("id", nargs="*", help="Delete error reports matching the given ids")
+        c_del_err_report.set_defaults(func=self.cmd_del_error_report)
 
         self.check_subcommands(error_subp, error_subcmds)
 
@@ -113,3 +128,39 @@ class ErrorReportCommands(Commands):
     def cmd_error_report(self, args):
         lstmsg = self._linstor.error_report_list(with_content=True, ids=args.report_id)
         return self.output_list(args, lstmsg, self.show_error_report, single_item=False)
+
+    @classmethod
+    def fill_str_part(cls, fill_str, default_str):
+        """
+        Fill fill_str with missing parts from default_str.
+
+        :param fill_str:
+        :param default_str:
+        :return:
+        """
+        return fill_str + default_str[len(fill_str):]
+
+    def cmd_del_error_report(self, args):
+        since_dt = None
+        to_dt = None
+
+        dt_format = '%Y-%m-%d %H:%M:%S'
+        def_dt_str = '0000-00-00 23:59:59'
+
+        if args.since:
+            since_str = self.fill_str_part(args.since, def_dt_str)
+            since_dt = datetime.strptime(since_str, dt_format)
+
+        if args.to:
+            to_str = self.fill_str_part(args.to, def_dt_str)
+            to_dt = datetime.strptime(to_str, dt_format)
+
+        replies = self.get_linstorapi().error_report_delete(
+            args.nodes,
+            since=since_dt,
+            to=to_dt,
+            exception=args.exception,
+            version=None,
+            ids=args.id
+        )
+        return self.handle_replies(args, replies)
