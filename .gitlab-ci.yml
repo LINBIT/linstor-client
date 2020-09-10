@@ -70,3 +70,25 @@ test:3.8:
   artifacts:
     reports:
       junit: test-reports/TEST-*.xml
+
+build:
+  stage: build
+  image: $LINBIT_DOCKER_REGISTRY/build-helpers:latest
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "jenkins"'
+  before_script:
+    - curl -sSL $LINBIT_REGISTRY_URL/repository/lbbuild/lbbuildctl-latest -o /usr/local/bin/lbbuildctl
+    - chmod +x /usr/local/bin/lbbuildctl
+  script:
+    - LINSTOR_CLIENT_VERSION=1.99.0
+    - awk -f "/usr/local/bin/dch.awk" -v PROJECT_VERSION="$LINSTOR_CLIENT_VERSION" -v PROJECT_NAME="linstor-client" debian/changelog > debian/changelog.tmp
+    - mv debian/changelog{.tmp,}
+    - sed -i "s/LINSTOR_CLI_VERSION [0-9.]*/LINSTOR_CLI_VERSION $LINSTOR_CLIENT_VERSION/g" Dockerfile
+    - sed -i "s/PYTHON_LINSTOR_VERSION [0-9.]*/PYTHON_LINSTOR_VERSION $LINSTOR_CLIENT_VERSION/g" Dockerfile
+    - sed -i "s/python-linstor >= [0-9.]*/python-linstor >= $LINSTOR_CLIENT_VERSION/g" setup.cfg setup.cfg.py2
+    - sed -i "s/\"python-linstor>=[0-9.]*\"/\"python-linstor>=$LINSTOR_CLIENT_VERSION\"/g" setup.py
+    - sed -i "s/VERSION = \"[0-9.]*\"/VERSION = \"$LINSTOR_CLIENT_VERSION\"/g" linstor_client/consts.py
+#    - dummy-release.sh linstor-client $LINSTOR_CLIENT_VERSION ignore
+    - NO_DOC="-no-doc" make debrelease
+    - curl -isSf -u $LINBIT_REGISTRY_USER:$LINBIT_REGISTRY_PASSWORD --upload-file dist/linstor-client-$LINSTOR_CLIENT_VERSION.tar.gz $LINBIT_REGISTRY_URL/repository/lbbuild-upstream/
+    - lbbuildctl build linstor-client --arch amd64 --ci -v "$LINSTOR_CLIENT_VERSION" -p "$LINSTOR_CLIENT_VERSION" -l -e LINBIT_REGISTRY_USER=$LINBIT_REGISTRY_USER -e LINBIT_REGISTRY_PASSWORD=$LINBIT_REGISTRY_PASSWORD -e LINBIT_REGISTRY_URL=$LINBIT_REGISTRY_URL -d ubuntu-bionic,ubuntu-focal,rhel7.0,rhel8.0

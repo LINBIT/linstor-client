@@ -16,6 +16,7 @@ DOCKERREGPATH = $(DOCKERREGISTRY)/linstor-client
 DOCKERREGPATH_QUAY = $(DOCKERREGISTRY_QUAY)/linbit/linstor-client
 DOCKERREGPATH_DOCKER = linbit/linstor-client
 DOCKER_TAG ?= latest
+NO_DOC ?=
 
 all: doc
 	$(PYTHON) setup.py build
@@ -38,15 +39,17 @@ up2date: linstor_client/consts_githash.py
 	$(info "Version strings/Changelogs up to date")
 endif
 
-release: up2date clean doc
+release: doc
+	make release-no-doc
+
+release-no-doc: up2date clean
 	$(PYTHON) setup.py sdist
 	@echo && echo "Did you run distclean?"
-	@echo && echo "Did you generate and commit the latest drbdsetup options?"
 
 debrelease:
 	echo 'recursive-include debian *' >> MANIFEST.in
 	dh_clean || true
-	make release
+	make release$(NO_DOC)
 	git checkout MANIFEST.in
 
 ifneq ($(FORCE),1)
