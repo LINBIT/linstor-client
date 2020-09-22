@@ -66,6 +66,7 @@ class DrbdOptions(object):
                 parser.add_argument(
                     '--' + opt_key,
                     choices=['yes', 'no'],
+                    type=str.lower,
                     help="yes/no (Default: %s)" % (option['default'])
                 )
             elif option['type'] == 'string':

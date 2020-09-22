@@ -68,7 +68,7 @@ class VolumeGroupCommands(Commands):
         #  ------------ DELETE END
 
         #  ------------ LIST START
-        vlm_grp_groupby = [x.name for x in self._vlm_grp_headers]
+        vlm_grp_groupby = [x.name.lower() for x in self._vlm_grp_headers]
         vlm_grp_group_completer = Commands.show_group_completer(vlm_grp_groupby, "groupby")
 
         p_lvlmgrps = vlm_grp_subp.add_parser(
@@ -78,7 +78,8 @@ class VolumeGroupCommands(Commands):
             'linstor. By default, the list is printed as a human readable table.')
         p_lvlmgrps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvlmgrps.add_argument('-g', '--groupby', nargs='+',
-                                choices=vlm_grp_groupby).completer = vlm_grp_group_completer
+                                choices=vlm_grp_groupby,
+                                type=str.lower).completer = vlm_grp_group_completer
         p_lvlmgrps.add_argument('-R', '--resources', nargs='+', type=str,
                                 help='Filter by list of resource groups').completer = self.resource_grp_completer
         p_lvlmgrps.add_argument('name', help="Resource group name.")

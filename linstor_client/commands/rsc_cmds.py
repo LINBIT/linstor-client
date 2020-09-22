@@ -141,7 +141,7 @@ class ResourceCommands(Commands):
                               help='Name of the resource to delete').completer = self.resource_completer
         p_rm_res.set_defaults(func=self.delete)
 
-        resgroupby = [x.name for x in ResourceCommands._resource_headers]
+        resgroupby = [x.name.lower() for x in ResourceCommands._resource_headers]
         res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
 
         p_lreses = res_subp.add_parser(
@@ -153,7 +153,8 @@ class ResourceCommands(Commands):
         p_lreses.add_argument(
             '-g', '--groupby',
             nargs='+',
-            choices=resgroupby).completer = res_group_completer
+            choices=resgroupby,
+            type=str.lower).completer = res_group_completer
         p_lreses.add_argument(
             '-r', '--resources',
             nargs='+',

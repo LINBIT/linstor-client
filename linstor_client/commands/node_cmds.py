@@ -108,16 +108,22 @@ class NodeCommands(Commands):
                                     apiconsts.DFLT_CTRL_PORT_SSL,
                                     apiconsts.VAL_NETCOM_TYPE_SSL))
         ntype_def = apiconsts.VAL_NODE_TYPE_STLT
-        p_new_node.add_argument('--node-type', choices=node_types,
-                                default=apiconsts.VAL_NODE_TYPE_STLT, help='Node type (default: %s)' % ntype_def)
+        p_new_node.add_argument('--node-type', choices=[x.lower() for x in node_types],
+                                default=apiconsts.VAL_NODE_TYPE_STLT,
+                                type=str.lower,
+                                help='Node type (default: %s)' % ntype_def.lower())
         ctype_def = apiconsts.VAL_NETCOM_TYPE_PLAIN
         p_new_node.add_argument('--communication-type',
-                                choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN, apiconsts.VAL_NETCOM_TYPE_SSL),
+                                choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN.lower(),
+                                         apiconsts.VAL_NETCOM_TYPE_SSL.lower()),
                                 default=ctype_def,
-                                help='Communication type (default: %s)' % ctype_def)
+                                type=str.lower,
+                                help='Communication type (default: %s)' % ctype_def.lower())
         itype_def = apiconsts.VAL_NETIF_TYPE_IP
-        p_new_node.add_argument('--interface-type', choices=(apiconsts.VAL_NETIF_TYPE_IP,), default=itype_def,
-                                help='Interface type (default: %s)' % itype_def)
+        p_new_node.add_argument('--interface-type', choices=(apiconsts.VAL_NETIF_TYPE_IP.lower(),),
+                                type=str.lower,
+                                default=itype_def,
+                                help='Interface type (default: %s)' % itype_def.lower())
         iname_def = 'default'
         p_new_node.add_argument('--interface-name', default=iname_def,
                                 help='Interface name (default: %s)' % iname_def)
@@ -155,9 +161,10 @@ class NodeCommands(Commands):
         )
         p_modify_node.add_argument(
             '--node-type', '-t',
-            choices=node_types,
+            choices=[x.lower() for x in node_types],
+            type=str.lower,
             default=apiconsts.VAL_NODE_TYPE_STLT,
-            help='Node type (default: %s)' % ntype_def
+            help='Node type (default: %s)' % ntype_def.lower()
         )
         p_modify_node.add_argument(
             'node_name',
@@ -261,9 +268,10 @@ class NodeCommands(Commands):
         )
         p_create_netinterface.add_argument(
             '--communication-type',
-            choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN, apiconsts.VAL_NETCOM_TYPE_SSL),
+            choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN.lower(), apiconsts.VAL_NETCOM_TYPE_SSL.lower()),
+            type=str.lower,
             default=ctype_def,
-            help='Communication type (default: %s)' % ctype_def
+            help='Communication type (default: %s)' % ctype_def.lower()
         )
         p_create_netinterface.add_argument(
             '--active',
@@ -290,9 +298,10 @@ class NodeCommands(Commands):
         )
         p_mod_netif.add_argument(
             '--communication-type',
-            choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN, apiconsts.VAL_NETCOM_TYPE_SSL),
+            choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN.lower(), apiconsts.VAL_NETCOM_TYPE_SSL.lower()),
+            type=str.lower,
             default=ctype_def,
-            help='Communication type (default: %s)' % ctype_def
+            help='Communication type (default: %s)' % ctype_def.lower()
         )
         p_mod_netif.add_argument(
             '--active',
@@ -322,7 +331,7 @@ class NodeCommands(Commands):
         p_delete_netinterface.set_defaults(func=self.delete_netif)
 
         # list nodes
-        node_groupby = [x.name for x in self._node_headers]
+        node_groupby = [x.name.lower() for x in self._node_headers]
         node_group_completer = Commands.show_group_completer(node_groupby, "groupby")
 
         p_lnodes = node_subp.add_parser(
@@ -331,7 +340,7 @@ class NodeCommands(Commands):
             description='Prints a list of all cluster nodes known to linstor. '
             'By default, the list is printed as a human readable table.')
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_lnodes.add_argument('-g', '--groupby', nargs='+',
+        p_lnodes.add_argument('-g', '--groupby', nargs='+', type=str.lower,
                               choices=node_groupby).completer = node_group_completer
         p_lnodes.add_argument('-n', '--nodes', nargs='+', type=str,
                               help='Filter by list of nodes').completer = self.node_completer

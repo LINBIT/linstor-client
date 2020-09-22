@@ -286,7 +286,8 @@ class Table(object):
 
         hdrnames = [h['name'] for h in self.header]
         if self.groups and self.table:
-            group_bys = [hdrnames.index(g) for g in self.groups if g in hdrnames]
+            low_hdrnames = [h.lower() for h in hdrnames]
+            group_bys = [low_hdrnames.index(g.lower()) for g in self.groups if g.lower() in low_hdrnames]
             for row in self.table:
                 for idx in group_bys:
                     try:

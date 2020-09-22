@@ -131,8 +131,8 @@ class SnapshotCommands(Commands):
         p_ship_list.add_argument(
             '--status',
             nargs='+',
-            choices=[x.value for x in consts.SnapshotShipStatus],
-            type=str,
+            choices=[x.value.lower() for x in consts.SnapshotShipStatus],
+            type=str.lower,
             help='Filter by list of statuses').completer = self.node_completer
         p_ship_list.set_defaults(func=self.shiplist)
 

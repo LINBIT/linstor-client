@@ -254,7 +254,7 @@ class StoragePoolCommands(Commands):
         p_rm_storpool.set_defaults(func=self.delete)
 
         # list storpool
-        storpoolgroupby = [x.name for x in self._stor_pool_headers]
+        storpoolgroupby = [x.name.lower() for x in self._stor_pool_headers]
         storpool_group_completer = Commands.show_group_completer(storpoolgroupby, "groupby")
 
         p_lstorpool = sp_subp.add_parser(
@@ -264,7 +264,8 @@ class StoragePoolCommands(Commands):
             'linstor. By default, the list is printed as a human readable table.')
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
-                                 choices=storpoolgroupby).completer = storpool_group_completer
+                                 choices=storpoolgroupby,
+                                 type=str.lower).completer = storpool_group_completer
         p_lstorpool.add_argument('-s', '--storage-pools', nargs='+', type=str,
                                  help='Filter by list of storage pools').completer = self.storage_pool_completer
         p_lstorpool.add_argument('-n', '--nodes', nargs='+', type=str,

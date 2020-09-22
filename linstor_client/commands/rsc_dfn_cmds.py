@@ -116,7 +116,7 @@ class ResourceDefinitionCommands(Commands):
             help='Name of the resource to delete').completer = self.resource_dfn_completer
         p_rm_res_dfn.set_defaults(func=self.delete)
 
-        rsc_dfn_groupby = [x.name for x in self._rsc_dfn_headers]
+        rsc_dfn_groupby = [x.name.lower() for x in self._rsc_dfn_headers]
         rsc_dfn_group_completer = Commands.show_group_completer(rsc_dfn_groupby, "groupby")
 
         p_lrscdfs = res_def_subp.add_parser(
@@ -126,7 +126,8 @@ class ResourceDefinitionCommands(Commands):
             'linstor. By default, the list is printed as a human readable table.')
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
-                               choices=rsc_dfn_groupby).completer = rsc_dfn_group_completer
+                               choices=rsc_dfn_groupby,
+                               type=str.lower).completer = rsc_dfn_group_completer
         p_lrscdfs.add_argument('-r', '--resource-definitions', nargs='+', type=str,
                                help='Filter by list of resource definitions').completer = self.resource_dfn_completer
         p_lrscdfs.add_argument('-e', '--external-name', action="store_true", help='Show user specified name.')

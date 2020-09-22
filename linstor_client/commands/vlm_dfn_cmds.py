@@ -110,7 +110,7 @@ class VolumeDefinitionCommands(Commands):
         p_rm_vol.set_defaults(func=self.delete)
 
         # list volume definitions
-        vlm_dfn_groupby = [x.name for x in self._vlm_dfn_headers]
+        vlm_dfn_groupby = [x.name.lower() for x in self._vlm_dfn_headers]
         vlm_dfn_group_completer = Commands.show_group_completer(vlm_dfn_groupby, "groupby")
 
         p_lvols = vol_def_subp.add_parser(
@@ -120,7 +120,8 @@ class VolumeDefinitionCommands(Commands):
             'By default, the list is printed as a human readable table.')
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvols.add_argument('-g', '--groupby', nargs='+',
-                             choices=vlm_dfn_groupby).completer = vlm_dfn_group_completer
+                             choices=vlm_dfn_groupby,
+                             type=str.lower).completer = vlm_dfn_group_completer
         p_lvols.add_argument('-r', '--resource-definitions', nargs='+', type=str,
                              help='Filter by list of resource definitions').completer = self.resource_dfn_completer
         p_lvols.add_argument('-e', '--external-name', action="store_true", help='Show user specified name.')

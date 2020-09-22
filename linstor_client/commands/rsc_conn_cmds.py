@@ -46,7 +46,7 @@ class ResourceConnectionCommands(Commands):
             description=Commands.Subcommands.generate_desc(subcmds)
         )
 
-        rescon_groubby = [x.name for x in ResourceConnectionCommands._headers]
+        rescon_groubby = [x.name.lower() for x in ResourceConnectionCommands._headers]
         res_group_completer = Commands.show_group_completer(rescon_groubby, "groupby")
 
         p_lresconn = subp.add_parser(
@@ -59,7 +59,8 @@ class ResourceConnectionCommands(Commands):
         p_lresconn.add_argument(
             '-g', '--groupby',
             nargs='+',
-            choices=rescon_groubby).completer = res_group_completer
+            choices=rescon_groubby,
+            type=str.lower).completer = res_group_completer
         p_lresconn.add_argument(
             'resource_name',
             help="Resource name"

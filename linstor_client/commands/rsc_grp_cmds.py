@@ -89,7 +89,7 @@ class ResourceGroupCommands(Commands):
         #  ------------ DELETE END
 
         #  ------------ LIST START
-        rsc_grp_groupby = [x.name for x in self._rsc_grp_headers]
+        rsc_grp_groupby = [x.name.lower() for x in self._rsc_grp_headers]
         rsc_grp_group_completer = Commands.show_group_completer(rsc_grp_groupby, "groupby")
 
         p_lrscgrps = res_grp_subp.add_parser(
@@ -99,7 +99,8 @@ class ResourceGroupCommands(Commands):
             'linstor. By default, the list is printed as a human readable table.')
         p_lrscgrps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscgrps.add_argument('-g', '--groupby', nargs='+',
-                                choices=rsc_grp_groupby).completer = rsc_grp_group_completer
+                                choices=rsc_grp_groupby,
+                                type=str.lower).completer = rsc_grp_group_completer
         p_lrscgrps.add_argument('-r', '--resource-groups', nargs='+', type=str,
                                 help='Filter by list of resource groups').completer = self.resource_grp_completer
         p_lrscgrps.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
