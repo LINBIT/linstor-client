@@ -206,8 +206,6 @@ echo "migration disabled, review script and remove this line"; exit 1\n
                                     '--minor', str(vol['minor']), r, str(vol['_size_kiB'])+'K')
                 MigrateCommands.lsc(of, 'volume-definition', 'set-property', r, vnr_str,
                                     'OverrideVlmId', bdname)
-                MigrateCommands.lsc(of, 'volume-definition', 'set-property', r, vnr_str,
-                                    'AllowLargerVolumeSize', 'true')
                 cgi = vol.get('props', {}).get('current-gi', None)
                 if cgi is not None:
                     MigrateCommands.lsc(of, 'volume-definition', 'set-property', r, vnr_str,
