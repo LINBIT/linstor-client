@@ -1,7 +1,7 @@
 import linstor_client.argparse.argparse as argparse
 from linstor_client.utils import rangecheck, filter_new_args
 from linstor.properties import properties
-import linstor.sharedconsts as apiconsts
+from linstor_client.commands import ArgumentError
 from linstor import SizeCalc, LinstorError
 
 
@@ -35,12 +35,12 @@ class DrbdOptions(object):
             try:
                 i = int(x)
                 if i not in range(_min, _max):
-                    raise argparse.ArgumentTypeError("{v} not in range [{min}-{max}].".format(v=i, min=_min, max=_max))
+                    raise ArgumentError("{v} not in range [{min}-{max}].".format(v=i, min=_min, max=_max))
                 return i
             except ValueError as va:
                 pass
             if x not in _symbols:
-                raise argparse.ArgumentTypeError("'{v}' must be one of {s}.".format(v=x, s=_symbols))
+                raise ArgumentError("'{v}' must be one of {s}.".format(v=x, s=_symbols))
             return x
 
         return foo
@@ -142,13 +142,11 @@ class DrbdOptions(object):
                     if option['min'] <= value <= option['max']:
                         value = str(value)
                     else:
-                        raise argparse.ArgumentTypeError(
+                        raise ArgumentError(
                             prop_name + " value {v} is out of range [{mi}-{ma}]".format(
                                 v=value,
                                 mi=option['min'],
-                                ma=option['max']
-                            )
-                        )
+                                ma=option['max']))
                 modify[key] = str(value)
 
         return modify, deletes

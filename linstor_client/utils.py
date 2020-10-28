@@ -149,10 +149,9 @@ def checkrange(v, i, j):
 # "type" used for argparse
 def rangecheck(i, j):
     def range(v):
-        import linstor_client.argparse.argparse as argparse
         v = int(v)
         if not checkrange(v, i, j):
-            raise argparse.ArgumentTypeError('%d not in range: [%d, %d]' % (v, i, j))
+            raise LinstorClientError('%d not in range: [%d, %d]' % (v, i, j), exit_code=2)
         return v
     return range
 

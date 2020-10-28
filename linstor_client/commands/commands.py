@@ -743,7 +743,7 @@ class Commands(object):
         layer_list = []
         for layer in layer_data.split(','):
             if layer.lower() not in linstor.Linstor.layer_list():
-                raise argparse.ArgumentTypeError('Layer name "{lay}" not valid'.format(lay=layer))
+                raise ArgumentError('Layer name "{lay}" not valid'.format(lay=layer))
             layer_list.append(layer)
         return layer_list
 
@@ -765,7 +765,7 @@ class Commands(object):
         provider_list = []
         for provider in providers.split(","):
             if provider.upper() not in linstor.Linstor.provider_list():
-                raise argparse.ArgumentTypeError('Provider "{prov}" not valid'.format(prov=provider))
+                raise ArgumentError('Provider "{prov}" not valid'.format(prov=provider))
             provider_list.append(provider)
         return provider_list
 
