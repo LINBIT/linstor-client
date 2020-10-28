@@ -98,7 +98,9 @@ class DrbdOptions(object):
                     parser.add_argument(
                         '--' + opt_key,
                         type=str,
-                        help="Range: [%d, %d]; Default: %s%s" % (min_, max_, str(default), unit)
+                        help="Range: [%d%s, %d%s]; Default: %s%s" % (
+                            min_, option.get('unit_prefix', ''),
+                            max_, option.get('unit_prefix', ''), str(default), unit)
                     )
                 else:
                     parser.add_argument('--' + opt_key, type=rangecheck(min_, max_),
@@ -143,10 +145,11 @@ class DrbdOptions(object):
                         value = str(value)
                     else:
                         raise ArgumentError(
-                            prop_name + " value {v} is out of range [{mi}-{ma}]".format(
+                            prop_name + " value {v}{u} is out of range [{mi}-{ma}]".format(
                                 v=value,
-                                mi=option['min'],
-                                ma=option['max']))
+                                u=SizeCalc.unit_to_str(unit),
+                                mi=str(option['min']) + option.get('unit_prefix', ''),
+                                ma=str(option['max']) + option.get('unit_prefix', '')))
                 modify[key] = str(value)
 
         return modify, deletes
