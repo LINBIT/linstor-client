@@ -1,3 +1,11 @@
+linstor-client (1.4.1-1) experimental; urgency=medium
+
+  * migrate: remove unused AllowLargerVolumeSize property
+  * fix incorrect use of argparse.ArgumentTypeError
+  * drbd-options: add units to error message
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 09 Nov 2020 08:21:41 +0000
+
 linstor-client (1.4.0-1) experimental; urgency=medium
 
   * main: allow setting global args from environment variables
