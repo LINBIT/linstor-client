@@ -59,7 +59,7 @@ class StoragePoolCommands(Commands):
         super(StoragePoolCommands, self).__init__()
 
     @classmethod
-    def _create_pool_args(cls, parser, shared_space=True):
+    def _create_pool_args(cls, parser, shared_space=True, external_locking=True):
         parser.add_argument(
             'node_name',
             type=str,
@@ -70,6 +70,12 @@ class StoragePoolCommands(Commands):
                 '--shared-space',
                 type=str,
                 help='Name of used shared space'
+            )
+        if external_locking:
+            parser.add_argument(
+                '--external-locking',
+                action="store_true",
+                help='Skip Linstors internal locking for shared storage pools'
             )
 
     def setup_commands(self, parser):
@@ -187,7 +193,7 @@ class StoragePoolCommands(Commands):
             aliases=[StoragePoolCommands.Diskless.SHORT],
             description='Create a diskless pool'
         )
-        self._create_pool_args(p_new_diskless_pool, shared_space=False)
+        self._create_pool_args(p_new_diskless_pool, shared_space=False, external_locking=False)
         p_new_diskless_pool.set_defaults(
             func=self.create,
             driver=linstor.StoragePoolDriver.Diskless,
@@ -312,12 +318,14 @@ class StoragePoolCommands(Commands):
     def create(self, args):
         try:
             shrd_space = None if "shared_space" not in args else args.shared_space
+            ext_locking = None if "external_locking" not in args else args.external_locking
             replies = self.get_linstorapi().storage_pool_create(
                 args.node_name,
                 args.name,
                 args.driver,
                 args.driver_pool_name,
-                shared_space=shrd_space
+                shared_space=shrd_space,
+                external_locking=ext_locking
             )
         except linstor.LinstorError as e:
             raise ArgumentError(e.message)
