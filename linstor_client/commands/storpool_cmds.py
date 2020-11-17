@@ -52,7 +52,8 @@ class StoragePoolCommands(Commands):
         linstor_client.TableHeader("FreeCapacity", alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
         linstor_client.TableHeader("TotalCapacity", alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
         linstor_client.TableHeader("CanSnapshots"),
-        linstor_client.TableHeader("State")
+        linstor_client.TableHeader("State"),
+        linstor_client.TableHeader("SharedName")
     ]
 
     def __init__(self):
@@ -370,7 +371,8 @@ class StoragePoolCommands(Commands):
                 free_capacity,
                 total_capacity,
                 storpool.supports_snapshots(),
-                tbl.color_cell(state_str, state_color)
+                tbl.color_cell(state_str, state_color),
+                storpool.free_space_mgr_name if ':' not in storpool.free_space_mgr_name else ''
             ])
         tbl.show()
         for err in errors:
