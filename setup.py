@@ -197,7 +197,7 @@ setup(
         "linstor_client.commands"
     ],
     install_requires=[
-        "python-linstor>=1.4.1"
+        "python-linstor>=1.4.2"
     ],
     py_modules=["linstor_client_main"],
     scripts=["scripts/linstor"],
