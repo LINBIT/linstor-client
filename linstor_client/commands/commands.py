@@ -61,6 +61,7 @@ class Commands(object):
     DRBD_PROXY = 'drbd-proxy'
     PHYSICAL_STORAGE = 'physical-storage'
     SOS_REPORT = 'sos-report'
+    SPACE_REPORTING = 'space-reporting'
 
     MainList = [
         CONTROLLER,
@@ -81,7 +82,8 @@ class Commands(object):
         SNAPSHOT,
         DRBD_PROXY,
         PHYSICAL_STORAGE,
-        SOS_REPORT
+        SOS_REPORT,
+        SPACE_REPORTING
     ]
     Hidden = [
         DMMIGRATE,
@@ -251,6 +253,10 @@ class Commands(object):
         class ShipList(object):
             LONG = "ship-list"
             SHORT = "shl"
+
+        class Query(object):
+            LONG = "query"
+            SHORT = "qry"
 
         @staticmethod
         def generate_desc(subcommands):
@@ -955,6 +961,30 @@ class MiscCommands(Commands):
         c_sos_download.set_defaults(func=self.cmd_sos_report_download)
         self.check_subcommands(sos_subp, sos_subcommands)
 
+        space_reporting_subcmds = [
+            Commands.Subcommands.Query
+        ]
+        spc_rep_parser = parser.add_parser(
+            Commands.SPACE_REPORTING,
+            aliases=["spr"],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description="Space reporting subcommands")
+
+        spc_rep_subp = spc_rep_parser.add_subparsers(
+            title="Space reporting commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(space_reporting_subcmds)
+        )
+
+        c_spc_report_query = spc_rep_subp.add_parser(
+            Commands.Subcommands.Query.LONG,
+            aliases=[Commands.Subcommands.Query.SHORT],
+            description='Queries the space reporting string'
+        )
+        c_spc_report_query.set_defaults(func=self.cmd_spc_report_query)
+
+        self.check_subcommands(spc_rep_subp, space_reporting_subcmds)
+
     @staticmethod
     def _summarize_api_call_responses(responses):
         return "; ".join([response.message for response in responses])
@@ -1008,3 +1038,16 @@ class MiscCommands(Commands):
         if args.since:
             since_dt = MiscCommands.parse_time_str(args.since)
         return self.handle_replies(args, self.get_linstorapi().sos_report_download(since=since_dt, to_file=args.path))
+
+    def show_space_report(self, args, space_report):
+        """
+
+        :param args:
+        :param space_report: responses.SpaceReport
+        :return:
+        """
+        print(space_report.report)
+
+    def cmd_spc_report_query(self, args):
+        reply = self.get_linstorapi().space_reporting_query()
+        return self.output_list(args, reply, self.show_space_report)
