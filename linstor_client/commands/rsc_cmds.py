@@ -398,10 +398,12 @@ class ResourceCommands(Commands):
                 print("Error: --auto-place not allowed in state '{state.name}'".format(state=current_state))
                 return ExitCode.ILLEGAL_STATE
 
+            place_count, additional_place_count, diskless_type = self.parse_place_count_args(args)
+
             # auto-place resource
             replies = self._linstor.resource_auto_place(
                 args.resource_definition_name,
-                args.auto_place,
+                place_count,
                 args.storage_pool,
                 args.do_not_place_with,
                 args.do_not_place_with_regex,
@@ -412,7 +414,9 @@ class ResourceCommands(Commands):
                 diskless_on_remaining=self.parse_diskless_on_remaining(args),
                 async_msg=async_flag,
                 layer_list=args.layer_list,
-                provider_list=args.providers
+                provider_list=args.providers,
+                additional_place_count=additional_place_count,
+                diskless_type=diskless_type
             )
 
             return self.handle_replies(args, replies)

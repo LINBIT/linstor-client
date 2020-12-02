@@ -6,7 +6,7 @@ import sys
 from datetime import datetime, timedelta
 
 import linstor
-from linstor.sharedconsts import NAMESPC_AUXILIARY
+import linstor.sharedconsts as apiconsts
 from linstor.properties import properties
 from linstor import SizeCalc
 import linstor_client
@@ -473,7 +473,7 @@ class Commands(object):
     @classmethod
     def _attach_aux_prop(cls, args):
         if args.aux:
-            args.key = NAMESPC_AUXILIARY + '/' + args.key
+            args.key = apiconsts.NAMESPC_AUXILIARY + '/' + args.key
         return args
 
     @classmethod
@@ -486,14 +486,14 @@ class Commands(object):
         if use_place_count:
             parser.add_argument(
                 '--place-count',
-                type=int,
+                type=str,
                 metavar="REPLICA_COUNT",
                 help='Auto place a resource to a specified number of nodes, set 0 to remove'
             )
         else:
             parser.add_argument(
                 '--auto-place',
-                type=int,
+                type=str,
                 metavar="REPLICA_COUNT",
                 help='Auto place a resource to a specified number of nodes'
             )
@@ -543,6 +543,39 @@ class Commands(object):
             help="Comma separated providers list. Only storage pools with the given provider kind "
                  "are considered as auto-place target. "
                  "Possible providers are: " + ",".join(linstor.Linstor.provider_list()))
+
+    @classmethod
+    def parse_place_count_args(cls, args, use_place_count=False):
+        """
+
+        :param args: argparse arguments
+        :param bool use_place_count: if replica count is named `place-count` or `auto-place`
+        :return: Tuple with (place_count, additional_place_count, diskless_type)
+        """
+        if args.drbd_diskless:
+            diskless_type = apiconsts.FLAG_DRBD_DISKLESS
+        elif args.nvme_initiator:
+            diskless_type = apiconsts.FLAG_NVME_INITIATOR
+        elif hasattr(args, "diskless") and args.diskless:
+            diskless_type = apiconsts.FLAG_DISKLESS
+        else:
+            diskless_type = None
+
+        place_count_arg = args.place_count if use_place_count else args.auto_place
+
+        additional_place_count = None
+        place_count = None
+
+        if place_count_arg:
+            if place_count_arg.startswith("+"):
+                additional_place_count = int(place_count_arg[1:])
+            elif place_count_arg in ['max', 'all']:
+                place_count = -1
+                additional_place_count = 0
+            else:
+                place_count = int(place_count_arg)
+
+        return place_count, additional_place_count, diskless_type
 
     @classmethod
     def parse_diskless_on_remaining(cls, args):

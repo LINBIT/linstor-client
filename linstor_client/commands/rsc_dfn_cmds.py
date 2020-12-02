@@ -79,6 +79,16 @@ class ResourceDefinitionCommands(Commands):
             'resource_definition_name',
             help='Name of the resource definition to auto place'
         )
+        p_auto_place.add_argument(
+            '--nvme-initiator',
+            action="store_true",
+            help='Mark this resource as initiator'
+        )
+        p_auto_place.add_argument(
+            '--drbd-diskless',
+            action="store_true",
+            help='Mark this resource as drbd diskless'
+        )
         p_auto_place.set_defaults(func=self.auto_place)
 
         # modify-resource definition
@@ -186,9 +196,12 @@ class ResourceDefinitionCommands(Commands):
         return self.handle_replies(args, replies)
 
     def auto_place(self, args):
+
+        place_count, additional_place_count, diskless_type = self.parse_place_count_args(args, use_place_count=True)
+
         replies = self.get_linstorapi().resource_auto_place(
             rsc_name=args.resource_definition_name,
-            place_count=args.place_count,
+            place_count=place_count,
             storage_pool=args.storage_pool,
             do_not_place_with=args.do_not_place_with,
             do_not_place_with_regex=args.do_not_place_with_regex,
@@ -197,7 +210,9 @@ class ResourceDefinitionCommands(Commands):
                 args.replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
             diskless_on_remaining=self.parse_diskless_on_remaining(args),
             layer_list=args.layer_list,
-            provider_list=args.providers)
+            provider_list=args.providers,
+            additional_place_count=additional_place_count,
+            diskless_type=diskless_type)
         return self.handle_replies(args, replies)
 
     def modify(self, args):
