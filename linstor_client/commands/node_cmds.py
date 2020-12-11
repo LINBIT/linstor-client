@@ -509,8 +509,15 @@ class NodeCommands(Commands):
                 if net_if.is_active and net_if.stlt_port:
                     active_ip = net_if.address + ":" + str(net_if.stlt_port) + " (" + net_if.stlt_encryption_type + ")"
 
-            aux_props = ["{k}={v}".format(k=k, v=v) for k, v in node.properties.items() if k.startswith(apiconsts.NAMESPC_AUXILIARY + '/')]
-            conn_stat = conn_stat_dict[node.connection_status]
+            aux_props = ["{k}={v}".format(k=k, v=v)
+                         for k, v in node.properties.items() if k.startswith(apiconsts.NAMESPC_AUXILIARY + '/')]
+
+            if apiconsts.FLAG_EVICTED in node.flags:
+                conn_stat = (apiconsts.FLAG_EVICTED, Color.RED)
+            elif apiconsts.FLAG_DELETE in node.flags:
+                conn_stat = (apiconsts.FLAG_DELETE, Color.RED)
+            else:
+                conn_stat = conn_stat_dict.get(node.connection_status)
 
             row = [node.name, node.type, active_ip]
             if args.show_aux_props:
