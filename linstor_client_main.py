@@ -44,6 +44,7 @@ from linstor_client.commands import (
     MigrateCommands,
     PhysicalStorageCommands,
     ErrorReportCommands,
+    ExosCommands,
     ZshGenerator,
     MiscCommands,
     Commands,
@@ -112,6 +113,7 @@ class LinStorCLI(object):
         self._misc_commands = MiscCommands()
         self._physical_storage_commands = PhysicalStorageCommands()
         self._error_report_commands = ErrorReportCommands()
+        self._exos_commands = ExosCommands()
         self._zsh_generator = None
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
@@ -226,6 +228,9 @@ class LinStorCLI(object):
         self._physical_storage_commands.setup_commands(subp)
 
         self._error_report_commands.setup_commands(subp)
+
+        # add all exos commands
+        self._exos_commands.setup_commands(subp)
 
         # misc commands
         self._misc_commands.setup_commands(subp)
@@ -345,6 +350,7 @@ class LinStorCLI(object):
                         self._misc_commands._linstor = self._linstorapi
                         self._physical_storage_commands._linstor = self._linstorapi
                         self._error_report_commands._linstor = self._linstorapi
+                        self._exos_commands._linstor = self._linstorapi
                         self._linstorapi.connect()
                         break
                     except linstor.LinstorNetworkError as le:

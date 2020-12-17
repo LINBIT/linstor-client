@@ -1,11 +1,11 @@
 import linstor
 import linstor_client
 import linstor_client.argparse.argparse as argparse
+import linstor.sharedconsts as apiconsts
 from linstor import SizeCalc
 from linstor.responses import StoragePoolListResponse
 from linstor_client.commands import ArgumentError, Commands
 from linstor_client.utils import Output
-
 
 class StoragePoolCommands(Commands):
     class Lvm(object):
@@ -43,6 +43,10 @@ class StoragePoolCommands(Commands):
     class OpenFlex(object):
         LONG = "openflex"
         SHORT = "openflex"
+
+    class Exos(object):
+        LONG = "exos"
+        SHORT = "exos"
 
     _stor_pool_headers = [
         linstor_client.TableHeader("StoragePool"),
@@ -109,7 +113,8 @@ class StoragePoolCommands(Commands):
             StoragePoolCommands.File,
             StoragePoolCommands.FileThin,
             StoragePoolCommands.SPDK,
-            StoragePoolCommands.OpenFlex
+            StoragePoolCommands.OpenFlex,
+            StoragePoolCommands.Exos
         ]
 
         sp_c_parser = sp_subp.add_parser(
@@ -240,6 +245,24 @@ class StoragePoolCommands(Commands):
         )
         p_new_openflex_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.OPENFLEX_TARGET)
 
+        p_new_exos_pool = create_subp.add_parser(
+            StoragePoolCommands.Exos.LONG,
+            aliases=[StoragePoolCommands.Exos.SHORT],
+            description='Create an EXOS storage pool'
+        )
+        self._create_pool_args(p_new_exos_pool)
+        p_new_exos_pool.add_argument(
+            'enclosure_name',
+            type=str,
+            help='Enclosure name'
+        )
+        p_new_exos_pool.add_argument(
+            'pool_sn',
+            type=str,
+            help='Exos Pool Serial Number'
+        )
+        p_new_exos_pool.set_defaults(func=self.create_exos, driver=linstor.StoragePoolDriver.EXOS)
+
         # END CREATE SUBCMDS
 
         # remove-storpool
@@ -327,6 +350,24 @@ class StoragePoolCommands(Commands):
                 args.driver_pool_name,
                 shared_space=shrd_space,
                 external_locking=ext_locking
+            )
+        except linstor.LinstorError as e:
+            raise ArgumentError(e.message)
+        return self.handle_replies(args, replies)
+
+    def create_exos(self, args):
+        try:
+            # no shared-space and no external locking. shared-space calculated by server, external locking not allowed
+            props = {
+                apiconsts.NAMESPC_EXOS + '/' + apiconsts.KEY_STOR_POOL_EXOS_ENCLOSURE: args.enclosure_name,
+                apiconsts.NAMESPC_EXOS + '/' + apiconsts.KEY_STOR_POOL_EXOS_POOL_SN: args.pool_sn
+            }
+            replies = self.get_linstorapi().storage_pool_create(
+                args.node_name,
+                args.name,
+                args.driver,
+                args.enclosure_name + '_' + args.pool_sn,
+                property_dict=props
             )
         except linstor.LinstorError as e:
             raise ArgumentError(e.message)

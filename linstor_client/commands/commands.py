@@ -62,6 +62,7 @@ class Commands(object):
     PHYSICAL_STORAGE = 'physical-storage'
     SOS_REPORT = 'sos-report'
     SPACE_REPORTING = 'space-reporting'
+    EXOS = "exos"
 
     MainList = [
         CONTROLLER,
@@ -83,7 +84,8 @@ class Commands(object):
         DRBD_PROXY,
         PHYSICAL_STORAGE,
         SOS_REPORT,
-        SPACE_REPORTING
+        SPACE_REPORTING,
+        EXOS
     ]
     Hidden = [
         DMMIGRATE,
