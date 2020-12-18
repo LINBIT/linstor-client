@@ -70,7 +70,8 @@ class NodeCommands(Commands):
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.Modify,
-            NodeCommands.Reconnect
+            NodeCommands.Reconnect,
+            Commands.Subcommands.Restore
         ]
 
         node_parser = parser.add_parser(
@@ -398,6 +399,19 @@ class NodeCommands(Commands):
         ).completer = self.node_completer
         Commands.add_parser_keyvalue(p_setp, "node")
         p_setp.set_defaults(func=self.set_props)
+
+        # restore evicted node
+        p_restore_node = node_subp.add_parser(
+            Commands.Subcommands.Restore.LONG,
+            aliases=[Commands.Subcommands.Restore.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description="Restore an evicted node."
+        )
+        p_restore_node.add_argument(
+            'node_name',
+            help="Evicted node to restore"
+        ).completer = self.node_completer
+        p_restore_node.set_defaults(func=self.restore_node)
 
         self.check_subcommands(interface_subp, netif_subcmds)
         self.check_subcommands(node_subp, subcmds)
@@ -799,6 +813,9 @@ class NodeCommands(Commands):
             delete_props=mod_prop_dict['delete']
         )
         return self.handle_replies(args, replies)
+
+    def restore_node(self, args):
+        return self.handle_replies(args, self.get_linstorapi().node_restore(node_name=args.node_name))
 
     def create_netif(self, args):
         replies = self._linstor.netinterface_create(
