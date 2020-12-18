@@ -1,3 +1,14 @@
+linstor-client (1.6.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * node-cmds: show evicted and deleting nodes
+  * node-cmds: add node restore command
+
+  [ Gabor Hernadi ]
+  * auto-place: add diskless placement and relative count
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Fri, 18 Dec 2020 08:52:10 +0000
+
 linstor-client (1.4.2-1) experimental; urgency=medium
 
   * add space-reporting command

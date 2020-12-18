@@ -21,7 +21,7 @@
 Global constants for linstor
 """
 
-VERSION = "1.4.2"
+VERSION = "1.6.0"
 
 try:
     from linstor.consts_githash import GITHASH
