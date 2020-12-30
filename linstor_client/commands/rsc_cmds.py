@@ -271,7 +271,7 @@ class ResourceCommands(Commands):
             help="Add disks to a diskless resource using this storage pool name"
         ).completer = self.storage_pool_dfn_completer
         p_toggle_disk_group_storage.add_argument(
-            '--default-storage-pool', '-dflt',
+            '--default-storage-pool', '--dflt',
             action='store_true',
             help="Add disks to a diskless resource using the storage pools determined from the properties of the "
                  "objects to which the volumes belong"
