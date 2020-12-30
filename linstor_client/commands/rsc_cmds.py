@@ -264,7 +264,7 @@ class ResourceCommands(Commands):
             Commands.Subcommands.ToggleDisk.LONG,
             aliases=[Commands.Subcommands.ToggleDisk.SHORT],
             description='Toggles a resource between diskless and having disks.')
-        p_toggle_disk_group_storage = p_toggle_disk.add_mutually_exclusive_group(required=True)
+        p_toggle_disk_group_storage = p_toggle_disk.add_mutually_exclusive_group(required=False)
         p_toggle_disk_group_storage.add_argument(
             '--storage-pool', '-s',
             type=str,
