@@ -1,3 +1,11 @@
+linstor-client (1.6.1-1) experimental; urgency=medium
+
+  * interactive: recover interactive connection after socket timeout
+  * rsc-td: fix incorrect toggle disk short option
+  * rsc-td: toggle disk storage pool options are now optional
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 13 Jan 2021 07:45:24 +0000
+
 linstor-client (1.6.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
