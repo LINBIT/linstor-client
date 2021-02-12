@@ -566,7 +566,7 @@ class LinStorCLI(object):
                         self.print_cmds()
                         return
                     else:
-                        cmd = " ".join(cmds_clone[1:])
+                        cmd = cmds_clone[1]
                         if cmd not in all_cmds:
                             unknown(cmd)
                 elif cmd in all_cmds:
