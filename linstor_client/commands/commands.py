@@ -258,6 +258,10 @@ class Commands(object):
             LONG = "query"
             SHORT = "qry"
 
+        class Involved(object):
+            LONG = "involved"
+            SHORT = "inv"
+
         @staticmethod
         def generate_desc(subcommands):
             """

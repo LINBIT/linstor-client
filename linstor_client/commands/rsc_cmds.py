@@ -28,6 +28,16 @@ class ResourceCreateTransactionState(object):
         return self._terminate_on_error
 
 
+class RscRespWrapper(object):
+    def __init__(self, original):
+        """
+
+        :param linstor.responses.ResourceResponse original:
+        """
+        self.resources = original.resources
+        self.resource_states = original.resource_states
+
+
 class ResourceCommands(Commands):
     CONN_OBJECT_NAME = 'rsc-conn'
 
@@ -58,7 +68,8 @@ class ResourceCommands(Commands):
             Commands.Subcommands.ToggleDisk,
             Commands.Subcommands.CreateTransactional,
             Commands.Subcommands.Activate,
-            Commands.Subcommands.Deactivate
+            Commands.Subcommands.Deactivate,
+            Commands.Subcommands.Involved
         ]
 
         # Resource subcommands
@@ -175,6 +186,29 @@ class ResourceCommands(Commands):
             help='Only show faulty resource.')
         p_lreses.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
         p_lreses.set_defaults(func=self.list)
+
+        p_involved = res_subp.add_parser(
+            Commands.Subcommands.Involved.LONG,
+            aliases=[Commands.Subcommands.Involved.SHORT],
+            description='Prints a list of resourced involved on a given node')
+        p_involved.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_involved.add_argument('-i', '--inuse', action="store_true", help='Only show resource bundles that are used.')
+        p_involved.add_argument(
+            '-d',
+            '--diskless-inuse',
+            action="store_true",
+            help='Only show resource bundles that have a diskless in-use.')
+        p_involved.add_argument(
+            '-m',
+            '--min-diskful',
+            type=int,
+            default=None,
+            help='Only show resource bundles that have less diskful replicas.')
+        p_involved.add_argument(
+            'node',
+            type=str,
+            help='Node name where a resource is used').completer = self.node_completer
+        p_involved.set_defaults(func=self.involved)
 
         # list volumes
         p_lvlms = res_subp.add_parser(
@@ -457,11 +491,65 @@ class ResourceCommands(Commands):
         replies = [x for subx in args.node_name for x in self._linstor.resource_delete(subx, args.name, async_flag)]
         return self.handle_replies(args, replies)
 
+    @classmethod
+    def _filter_involved_resources(
+            cls,
+            res_response,
+            on_nodes=None,
+            only_inuse=False,
+            only_diskless_inuse=False,
+            min_replicas=None):
+        """
+        Filter a RscRespWrapper object according to involved rules.
+
+        :param RscRespWrapper res_response: response resource wrapper where deleting resource is possible
+        :param list[str] on_nodes: if resource is on any of these nodes
+        :param bool only_inuse: only show resource bundles that are inuse
+        :param bool only_diskless_inuse: only show resource bundles where the inuse node is diskless
+        :param Optional[int] min_replicas: only show resource bundles that have less diskful replicas
+        :return: A RscRespWrapper object with the filtered resources
+        :rtype: RscRespWrapper
+        """
+        res_del = set()
+        rsc_state_lkup = {x.node_name + x.name: x for x in res_response.resource_states}
+        if on_nodes:
+            look_up_nodes = {}
+            for rsc in res_response.resources:
+                in_use = rsc_state_lkup.get(rsc.node_name + rsc.name).in_use
+                if rsc.name not in look_up_nodes:
+                    look_up_nodes[rsc.name] = {
+                        'nodes': [rsc.node_name],
+                        'inuse': rsc_state_lkup.get(rsc.node_name + rsc.name).in_use,
+                        'diskless-inuse': in_use and apiconsts.FLAG_DISKLESS in rsc.flags,
+                        'replicas': 1 if apiconsts.FLAG_DISKLESS not in rsc.flags else 0
+                    }
+                else:
+                    look_up_nodes[rsc.name]['nodes'].append(rsc.node_name)
+                    look_up_nodes[rsc.name]['inuse'] |= in_use
+                    look_up_nodes[rsc.name]['diskless-inuse'] |= in_use and apiconsts.FLAG_DISKLESS in rsc.flags
+                    look_up_nodes[rsc.name]['replicas'] += 1 if apiconsts.FLAG_DISKLESS not in rsc.flags else 0
+            for i, rsc in enumerate(res_response.resources):
+                look_rsc = look_up_nodes[rsc.name]
+                for n in on_nodes:
+                    if n not in look_rsc['nodes']:
+                        res_del.add(i)
+                        break
+                if only_inuse and not look_rsc['inuse']:
+                    res_del.add(i)
+                if only_diskless_inuse and not look_rsc['diskless-inuse']:
+                    res_del.add(i)
+                print(rsc.name, look_rsc['replicas'])
+                if min_replicas is not None and min_replicas <= look_rsc['replicas']:
+                    res_del.add(i)
+            for ri in reversed(list(res_del)):
+                del res_response.resources[ri]
+        return res_del
+
     def show(self, args, lstmsg):
         """
 
         :param args:
-        :param linstor.responses.ResourceResponse lstmsg:
+        :param RscRespWrapper lstmsg:
         :return:
         """
         rsc_dfns = self._linstor.resource_dfn_list_raise(query_volume_definitions=False)
@@ -547,6 +635,25 @@ class ResourceCommands(Commands):
     def list_volumes(self, args):
         lstmsg = self._linstor.volume_list(args.nodes, args.storage_pools, args.resources)
         return self.output_list(args, lstmsg, VolumeCommands.show_volumes)
+
+    def show_involved(self, args, lstmsg):
+        """
+        Filters involved resources and shows them with the normal resource list function.
+
+        :param args: argparse options
+        :param linstor.responses.ResourceResponse lstmsg: resource list REST answer from controller.
+        :return: None
+        """
+        args.groupby = None
+        args.all = True
+        args.faulty = False
+        rsc_resp_wrp = RscRespWrapper(lstmsg)
+        self._filter_involved_resources(rsc_resp_wrp, [args.node], args.inuse, args.diskless_inuse, args.min_diskful)
+        self.show(args, rsc_resp_wrp)
+
+    def involved(self, args):
+        lstmsg = self._linstor.resource_list()
+        return self.output_list(args, lstmsg, self.show_involved)
 
     @classmethod
     def _props_show(cls, args, lstmsg):
