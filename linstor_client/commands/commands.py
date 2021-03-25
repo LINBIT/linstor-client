@@ -274,13 +274,17 @@ class Commands(object):
             """
 
             return "\n".join([
-                " - {} ({})".format(sub.LONG, sub.SHORT)
+                " - {} ({})".format(sub.LONG, sub.SHORT) if hasattr(sub, 'SHORT') else " - {}".format(sub.LONG)
                 for sub in sorted(subcommands, key=lambda x:x.LONG)])
 
     @classmethod
     def check_subcommands(cls, subp, subcmds):
         parser_keys = set(subp.choices.keys())
-        subcmd_keys = set([key for subcmd in subcmds for key in [subcmd.LONG, subcmd.SHORT]])
+        subcmd_keys = set()
+        for subcmd in subcmds:
+            subcmd_keys.add(subcmd.LONG)
+            if hasattr(subcmd, 'SHORT'):
+                subcmd_keys.add(subcmd.SHORT)
         assert parser_keys == subcmd_keys, "not all subcommands are defined:\n"\
                                            + str(parser_keys) + "\n" + str(subcmd_keys)
         subp.metavar = "{%s}" % ", ".join(sorted([x.LONG for x in subcmds]))
