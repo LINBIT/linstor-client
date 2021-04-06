@@ -206,7 +206,8 @@ class ResourceGroupCommands(Commands):
                 args.replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
             diskless_on_remaining=self.parse_diskless_on_remaining(args),
             layer_list=self.prepare_argparse_list(args.layer_list),
-            provider_list=self.prepare_argparse_list(args.providers)
+            provider_list=self.prepare_argparse_list(args.providers),
+            diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool)
         )
         return self.handle_replies(args, replies)
 
@@ -225,7 +226,8 @@ class ResourceGroupCommands(Commands):
             layer_list=args.layer_list,
             provider_list=args.providers,
             property_dict={},
-            delete_props=[]
+            delete_props=[],
+            diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool)
         )
         return self.handle_replies(args, replies)
 

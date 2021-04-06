@@ -493,6 +493,12 @@ class Commands(object):
             type=str,
             nargs='*',
             help="Storage pool name to use, set empty string to remove.").completer = cls.storage_pool_dfn_completer
+        parser.add_argument(
+            '--diskless-storage-pool',
+            type=str,
+            nargs='*',
+            help="Diskless storage pool name to use, set empty string to \
+                remove.").completer = cls.storage_pool_dfn_completer
         if use_place_count:
             parser.add_argument(
                 '--place-count',

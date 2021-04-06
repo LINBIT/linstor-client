@@ -450,7 +450,8 @@ class ResourceCommands(Commands):
                 layer_list=args.layer_list,
                 provider_list=args.providers,
                 additional_place_count=additional_place_count,
-                diskless_type=diskless_type
+                diskless_type=diskless_type,
+                diskless_storage_pool=args.diskless_storage_pool
             )
 
             return self.handle_replies(args, replies)
