@@ -18,13 +18,13 @@
 """
 
 """
-Global constants for linstor
+Global constants for linstor client
 """
 
 VERSION = "1.6.1"
 
 try:
-    from linstor.consts_githash import GITHASH
+    from linstor_client.consts_githash import GITHASH
 except ImportError:
     GITHASH = 'GIT-hash: UNKNOWN'
 
