@@ -1,3 +1,23 @@
+linstor-client (1.7.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * interactive: help with a command reported command as unknown
+  * debian: install bash completion through setup.py
+  * resource/involved: New command that shows only involved resources from [...]
+  * tests: fix for latest controller version
+  * gitlab-ci: try to checkout same linstor-api-py branch
+  * gitlab-ci: trigger linstor-tests on jenkins push
+  * fix showing incorrect linstor-client githash
+
+  [ Gabor Hernadi ]
+  * Allow commands to neglect SHORT version
+  * sp-create: added --external_locking flag
+  * sp list: added sharedName column
+  * storpools: add exos storage pool support
+  * RG: add diskless-storpool-list filter
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 27 Apr 2021 11:36:59 +0000
+
 linstor-client (1.6.1-1) experimental; urgency=medium
 
   * interactive: recover interactive connection after socket timeout
