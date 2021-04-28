@@ -1,3 +1,10 @@
+linstor-client (1.7.1-1) experimental; urgency=medium
+
+  * setup.cfg: build-requires is deprecated
+  * rsc-cmds: involved remove debug output and fix removing elements
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 28 Apr 2021 06:50:15 +0000
+
 linstor-client (1.7.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
