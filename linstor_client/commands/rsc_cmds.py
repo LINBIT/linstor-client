@@ -508,7 +508,7 @@ class ResourceCommands(Commands):
         :param bool only_inuse: only show resource bundles that are inuse
         :param bool only_diskless_inuse: only show resource bundles where the inuse node is diskless
         :param Optional[int] min_replicas: only show resource bundles that have less diskful replicas
-        :return: A RscRespWrapper object with the filtered resources
+        :return: The res_response argument with filtered resources
         :rtype: RscRespWrapper
         """
         res_del = set()
@@ -539,12 +539,13 @@ class ResourceCommands(Commands):
                     res_del.add(i)
                 if only_diskless_inuse and not look_rsc['diskless-inuse']:
                     res_del.add(i)
-                print(rsc.name, look_rsc['replicas'])
                 if min_replicas is not None and min_replicas <= look_rsc['replicas']:
                     res_del.add(i)
-            for ri in reversed(list(res_del)):
+            res_del_list = list(res_del)
+            res_del_list.sort()
+            for ri in reversed(res_del_list):
                 del res_response.resources[ri]
-        return res_del
+        return res_response
 
     def show(self, args, lstmsg):
         """
