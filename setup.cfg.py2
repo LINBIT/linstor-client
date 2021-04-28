@@ -3,7 +3,7 @@ release = 1
 group = System Environment/Daemons
 packager = LINSTOR Team <drbd-user@lists.linbit.com>
 vendor = LINBIT HA-Solutions GmbH
-build-requires =
+build_requires =
   python2-setuptools
 requires =
   python-linstor >= 1.7.0
