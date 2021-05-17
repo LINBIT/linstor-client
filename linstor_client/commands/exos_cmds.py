@@ -369,7 +369,7 @@ class ExosCommands(Commands):
                 encl.ctrl_a_ip if encl.ctrl_a_ip else "-",
                 encl.ctrl_b_ip if encl.ctrl_b_ip else "-",
                 tbl.color_cell(encl.health, health_color),
-                encl.health_reason
+                encl.health_reason if encl.health_reason else ""
             ]
             tbl.add_row(row)
         tbl.show()
