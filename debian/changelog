@@ -1,3 +1,9 @@
+linstor-client (1.7.2-1) experimental; urgency=medium
+
+  * Exos: Made health_reasons optional
+
+ -- Gabor Hernadi <gabor.hernadi@linbit.com>  Tue, 18 May 2021 10:47:17 +0000
+
 linstor-client (1.7.1-1) experimental; urgency=medium
 
   * setup.cfg: build-requires is deprecated
