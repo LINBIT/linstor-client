@@ -120,6 +120,10 @@ class Commands(object):
             LONG = "create"
             SHORT = "c"
 
+        class MakeAvailable(object):
+            LONG = "make-available"
+            SHORT = "mkavail"
+
         class AutoPlace(object):
             LONG = "auto-place"
             SHORT = "ap"

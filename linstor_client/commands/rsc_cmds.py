@@ -59,6 +59,7 @@ class ResourceCommands(Commands):
     def setup_commands(self, parser):
         subcmds = [
             Commands.Subcommands.Create,
+            Commands.Subcommands.MakeAvailable,
             Commands.Subcommands.List,
             Commands.Subcommands.ListVolumes,
             Commands.Subcommands.Delete,
@@ -130,6 +131,32 @@ class ResourceCommands(Commands):
             type=str,
             help='Name of the resource definition').completer = self.resource_dfn_completer
         p_new_res.set_defaults(func=self.create, allowed_states=[DefaultState, ResourceCreateTransactionState])
+
+        # make available
+        p_mkavial = res_subp.add_parser(
+            Commands.Subcommands.MakeAvailable.LONG,
+            aliases=[Commands.Subcommands.MakeAvailable.SHORT],
+            description='Make a resource available on a node, noop if already exists.')
+        p_mkavial.add_argument(
+            '--diskful',
+            action="store_true",
+            help='Make the resource diskful on the node.'
+        )
+        p_mkavial.add_argument(
+            '-l', '--layer-list',
+            type=self.layer_data_check,
+            help="Comma separated layer list, order is from left to right top-down "
+                 "This means the top most layer is on the left. "
+                 "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
+        p_mkavial.add_argument(
+            'node_name',
+            type=str,
+            help='Name of the node to deploy the resource').completer = self.node_completer
+        p_mkavial.add_argument(
+            'resource_name',
+            type=str,
+            help='Name of the resource definition').completer = self.resource_dfn_completer
+        p_mkavial.set_defaults(func=self.make_available)
 
         # remove-resource
         p_rm_res = res_subp.add_parser(
@@ -484,6 +511,11 @@ class ResourceCommands(Commands):
             else:
                 replies = self._linstor.resource_create(rscs, async_flag)
                 return self.handle_replies(args, replies)
+
+    def make_available(self, args):
+        replies = self.get_linstorapi().resource_make_available(
+            args.node_name, args.resource_name, args.diskful, args.layer_list)
+        return self.handle_replies(args, replies)
 
     def delete(self, args):
         async_flag = vars(args)["async"]
