@@ -1,3 +1,9 @@
+linstor-client (1.7.3-1) experimental; urgency=medium
+
+  * rsc-cmds: add make available command
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 02 Jun 2021 07:42:06 +0000
+
 linstor-client (1.7.2-1) experimental; urgency=medium
 
   * Exos: Made health_reasons optional
