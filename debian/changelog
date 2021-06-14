@@ -1,3 +1,10 @@
+linstor-client (1.8.0-1) experimental; urgency=medium
+
+  * node: show info also for combined nodes
+  * add client info to the user-agent of pythonlinstor
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 14 Jun 2021 13:22:57 +0000
+
 linstor-client (1.7.3-1) experimental; urgency=medium
 
   * rsc-cmds: add make available command
