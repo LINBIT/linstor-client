@@ -725,7 +725,8 @@ class NodeCommands(Commands):
         unsp_lrs_msgs = {}
 
         # only satellite nodes got useful info
-        for node in [x for x in lstmsg.nodes if x.type.lower() == apiconsts.VAL_NODE_TYPE_STLT.lower()]:
+        for node in [x for x in lstmsg.nodes if x.type.lower() in [apiconsts.VAL_NODE_TYPE_STLT.lower(),
+                                                                   apiconsts.VAL_NODE_TYPE_CMBD.lower()]]:
             if node.connection_status != "ONLINE":
                 node_offline_msg = "NODE IS OFFLINE!"
                 unsp_provs_msgs.update({node.name: node_offline_msg})
