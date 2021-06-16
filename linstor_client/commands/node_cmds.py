@@ -357,6 +357,7 @@ class NodeCommands(Commands):
                         'By default, the list is printed as a human readable table.'
         )
         p_info_node.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_info_node.add_argument('-f', '--full', action="store_true", help="Also shows provider/layer errors")
         p_info_node.add_argument(
             '-n', '--nodes', nargs='+', type=str, help='Filter by list of nodes'
         ).completer = self.node_completer
@@ -763,7 +764,7 @@ class NodeCommands(Commands):
 
         # print storage providers
         tbl_provs.show()
-        if unsp_provs_msgs:
+        if args.full and unsp_provs_msgs:
             print("Unsupported storage providers:")
             for node_name, unsp_provs_msg in unsp_provs_msgs.items():
                 is_node_online = isinstance(unsp_provs_msg, dict)
@@ -776,7 +777,7 @@ class NodeCommands(Commands):
         # print resource layers
         print("")
         tbl_lrs.show()
-        if unsp_lrs_msgs:
+        if args.full and unsp_lrs_msgs:
             print("Unsupported resource layers:")
             for node_name, unsp_lrs_msg in unsp_lrs_msgs.items():
                 is_node_online = isinstance(unsp_lrs_msg, dict)
