@@ -20,7 +20,8 @@ class ControllerCommands(Commands):
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.DrbdOptions,
             Commands.Subcommands.Version,
-            Commands.Subcommands.QueryMaxVlmSize
+            Commands.Subcommands.QueryMaxVlmSize,
+            Commands.Subcommands.Which,
         ]
 
         con_parser = parser.add_parser(
@@ -113,6 +114,11 @@ class ControllerCommands(Commands):
         )
         p_query_max_vlm_size.set_defaults(func=self.query_max_volume_size)
 
+        p_which_controller = con_subp.add_parser(
+            Commands.Subcommands.Which.LONG,
+            description='Shows controller currently used.')
+        p_which_controller.set_defaults(func=self.which_controller)
+
         self.check_subcommands(con_subp, subcmds)
 
     @classmethod
@@ -177,3 +183,10 @@ class ControllerCommands(Commands):
             return self.handle_replies(args, api_responses)
 
         return self.output_list(args, replies, self._show_query_max_volume)
+
+    def which_controller(self, args):
+        ctrl_uri = self.get_linstorapi().controller_host()
+        if args.machine_readable:
+            print(json.dumps({"controller_uri": ctrl_uri}))
+        else:
+            print(ctrl_uri)
