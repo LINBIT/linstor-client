@@ -63,6 +63,7 @@ class Commands(object):
     SOS_REPORT = 'sos-report'
     SPACE_REPORTING = 'space-reporting'
     EXOS = "exos"
+    ADVISE = "advise"
 
     MainList = [
         CONTROLLER,
@@ -85,7 +86,8 @@ class Commands(object):
         PHYSICAL_STORAGE,
         SOS_REPORT,
         SPACE_REPORTING,
-        EXOS
+        EXOS,
+        ADVISE,
     ]
     Hidden = [
         DMMIGRATE,

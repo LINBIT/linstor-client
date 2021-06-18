@@ -17,3 +17,4 @@ from .exos_cmds import ExosCommands
 from .zsh_completer import ZshGenerator
 from .physical_storage_cmds import PhysicalStorageCommands
 from .error_report_cmds import ErrorReportCommands
+from .advise import AdviceCommands
