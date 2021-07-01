@@ -23,6 +23,8 @@ def _drbd_options():
 class DrbdOptions(object):
     drbd_options = _drbd_options()
 
+    CLASH_OPTIONS = ["timeout"]
+
     unsetprefix = 'unset'
 
     @staticmethod
@@ -60,6 +62,8 @@ class DrbdOptions(object):
     @classmethod
     def add_arguments(cls, parser, object_name, allow_unset=True):
         for opt_key, option in sorted(cls.drbd_options[object_name].items(), key=lambda k: k[0]):
+            if opt_key in cls.CLASH_OPTIONS:
+                opt_key = "drbd-" + opt_key
             if option['type'] == 'symbol':
                 parser.add_argument('--' + opt_key, choices=option['values'])
             elif option['type'] == 'boolean':
@@ -129,9 +133,11 @@ class DrbdOptions(object):
         modify = {}
         deletes = []
         for arg in new_args:
-            value = new_args[arg]
             is_unset = arg.startswith(cls.unsetprefix)
+            value = new_args[arg]
             prop_name = arg[len(cls.unsetprefix) + 1:] if is_unset else arg
+            if prop_name.startswith("drbd-") and prop_name[5:] in cls.CLASH_OPTIONS:
+                prop_name = prop_name[5:]
             option = cls.drbd_options[object_name][prop_name]
 
             key = option['key']
