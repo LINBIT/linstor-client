@@ -908,12 +908,8 @@ class Commands(object):
             max_vlm_size = SizeCalc.approximate_size_string(candidate.max_volume_size)
 
             storage_pool_props = [x for x in storage_pool_dfns if x.name == candidate.storage_pool][0].properties
-            max_oversubscription_ratio_props = \
-                [x for x in storage_pool_props if x.key == KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO]
-            max_oversubscription_ratio_prop = max_oversubscription_ratio_props[0].value \
-                if max_oversubscription_ratio_props \
-                else lstmsg.default_max_oversubscription_ratio
-            max_oversubscription_ratio = float(max_oversubscription_ratio_prop)
+            max_oversubscription_ratio = float(storage_pool_props.get(
+                KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO, lstmsg.default_max_oversubscription_ratio))
 
             tbl.add_row([
                 candidate.storage_pool,
