@@ -31,7 +31,9 @@ class NodeCommands(Commands):
             linstor_client.TableHeader("LVM"),
             linstor_client.TableHeader("LVMThin"),
             linstor_client.TableHeader("ZFS/Thin"),
-            linstor_client.TableHeader("File/Thin")
+            linstor_client.TableHeader("File/Thin"),
+            linstor_client.TableHeader("SPDK"),
+            linstor_client.TableHeader("EXOS"),
         ]
     ]
 
@@ -41,7 +43,11 @@ class NodeCommands(Commands):
             linstor_client.TableHeader("DRBD"),
             linstor_client.TableHeader("LUKS"),
             linstor_client.TableHeader("NVMe"),
-            linstor_client.TableHeader("Storage")
+            linstor_client.TableHeader("Cache"),
+            linstor_client.TableHeader("BCache"),
+            linstor_client.TableHeader("WriteCache"),
+            linstor_client.TableHeader("OpenFlex"),
+            linstor_client.TableHeader("Storage"),
         ]
     ]
 
