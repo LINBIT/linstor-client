@@ -1,4 +1,5 @@
 import collections
+import getpass
 import socket
 import sys
 
@@ -55,6 +56,10 @@ class NodeCommands(Commands):
         LONG = "create-openflex-target"
         SHORT = "coft"
 
+    class CreateRemoteSpdkTarget:
+        LONG = "create-remote-spdk-target"
+        SHORT = "crspdkt"
+
     class Reconnect:
         LONG = "reconnect"
         SHORT = "rc"
@@ -67,6 +72,7 @@ class NodeCommands(Commands):
         subcmds = [
             Commands.Subcommands.Create,
             NodeCommands.CreateOpenFlexTarget,
+            NodeCommands.CreateRemoteSpdkTarget,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
             Commands.Subcommands.Lost,
@@ -149,16 +155,49 @@ class NodeCommands(Commands):
         p_create_of_target = node_subp.add_parser(
             NodeCommands.CreateOpenFlexTarget.LONG,
             aliases=[NodeCommands.CreateOpenFlexTarget.SHORT],
-            description='Creates a virtual on controller openflex target node.'
+            description='Creates a virtual on controller OpenFlex target node.'
         )
         p_create_of_target.add_argument(
             'node_name',
-            help='Name of the new openflex target node',
+            help='Name of the new OpenFlex target node',
             type=str
         )
         p_create_of_target.add_argument('stor_dev_host', help='OpenFlex storage device host')
         p_create_of_target.add_argument('stor_dev', help='OpenFlex storage device id')
         p_create_of_target.set_defaults(func=self.create_of_target)
+
+        # remote spdk create
+        p_create_remote_spdk_target = node_subp.add_parser(
+            NodeCommands.CreateRemoteSpdkTarget.LONG,
+            aliases=[NodeCommands.CreateRemoteSpdkTarget.SHORT],
+            description='Creates a virtual on controller remote SPDK target node.'
+        )
+        p_create_remote_spdk_target.add_argument(
+            'node_name',
+            help='Name of the new remote SPDK target node',
+            type=str
+        )
+        p_create_remote_spdk_target.add_argument('api_host', help='Remote SPDK storage device API host')
+        p_create_remote_spdk_target.add_argument('--api-port', help='Remote SPDK storage device API port')
+        p_create_remote_spdk_target.add_argument('--api-user', help='Remote SPDK storage device API user name')
+        p_create_remote_spdk_target.add_argument(
+            '--api-user-env',
+            help='Environment variable containing remote SPDK storage device API user name'
+        )
+        p_create_remote_spdk_target.add_argument(
+            '--api-pw',
+            type=str,
+            nargs='?',
+            help='Remote SPDK storage device API password',
+            action='store',
+            const=''
+        )
+        p_create_remote_spdk_target.add_argument(
+            '--api-pw-env',
+            help='Environment variable containing remote SPDK storage device API password'
+        )
+
+        p_create_remote_spdk_target.set_defaults(func=self.create_remote_spdk_target)
 
         # modify node
         p_modify_node = node_subp.add_parser(
@@ -473,6 +512,40 @@ class NodeCommands(Commands):
             property_dict=props
         )
         return self.handle_replies(args, replies)
+
+    def create_remote_spdk_target(self, args):
+        props = {
+            apiconsts.NAMESPC_STORAGE_DRIVER + '/' + apiconsts.KEY_STOR_POOL_REMOTE_SPDK_API_HOST: args.api_host,
+        }
+
+        tmp_dict = {
+            apiconsts.KEY_STOR_POOL_REMOTE_SPDK_API_PORT: args.api_port,
+            apiconsts.KEY_STOR_POOL_REMOTE_SPDK_API_USER_NAME: args.api_user,
+            apiconsts.KEY_STOR_POOL_REMOTE_SPDK_API_USER_NAME_ENV: args.api_user_env,
+            apiconsts.KEY_STOR_POOL_REMOTE_SPDK_API_USER_PW: self._get_password(args),
+            apiconsts.KEY_STOR_POOL_REMOTE_SPDK_API_USER_PW_ENV: args.api_pw_env
+        }
+
+        for key, val in tmp_dict.items():
+            if val:
+                props[apiconsts.NAMESPC_STORAGE_DRIVER + '/' + key] = val
+
+        replies = self.get_linstorapi().node_create(
+            args.node_name,
+            apiconsts.VAL_NODE_TYPE_REMOTE_SPDK,
+            "127.0.0.1",
+            property_dict=props
+        )
+        return self.handle_replies(args, replies)
+
+    @staticmethod
+    def _get_password(args):
+        if args.api_pw is None:
+            return None
+        elif args.api_pw:
+            return args.api_pw
+        else:
+            return getpass.getpass("Password: ")
 
     def modify_node(self, args):
         replies = self.get_linstorapi().node_modify(args.node_name, args.node_type)

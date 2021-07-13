@@ -40,6 +40,10 @@ class StoragePoolCommands(Commands):
         LONG = "spdk"
         SHORT = "spdk"
 
+    class RemoteSPDK(object):
+        LONG = "remotespdk"
+        SHORT = "remotespdk"
+
     class OpenFlex(object):
         LONG = "openflex"
         SHORT = "openflex"
@@ -113,6 +117,7 @@ class StoragePoolCommands(Commands):
             StoragePoolCommands.File,
             StoragePoolCommands.FileThin,
             StoragePoolCommands.SPDK,
+            StoragePoolCommands.RemoteSPDK,
             StoragePoolCommands.OpenFlex,
             StoragePoolCommands.Exos
         ]
@@ -151,9 +156,22 @@ class StoragePoolCommands(Commands):
         p_new_spdk_pool.add_argument(
             'driver_pool_name',
             type=str,
-            help='The Spdk volume group to use.'
+            help='The Spdk logical volume store to use.'
         )
         p_new_spdk_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.SPDK)
+
+        p_new_remote_spdk_pool = create_subp.add_parser(
+            StoragePoolCommands.RemoteSPDK.LONG,
+            aliases=[StoragePoolCommands.RemoteSPDK.SHORT],
+            description='Create a remote-spdk storage pool'
+        )
+        self._create_pool_args(p_new_remote_spdk_pool)
+        p_new_remote_spdk_pool.add_argument(
+            'driver_pool_name',
+            type=str,
+            help='The remote Spdk logical volume store to use.'
+        )
+        p_new_remote_spdk_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.REMOTE_SPDK)
 
         p_new_lvm_thin_pool = create_subp.add_parser(
             StoragePoolCommands.LvmThin.LONG,
