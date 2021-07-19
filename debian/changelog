@@ -1,3 +1,23 @@
+linstor-client (1.9.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * linstor controller which command that shows currently used controller
+  * node-info: show provider/layer errors only with new option
+  * drbd-opts: timeout clashes with the global linstor-client timeout option
+  * qmvs: remove old property reading
+  * node/info: add missing layers and providers
+  * cmds: always show all resources (including tiebreaker)
+  * node-info: add REMOTE_SPDK
+  * setup.py: fix parsing debian changelog with nonascii chars
+
+  [ Moritz "WanzenBug" Wanzenböck ]
+  * Add linstor advise subcommands
+
+  [ Gabor Hernadi ]
+  * RemoteSpdk: Added subcommands
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 19 Jul 2021 08:43:05 +0000
+
 linstor-client (1.8.0-1) experimental; urgency=medium
 
   * node: show info also for combined nodes
