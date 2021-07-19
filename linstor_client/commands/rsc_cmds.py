@@ -206,7 +206,7 @@ class ResourceCommands(Commands):
         p_lreses.add_argument(
             '-a', '--all',
             action="store_true",
-            help='Show all resources, otherwise e.g. auto-quorum resources will be hidden.')
+            help='Show all resources.')
         p_lreses.add_argument(
             '--faulty',
             action="store_true",
@@ -259,7 +259,7 @@ class ResourceCommands(Commands):
         p_lvlms.add_argument(
             '-a', '--all',
             action="store_true",
-            help='Show all resources, otherwise e.g. auto-qorum resources will be hidden.'
+            help='Show all resources.'
         )
         p_lvlms.set_defaults(func=self.list_volumes)
 
@@ -598,9 +598,6 @@ class ResourceCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
 
         for rsc in lstmsg.resources:
-            if not args.all and apiconsts.FLAG_TIE_BREAKER in rsc.flags:
-                continue  # skip tie breaker resources
-
             rsc_dfn_port = ''
             if rsc.name in rsc_dfn_map:
                 drbd_data = rsc_dfn_map[rsc.name].drbd_data

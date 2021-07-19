@@ -59,7 +59,7 @@ class VolumeCommands(Commands):
         p_lvlms.add_argument(
             '-a', '--all',
             action="store_true",
-            help='Show all resources, otherwise e.g. auto-qorum resources will be hidden.'
+            help='Show all resources.'
         )
         p_lvlms.set_defaults(func=self.list_volumes)
 
@@ -169,9 +169,6 @@ class VolumeCommands(Commands):
 
         reports = []
         for rsc in lstmsg.resources:
-            if not args.all and apiconsts.FLAG_TIE_BREAKER in rsc.flags:
-                continue  # skip tie breaker resources
-
             if apiconsts.FLAG_RSC_INACTIVE in rsc.flags:
                 continue  # do not show non existing volumes for inactive resources
 
