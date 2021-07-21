@@ -24,7 +24,7 @@ class _Issue(object):
 
     FIX_NEEDLESS_DISKLESS_IN_USE = 'linstor r rd --dflt {node} {rsc}'
 
-    FIX_AUTOPLACE_TIEBREAKER = 'linstor rd ap -d --place-count 1 {rsc}'
+    FIX_AUTOPLACE_TIEBREAKER = 'linstor rd ap --drbd-diskless --place-count 1 {rsc}'
 
     FIX_AUTOPLACE = 'linstor rd ap --place-count {count} {rsc}'
 
