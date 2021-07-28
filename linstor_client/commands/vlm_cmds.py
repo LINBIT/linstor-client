@@ -30,7 +30,7 @@ class VolumeCommands(Commands):
             Commands.VOLUME,
             aliases=['v'],
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Resouce subcommands")
+            description="Volume subcommands")
         vlm_sub = vlm_parser.add_subparsers(
             title="volume commands",
             metavar="",
