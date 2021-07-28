@@ -48,6 +48,8 @@ from linstor_client.commands import (
     AdviceCommands,
     ZshGenerator,
     MiscCommands,
+    BackupCommands,
+    RemoteCommands,
     Commands,
     DefaultState,
     ArgumentError
@@ -116,10 +118,35 @@ class LinStorCLI(object):
         self._error_report_commands = ErrorReportCommands()
         self._exos_commands = ExosCommands()
         self._advise_commands = AdviceCommands()
+        self._backup_commands = BackupCommands()
+        self._remote_commands = RemoteCommands()
+
+        self._command_list = [
+            self._controller_commands,
+            self._node_commands,
+            self._resource_dfn_commands,
+            self._resource_grp_commands,
+            self._volume_grp_commands,
+            self._resource_commands,
+            self._resource_conn_commands,
+            self._volume_commands,
+            self._snapshot_commands,
+            self._drbd_proxy_commands,
+            self._storage_pool_commands,
+            self._volume_dfn_commands,
+            self._physical_storage_commands,
+            self._error_report_commands,
+            self._exos_commands,
+            self._advise_commands,
+            self._backup_commands,
+            self._remote_commands,
+            self._misc_commands,
+        ]
+
         self._zsh_generator = None
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
-        self._linstorapi = None  # type: linstor.Linstor
+        self._linstorapi = None  # type: Optional[linstor.Linstor]
 
     def setup_parser(self):
         parser = argparse.ArgumentParser(prog="linstor")
@@ -196,49 +223,8 @@ class LinStorCLI(object):
                                  description='Only useful in interactive mode')
         p_exit.set_defaults(func=self.cmd_exit, always_allowed=True)
 
-        # controller commands
-        self._controller_commands.setup_commands(subp)
-
-        # add all node commands
-        self._node_commands.setup_commands(subp)
-
-        # new-resource definition
-        self._resource_dfn_commands.setup_commands(subp)
-
-        self._resource_grp_commands.setup_commands(subp)
-        self._volume_grp_commands.setup_commands(subp)
-
-        # add all resource commands
-        self._resource_commands.setup_commands(subp)
-
-        self._resource_conn_commands.setup_commands(subp)
-
-        self._volume_commands.setup_commands(subp)
-
-        # add all snapshot commands
-        self._snapshot_commands.setup_commands(subp)
-
-        # add all DRBD proxy commands
-        self._drbd_proxy_commands.setup_commands(subp)
-
-        # add all storage pools commands
-        self._storage_pool_commands.setup_commands(subp)
-
-        # add all volume definition commands
-        self._volume_dfn_commands.setup_commands(subp)
-
-        self._physical_storage_commands.setup_commands(subp)
-
-        self._error_report_commands.setup_commands(subp)
-
-        # add all exos commands
-        self._exos_commands.setup_commands(subp)
-
-        # add all advise commands
-        self._advise_commands.setup_commands(subp)
-
-        # misc commands
-        self._misc_commands.setup_commands(subp)
+        for sub_cmd in self._command_list:
+            sub_cmd.setup_commands(subp)
 
         # dm-migrate
         c_dmmigrate = subp.add_parser(
@@ -341,23 +327,8 @@ class LinStorCLI(object):
                         self._linstorapi.cafile = args.cafile
                         self._linstorapi.allow_insecure = args.allow_insecure_auth
                         self._linstorapi.curl = args.curl
-                        self._controller_commands._linstor = self._linstorapi
-                        self._node_commands._linstor = self._linstorapi
-                        self._storage_pool_commands._linstor = self._linstorapi
-                        self._resource_dfn_commands._linstor = self._linstorapi
-                        self._resource_grp_commands._linstor = self._linstorapi
-                        self._volume_grp_commands._linstor = self._linstorapi
-                        self._volume_dfn_commands._linstor = self._linstorapi
-                        self._resource_commands._linstor = self._linstorapi
-                        self._resource_conn_commands._linstor = self._linstorapi
-                        self._volume_commands._linstor = self._linstorapi
-                        self._snapshot_commands._linstor = self._linstorapi
-                        self._drbd_proxy_commands._linstor = self._linstorapi
-                        self._misc_commands._linstor = self._linstorapi
-                        self._physical_storage_commands._linstor = self._linstorapi
-                        self._error_report_commands._linstor = self._linstorapi
-                        self._exos_commands._linstor = self._linstorapi
-                        self._advise_commands._linstor = self._linstorapi
+                        for cmd in self._command_list:
+                            cmd._linstor = self._linstorapi
                         self._linstorapi.connect()
                         break
                     except linstor.LinstorNetworkError as le:

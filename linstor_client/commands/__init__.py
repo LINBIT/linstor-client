@@ -18,3 +18,5 @@ from .zsh_completer import ZshGenerator
 from .physical_storage_cmds import PhysicalStorageCommands
 from .error_report_cmds import ErrorReportCommands
 from .advise import AdviceCommands
+from .backup_cmds import BackupCommands
+from .remote_cmds import RemoteCommands

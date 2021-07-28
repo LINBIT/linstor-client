@@ -64,6 +64,8 @@ class Commands(object):
     SPACE_REPORTING = 'space-reporting'
     EXOS = "exos"
     ADVISE = "advise"
+    BACKUP = "backup"
+    REMOTE = "remote"
 
     MainList = [
         CONTROLLER,
@@ -88,6 +90,8 @@ class Commands(object):
         SPACE_REPORTING,
         EXOS,
         ADVISE,
+        BACKUP,
+        REMOTE,
     ]
     Hidden = [
         DMMIGRATE,
@@ -350,13 +354,13 @@ class Commands(object):
         return replies and isinstance(replies[0], linstor.ApiCallResponse)
 
     @classmethod
-    def output_list(cls, args, replies, output_func, single_item=True):
+    def output_list(cls, args, replies, output_func, single_item=True, machine_readable_raw=False):
         if isinstance(replies, list) and not args.curl:
             if cls.check_for_api_replies(replies):
                 return cls.handle_replies(args, replies)
 
             if args.machine_readable:
-                cls._print_machine_readable(replies, args.output_version)
+                cls._print_machine_readable(replies, args.output_version, machine_readable_raw)
             else:
                 output_func(args, replies[0] if single_item else replies)
                 api_replies = linstor.Linstor.filter_api_call_response(replies[1:])
@@ -383,25 +387,24 @@ class Commands(object):
         return json.dumps(data, indent=2)
 
     @classmethod
-    def _print_machine_readable(cls, data, output_version):
+    def _print_machine_readable(cls, data, output_version, single_item=False):
         """
         serializes the given protobuf data and prints to stdout.
         """
         assert(isinstance(data, list))
+        output = None
         if output_version == 'v0':
-            s = json.dumps([x.data_v0 for x in data], indent=2)
+            if single_item:
+                output = data[0].data_v0
+            else:
+                output = [x.data_v0 for x in data]
         elif output_version == 'v1':
-            s = json.dumps([x.data_v1 for x in data], indent=2)
+            if single_item:
+                output = data[0].data_v1
+            else:
+                output = [x.data_v1 for x in data]
 
-        # try:
-        #     s = ""
-        #     from google.protobuf import json_format
-        #     for x in data:
-        #         s += json_format.MessageToJson(x, preserving_proto_field_name=True)
-        # except ImportError as e:
-        #     sys.stderr.write(
-        #         "You are using a protobuf version prior to 2.7, which is needed for json output")
-        #     return True
+        s = cls._to_json(output)
         print(s)
         return True
 
@@ -788,6 +791,20 @@ class Commands(object):
         if lstmsg:
             for rsc in lstmsg.resources:
                 possible.add(rsc.name)
+
+            if prefix:
+                return [res for res in possible if res.startswith(prefix)]
+
+        return possible
+
+    def remote_completer(self, prefix, **kwargs):
+        lapi = self.get_linstorapi(**kwargs)
+        possible = set()
+        lstmsg = lapi.remote_list()[0]  # type: linstor.responses.RemoteListResponse
+
+        if lstmsg:
+            possible += {x.name for x in lstmsg.s3_remotes}
+            possible += {x.name for x in lstmsg.linstor_remotes}
 
             if prefix:
                 return [res for res in possible if res.startswith(prefix)]

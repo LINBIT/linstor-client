@@ -4,6 +4,7 @@ import linstor_client
 from linstor_client.commands import Commands
 from linstor_client.consts import Color
 from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
+from linstor.sharedconsts import FLAG_BACKUP, FLAG_SHIPPING, FLAG_BACKUP_TARGET, FLAG_BACKUP_SOURCE
 from linstor_client.utils import Output
 from linstor import SizeCalc, consts
 
@@ -306,7 +307,18 @@ class SnapshotCommands(Commands):
             elif FLAG_FAILED_DISCONNECT in snapshot_dfn.flags:
                 state_cell = tbl.color_cell("Satellite disconnected", Color.RED)
             elif FLAG_SUCCESSFUL in snapshot_dfn.flags:
-                state_cell = tbl.color_cell("Successful", Color.DARKGREEN)
+                in_backup_restore = False
+                in_backup_create = False
+                if FLAG_BACKUP in snapshot_dfn.flags and FLAG_SHIPPING in snapshot_dfn.flags:
+                    for snap in snapshot_dfn.snapshots:
+                        in_backup_create |= FLAG_BACKUP_SOURCE in snap.flags
+                        in_backup_restore |= FLAG_BACKUP_TARGET in snap.flags
+                if in_backup_create:
+                    state_cell = tbl.color_cell("Shipping", Color.YELLOW)
+                elif in_backup_restore:
+                    state_cell = tbl.color_cell("Restoring", Color.YELLOW)
+                else:
+                    state_cell = tbl.color_cell("Successful", Color.DARKGREEN)
             else:
                 state_cell = tbl.color_cell("Incomplete", Color.DARKBLUE)
 
