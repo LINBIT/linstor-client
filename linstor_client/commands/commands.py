@@ -274,6 +274,10 @@ class Commands(object):
             LONG = "which"
             SHORT = "which"
 
+        class Clone(object):
+            LONG = "clone"
+            SHORT = "cln"
+
         @staticmethod
         def generate_desc(subcommands):
             """

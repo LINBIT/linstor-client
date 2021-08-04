@@ -1,11 +1,13 @@
+import sys
+
 import linstor_client.argparse.argparse as argparse
 
 import linstor
 import linstor_client
 from linstor_client.commands import Commands, DrbdOptions, ArgumentError
-from linstor_client.consts import Color
+from linstor_client.consts import Color, ExitCode
 from linstor.sharedconsts import FLAG_DELETE
-from linstor_client.utils import rangecheck
+from linstor_client.utils import rangecheck, Output
 
 
 class ResourceDefinitionCommands(Commands):
@@ -30,7 +32,8 @@ class ResourceDefinitionCommands(Commands):
             Commands.Subcommands.Delete,
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
-            Commands.Subcommands.DrbdOptions
+            Commands.Subcommands.DrbdOptions,
+            Commands.Subcommands.Clone,
         ]
 
         # Resource definition subcommands
@@ -106,7 +109,6 @@ class ResourceDefinitionCommands(Commands):
         p_mod_res_dfn.set_defaults(func=self.modify)
 
         # remove-resource definition
-        # TODO description
         p_rm_res_dfn = res_def_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
@@ -128,6 +130,23 @@ class ResourceDefinitionCommands(Commands):
 
         rsc_dfn_groupby = [x.name.lower() for x in self._rsc_dfn_headers]
         rsc_dfn_group_completer = Commands.show_group_completer(rsc_dfn_groupby, "groupby")
+
+        p_clone_rscdfn = res_def_subp.add_parser(
+            Commands.Subcommands.Clone.LONG,
+            aliases=[Commands.Subcommands.Clone.SHORT],
+            description="Clones a resource definition with all resources and volumes(including data).")
+        p_clone_rscdfn.add_argument('-e', '--external-name', type=str, help='User specified name.')
+        p_clone_rscdfn.add_argument('--no-wait', action="store_true", help="Wait till cloning is done.")
+        p_clone_rscdfn.add_argument('--wait-timeout', type=int, help="Wait this seconds for the clone to finish.")
+        p_clone_rscdfn.add_argument(
+            'source_resource',
+            help="Source resource definition name").completer = self.resource_dfn_completer
+        p_clone_rscdfn.add_argument('clone_name',
+                                    nargs="?",
+                                    type=str,
+                                    help='Name of the new resource definition. '
+                                         'Will be ignored if EXTERNAL_NAME is set.')
+        p_clone_rscdfn.set_defaults(func=self.clone)
 
         p_lrscdfs = res_def_subp.add_parser(
             Commands.Subcommands.List.LONG,
@@ -214,6 +233,32 @@ class ResourceDefinitionCommands(Commands):
             additional_place_count=additional_place_count,
             diskless_type=diskless_type)
         return self.handle_replies(args, replies)
+
+    def clone(self, args):
+        clone_resp = self.get_linstorapi().resource_dfn_clone(args.source_resource, args.clone_name, args.external_name)
+
+        rc = self.handle_replies(args, clone_resp.messages)
+
+        if rc == ExitCode.OK and not args.no_wait:
+            if not args.machine_readable:
+                print("Waiting for cloning to complete...")
+            try:
+                res = self.get_linstorapi().resource_dfn_clone_wait_complete(
+                    clone_resp.source_name, clone_resp.clone_name, timeout=args.wait_timeout)
+                if not res:
+                    rc = ExitCode.API_ERROR
+                if not args.machine_readable:
+                    if res:
+                        print("{msg} cloning {c}.".format(
+                            c=clone_resp.clone_name, msg=Output.color_str("Completed", Color.GREEN, args.no_color)))
+                    else:
+                        print("{msg} cloning {c}, please check resource status or satellite errors.".format(
+                            c=clone_resp.clone_name, msg=Output.color_str("Failed", Color.RED, args.no_color)))
+            except linstor.LinstorApiCallError as e:
+                rc = ExitCode.API_ERROR
+                Output.handle_ret(e.main_error, args.no_color, False, sys.stderr)
+
+        return rc
 
     def modify(self, args):
         replies = self._linstor.resource_dfn_modify(
