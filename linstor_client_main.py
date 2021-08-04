@@ -396,6 +396,8 @@ class LinStorCLI(object):
             rc = ExitCode.CONNECTION_TIMEOUT
             self._linstorapi.disconnect()
             self._linstorapi = None  # should trigger reconnect in interactive mode
+        except linstor.LinstorApiCallError as le:
+            rc = self._controller_commands.handle_replies(args, le.all_errors())
         except linstor.LinstorError as le:
             self._report_linstor_error(le)
             rc = ExitCode.UNKNOWN_ERROR
