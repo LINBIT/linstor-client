@@ -131,7 +131,7 @@ class VolumeCommands(Commands):
                     tbl_color = Color.RED
                 elif apiconsts.FLAG_TIE_BREAKER in rsc_flags:
                     state = 'TieBreaker'
-                    tbl_color = Color.DARKGREEN
+                    tbl_color = None
                 else:
                     state = state_prefix + disk_state  # green text
             elif disk_state in ['Inconsistent', 'Failed', 'To: Creating', 'To: Attachable', 'To: Attaching']:
