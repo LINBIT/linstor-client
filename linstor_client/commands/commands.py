@@ -218,15 +218,15 @@ class Commands(object):
             LONG = "create-transactional"
             SHORT = "ct"
 
-        class TransactionBegin(object):
+        class Begin(object):
             LONG = "begin"
             SHORT = "b"
 
-        class TransactionAbort(object):
+        class Abort(object):
             LONG = "abort"
             SHORT = "a"
 
-        class TransactionCommit(object):
+        class Commit(object):
             LONG = "commit"
             SHORT = "c"
 

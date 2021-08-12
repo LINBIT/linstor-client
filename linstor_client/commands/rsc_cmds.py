@@ -399,9 +399,9 @@ class ResourceCommands(Commands):
 
         # resource creation transaction commands
         transactional_create_subcmds = [
-            Commands.Subcommands.TransactionBegin,
-            Commands.Subcommands.TransactionAbort,
-            Commands.Subcommands.TransactionCommit
+            Commands.Subcommands.Begin,
+            Commands.Subcommands.Abort,
+            Commands.Subcommands.Commit
         ]
 
         transactional_create_parser = res_subp.add_parser(
@@ -416,8 +416,8 @@ class ResourceCommands(Commands):
 
         # begin resource creation transaction
         p_transactional_create_begin = transactional_create_subp.add_parser(
-            Commands.Subcommands.TransactionBegin.LONG,
-            aliases=[Commands.Subcommands.TransactionBegin.SHORT],
+            Commands.Subcommands.Begin.LONG,
+            aliases=[Commands.Subcommands.Begin.SHORT],
             description='Start group of resources to create in a single transaction.')
         p_transactional_create_begin.add_argument(
             '--terminate-on-error',
@@ -428,16 +428,16 @@ class ResourceCommands(Commands):
 
         # abort resource creation transaction
         p_transactional_create_abort = transactional_create_subp.add_parser(
-            Commands.Subcommands.TransactionAbort.LONG,
-            aliases=[Commands.Subcommands.TransactionAbort.SHORT],
+            Commands.Subcommands.Abort.LONG,
+            aliases=[Commands.Subcommands.Abort.SHORT],
             description='Abort resource creation transaction.')
         p_transactional_create_abort.set_defaults(
             func=self.transactional_create_abort, allowed_states=[ResourceCreateTransactionState])
 
         # commit resource creation transaction
         p_transactional_create_commit = transactional_create_subp.add_parser(
-            Commands.Subcommands.TransactionCommit.LONG,
-            aliases=[Commands.Subcommands.TransactionCommit.SHORT],
+            Commands.Subcommands.Commit.LONG,
+            aliases=[Commands.Subcommands.Commit.SHORT],
             description='Create resources defined in the current resource creation transaction.')
         p_transactional_create_commit.add_argument(
             '--async',
