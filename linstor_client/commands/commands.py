@@ -282,6 +282,10 @@ class Commands(object):
             LONG = "clone"
             SHORT = "cln"
 
+        class Adjust(object):
+            LONG = "adjust"
+            SHORT = "adj"
+
         @staticmethod
         def generate_desc(subcommands):
             """

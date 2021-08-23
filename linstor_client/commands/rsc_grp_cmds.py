@@ -29,7 +29,8 @@ class ResourceGroupCommands(Commands):
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.DrbdOptions,
             Commands.Subcommands.Spawn,
-            Commands.Subcommands.QueryMaxVlmSize
+            Commands.Subcommands.QueryMaxVlmSize,
+            Commands.Subcommands.Adjust
         ]
 
         # Resource group subcommands
@@ -191,6 +192,23 @@ class ResourceGroupCommands(Commands):
         p_qmvs.set_defaults(func=self.qmvs)
         #  ------------ QMVS END
 
+        #  ------------ ADJUST START
+        p_adjust = res_grp_subp.add_parser(
+            Commands.Subcommands.Adjust.LONG,
+            aliases=[Commands.Subcommands.Adjust.SHORT],
+            description="Adjusts all resource-definition of the given resource-group.\nCAUTION: This operation might take a long time and even exceed the default 5 min timeout!"
+        )
+        p_adjust.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_adjust.add_argument(
+            'resource_group_name',
+            nargs="?",
+            default=None,
+            help="Resource group to adjust. If omitted, all resource groups will be adjusted"
+        ).completer = self.resource_grp_completer
+        # p_adjust.add_argument('-o', '--overprovision', help='Multiplier of thin storage pool\'s free space. Default: 2.0')
+        p_adjust.set_defaults(func=self.adjust)
+        #  ------------ ADJUST END
+
         self.check_subcommands(res_grp_subp, subcmds)
 
     def create(self, args):
@@ -316,3 +334,11 @@ class ResourceGroupCommands(Commands):
             return self.handle_replies(args, api_responses)
 
         return self.output_list(args, replies, self._show_query_max_volume)
+
+    def adjust(self, args):
+        replies = self.get_linstorapi().resource_group_adjust(
+            args.resource_group_name
+           # args.overprovision
+        )
+        return self.handle_replies(args, replies)
+
