@@ -130,7 +130,7 @@ class StoragePoolCommands(Commands):
         )
         create_subp = sp_c_parser.add_subparsers(
             title="Storage pool create commands",
-            metavar="{" + ",".join([x.LONG for x in subcmd_create]) + "}",
+            metavar="",
             description=Commands.Subcommands.generate_desc(subcmd_create)
         )
 
