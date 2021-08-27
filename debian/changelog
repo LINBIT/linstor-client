@@ -1,3 +1,21 @@
+linstor-client (1.10.0-1) experimental; urgency=medium
+
+  [ Moritz "WanzenBug" Wanzenböck ]
+  * advise: fix suggestion for autoplacing tiebreaker
+
+  [ Rene Peinthor ]
+  * vlm_cmds: fix incorrect description
+  * rsc-cmds: do not show tiebreaker in faulty view
+  * main: handle LinstorApiCallErrors
+  * clone-api: add clone command for resource-definition
+  * BackupShipping: Added commands
+  * storpools: metavar will be set by check_subcommands
+
+  [ Gabor Hernadi ]
+  * Renamed Transaction* command classes
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Fri, 27 Aug 2021 08:44:00 +0000
+
 linstor-client (1.9.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
