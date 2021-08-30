@@ -223,9 +223,11 @@ class BackupCommands(Commands):
             help="The resource to abort")
         p_crtabort.add_argument(
             "-r", "--restore",
+            action="store_true",
             help="Only abort a restoration of the given resource")
         p_crtabort.add_argument(
             "-c", "--create",
+            action="store_true",
             help="Only abort a creation of the given resource")
         p_crtabort.set_defaults(func=self.abort)
 
