@@ -12,6 +12,7 @@ from linstor_client.consts import Color, ExitCode
 from linstor_client.tree import TreeNode
 from linstor_client.utils import (LinstorClientError, ip_completer,
                                   rangecheck)
+from datetime import datetime
 
 
 class NodeCommands(Commands):
@@ -597,6 +598,14 @@ class NodeCommands(Commands):
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
+        show_eviction_info = False
+        for node in lstmsg.nodes:
+            node_is_offline = conn_stat_dict.get(node.connection_status)[0] == apiconsts.ConnectionStatus.OFFLINE.name
+            node_is_evicted = apiconsts.FLAG_EVICTED in node.flags
+            if node.eviction_timestamp and node_is_offline and not node_is_evicted:
+                show_eviction_info = True
+                break
+
         for node in lstmsg.nodes:
             # concat a ip list with satellite connection indicator
             active_ip = ""
@@ -617,9 +626,24 @@ class NodeCommands(Commands):
             row = [node.name, node.type, active_ip]
             if args.show_aux_props:
                 row.append("\n".join(aux_props))
-            row += [tbl.color_cell(conn_stat[0], conn_stat[1])]
+
+            state_text = conn_stat[0]
+            node_is_offline = conn_stat_dict.get(node.connection_status)[0] == apiconsts.ConnectionStatus.OFFLINE.name
+            node_is_evicted = apiconsts.FLAG_EVICTED in node.flags
+            if show_eviction_info and node_is_offline and not node_is_evicted:
+                if node.eviction_timestamp:
+                    eviction = datetime.fromtimestamp(int(node.eviction_timestamp / 1000))
+                else:
+                    eviction = "Disabled"
+                state_text += " (Auto-eviction: {eviction})".format(eviction=eviction)
+
+            row += [tbl.color_cell(state_text, conn_stat[1])]
             tbl.add_row(row)
         tbl.show()
+
+        if show_eviction_info:
+            print("To cancel automatic eviction please consider the corresponding DrbdOptions/AutoEvict* properties on controller and / or node level")
+            print("See 'linstor controller set-property --help' or 'linstor node set-property --help' for more details")
 
     def list(self, args):
         lstmsg = self._linstor.node_list(args.nodes, args.props)
