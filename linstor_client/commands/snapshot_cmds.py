@@ -86,6 +86,11 @@ class SnapshotCommands(Commands):
             'snapshot_name',
             type=str,
             help='Name of the snapshot local to the resource definition')
+        p_delete_snapshot.add_argument(
+            '-n', '--nodes',
+            type=str,
+            nargs='+',
+            help='Only delete the snapshot from the given nodes. Default: Delete given snapshot from all nodes')
         p_delete_snapshot.set_defaults(func=self.delete)
 
         p_ship = snapshot_subp.add_parser(
@@ -283,7 +288,7 @@ class SnapshotCommands(Commands):
         return self.handle_replies(args, replies)
 
     def delete(self, args):
-        replies = self._linstor.snapshot_delete(args.resource_definition_name, args.snapshot_name)
+        replies = self._linstor.snapshot_delete(args.resource_definition_name, args.snapshot_name, args.nodes)
         return self.handle_replies(args, replies)
 
     def rollback(self, args):
