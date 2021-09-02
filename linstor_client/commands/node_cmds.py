@@ -459,6 +459,16 @@ class NodeCommands(Commands):
             'node_name',
             help="Evicted node to restore"
         ).completer = self.node_completer
+        p_restore_node.add_argument(
+            '--delete-resources',
+            action='store_true',
+            help="Delete the resources before reconnecting the node"
+        ).completer = self.node_completer
+        p_restore_node.add_argument(
+            '--delete-snapshots',
+            action='store_true',
+            help="Delete the snapshots before reconnecting the node"
+        ).completer = self.node_completer
         p_restore_node.set_defaults(func=self.restore_node)
 
         self.check_subcommands(interface_subp, netif_subcmds)
@@ -921,7 +931,12 @@ class NodeCommands(Commands):
         return self.handle_replies(args, replies)
 
     def restore_node(self, args):
-        return self.handle_replies(args, self.get_linstorapi().node_restore(node_name=args.node_name))
+        replies = self.get_linstorapi().node_restore(
+            node_name=args.node_name,
+            delete_resources=args.delete_resources,
+            delete_snapshots=args.delete_snapshots
+        )
+        return self.handle_replies(args, replies)
 
     def create_netif(self, args):
         replies = self._linstor.netinterface_create(
