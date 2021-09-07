@@ -1,3 +1,12 @@
+linstor-client (1.10.1-1) experimental; urgency=medium
+
+  * Snapshot,delete: Add --nodes parameter
+  * Node,list: added optional Eviction Time to state when node is OFFLINE
+  * RscGrp: Added adjust command
+  * Node,restore: Add delete-resources and -snapshots
+
+ -- Gabor Hernadi <gabor.hernadi@linbit.com>  Tue, 07 Sep 2021 09:33:03 +0000
+
 linstor-client (1.10.0-1) experimental; urgency=medium
 
   [ Moritz "WanzenBug" Wanzenböck ]
