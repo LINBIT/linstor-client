@@ -4,6 +4,7 @@ from datetime import datetime
 
 import getpass
 
+from linstor import SizeCalc
 import linstor_client
 import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands
@@ -12,6 +13,10 @@ from linstor_client.consts import Color
 
 
 class BackupCommands(Commands):
+
+    class Info(object):
+        LONG = "info"
+        SHORT = "i"
 
     class Ship(object):
         LONG = "ship"
@@ -53,16 +58,17 @@ class BackupCommands(Commands):
             Commands.Subcommands.Delete,
             Commands.Subcommands.Abort,
             Commands.Subcommands.Restore,
-            BackupCommands.Ship
+            BackupCommands.Ship,
+            BackupCommands.Info
         ]
 
         bkp_parser = parser.add_parser(
             Commands.BACKUP,
             aliases=['b'],
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Resouce subcommands")
+            description="Commands to manage Backups")
         bkp_sub = bkp_parser.add_subparsers(
-            title="volume commands",
+            title="Backup subcommands",
             metavar="",
             description=Commands.Subcommands.generate_desc(subcmds)
         )
@@ -258,6 +264,30 @@ class BackupCommands(Commands):
         # TODO: add stor_pool_renaming
         p_shipbak.set_defaults(func=self.ship)
 
+        # restore backup
+        p_infobak = bkp_sub.add_parser(
+            BackupCommands.Info.LONG,
+            aliases=[BackupCommands.Info.SHORT],
+            description="Retrieve information about a given backup. Either --id OR --resource must be used (not both). Option --storpool-rename must be used in combination with --target-node")
+        self._add_remote(p_infobak)
+        p_infobak.add_argument(
+            "-r", "--resource",
+            help="Get info about the latest backup of the given resource")
+        p_infobak.add_argument(
+            "--id",
+            help="Get info about the given backup to restore")
+        p_infobak.add_argument(
+            "-n", "--target_node",
+            help="Target node to calculate remaining free space"
+        ).completer = self.node_completer
+        p_infobak.add_argument(
+            "--storpool-rename",
+            nargs='*',
+            help="Rename storage pool names. Format: $oldname=$newname",
+            action=BackupCommands._KeyValue)
+        p_infobak.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_infobak.set_defaults(func=self.info)
+
         self.check_subcommands(p_delbak_subp, subcmd_delete)
         self.check_subcommands(bkp_sub, subcmds)
 
@@ -412,6 +442,70 @@ class BackupCommands(Commands):
             return args.passphrase
         else:
             return getpass.getpass(message)
+
+    def info(self, args):
+        lstmsg = self.get_linstorapi().backup_info(
+            args.remote,
+            resource_name=args.resource,
+            bak_id=args.id,
+            target_node=args.target_node,
+            stor_pool_map=args.storpool_rename)
+        return self.output_list(args, lstmsg, BackupCommands.show_backups_info)
+
+    @classmethod
+    def show_backups_info(cls, args, lstmsg):
+        rsc_tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+
+        rsc_tbl.add_column("Resource")
+        rsc_tbl.add_column("Full Backup")
+        rsc_tbl.add_column("Latest Backup")
+        rsc_tbl.add_column("Backup Count")
+        rsc_tbl.add_column("Download Size")
+        rsc_tbl.add_column("Allocated Size")
+
+        # table will only have a single row
+        row = [lstmsg.rsc, lstmsg.full, lstmsg.latest, lstmsg.count]
+        row += [SizeCalc.approximate_size_string(lstmsg.dl_size),
+                SizeCalc.approximate_size_string(lstmsg.alloc_size)]
+        rsc_tbl.add_row(row)
+        rsc_tbl.show()
+
+        stor_pool_tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+
+        stor_pool_tbl.add_column("Origin StorPool (Type)")
+        if args.target_node:
+            stor_pool_tbl.add_column("Target Pool")
+            stor_pool_tbl.add_column("Remaining Free Space")
+        stor_pool_tbl.add_column("Volume to Download")
+        stor_pool_tbl.add_column("Type")
+        stor_pool_tbl.add_column("Download Size")
+        stor_pool_tbl.add_column("Allocated Size")
+        stor_pool_tbl.add_column("Usable Size")
+
+        for stor_pool in lstmsg.storpools:
+            row = [stor_pool.name + " (" + stor_pool.provider_kind + ")"]
+            if args.target_node:
+                row += [stor_pool.target_name, ]
+                if (stor_pool.remaining_space < 0):
+                    row += [stor_pool_tbl.color_cell("-" + SizeCalc.approximate_size_string(-stor_pool.remaining_space), Color.RED)]
+                else:
+                    row += [SizeCalc.approximate_size_string(stor_pool.remaining_space)]
+
+            vlm_to_dl_cell = []
+            type_cell = []
+            dl_size_cell = []
+            alloc_size_cell = []
+            usable_size_cell = []
+            for volume in stor_pool.volumes:
+                vlm_to_dl_cell += [volume.name if volume.name else "-"]
+                type_cell += [volume.layer_type]
+                dl_size_cell += [SizeCalc.approximate_size_string(volume.dl_size) if volume.dl_size else "-"]
+                alloc_size_cell += [SizeCalc.approximate_size_string(volume.alloc_size) if volume.alloc_size else "-"]
+                usable_size_cell += [SizeCalc.approximate_size_string(volume.usable_size) if volume.usable_size else "-"]
+            row += ["\n".join(vlm_to_dl_cell), "\n".join(type_cell), "\n".join(dl_size_cell), "\n".join(alloc_size_cell), "\n".join(usable_size_cell)]
+            stor_pool_tbl.add_row(row)
+
+        stor_pool_tbl.show()
 
     # create a keyvalue class
     class _KeyValue(argparse.Action):
