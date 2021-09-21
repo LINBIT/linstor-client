@@ -39,7 +39,7 @@ class BackupCommands(Commands):
         SHORT = "s3"
 
     _backup_headers = [
-        linstor_client.TableHeader("S3 Key"),
+        linstor_client.TableHeader("Backup Name(ID)"),
         linstor_client.TableHeader("Finished at"),
         linstor_client.TableHeader("Based On"),
         linstor_client.TableHeader("Status")
