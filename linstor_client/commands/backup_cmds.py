@@ -77,7 +77,7 @@ class BackupCommands(Commands):
         p_lbackups = bkp_sub.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of all volumes.')
+            description='Prints a list of backups.')
         p_lbackups.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lbackups.add_argument(
             '-r', '--resource',
@@ -268,7 +268,8 @@ class BackupCommands(Commands):
         p_infobak = bkp_sub.add_parser(
             BackupCommands.Info.LONG,
             aliases=[BackupCommands.Info.SHORT],
-            description="Retrieve information about a given backup. Either --id OR --resource must be used (not both). Option --storpool-rename must be used in combination with --target-node")
+            description="Retrieve information about a given backup. Either --id OR --resource must be used (not both)."
+                        " Option --storpool-rename must be used in combination with --target-node")
         self._add_remote(p_infobak)
         p_infobak.add_argument(
             "-r", "--resource",
