@@ -215,6 +215,11 @@ class BackupCommands(Commands):
             nargs='*',
             help="Rename storage pool names. Format: $oldname=$newname",
             action=BackupCommands._KeyValue)
+        p_rstbak.add_argument(
+            "--download-only",
+            action='store_true',
+            help="Only download backups"
+        )
         p_rstbak.set_defaults(func=self.restore)
 
         # abort backup
@@ -261,6 +266,11 @@ class BackupCommands(Commands):
         p_shipbak.add_argument(
             "--target-storage-pool",
             help="Specify in which target storage pool the backup should be received")
+        p_shipbak.add_argument(
+            "--download-only",
+            action='store_true',
+            help="Only download backups"
+        )
         # TODO: add stor_pool_renaming
         p_shipbak.set_defaults(func=self.ship)
 
@@ -413,7 +423,8 @@ class BackupCommands(Commands):
             resource_name=args.resource,
             bak_id=args.id,
             passphrase=self._get_passphrase(args, "Origin clusters passphrase: "),
-            stor_pool_map=args.storpool_rename)
+            stor_pool_map=args.storpool_rename,
+            download_only=args.download_only)
         return self.handle_replies(args, replies)
 
     def abort(self, args):
@@ -432,7 +443,8 @@ class BackupCommands(Commands):
             src_node=args.source_node,
             dst_node=args.target_node,
             dst_net_if=args.target_net_if,
-            dst_stor_pool=args.target_storage_pool)
+            dst_stor_pool=args.target_storage_pool,
+            download_only=args.download_only)
         return self.handle_replies(args, replies)
 
     @classmethod
