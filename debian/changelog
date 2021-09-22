@@ -1,3 +1,16 @@
+linstor-client (1.10.2-1) experimental; urgency=medium
+
+  [ Gabor Hernadi ]
+  * BackupShipping: Removed argument from --restore and --create
+  * BackupShipping: Added backup info subcommand
+
+  [ Rene Peinthor ]
+  * backup-cmds: fix copy paste description
+  * backup-cmds: improve backup list table header
+  * backup-cmds: add download only option
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 22 Sep 2021 13:50:54 +0000
+
 linstor-client (1.10.1-1) experimental; urgency=medium
 
   * Snapshot,delete: Add --nodes parameter
