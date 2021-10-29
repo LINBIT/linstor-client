@@ -66,6 +66,7 @@ class Commands(object):
     ADVISE = "advise"
     BACKUP = "backup"
     REMOTE = "remote"
+    FILE = "file"
 
     MainList = [
         CONTROLLER,
@@ -92,6 +93,7 @@ class Commands(object):
         ADVISE,
         BACKUP,
         REMOTE,
+        FILE,
     ]
     Hidden = [
         DMMIGRATE,
@@ -285,6 +287,14 @@ class Commands(object):
         class Adjust(object):
             LONG = "adjust"
             SHORT = "adj"
+
+        class Deploy(object):
+            LONG = "deploy"
+            SHORT = "dep"
+
+        class Undeploy(object):
+            LONG = "undeploy"
+            SHORT = "und"
 
         @staticmethod
         def generate_desc(subcommands):

@@ -50,6 +50,7 @@ from linstor_client.commands import (
     MiscCommands,
     BackupCommands,
     RemoteCommands,
+    FileCommands,
     Commands,
     DefaultState,
     ArgumentError
@@ -120,6 +121,7 @@ class LinStorCLI(object):
         self._advise_commands = AdviceCommands()
         self._backup_commands = BackupCommands()
         self._remote_commands = RemoteCommands()
+        self._file_commands = FileCommands()
 
         self._command_list = [
             self._controller_commands,
@@ -140,7 +142,8 @@ class LinStorCLI(object):
             self._advise_commands,
             self._backup_commands,
             self._remote_commands,
-            self._misc_commands,
+            self._file_commands,
+            self._misc_commands
         ]
 
         self._zsh_generator = None
