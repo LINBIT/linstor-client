@@ -208,6 +208,10 @@ class Commands(object):
             LONG = "restore"
             SHORT = "rst"
 
+        class Evacuate(object):
+            LONG = "evacuate"
+            SHORT = "evac"
+
         class SetSize(object):
             LONG = "set-size"
             SHORT = "size"

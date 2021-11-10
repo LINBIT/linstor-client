@@ -624,6 +624,8 @@ class ResourceCommands(Commands):
                     vlm_state = VolumeCommands.get_volume_state(rsc_state_obj.volume_states, vlm.number) \
                         if rsc_state_obj else None
                     rsc_state, rsc_state_color = VolumeCommands.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
+                    if apiconsts.FLAG_EVACUATE in rsc.flags:
+                        rsc_state += ", Evacuating"
                     if rsc_state_color is not None:
                         break
 

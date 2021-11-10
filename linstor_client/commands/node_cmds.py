@@ -85,7 +85,8 @@ class NodeCommands(Commands):
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.Modify,
             NodeCommands.Reconnect,
-            Commands.Subcommands.Restore
+            Commands.Subcommands.Restore,
+            Commands.Subcommands.Evacuate
         ]
 
         node_parser = parser.add_parser(
@@ -471,6 +472,19 @@ class NodeCommands(Commands):
         ).completer = self.node_completer
         p_restore_node.set_defaults(func=self.restore_node)
 
+        # node evacuate
+        p_evacuate_node = node_subp.add_parser(
+            Commands.Subcommands.Evacuate.LONG,
+            aliases=[Commands.Subcommands.Evacuate.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description="Evacuate a node."
+        )
+        p_evacuate_node.add_argument(
+            'node_name',
+            help="Node to evacuate"
+        ).completer = self.node_completer
+        p_evacuate_node.set_defaults(func=self.evacuate_node)
+
         self.check_subcommands(interface_subp, netif_subcmds)
         self.check_subcommands(node_subp, subcmds)
 
@@ -630,6 +644,8 @@ class NodeCommands(Commands):
                 conn_stat = (apiconsts.FLAG_EVICTED, Color.RED)
             elif apiconsts.FLAG_DELETE in node.flags:
                 conn_stat = (apiconsts.FLAG_DELETE, Color.RED)
+            elif apiconsts.FLAG_EVACUATE in node.flags:
+                conn_stat = (apiconsts.FLAG_EVACUATE, Color.YELLOW)
             else:
                 conn_stat = conn_stat_dict.get(node.connection_status)
 
@@ -935,6 +951,12 @@ class NodeCommands(Commands):
             node_name=args.node_name,
             delete_resources=args.delete_resources,
             delete_snapshots=args.delete_snapshots
+        )
+        return self.handle_replies(args, replies)
+
+    def evacuate_node(self, args):
+        replies = self.get_linstorapi().node_evacuate(
+            node_name=args.node_name
         )
         return self.handle_replies(args, replies)
 
