@@ -367,7 +367,7 @@ class BackupCommands(Commands):
 
     def list_backups(self, args):
         lstmsg = self.get_linstorapi().backup_list(args.remote_name, args.resource)
-        return self.output_list(args, lstmsg, BackupCommands.show_backups)
+        return self.output_list(args, lstmsg, BackupCommands.show_backups, machine_readable_raw=True)
 
     def create(self, args):
         replies = self.get_linstorapi().backup_create(args.remote, args.resource, not args.full, args.node)
