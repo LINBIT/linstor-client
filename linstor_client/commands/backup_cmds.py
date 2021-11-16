@@ -499,8 +499,9 @@ class BackupCommands(Commands):
             row = [stor_pool.name + " (" + stor_pool.provider_kind + ")"]
             if args.target_node:
                 row += [stor_pool.target_name, ]
-                if (stor_pool.remaining_space < 0):
-                    row += [stor_pool_tbl.color_cell("-" + SizeCalc.approximate_size_string(-stor_pool.remaining_space), Color.RED)]
+                if stor_pool.remaining_space < 0:
+                    row += [stor_pool_tbl.color_cell(
+                        "-" + SizeCalc.approximate_size_string(-stor_pool.remaining_space), Color.RED)]
                 else:
                     row += [SizeCalc.approximate_size_string(stor_pool.remaining_space)]
 
@@ -514,8 +515,10 @@ class BackupCommands(Commands):
                 type_cell += [volume.layer_type]
                 dl_size_cell += [SizeCalc.approximate_size_string(volume.dl_size) if volume.dl_size else "-"]
                 alloc_size_cell += [SizeCalc.approximate_size_string(volume.alloc_size) if volume.alloc_size else "-"]
-                usable_size_cell += [SizeCalc.approximate_size_string(volume.usable_size) if volume.usable_size else "-"]
-            row += ["\n".join(vlm_to_dl_cell), "\n".join(type_cell), "\n".join(dl_size_cell), "\n".join(alloc_size_cell), "\n".join(usable_size_cell)]
+                usable_size_cell += [SizeCalc.approximate_size_string(volume.usable_size)
+                                     if volume.usable_size else "-"]
+            row += ["\n".join(vlm_to_dl_cell), "\n".join(type_cell), "\n".join(dl_size_cell),
+                    "\n".join(alloc_size_cell), "\n".join(usable_size_cell)]
             stor_pool_tbl.add_row(row)
 
         stor_pool_tbl.show()
