@@ -463,7 +463,7 @@ class BackupCommands(Commands):
             bak_id=args.id,
             target_node=args.target_node,
             stor_pool_map=args.storpool_rename)
-        return self.output_list(args, lstmsg, BackupCommands.show_backups_info)
+        return self.output_list(args, lstmsg, BackupCommands.show_backups_info, machine_readable_raw=True)
 
     @classmethod
     def show_backups_info(cls, args, lstmsg):
