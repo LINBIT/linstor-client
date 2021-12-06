@@ -313,7 +313,7 @@ class ExosCommands(Commands):
         replies = self.get_linstorapi().exos_enclosure_create(
             args.name,
             args.ctrl_a_ip,
-            args.ctrl_b_ip[0] if args.ctrl_b_ip else None,
+            args.ctrl_b_ip if args.ctrl_b_ip else None,
             args.username,
             args.username_env,
             self._get_password(args),
@@ -325,7 +325,7 @@ class ExosCommands(Commands):
         replies = self.get_linstorapi().exos_enclosure_modify(
             args.name,
             args.ctrl_a_ip,
-            args.ctrl_b_ip[0] if args.ctrl_b_ip else None,
+            args.ctrl_b_ip if args.ctrl_b_ip else None,
             args.username,
             args.username_env,
             self._get_password(args),
