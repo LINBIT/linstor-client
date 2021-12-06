@@ -390,7 +390,7 @@ class BackupCommands(Commands):
 
         replies = self.get_linstorapi().backup_delete(
             args.remote,
-            time=args.time,
+            timestamp=args.time,
             resource_name=args.resource,
             node_name=args.node,
             cascade=args.cascade,
