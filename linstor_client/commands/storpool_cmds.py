@@ -78,7 +78,9 @@ class StoragePoolCommands(Commands):
             parser.add_argument(
                 '--shared-space',
                 type=str,
-                help='Name of used shared space'
+                help='Unique identifier of backing storage shared by multiple nodes. If omitted Linstor will assume ' +
+                     'the pool is unique for each node.  When using shared volume groups with LVM2 the volume group ' +
+                     'UUID could be used as the SHARED_SPACE identifier.'
             )
         if external_locking:
             parser.add_argument(
