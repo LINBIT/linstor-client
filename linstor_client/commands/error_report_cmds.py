@@ -1,6 +1,5 @@
 import linstor_client.argparse.argparse as argparse
 
-import linstor
 from linstor_client.table import Table, TableHeader
 from linstor_client.utils import Output
 from linstor_client.commands import Commands
@@ -95,7 +94,8 @@ class ErrorReportCommands(Commands):
             tbl.add_header(TableHeader("Version"))
 
         for error in lstmsg:
-            msg = error.exception_message if len(error.exception_message) < 60 else error.exception_message[0:57]+'...'
+            msg = error.exception_message \
+                if len(error.exception_message) < 60 else error.exception_message[0:57] + '...'
             row = [
                 error.id,
                 str(error.datetime)[:19],

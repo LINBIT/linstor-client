@@ -2,7 +2,6 @@ import linstor_client.argparse.argparse as argparse
 
 from linstor_client.commands import Commands
 from linstor_client import Table, TableHeader
-from linstor.responses import PhysicalStorageList
 
 
 class PhysicalStorageCommands(Commands):

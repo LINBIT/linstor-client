@@ -126,21 +126,5 @@ class TestNodeCommands(LinstorTestCase):
             self.assertEqual(0, retcode)
 
 
-
-"""
-class TestDescribe(LinstorTestCaseWithData):
-    def test_describe_node(self):
-        nodes = self.execute_with_machine_output(['node', 'describe'])
-        self.assertEqual(4, len(nodes))
-
-        nodes = self.execute_with_machine_output(['node', 'describe', 'fakehost1'])
-        self.assertEqual(1, len(nodes))
-
-        nodes = self.execute_with_machine_output(['node', 'describe', 'asdofk'])
-        self.assertFalse(nodes)
-
-        self.assertNotEqual(0, self.execute(['node', 'describe', 'daskl']))
-"""
-
 if __name__ == '__main__':
     unittest.main()

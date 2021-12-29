@@ -49,15 +49,15 @@ echo "migration disabled, review script and remove this line"; exit 1\n
 
         def ask(prefix):
             if default:
-                prefix += ' or <Enter> for "%s"' % (default)
-            ans = my_input('%s: ' % (prefix))
-            if ans == '':  # <Enter>
+                prefix += ' or <Enter> for "%s"' % default
+            answer = my_input('%s: ' % prefix)
+            if answer == '':  # <Enter>
                 return default  # which is the set default or ''
-            return ans
+            return answer
 
         os.system('clear')
         while True:
-            sys.stdout.write('%s\n\n' % (question))
+            sys.stdout.write('%s\n\n' % question)
 
             if len(options) > 0:
                 for k in sorted(options.keys()):
@@ -193,17 +193,17 @@ echo "migration disabled, review script and remove this line"; exit 1\n
                 for otype in ('/dso/disko/', '/dso/neto/', '/dso/peerdisko/', '/dso/reso/'):
                     if prop.startswith(otype):
                         opt = prop.split('/')[3]
-                        MigrateCommands.lsc(of, 'resource-definition', 'drbd-options', '--'+opt, propval, r)
+                        MigrateCommands.lsc(of, 'resource-definition', 'drbd-options', '--' + opt, propval, r)
 
             volumes = v['volumes']
             vnrs = sorted([int(vnr) for vnr in volumes.keys()])
             for vnr in vnrs:
                 vnr_str = str(vnr)
                 vol = volumes[vnr_str]
-                bdname = r+'_'
-                bdname += vnr_str if vnr >= 10 else "0"+vnr_str
+                bdname = r + '_'
+                bdname += vnr_str if vnr >= 10 else "0" + vnr_str
                 MigrateCommands.lsc(of, 'volume-definition', 'create', '--vlmnr', vnr_str,
-                                    '--minor', str(vol['minor']), r, str(vol['_size_kiB'])+'K')
+                                    '--minor', str(vol['minor']), r, str(vol['_size_kiB']) + 'K')
                 MigrateCommands.lsc(of, 'volume-definition', 'set-property', r, vnr_str,
                                     'OverrideVlmId', bdname)
                 cgi = vol.get('props', {}).get('current-gi', None)

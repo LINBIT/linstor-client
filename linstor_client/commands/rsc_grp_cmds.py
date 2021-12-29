@@ -196,7 +196,8 @@ class ResourceGroupCommands(Commands):
         p_adjust = res_grp_subp.add_parser(
             Commands.Subcommands.Adjust.LONG,
             aliases=[Commands.Subcommands.Adjust.SHORT],
-            description="Adjusts all resource-definition of the given resource-group.\nCAUTION: This operation might take a long time and even exceed the default 5 min timeout!"
+            description="Adjusts all resource-definition of the given resource-group.\n"
+                        "CAUTION: This operation might take a long time and even exceed the default 5 min timeout!"
         )
         p_adjust.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_adjust.add_argument(
@@ -205,7 +206,8 @@ class ResourceGroupCommands(Commands):
             default=None,
             help="Resource group to adjust. If omitted, all resource groups will be adjusted"
         ).completer = self.resource_grp_completer
-        # p_adjust.add_argument('-o', '--overprovision', help='Multiplier of thin storage pool\'s free space. Default: 2.0')
+        # p_adjust.add_argument('-o', '--overprovision',
+        #                       help='Multiplier of thin storage pool\'s free space. Default: 2.0')
         p_adjust.set_defaults(func=self.adjust)
         #  ------------ ADJUST END
 
@@ -338,7 +340,6 @@ class ResourceGroupCommands(Commands):
     def adjust(self, args):
         replies = self.get_linstorapi().resource_group_adjust(
             args.resource_group_name
-           # args.overprovision
+            # args.overprovision
         )
         return self.handle_replies(args, replies)
-

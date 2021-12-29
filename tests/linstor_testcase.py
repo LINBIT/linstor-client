@@ -7,24 +7,13 @@ except ImportError:
     from io import StringIO
 import json
 import os
-import tarfile
-import subprocess
 from linstor.linstorapi import ApiCallResponse
 
 
 controller_port = os.environ.get('LINSTOR_CONTROLLER_PORT', 63370)
 
-# update_port_sql = """
-# UPDATE PROPS_CONTAINERS SET PROP_VALUE='{port}'
-#     WHERE PROPS_INSTANCE='CTRLCFG' AND PROP_KEY='netcom/PlainConnector/port';
-# UPDATE PROPS_CONTAINERS SET PROP_VALUE='127.0.0.1'
-#     WHERE PROPS_INSTANCE='CTRLCFG' AND PROP_KEY='netcom/PlainConnector/bindaddress';
-# """.format(port=controller_port)
-
 
 class LinstorTestCase(unittest.TestCase):
-    controller = None
-
     @classmethod
     def find_linstor_tar(cls, paths):
         for spath in paths:
@@ -38,80 +27,8 @@ class LinstorTestCase(unittest.TestCase):
         pass
 
     @classmethod
-    def oldsetup(cls):
-        install_path = os.path.abspath('build/_linstor_unittests')
-        linstor_tar_search_paths = [
-            os.path.abspath(os.path.join('./')),
-            os.path.abspath(os.path.join('../linstor', 'build', 'distributions')),
-            os.path.abspath(os.path.join('../linstor-server', 'build', 'distributions'))
-        ]
-        linstor_distri_tar = cls.find_linstor_tar(linstor_tar_search_paths)
-
-        if linstor_distri_tar is None:
-            raise RuntimeError("Unable to find any linstor distribution tar: " + str(linstor_tar_search_paths))
-
-        print("Using " + linstor_distri_tar)
-        try:
-            os.removedirs(install_path)
-        except OSError:
-            pass
-        with tarfile.open(linstor_distri_tar) as tar:
-            tar.extractall(install_path)
-            linstor_file_name = tar.getnames()[0]  # on jenkins the tar and folder within is named workspace-1.0
-
-        # get sql init script
-        # execute_init_sql_path = os.path.join(install_path, 'init.sql')
-        # linjar_filename = os.path.join(install_path, linstor_file_name, 'lib', linstor_file_name + '.jar')
-        # with zipfile.ZipFile(linjar_filename, 'r') as linjar:
-        #     with linjar.open('resource/drbd-init-derby.sql', 'r') as sqlfile:
-        #         with open(execute_init_sql_path, 'wt') as init_sql_file:
-        #             for line in sqlfile:
-        #                 init_sql_file.write(line.decode())
-        #             # patch init sql file to start controller on different port
-        #             init_sql_file.write(update_port_sql)
-
-        linstor_bin = os.path.join(install_path, linstor_file_name, 'bin')
-
-        # start linstor controller
-        controller_bin = os.path.join(linstor_bin, "Controller")
-        print("executing: " + controller_bin)
-        cls.controller = subprocess.Popen(
-            [
-                controller_bin,
-                "--memory-database=h2;" + str(cls.port()) + ";" + cls.host(),
-                "--rest-bind=" + cls.host() + ":" + str(cls.rest_port())
-            ],
-            cwd=install_path,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        print('Waiting for controller to start, if this takes longer than 10s cancel')
-        while True:
-            line = cls.controller.stdout.readline()  # this will block
-            line = line.decode()
-            sys.stdout.write(line)
-            sys.stdout.flush()
-            if 'Controller initialized' in line:
-                break
-
-    @classmethod
     def tearDownClass(cls):
         pass
-
-    @classmethod
-    def oldtearDownClass(cls):
-        cls.controller.poll()
-        if cls.controller.returncode:
-            sys.stderr.write("Controller already down!!!.\n")
-            raise RuntimeError("Controller already down!!!.")
-        cls.controller.terminate()
-        cls.controller.wait()
-        sys.stdout.write(cls.controller.stdout.read().decode())
-        sys.stdout.write(cls.controller.stderr.read().decode())
-        cls.controller.stderr.close()
-        cls.controller.stdout.close()
-        sys.stdout.write("Controller terminated.\n")
-        sys.stdout.flush()
 
     @classmethod
     def host(cls):
@@ -137,11 +54,13 @@ class LinstorTestCase(unittest.TestCase):
     @classmethod
     def execute(cls, cmd_args):
         LinstorTestCase.add_controller_arg(cmd_args)
+        print(cmd_args)
         linstor_cli = linstor_client_main.LinStorCLI()
 
         try:
             return linstor_cli.parse_and_execute(cmd_args)
         except SystemExit as e:
+            print(e)
             return e.code
 
     @classmethod
@@ -263,60 +182,3 @@ class LinstorTestCase(unittest.TestCase):
     def find_and_check_prop(self, props, key, value):
         prop = self.find_prop(props, key)
         self.check_prop(prop, key, value)
-
-
-class LinstorTestCaseWithData(LinstorTestCase):
-
-    @classmethod
-    def assert_execute(cls, cmd):
-        r = cls.execute(cmd)
-        if r != 0:
-            cls.controller.terminate()
-            raise AssertionError("No clean exit({e}) from command: {cmd}".format(e=r, cmd=" ".join(cmd)))
-        return True
-
-    @classmethod
-    def setUpClass(cls):
-        super(LinstorTestCaseWithData, cls).setUpClass()
-
-        cls.assert_execute(['node', 'create', 'fakehost1', '1.0.0.1'])
-        cls.assert_execute(['node', 'create', 'fakehost2', '1.0.0.2'])
-        cls.assert_execute(['node', 'create', 'fakehost3', '1.0.0.3'])
-        cls.assert_execute(['node', 'create', 'fakemachine', '1.0.0.4'])
-
-        cls.assert_execute(['node', 'interface', 'create', 'fakehost1', 'fastnet', '10.0.0.1'])
-
-        cls.assert_execute(['storage-pool', 'create', 'lvm', 'fakehost1', 'DfltStorPool', 'mylvmpool'])
-        cls.assert_execute(['storage-pool', 'create', 'lvm', 'fakehost2', 'DfltStorPool', 'mylvmpool'])
-        cls.assert_execute(['storage-pool', 'create', 'lvm', 'fakehost3', 'DfltStorPool', 'mylvmpool'])
-
-        cls.assert_execute(['storage-pool', 'create', 'lvmthin', 'fakehost1', 'thinpool', 'myvg/mythinpool'])
-        cls.assert_execute(['storage-pool', 'create', 'lvmthin', 'fakehost2', 'thinpool', 'myvg/mythinpool'])
-
-        cls.assert_execute(['storage-pool', 'create', 'zfs', 'fakehost1', 'zfsubuntu', 'zfsstorage'])
-        cls.assert_execute(['storage-pool', 'create', 'zfs', 'fakehost2', 'zfsubuntu', 'zfsstorage'])
-
-        cls.assert_execute(['resource-definition', 'create', 'rsc1'])
-        cls.assert_execute(['volume-definition', 'create', 'rsc1', '128Mib'])
-
-        cls.assert_execute(['resource', 'create', '--async', 'fakehost1', 'rsc1'])
-        cls.assert_execute(['resource', 'create', '--async', 'fakehost2', 'rsc1'])
-        cls.assert_execute(['resource', 'create', '--async', '-d', 'fakehost3', 'rsc1'])
-
-        cls.assert_execute(['resource-definition', 'create', 'rsc-zfs'])
-        cls.assert_execute(['volume-definition', 'create', 'rsc-zfs', '128Mib'])
-
-        cls.assert_execute(['resource', 'create', '--async', 'fakehost1', 'rsc-zfs', '-s', 'zfsubuntu'])
-        cls.assert_execute(['resource', 'create', '--async', 'fakehost2', 'rsc-zfs', '-s', 'zfsubuntu'])
-
-        cls.assert_execute(['resource-definition', 'create', 'rsc_thin'])
-        cls.assert_execute(['volume-definition', 'create', 'rsc_thin', '128Mib'])
-        cls.assert_execute(['volume-definition', 'create', 'rsc_thin', '64Mib'])
-
-        cls.assert_execute(['resource', 'create', '--async', 'fakehost1', 'rsc_thin', '-s', 'thinpool'])
-        cls.assert_execute(['resource', 'create', '--async', 'fakehost2', 'rsc_thin', '-s', 'thinpool'])
-
-    def get_list(self, field, response):
-        self.assertEqual(1, len(response))
-        self.assertIn(field, response[0])
-        return response[0][field]

@@ -34,7 +34,7 @@ def get_terminal_size():
                 'hh',
                 fcntl.ioctl(term_fd, termios.TIOCGWINSZ, '1234')
             )
-        except:
+        except (ImportError, IOError, OSError):
             pass
         return term_dim
     # Assign the first value that's not a NoneType
@@ -43,11 +43,11 @@ def get_terminal_size():
         try:
             with os.open(os.ctermid(), os.O_RDONLY) as term_fd:
                 term_dim = ioctl_GWINSZ(term_fd)
-        except:
+        except (IOError, OSError):
             pass
     try:
         (term_width, term_height) = int(term_dim[1]), int(term_dim[0])
-    except:
+    except (IndexError, TypeError):
         term_width = DEFAULT_TERM_WIDTH
         term_height = DEFAULT_TERM_HEIGHT
     return term_width, term_height
@@ -429,7 +429,7 @@ class Table(object):
                     if 2 < ridx < table_size - 2:
                         if multi_line_row and row_separator:
                             row_sep = ctbl[enc]['ml'] + ctbl[enc]['mdc']\
-                                      * (sum(columnmax) + (3 * header_size) - 1) + ctbl[enc]['mr']
+                                * (sum(columnmax) + (3 * header_size) - 1) + ctbl[enc]['mr']
                             output_table_str += self._str_print(row_sep)
             return output_table_str
         except IOError as e:

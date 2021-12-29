@@ -560,7 +560,7 @@ class Commands(object):
             nargs='?',
             type=str,
             metavar="RESOURCE_REGEX",
-            help='Try to avoid nodes that already have a resource ' +
+            help="Try to avoid nodes that already have a resource "
                  "deployed who's name is matching the given regular expression."
         )
         parser.add_argument(
@@ -874,19 +874,19 @@ class Commands(object):
         return provider_list
 
     @classmethod
-    def prepare_argparse_list(cls, l, prefix=''):
+    def prepare_argparse_list(cls, pre_list, prefix=''):
         """
         argparse returns either None or a list with values,
         but to unset a fields you have to use field= or field='' as argparse syntax.
         that will return following list [''], we have to convert such lists to empty lists
-        :param list[str] l: list to prefix ith Aux/ and convert
+        :param list[str] pre_list: list to prefix ith Aux/ and convert
         :param str prefix: will prefix every list value with this str
         :return: converted list
         :rtype: Optional[list[str]]
         """
-        if l:
-            if l[0]:
-                return [prefix + x for x in l]
+        if pre_list:
+            if pre_list[0]:
+                return [prefix + x for x in pre_list]
             else:
                 return []
         return None

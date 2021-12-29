@@ -7,6 +7,7 @@ from linstor.responses import StoragePoolListResponse
 from linstor_client.commands import ArgumentError, Commands
 from linstor_client.utils import Output
 
+
 class StoragePoolCommands(Commands):
     class Lvm(object):
         LONG = "lvm"
@@ -78,8 +79,8 @@ class StoragePoolCommands(Commands):
             parser.add_argument(
                 '--shared-space',
                 type=str,
-                help='Unique identifier of backing storage shared by multiple nodes. If omitted Linstor will assume ' +
-                     'the pool is unique for each node.  When using shared volume groups with LVM2 the volume group ' +
+                help='Unique identifier of backing storage shared by multiple nodes. If omitted Linstor will assume '
+                     'the pool is unique for each node.  When using shared volume groups with LVM2 the volume group '
                      'UUID could be used as the SHARED_SPACE identifier.'
             )
         if external_locking:
@@ -470,4 +471,3 @@ class StoragePoolCommands(Commands):
             mod_prop_dict['delete']
         )
         return self.handle_replies(args, replies)
-

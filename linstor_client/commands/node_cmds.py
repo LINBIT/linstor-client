@@ -668,7 +668,8 @@ class NodeCommands(Commands):
         tbl.show()
 
         if show_eviction_info:
-            print("To cancel automatic eviction please consider the corresponding DrbdOptions/AutoEvict* properties on controller and / or node level")
+            print("To cancel automatic eviction please consider the corresponding "
+                  "DrbdOptions/AutoEvict* properties on controller and / or node level")
             print("See 'linstor controller set-property --help' or 'linstor node set-property --help' for more details")
 
     def list(self, args):

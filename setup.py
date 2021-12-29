@@ -57,9 +57,9 @@ class CheckUpToDate(Command):
                     sys.exit(1)
             with open("Dockerfile") as f:
                 found = 0
-                content = [l.strip() for l in f.readlines()]
-                for l in content:
-                    fields = [f.strip() for f in l.split()]
+                content = [line.strip() for line in f.readlines()]
+                for line in content:
+                    fields = [f.strip() for f in line.split()]
                     if len(fields) == 3 and fields[0] == 'ENV' and \
                        fields[1] == 'LINSTOR_CLI_VERSION' and fields[2] == version:
                         found += 1
@@ -124,8 +124,8 @@ class BuildManCommand(Command):
             t.close()
             linstorxml.close()
 
-            os.system("cd %s; " % (outdir) + ' ' +
-                      "xsltproc --xinclude --stringparam variablelist.term.break.after 1 "
+            os.system("cd %s; " % outdir
+                      + " xsltproc --xinclude --stringparam variablelist.term.break.after 1 "
                       "http://docbook.sourceforge.net/release/xsl/current/manpages/docbook.xsl "
                       "linstor.xml; gzip -f -9 linstor.8")
         # subcommands
@@ -150,8 +150,7 @@ class BuildManCommand(Command):
             toplevel = cmd[0]
             # aliases = cmd[1:]
             # we could use the aliases to symlink them to the toplevel cmd
-            outfile = os.path.join('.', outdir, name + '-' + toplevel + '.' +
-                                   mansection + ".gz")
+            outfile = os.path.join('.', outdir, name + '-' + toplevel + '.' + mansection + ".gz")
             if os.path.isfile(outfile):
                 continue
             sys.stdout.write("Generating %s ...\n" % (outfile))
@@ -184,8 +183,8 @@ setup(
     version=get_setup_version(),
     description="DRBD distributed resource management utility",
     long_description="This client program communicates to controller node which manages the resources",
-    author="Robert Altnoeder <robert.altnoeder@linbit.com>, Roland Kammerer <roland.kammerer@linbit.com>" +
-           ", Rene Peinthor <rene.peinthor@linbit.com>",
+    author="Robert Altnoeder <robert.altnoeder@linbit.com>, Roland Kammerer <roland.kammerer@linbit.com>"
+           + ", Rene Peinthor <rene.peinthor@linbit.com>",
     author_email="roland.kammerer@linbit.com",
     maintainer="LINBIT HA-Solutions GmbH",
     maintainer_email="drbd-user@lists.linbit.com",

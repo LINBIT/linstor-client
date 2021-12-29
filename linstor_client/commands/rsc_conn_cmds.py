@@ -52,7 +52,7 @@ class ResourceConnectionCommands(Commands):
         p_lresconn = subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of all resource connections for the given resource. ' +
+            description='Prints a list of all resource connections for the given resource. '
                         'By default, the list is printed as a human readable table.'
         )
         p_lresconn.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')

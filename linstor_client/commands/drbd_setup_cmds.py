@@ -39,7 +39,7 @@ class DrbdOptions(object):
                 if i not in range(_min, _max):
                     raise ArgumentError("{v} not in range [{min}-{max}].".format(v=i, min=_min, max=_max))
                 return i
-            except ValueError as va:
+            except ValueError:
                 pass
             if x not in _symbols:
                 raise ArgumentError("'{v}' must be one of {s}.".format(v=x, s=_symbols))

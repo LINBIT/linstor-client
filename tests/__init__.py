@@ -1,5 +1,5 @@
 import unittest
-from .linstor_testcase import LinstorTestCase, LinstorTestCaseWithData
+from .linstor_testcase import LinstorTestCase
 from . import test_ctrl_list_commands, test_ctrl_nodes, test_ctrl_usecases
 from . import test_ctrl_props, test_drbd_options
 

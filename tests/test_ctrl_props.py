@@ -1,5 +1,5 @@
 from tests import LinstorTestCase
-from linstor.sharedconsts import *
+from linstor.sharedconsts import NAMESPC_AUXILIARY
 
 
 class TestProperties(LinstorTestCase):

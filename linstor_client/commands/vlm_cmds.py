@@ -186,8 +186,8 @@ class VolumeCommands(Commands):
                 ) if rsc_state else None
                 state_txt, color = cls.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
                 has_errors = any([x.is_error() for x in vlm.reports])
-                conn_failed = (rsc.layer_data.drbd_resource and
-                               any(not v.connected for k, v in rsc.layer_data.drbd_resource.connections.items()))
+                conn_failed = (rsc.layer_data.drbd_resource
+                               and any(not v.connected for k, v in rsc.layer_data.drbd_resource.connections.items()))
                 if conn_failed:
                     color = Color.RED
 

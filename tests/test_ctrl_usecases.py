@@ -1,6 +1,7 @@
 import unittest
 from tests import LinstorTestCase
-from linstor.sharedconsts import *
+from linstor.sharedconsts import MASK_CRT, MASK_STOR_POOL, CREATED, MASK_NODE, FAIL_NOT_FOUND_NODE, MASK_VLM_DFN
+from linstor.sharedconsts import FAIL_NOT_FOUND_RSC_DFN, FAIL_INVLD_VLM_SIZE, MASK_DEL, WARN_NOT_FOUND, MASK_RSC_DFN
 from linstor import SizeCalc
 
 

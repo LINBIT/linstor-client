@@ -42,7 +42,7 @@ class TestUtils(unittest.TestCase):
 
         tbl.add_row([
             "0",
-            "In a land far far away in a time long long ago\nThere were 3 pigs with 3 wigs and a chair to despair\n" +
+            "In a land far far away in a time long long ago\nThere were 3 pigs with 3 wigs and a chair to despair\n"
             "in a house with no mouse.",
             "PlaceCount: 2\nDisklessOnRemaining: True\nStoragePool: DfltStorPool\nLayerList: storage,drbd"]
         )

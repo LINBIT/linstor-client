@@ -2,8 +2,6 @@ import json
 
 import linstor
 import linstor_client.argparse.argparse as argparse
-import linstor_client
-from linstor import SizeCalc
 from linstor_client.commands import Commands, DrbdOptions
 
 
@@ -89,7 +87,7 @@ class ControllerCommands(Commands):
             '--do-not-place-with-regex',
             type=str,
             metavar="RESOURCE_REGEX",
-            help='Try to avoid nodes that already have a resource ' +
+            help='Try to avoid nodes that already have a resource '
                  'deployed whos name is matching the given regular expression.'
         )
         p_query_max_vlm_size.add_argument(
