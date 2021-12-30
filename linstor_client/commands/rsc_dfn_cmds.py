@@ -139,6 +139,11 @@ class ResourceDefinitionCommands(Commands):
         p_clone_rscdfn.add_argument('--no-wait', action="store_true", help="Wait till cloning is done.")
         p_clone_rscdfn.add_argument('--wait-timeout', type=int, help="Wait this seconds for the clone to finish.")
         p_clone_rscdfn.add_argument(
+            '--use-zfs-clone',
+            action="store_true",
+            default=None,
+            help="Use ZFS clone instead send/recv, but have a dependent snapshot")
+        p_clone_rscdfn.add_argument(
             'source_resource',
             help="Source resource definition name").completer = self.resource_dfn_completer
         p_clone_rscdfn.add_argument('clone_name',
@@ -235,7 +240,8 @@ class ResourceDefinitionCommands(Commands):
         return self.handle_replies(args, replies)
 
     def clone(self, args):
-        clone_resp = self.get_linstorapi().resource_dfn_clone(args.source_resource, args.clone_name, args.external_name)
+        clone_resp = self.get_linstorapi().resource_dfn_clone(
+            args.source_resource, args.clone_name, args.external_name, use_zfs_clone=args.use_zfs_clone)
 
         rc = self.handle_replies(args, clone_resp.messages)
 
