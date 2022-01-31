@@ -83,6 +83,9 @@ class BackupCommands(Commands):
             '-r', '--resource',
             help='Only show backups for given resource')
         p_lbackups.add_argument(
+            '-s', '--snapshot',
+            help='Only show backups with the given snapshot name')
+        p_lbackups.add_argument(
             'remote_name',
             help='Remote name to show backups for')
         p_lbackups.add_argument(
@@ -104,6 +107,9 @@ class BackupCommands(Commands):
         p_crtbak.add_argument(
             "-n", "--node",
             help="Node to prefer to upload backup")
+        p_crtbak.add_argument(
+            "-s", "--snapshot",
+            help="Name of the local snapshot to create")
         p_crtbak.add_argument(
             "resource",
             help="Resource used for the backup"
@@ -201,6 +207,9 @@ class BackupCommands(Commands):
             "-r", "--resource",
             help="Restore the latest backup of the given resource")
         p_rstbak.add_argument(
+            "-s", "--snapshot",
+            help="Restore the latest backup with the given snapshot name")
+        p_rstbak.add_argument(
             "--id",
             help="Specific backup to restore")
         p_rstbak.add_argument(
@@ -285,6 +294,9 @@ class BackupCommands(Commands):
             "-r", "--resource",
             help="Get info about the latest backup of the given resource")
         p_infobak.add_argument(
+            "-s", "--snapshot",
+            help="Get info about the last backup with this snapshot name")
+        p_infobak.add_argument(
             "--id",
             help="Get info about the given backup to restore")
         p_infobak.add_argument(
@@ -366,11 +378,21 @@ class BackupCommands(Commands):
         tbl.show()
 
     def list_backups(self, args):
-        lstmsg = self.get_linstorapi().backup_list(args.remote_name, args.resource)
+        lstmsg = self.get_linstorapi().backup_list(
+            remote_name=args.remote_name,
+            resource_name=args.resource,
+            snap_name=args.snapshot
+        )
         return self.output_list(args, lstmsg, BackupCommands.show_backups, machine_readable_raw=True)
 
     def create(self, args):
-        replies = self.get_linstorapi().backup_create(args.remote, args.resource, not args.full, args.node)
+        replies = self.get_linstorapi().backup_create(
+            remote_name=args.remote,
+            resource_name=args.resource,
+            incremental=not args.full,
+            node_name=args.node,
+            snap_name=args.snapshot
+        )
         return self.handle_replies(args, replies)
 
     def del_by_id(self, args):
@@ -424,7 +446,9 @@ class BackupCommands(Commands):
             bak_id=args.id,
             passphrase=self._get_passphrase(args, "Origin clusters passphrase: "),
             stor_pool_map=args.storpool_rename,
-            download_only=args.download_only)
+            download_only=args.download_only,
+            snap_name=args.snapshot,
+        )
         return self.handle_replies(args, replies)
 
     def abort(self, args):
@@ -462,7 +486,9 @@ class BackupCommands(Commands):
             resource_name=args.resource,
             bak_id=args.id,
             target_node=args.target_node,
-            stor_pool_map=args.storpool_rename)
+            stor_pool_map=args.storpool_rename,
+            snap_name=args.snapshot,
+        )
         return self.output_list(args, lstmsg, BackupCommands.show_backups_info, machine_readable_raw=True)
 
     @classmethod
