@@ -288,6 +288,10 @@ class Commands(object):
             LONG = "clone"
             SHORT = "cln"
 
+        class WaitSync(object):
+            LONG = "wait-sync"
+            SHORT = "ws"
+
         class Adjust(object):
             LONG = "adjust"
             SHORT = "adj"

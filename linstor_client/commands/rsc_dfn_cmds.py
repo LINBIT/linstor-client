@@ -34,6 +34,7 @@ class ResourceDefinitionCommands(Commands):
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.DrbdOptions,
             Commands.Subcommands.Clone,
+            Commands.Subcommands.WaitSync,
         ]
 
         # Resource definition subcommands
@@ -153,6 +154,15 @@ class ResourceDefinitionCommands(Commands):
                                          'Will be ignored if EXTERNAL_NAME is set.')
         p_clone_rscdfn.set_defaults(func=self.clone)
 
+        p_wait_sync = res_def_subp.add_parser(
+            Commands.Subcommands.WaitSync.LONG,
+            aliases=[Commands.Subcommands.WaitSync.SHORT],
+            description="Wait till the given resource is synced or e.g. ready to be resized.")
+        p_wait_sync.add_argument('--wait-timeout', type=int, help="Wait this seconds for the clone to finish.")
+        p_wait_sync.add_argument(
+            "resource_name", help="Resource name to be checked.").completer = self.resource_dfn_completer
+        p_wait_sync.set_defaults(func=self.wait_sync)
+
         p_lrscdfs = res_def_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
@@ -265,6 +275,11 @@ class ResourceDefinitionCommands(Commands):
                 Output.handle_ret(e.main_error, args.no_color, False, sys.stderr)
 
         return rc
+
+    def wait_sync(self, args):
+        # this method either returns True or raises
+        self.get_linstorapi().resource_dfn_wait_synced(args.resource_name, timeout=args.wait_timeout)
+        return ExitCode.OK
 
     def modify(self, args):
         replies = self._linstor.resource_dfn_modify(
