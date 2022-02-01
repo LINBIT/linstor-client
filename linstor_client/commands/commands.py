@@ -304,6 +304,10 @@ class Commands(object):
             LONG = "undeploy"
             SHORT = "und"
 
+        class BackupDb(object):
+            LONG = "backupdb"
+            SHORT = "bakdb"
+
         @staticmethod
         def generate_desc(subcommands):
             """

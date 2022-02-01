@@ -20,6 +20,7 @@ class ControllerCommands(Commands):
             Commands.Subcommands.Version,
             Commands.Subcommands.QueryMaxVlmSize,
             Commands.Subcommands.Which,
+            Commands.Subcommands.BackupDb,
         ]
 
         con_parser = parser.add_parser(
@@ -117,6 +118,18 @@ class ControllerCommands(Commands):
             description='Shows controller currently used.')
         p_which_controller.set_defaults(func=self.which_controller)
 
+        p_backup_db = con_subp.add_parser(
+            Commands.Subcommands.BackupDb.LONG,
+            aliases=[Commands.Subcommands.BackupDb.SHORT],
+            description='Create a backup of the controller database.'
+        )
+        p_backup_db.add_argument(
+            'backup_name',
+            metavar="BACKUP_NAME",
+            help='Base name of the backup'
+        )
+        p_backup_db.set_defaults(func=self.backup_controller_db)
+
         self.check_subcommands(con_subp, subcmds)
 
     @classmethod
@@ -188,3 +201,7 @@ class ControllerCommands(Commands):
             print(json.dumps({"controller_uri": ctrl_uri}))
         else:
             print(ctrl_uri)
+
+    def backup_controller_db(self, args):
+        replies = self.get_linstorapi().controller_backupdb(args.backup_name)
+        return self.handle_replies(args, replies)
