@@ -39,7 +39,8 @@ class BackupCommands(Commands):
         SHORT = "s3"
 
     _backup_headers = [
-        linstor_client.TableHeader("Backup Name(ID)"),
+        linstor_client.TableHeader("Resource"),
+        linstor_client.TableHeader("Snapshot"),
         linstor_client.TableHeader("Finished at"),
         linstor_client.TableHeader("Based On"),
         linstor_client.TableHeader("Status")
@@ -92,6 +93,10 @@ class BackupCommands(Commands):
             '-o', '--others',
             action="store_true",
             help='Only show s3 objects that are unknown to Linstor')
+        p_lbackups.add_argument(
+            '-i', '--show-id',
+            action="store_true",
+            help='Include the full ID in the output')
         p_lbackups.set_defaults(func=self.list_backups)
 
         # create backup
@@ -353,9 +358,12 @@ class BackupCommands(Commands):
             for hdr in backup_hdr:
                 tbl.add_header(hdr)
 
+            if args.show_id:
+                tbl.add_header(linstor_client.TableHeader("Backup Name(ID)"))
+
             for backup in lstmsg.linstor:
-                # row = [backup.id, backup.origin_rsc_name, backup.start_time]
-                row = [backup.id]
+                # resource, snapshot, finish time, base, status
+                row = [backup.origin_rsc_name, backup.origin_snap_name]
                 if backup.finished_timestamp:
                     row += [datetime.fromtimestamp(int(backup.finished_timestamp / 1000))]
                 else:
@@ -372,6 +380,9 @@ class BackupCommands(Commands):
                     status_color = Color.RED
 
                 row += [tbl.color_cell(status_text, status_color)]
+
+                if args.show_id:
+                    row += [backup.id]
 
                 tbl.add_row(row)
 
@@ -496,6 +507,7 @@ class BackupCommands(Commands):
         rsc_tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
 
         rsc_tbl.add_column("Resource")
+        rsc_tbl.add_column("Snapshot")
         rsc_tbl.add_column("Full Backup")
         rsc_tbl.add_column("Latest Backup")
         rsc_tbl.add_column("Backup Count")
@@ -503,7 +515,7 @@ class BackupCommands(Commands):
         rsc_tbl.add_column("Allocated Size")
 
         # table will only have a single row
-        row = [lstmsg.rsc, lstmsg.full, lstmsg.latest, lstmsg.count]
+        row = [lstmsg.rsc, lstmsg.snap, lstmsg.full, lstmsg.latest, lstmsg.count]
         row += [SizeCalc.approximate_size_string(lstmsg.dl_size),
                 SizeCalc.approximate_size_string(lstmsg.alloc_size)]
         rsc_tbl.add_row(row)
