@@ -53,6 +53,14 @@ class StoragePoolCommands(Commands):
         LONG = "exos"
         SHORT = "exos"
 
+    class StorageSpaces(object):
+        LONG = "storagespaces"
+        SHORT = "storagespaces"
+
+    class StorageSpacesThin(object):
+        LONG = "storagespacesthin"
+        SHORT = "storagespacesthin"
+
     _stor_pool_headers = [
         linstor_client.TableHeader("StoragePool"),
         linstor_client.TableHeader("Node"),
@@ -122,7 +130,9 @@ class StoragePoolCommands(Commands):
             StoragePoolCommands.SPDK,
             StoragePoolCommands.RemoteSPDK,
             StoragePoolCommands.OpenFlex,
-            StoragePoolCommands.Exos
+            StoragePoolCommands.Exos,
+            StoragePoolCommands.StorageSpaces,
+            StoragePoolCommands.StorageSpacesThin
         ]
 
         sp_c_parser = sp_subp.add_parser(
@@ -175,6 +185,35 @@ class StoragePoolCommands(Commands):
             help='The remote Spdk logical volume store to use.'
         )
         p_new_remote_spdk_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.REMOTE_SPDK)
+
+        p_new_storage_spaces_pool = create_subp.add_parser(
+            StoragePoolCommands.StorageSpaces.LONG,
+            aliases=[StoragePoolCommands.StorageSpaces.SHORT],
+            description='Create a Microsoft storage spaces storage pool (thick provisioned)'
+        )
+        self._create_pool_args(p_new_storage_spaces_pool)
+        p_new_storage_spaces_pool.add_argument(
+            'driver_pool_name',
+            type=str,
+            help='The storage pool name to use. It must have been created with ServerManager or similar tools'
+        )
+        p_new_storage_spaces_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.STORAGE_SPACES)
+
+        p_new_storage_spaces_thin_pool = create_subp.add_parser(
+            StoragePoolCommands.StorageSpacesThin.LONG,
+            aliases=[StoragePoolCommands.StorageSpacesThin.SHORT],
+            description='Create a Microsoft storage spaces storage pool (thin provisioned)'
+        )
+        self._create_pool_args(p_new_storage_spaces_thin_pool)
+        p_new_storage_spaces_thin_pool.add_argument(
+            'driver_pool_name',
+            type=str,
+            help='The storage pool name to use. It must have been created with ServerManager or similar tools'
+        )
+        p_new_storage_spaces_thin_pool.set_defaults(
+            func=self.create,
+            driver=linstor.StoragePoolDriver.STORAGE_SPACES_THIN
+        )
 
         p_new_lvm_thin_pool = create_subp.add_parser(
             StoragePoolCommands.LvmThin.LONG,

@@ -2,7 +2,6 @@
 from __future__ import print_function
 import os
 import sys
-import fcntl
 import errno
 import operator
 import locale
@@ -30,6 +29,7 @@ def get_terminal_size():
         try:
             import termios
             import struct
+            import fcntl
             term_dim = struct.unpack(
                 'hh',
                 fcntl.ioctl(term_fd, termios.TIOCGWINSZ, '1234')
@@ -43,7 +43,7 @@ def get_terminal_size():
         try:
             with os.open(os.ctermid(), os.O_RDONLY) as term_fd:
                 term_dim = ioctl_GWINSZ(term_fd)
-        except (IOError, OSError):
+        except (AttributeError, IOError, OSError):
             pass
     try:
         (term_width, term_height) = int(term_dim[1]), int(term_dim[0])
