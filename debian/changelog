@@ -1,3 +1,10 @@
+linstor-client (1.13.1-1) experimental; urgency=medium
+
+  * gitlab: remove package before building
+  * file_cmds: switch editor fallback to nano
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 12 May 2022 09:59:32 +0000
+
 linstor-client (1.13.0-1) experimental; urgency=medium
 
   [ Roland Kammerer ]
