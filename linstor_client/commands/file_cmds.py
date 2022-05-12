@@ -120,7 +120,7 @@ class FileCommands(Commands):
 
     def modify(self, args):
         if sys.stdin.isatty():
-            editor = os.environ.get('EDITOR', 'vim')
+            editor = os.environ.get('EDITOR', 'nano')
             try:
                 showmsg = self._linstor.file_show(args.file_name)
                 initial_content = base64.b64decode(showmsg.files.content).decode()
