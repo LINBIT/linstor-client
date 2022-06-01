@@ -825,17 +825,17 @@ class Commands(object):
 
     def remote_completer(self, prefix, **kwargs):
         lapi = self.get_linstorapi(**kwargs)
-        possible = set()
+        possible = []
         lstmsg = lapi.remote_list()[0]  # type: linstor.responses.RemoteListResponse
 
         if lstmsg:
-            possible += {x.name for x in lstmsg.s3_remotes}
-            possible += {x.name for x in lstmsg.linstor_remotes}
+            possible += [x.remote_name for x in lstmsg.s3_remotes]
+            possible += [x.remote_name for x in lstmsg.linstor_remotes]
 
             if prefix:
-                return [res for res in possible if res.startswith(prefix)]
+                return [res for res in set(possible) if res.startswith(prefix)]
 
-        return possible
+        return set(possible)
 
     @classmethod
     def layer_data_check(cls, layer_data):
