@@ -60,7 +60,8 @@ class BackupCommands(Commands):
             Commands.Subcommands.Abort,
             Commands.Subcommands.Restore,
             BackupCommands.Ship,
-            BackupCommands.Info
+            BackupCommands.Info,
+            Commands.Subcommands.Schedule,
         ]
 
         bkp_parser = parser.add_parser(
@@ -88,7 +89,7 @@ class BackupCommands(Commands):
             help='Only show backups with the given snapshot name')
         p_lbackups.add_argument(
             'remote_name',
-            help='Remote name to show backups for')
+            help='Remote name to show backups for').completer = Commands.remote_completer
         p_lbackups.add_argument(
             '-o', '--others',
             action="store_true",
@@ -194,6 +195,8 @@ class BackupCommands(Commands):
         self._add_cascading(p_delbak_id, p_delbak_filter)
         self._add_dry_run(p_delbak_id, p_delbak_filter, p_delbak_all, p_delbak_s3)
         p_delbak_s3.set_defaults(func=self.del_s3)
+
+        self.check_subcommands(p_delbak_subp, subcmd_delete)
 
         # restore backup
         p_rstbak = bkp_sub.add_parser(
@@ -316,7 +319,85 @@ class BackupCommands(Commands):
         p_infobak.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_infobak.set_defaults(func=self.info)
 
-        self.check_subcommands(p_delbak_subp, subcmd_delete)
+        # schedule backup
+        subcmd_schedule = [
+            Commands.Subcommands.Enable,
+            Commands.Subcommands.Disable,
+            Commands.Subcommands.Delete,
+        ]
+
+        p_schedbak = bkp_sub.add_parser(
+            Commands.Subcommands.Schedule.LONG,
+            aliases=[Commands.Subcommands.Schedule.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description="Schedule backup(s) from a remote")
+        p_schedbak_subp = p_schedbak.add_subparsers(
+            title="Schedule backup commands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(subcmd_schedule))
+
+        p_bak_sched_enable = p_schedbak_subp.add_parser(
+            Commands.Subcommands.Enable.LONG,
+            aliases=[Commands.Subcommands.Enable.SHORT],
+            description="Enable a schedule.")
+        p_bak_sched_enable.add_argument(
+            'remote_name',
+            help='Remote name').completer = Commands.remote_completer
+        p_bak_sched_enable.add_argument(
+            'schedule_name',
+            help='Schedule name').completer = Commands.schedule_completer
+        p_bak_sched_enable.add_argument(
+            "--node", "--preferred-node",
+            help="Preferred node name")
+        p_bak_sched_enable_mut_group = p_bak_sched_enable.add_mutually_exclusive_group(required=False)
+        p_bak_sched_enable_mut_group.add_argument(
+            "--rd", "--resource-definition",
+            help="Resource definition name")
+        p_bak_sched_enable_mut_group.add_argument(
+            "--rg", "--resource-group",
+            help="Resource group name")
+        p_bak_sched_enable.set_defaults(func=self.schedule_enable)
+
+        p_bak_sched_disable = p_schedbak_subp.add_parser(
+            Commands.Subcommands.Disable.LONG,
+            aliases=[Commands.Subcommands.Disable.SHORT],
+            description="Disable a schedule.")
+        p_bak_sched_disable.add_argument(
+            'remote_name',
+            help='Remote name').completer = Commands.remote_completer
+        p_bak_sched_disable.add_argument(
+            'schedule_name',
+            help='Schedule name').completer = Commands.schedule_completer
+        p_bak_sched_disable_mut_group = p_bak_sched_disable.add_mutually_exclusive_group(required=False)
+        p_bak_sched_disable_mut_group.add_argument(
+            "--rd", "--resource-definition",
+            help="Resource definition name")
+        p_bak_sched_disable_mut_group.add_argument(
+            "--rg", "--resource-group",
+            help="Resource group name")
+        p_bak_sched_disable.set_defaults(func=self.schedule_disable)
+
+        p_bak_sched_delete = p_schedbak_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
+            description="Delete a schedule.")
+        p_bak_sched_delete.add_argument(
+            'remote_name',
+            help='Remote name').completer = Commands.remote_completer
+        p_bak_sched_delete.add_argument(
+            'schedule_name',
+            help='Schedule name').completer = Commands.schedule_completer
+        p_bak_sched_delete_mut_group = p_bak_sched_delete.add_mutually_exclusive_group(required=False)
+        p_bak_sched_delete_mut_group.add_argument(
+            "--rd", "--resource-definition",
+            help="Resource definition name")
+        p_bak_sched_delete_mut_group.add_argument(
+            "--rg", "--resource-group",
+            help="Resource group name")
+        p_bak_sched_delete.set_defaults(func=self.schedule_delete)
+
+        self.check_subcommands(p_schedbak_subp, subcmd_schedule)
+
         self.check_subcommands(bkp_sub, subcmds)
 
     def _add_remote(self, parser):
@@ -560,6 +641,31 @@ class BackupCommands(Commands):
             stor_pool_tbl.add_row(row)
 
         stor_pool_tbl.show()
+
+    def schedule_enable(self, args):
+        replies = self.get_linstorapi().backup_schedule_enable(
+            remote_name=args.remote_name,
+            schedule_name=args.schedule_name,
+            preferred_node=args.node,
+            resource_name=args.rd,
+            resource_group_name=args.rg)
+        return self.handle_replies(args, replies)
+
+    def schedule_disable(self, args):
+        replies = self.get_linstorapi().backup_schedule_disable(
+            remote_name=args.remote_name,
+            schedule_name=args.schedule_name,
+            resource_name=args.rd,
+            resource_group_name=args.rg)
+        return self.handle_replies(args, replies)
+
+    def schedule_delete(self, args):
+        replies = self.get_linstorapi().backup_schedule_delete(
+            remote_name=args.remote_name,
+            schedule_name=args.schedule_name,
+            resource_name=args.rd,
+            resource_group_name=args.rg)
+        return self.handle_replies(args, replies)
 
     # create a keyvalue class
     class _KeyValue(argparse.Action):

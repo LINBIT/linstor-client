@@ -67,6 +67,7 @@ class Commands(object):
     BACKUP = "backup"
     REMOTE = "remote"
     FILE = "file"
+    SCHEDULE = "schedule"
 
     MainList = [
         CONTROLLER,
@@ -94,6 +95,7 @@ class Commands(object):
         BACKUP,
         REMOTE,
         FILE,
+        SCHEDULE
     ]
     Hidden = [
         DMMIGRATE,
@@ -307,6 +309,18 @@ class Commands(object):
         class BackupDb(object):
             LONG = "backupdb"
             SHORT = "bakdb"
+
+        class Enable(object):
+            LONG = "enable"
+            SHORT = "en"
+
+        class Disable(object):
+            LONG = "disable"
+            SHORT = "dis"
+
+        class Schedule(object):
+            LONG = "schedule"
+            SHORT = "sched"
 
         @staticmethod
         def generate_desc(subcommands):
@@ -836,6 +850,19 @@ class Commands(object):
                 return [res for res in set(possible) if res.startswith(prefix)]
 
         return set(possible)
+
+    def schedule_completer(self, prefix, **kwargs):
+        lapi = self.get_linstorapi(**kwargs)
+        possible = set()
+        sched_resp = lapi.schedule_list()  # type: linstor.responses.ScheduleListResponse
+
+        for schedule in sched_resp.schedules:
+            possible.add(schedule.schedule_name)
+
+        if prefix:
+            return [res for res in possible if res.startswith(prefix)]
+
+        return possible
 
     @classmethod
     def layer_data_check(cls, layer_data):
