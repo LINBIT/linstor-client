@@ -1077,6 +1077,32 @@ class MiscCommands(Commands):
             description='Create a sos report on the controller'
         )
         c_sos_create.add_argument('-s', '--since', help='Create sos-report with logs since n days. e.g. "3days"')
+        c_sos_create.add_argument(
+            '-n',
+            '--nodes',
+            nargs='+',
+            type=str,
+            help='Only include the given nodes in the sos-report'
+        ).completer = self.node_completer
+        c_sos_create.add_argument(
+            '-r',
+            '--resources',
+            nargs='+',
+            type=str,
+            help='Only include nodes that have the given resources deployed in the sos-report'
+        ).completer = self.resource_completer
+        c_sos_create.add_argument(
+            '-e',
+            '--exclude-nodes',
+            nargs='+',
+            type=str,
+            help='Do not include the given nodes in the sos-report'
+        ).completer = self.node_completer
+        c_sos_create.add_argument(
+            '--no-controller',
+            action='store_true',
+            help='Do not include the controller in the sos-report'
+        )
         c_sos_create.set_defaults(func=self.cmd_sos_report_create)
 
         c_sos_download = sos_subp.add_parser(
@@ -1087,6 +1113,32 @@ class MiscCommands(Commands):
         c_sos_download.add_argument('-s', '--since', help='Create sos-report with logs since n days. e.g. "3days"')
         c_sos_download.add_argument(
             'path', nargs='?', help='Directory where to download the sos report')
+        c_sos_download.add_argument(
+            '-n',
+            '--nodes',
+            nargs='+',
+            type=str,
+            help='Only include the given nodes in the sos-report'
+        ).completer = self.node_completer
+        c_sos_download.add_argument(
+            '-r',
+            '--resources',
+            nargs='+',
+            type=str,
+            help='Only include nodes that have the given resources deployed in the sos-report'
+        ).completer = self.resource_completer
+        c_sos_download.add_argument(
+            '-e',
+            '--exclude-nodes',
+            nargs='+',
+            type=str,
+            help='Do not include the given nodes in the sos-report'
+        ).completer = self.node_completer
+        c_sos_download.add_argument(
+            '--no-controller',
+            action='store_true',
+            help='Do not include the controller in the sos-report'
+        )
         c_sos_download.set_defaults(func=self.cmd_sos_report_download)
         self.check_subcommands(sos_subp, sos_subcommands)
 
@@ -1159,14 +1211,30 @@ class MiscCommands(Commands):
         since_dt = None
         if args.since:
             since_dt = MiscCommands.parse_time_str(args.since)
-        replies = self.get_linstorapi().sos_report_create(since=since_dt)
+        replies = self.get_linstorapi().sos_report_create(
+            since=since_dt,
+            nodes=args.nodes,
+            rscs=args.resources,
+            exclude=args.exclude_nodes,
+            include_ctrl=not args.no_controller
+        )
         return self.handle_replies(args, replies)
 
     def cmd_sos_report_download(self, args):
         since_dt = None
         if args.since:
             since_dt = MiscCommands.parse_time_str(args.since)
-        return self.handle_replies(args, self.get_linstorapi().sos_report_download(since=since_dt, to_file=args.path))
+        return self.handle_replies(
+            args,
+            self.get_linstorapi().sos_report_download(
+                since=since_dt,
+                to_file=args.path,
+                nodes=args.nodes,
+                rscs=args.resources,
+                exclude=args.exclude_nodes,
+                include_ctrl=not args.no_controller
+            )
+        )
 
     def show_space_report(self, args, space_report):
         """
