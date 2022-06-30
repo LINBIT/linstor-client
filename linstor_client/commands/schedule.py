@@ -144,7 +144,22 @@ class ScheduleCommands(Commands):
         create_sched = sched_sub.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Create a schedule.')
+            formatter_class=argparse.RawTextHelpFormatter,
+            description='''\
+Create a schedule.
+
+Cron-Syntax:
+  */5 3 2-4 4,5 SAT
+   ^  ^  ^   ^   ^
+   |  |  |   |   +- Day of Week (Numbers 0-6 (0 == Sunday) or 3 letter abbreviation)
+   |  |  |   +----- Month (Numbers 1-12 or 3 letter abbreviation)
+   |  |  +--------- Day of Month (1-31)
+   |  +------------ Hour (0-23)
+   +--------------- Minute (0-59)
+
+The example above reads:
+Every 5 minutes past hour 3 on every day between 2 and 4 and on every Saturday in April and May.
+''')
         create_sched.add_argument('schedule_name', help='Name of the schedule')
         create_sched.add_argument('full_cron', help='Cron expression to be used for full backups')
         create_sched.add_argument('-i', '--incremental-cron', help='Cron expression to be used for incremental backups')
@@ -162,7 +177,23 @@ class ScheduleCommands(Commands):
         modify_sched = sched_sub.add_parser(
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
-            description='Modify a schedule.')
+            formatter_class=argparse.RawTextHelpFormatter,
+            description='''\
+Modify a schedule.
+
+Cron-Syntax:
+  */5 3 2-4 4,5 SAT
+   ^  ^  ^   ^   ^
+   |  |  |   |   +- Day of Week (Numbers 0-6 (0 == Sunday) or 3 letter abbreviation)
+   |  |  |   +----- Month (Numbers 1-12 or 3 letter abbreviation)
+   |  |  +--------- Day of Month (1-31)
+   |  +------------ Hour (0-23)
+   +--------------- Minute (0-59)
+
+The example above reads:
+Every 5 minutes past hour 3 on every day between 2 and 4 and on every Saturday in April and May.
+''')
+
         modify_sched.add_argument('schedule_name', help='Name of the schedule')
         modify_sched.add_argument('-f', '--full-cron', help='Cron expression to be used for full backups')
         modify_sched.add_argument('-i', '--incremental-cron', help='Cron expression to be used for incremental backups')
