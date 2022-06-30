@@ -4,6 +4,7 @@ import linstor_client
 import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands
 from linstor_client import Table
+from linstor_client.consts import Color
 
 
 class ScheduleCommands(Commands):
@@ -30,9 +31,9 @@ class ScheduleCommands(Commands):
     _schedule_by_resource_details_headers = [
         linstor_client.TableHeader("Remote"),
         linstor_client.TableHeader("Schedule"),
-        linstor_client.TableHeader("RscDfn"),
-        linstor_client.TableHeader("RscGrp"),
-        linstor_client.TableHeader("Ctrl"),
+        linstor_client.TableHeader("Resource-Definition"),
+        linstor_client.TableHeader("Resource-Group"),
+        linstor_client.TableHeader("Controller"),
     ]
 
     class ListByResource(object):
@@ -322,10 +323,12 @@ Every 5 minutes past hour 3 on every day between 2 and 4 and on every Saturday i
         return self.output_list(args, lstmsg, ScheduleCommands.show_schedules_by_resource, machine_readable_raw=True)
 
     @classmethod
-    def _enabled_disabled_str(cls, val):
+    def _enabled_disabled_str(cls, val, win):
         if val is None:
-            return ""
-        return "Enabled" if val else "Disabled"
+            return ["", None]
+        color_if_win = Color.GREEN if val else Color.RED
+        text = "Enabled" if val else "Disabled"
+        return [text, color_if_win if win else None]
 
     @classmethod
     def show_schedules_by_resource_details(cls, args, lstmsg):
@@ -339,12 +342,20 @@ Every 5 minutes past hour 3 on every day between 2 and 4 and on every Saturday i
         for hdr in cls._schedule_by_resource_details_headers:
             tbl.add_header(hdr)
         for schedule in lstmsg.schedule_resources:
+            rd_win = schedule.resource_definition is not None
+            rg_win = not rd_win and schedule.resource_group is not None
+            c_win = not rd_win and not rg_win and schedule.controller is not None
+
+            rd_text_color = cls._enabled_disabled_str(schedule.resource_definition, rd_win)
+            rg_text_color = cls._enabled_disabled_str(schedule.resource_group, rg_win)
+            c_text_color = cls._enabled_disabled_str(schedule.controller, c_win)
+
             row = [
                 schedule.remote_name,
                 schedule.schedule_name,
-                cls._enabled_disabled_str(schedule.resource_definition),
-                cls._enabled_disabled_str(schedule.resource_group),
-                cls._enabled_disabled_str(schedule.controller),
+                tbl.color_cell(rd_text_color[0], rd_text_color[1]) if rd_win else rd_text_color[0],
+                tbl.color_cell(rg_text_color[0], rg_text_color[1]) if rg_win else rg_text_color[0],
+                tbl.color_cell(c_text_color[0], c_text_color[1]) if c_win else c_text_color[0],
             ]
             tbl.add_row(row)
         tbl.show()
