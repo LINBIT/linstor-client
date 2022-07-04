@@ -194,6 +194,7 @@ class BackupCommands(Commands):
             help="S3 key to delete")
         self._add_cascading(p_delbak_id, p_delbak_filter)
         self._add_dry_run(p_delbak_id, p_delbak_filter, p_delbak_all, p_delbak_s3)
+        self._add_keep_snaps(p_delbak_id, p_delbak_filter, p_delbak_all)
         p_delbak_s3.set_defaults(func=self.del_s3)
 
         self.check_subcommands(p_delbak_subp, subcmd_delete)
@@ -425,6 +426,15 @@ class BackupCommands(Commands):
             )
 
     @classmethod
+    def _add_keep_snaps(cls, *parsers):
+        for p in parsers:
+            p.add_argument(
+                "--keep-snaps", "--keep-snapshots",
+                action="store_true",
+                help="Do not delete the local snapshots, only the remote backups"
+            )
+
+    @classmethod
     def show_backups(cls, args, lstmsg):
         tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
 
@@ -493,7 +503,8 @@ class BackupCommands(Commands):
             bak_id=args.id if not args.prefix else None,
             bak_id_prefix=args.id if args.prefix else None,
             cascade=args.cascade,
-            dryrun=args.dry_run
+            dryrun=args.dry_run,
+            keep_snaps=args.keep_snaps
         )
         return self.handle_replies(args, replies)
 
@@ -508,7 +519,8 @@ class BackupCommands(Commands):
             resource_name=args.resource,
             node_name=args.node,
             cascade=args.cascade,
-            dryrun=args.dry_run
+            dryrun=args.dry_run,
+            keep_snaps=args.keep_snaps
         )
         return self.handle_replies(args, replies)
 
@@ -517,7 +529,8 @@ class BackupCommands(Commands):
             args.remote,
             all_linstor=True if not args.cluster else None,
             all_local_cluster=True if args.cluster else None,
-            dryrun=args.dry_run
+            dryrun=args.dry_run,
+            keep_snaps=args.keep_snaps
         )
         return self.handle_replies(args, replies)
 
