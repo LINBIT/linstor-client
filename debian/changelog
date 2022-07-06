@@ -1,3 +1,19 @@
+linstor-client (1.14.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * fix broken remote completer
+  * schedule: add basic commands and enable/disable/delete
+
+  [ Gabor Hernadi ]
+  * Schedule,crt,mod: Add cron syntax description
+  * Schedule,lbr: Add color for winning setting
+
+  [ Johanna Kucera ]
+  * SosReport: add commands for new filter options
+  * BackupShipping: add keep-snaps option to delete-cmds
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 06 Jul 2022 11:10:15 +0000
+
 linstor-client (1.13.1-1) experimental; urgency=medium
 
   * gitlab: remove package before building
