@@ -544,7 +544,7 @@ class Commands(object):
         return args
 
     @classmethod
-    def add_auto_select_argparse_arguments(cls, parser, use_place_count=False):
+    def add_auto_select_argparse_arguments(cls, parser, use_place_count=False, use_p_for_providers=True):
         parser.add_argument(
             '--storage-pool', '-s',
             type=str,
@@ -611,7 +611,7 @@ class Commands(object):
                  "This means the top most layer is on the left. "
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
         parser.add_argument(
-            '-p', '--providers',
+            '--providers', '-p' if use_p_for_providers else '--prov',
             type=cls.provider_check,
             help="Comma separated providers list. Only storage pools with the given provider kind "
                  "are considered as auto-place target. "

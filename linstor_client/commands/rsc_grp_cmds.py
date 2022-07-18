@@ -176,6 +176,7 @@ class ResourceGroupCommands(Commands):
             'volume_sizes',
             nargs='*'
         )
+        self.add_auto_select_argparse_arguments(p_spawn, use_place_count=True, use_p_for_providers=False)
         p_spawn.set_defaults(func=self.spawn)
         #  ------------ SPAWN END
 
@@ -323,7 +324,18 @@ class ResourceGroupCommands(Commands):
             vlm_sizes=args.volume_sizes,
             partial=args.partial,
             definitions_only=args.definition_only,
-            external_name=args.external_name
+            external_name=args.external_name,
+            place_count=args.place_count,
+            storage_pool=args.storage_pool,
+            do_not_place_with=self.prepare_argparse_list(args.do_not_place_with),
+            do_not_place_with_regex=args.do_not_place_with_regex,
+            replicas_on_same=self.prepare_argparse_list(args.replicas_on_same, linstor.consts.NAMESPC_AUXILIARY + '/'),
+            replicas_on_different=self.prepare_argparse_list(
+                args.replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
+            diskless_on_remaining=self.parse_diskless_on_remaining(args),
+            layer_list=self.prepare_argparse_list(args.layer_list),
+            provider_list=self.prepare_argparse_list(args.providers),
+            diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool)
         )
         return self.handle_replies(args, replies)
 
