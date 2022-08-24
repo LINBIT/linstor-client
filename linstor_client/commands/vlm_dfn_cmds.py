@@ -60,12 +60,12 @@ class VolumeDefinitionCommands(Commands):
         p_new_vol = vol_def_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Defines a volume with a capacity of size for use with '
-            'linstore. If the resource resname exists already, a new volume is '
+            description='Defines a volume with a capacity of `size` for use with '
+            'LINSTOR. If the resource `resource_name` exists already, a new volume is '
             'added to that resource, otherwise the resource is created automatically '
-            'with default settings. Unless minornr is specified, a minor number for '
-            "the volume's DRBD block device is assigned automatically by the "
-            'linstor server.')
+            'with default settings. Unless `--minor MINOR` is specified, a minor number '
+            "for the volume's DRBD block device is assigned automatically by the "
+            'LINSTOR server.')
         p_new_vol.add_argument(
             '--storage-pool', '-s',
             type=str,
