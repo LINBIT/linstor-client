@@ -194,7 +194,7 @@ class Table(object):
 
     def set_groupby(self, groups):
         if groups:
-            assert(isinstance(groups, list))
+            assert (isinstance(groups, list))
             self.groups = groups
 
     @classmethod

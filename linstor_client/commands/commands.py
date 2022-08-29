@@ -431,7 +431,7 @@ class Commands(object):
         """
         serializes the given protobuf data and prints to stdout.
         """
-        assert(isinstance(data, list))
+        assert (isinstance(data, list))
         output = None
         if output_version == 'v0':
             if single_item:

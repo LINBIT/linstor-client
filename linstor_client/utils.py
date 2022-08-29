@@ -211,14 +211,14 @@ def filter_new_args(unsetprefix, args):
 def filter_prohibited(to_filter, prohibited):
     for k in prohibited:
         if k in to_filter:
-            del(to_filter[k])
+            del (to_filter[k])
     return to_filter
 
 
 def filter_allowed(to_filter, allowed):
     for k in to_filter.keys():
         if k not in allowed:
-            del(to_filter[k])
+            del (to_filter[k])
     return to_filter
 
 
