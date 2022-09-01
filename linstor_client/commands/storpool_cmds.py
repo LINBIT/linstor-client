@@ -61,6 +61,10 @@ class StoragePoolCommands(Commands):
         LONG = "storagespacesthin"
         SHORT = "storagespacesthin"
 
+    class EbsInit(object):
+        LONG = "ebs_initiator"
+        SHORT = "ebs_init"
+
     _stor_pool_headers = [
         linstor_client.TableHeader("StoragePool"),
         linstor_client.TableHeader("Node"),
@@ -132,7 +136,8 @@ class StoragePoolCommands(Commands):
             StoragePoolCommands.OpenFlex,
             StoragePoolCommands.Exos,
             StoragePoolCommands.StorageSpaces,
-            StoragePoolCommands.StorageSpacesThin
+            StoragePoolCommands.StorageSpacesThin,
+            StoragePoolCommands.EbsInit
         ]
 
         sp_c_parser = sp_subp.add_parser(
@@ -323,6 +328,19 @@ class StoragePoolCommands(Commands):
         )
         p_new_exos_pool.set_defaults(func=self.create_exos, driver=linstor.StoragePoolDriver.EXOS)
 
+        p_new_ebs_init_pool = create_subp.add_parser(
+            StoragePoolCommands.EbsInit.LONG,
+            aliases=[StoragePoolCommands.EbsInit.SHORT],
+            description='Create an EBS initiator storage pool'
+        )
+        self._create_pool_args(p_new_ebs_init_pool, shared_space=False, external_locking=False)
+        p_new_ebs_init_pool.add_argument(
+            'ebs_remote_name',
+            type=str,
+            help='EBS Remote name'
+        )
+        p_new_ebs_init_pool.set_defaults(func=self.create_ebs)
+
         # END CREATE SUBCMDS
 
         # remove-storpool
@@ -440,6 +458,24 @@ class StoragePoolCommands(Commands):
             raise ArgumentError(e.message)
         return self.handle_replies(args, replies)
 
+    def create_ebs(self, args):
+        try:
+            # no shared-space and no external locking. shared-space calculated by server, external locking not allowed
+            ebs_remote_key = apiconsts.NAMESPC_STORAGE_DRIVER + '/' + apiconsts.NAMESPC_EBS + '/' + apiconsts.KEY_REMOTE
+            props = {
+                ebs_remote_key: args.ebs_remote_name
+            }
+            replies = self.get_linstorapi().storage_pool_create(
+                args.node_name,
+                args.name,
+                linstor.StoragePoolDriver.EBS_INIT,
+                None,
+                property_dict=props
+            )
+        except linstor.LinstorError as e:
+            raise ArgumentError(e.message)
+        return self.handle_replies(args, replies)
+
     def delete(self, args):
         # execute delete storpooldfns and flatten result list
         replies = [x for subx in args.node_name for x in self._linstor.storage_pool_delete(subx, args.name)]
@@ -464,7 +500,8 @@ class StoragePoolCommands(Commands):
 
             free_capacity = ""
             total_capacity = ""
-            if not storpool.is_diskless() and storpool.free_space is not None:
+            if not storpool.is_diskless() and storpool.free_space is not None and \
+                    storpool.provider_kind != "EBS_TARGET":
                 free_capacity = SizeCalc.approximate_size_string(storpool.free_space.free_capacity)
                 total_capacity = SizeCalc.approximate_size_string(storpool.free_space.total_capacity)
 

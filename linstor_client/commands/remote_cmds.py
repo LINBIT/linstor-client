@@ -17,6 +17,10 @@ class RemoteCommands(Commands):
         LONG = "linstor"
         SHORT = "l"
 
+    class SubCmdEbs(object):
+        LONG = "ebs"
+        SHORT = "ebs"
+
     def setup_commands(self, parser):
         subcmds = [
             Commands.Subcommands.List,
@@ -27,7 +31,8 @@ class RemoteCommands(Commands):
 
         create_modify_subcmds = [
             RemoteCommands.SubCmdS3,
-            RemoteCommands.SubCmdLinstor
+            RemoteCommands.SubCmdLinstor,
+            RemoteCommands.SubCmdEbs
         ]
 
         rmo_parser = parser.add_parser(
@@ -40,7 +45,7 @@ class RemoteCommands(Commands):
             description=Commands.Subcommands.generate_desc(subcmds)
         )
 
-        # list volumes
+        # list
         p_lremotes = rmo_sub.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
@@ -98,6 +103,25 @@ class RemoteCommands(Commands):
             const='')
         p_crt_linstor_remote.set_defaults(func=self.create_linstor)
 
+        # create ebs
+        p_crt_ebs_remote = p_crt_sub.add_parser(
+            RemoteCommands.SubCmdEbs.LONG,
+            aliases=[RemoteCommands.SubCmdEbs.SHORT],
+            description="Create a new EBS remote"
+        )
+        p_crt_ebs_remote.add_argument("name", help="Remote name")
+        p_crt_ebs_remote.add_argument("availability_zone", help="Availability zone. Example: eu-central-1b")
+        p_crt_ebs_remote.add_argument(
+            "--endpoint",
+            help="Endpoint of the EBS remote. If omitted the endpoint is constructed based on the region")
+        p_crt_ebs_remote.add_argument(
+            "--region", help="Region of the EBS remote. If omitted the region is constructed based on the availability \
+            zone")
+        p_crt_ebs_remote.add_argument("access_key", help="Access key of the EBS remote")
+        p_crt_ebs_remote.add_argument("secret_key", nargs="?",
+                                      help="Secret key of the EBS remote, if not provided will be prompted")
+        p_crt_ebs_remote.set_defaults(func=self.create_ebs)
+
         # modify
         p_mod_remote = rmo_sub.add_parser(
             Commands.Subcommands.Modify.LONG,
@@ -148,6 +172,25 @@ class RemoteCommands(Commands):
             const='')
         p_mod_linstor_remote.set_defaults(func=self.modify_linstor)
 
+        # modify ebs
+        p_mod_ebs = p_mod_sub.add_parser(
+            RemoteCommands.SubCmdEbs.LONG,
+            aliases=[RemoteCommands.SubCmdEbs.SHORT],
+            description="Modify a EBS remote"
+        )
+        p_mod_ebs.add_argument("name", help="Remote name").completer = self.remote_completer
+        p_mod_ebs.add_argument("--endpoint", help="Endpoint of the EBS remote")
+        p_mod_ebs.add_argument("--availabiliy-zone", "--az",
+                               help="Availability Zone of the EBS remote. Example: eu-central-1b")
+        p_mod_ebs.add_argument("--region", help="Region of the EBS remote")
+        p_mod_ebs.add_argument("--access_key", help="Access key of the EBS remote")
+        p_mod_ebs.add_argument("--secret_key",
+                               nargs="?",
+                               action='store',
+                               const='',
+                               help="Secret key of the EBS remote, if not provided will be prompted")
+        p_mod_ebs.set_defaults(func=self.modify_ebs)
+
         # delete
         p_del_remote = rmo_sub.add_parser(
             Commands.Subcommands.Delete.LONG,
@@ -185,6 +228,12 @@ class RemoteCommands(Commands):
                 "name": lin_remote.remote_name,
                 "type": "Linstor",
                 "info": lin_remote.url
+            })
+        for ebs in remotes.ebs_remotes:
+            rows.append({
+                "name": ebs.remote_name,
+                "type": "EBS",
+                "info": "{url}, AZ: {az}".format(url=ebs.endpoint, az=ebs.availability_zone)
             })
         for remote in rows:
             tbl.add_row([remote["name"], remote["type"], remote["info"]])
@@ -255,6 +304,36 @@ class RemoteCommands(Commands):
             url=args.url,
             passphrase=passphrase,
             cluster_id=args.cluster_id)
+        return self.handle_replies(args, replies)
+
+    def create_ebs(self, args):
+        if args.secret_key:
+            password = args.secret_key
+        else:
+            password = getpass.getpass("Secret-key: ")  # read from keyboard
+        replies = self.get_linstorapi().remote_create_ebs(
+            remote_name=args.name,
+            availability_zone=args.availability_zone,
+            endpoint=args.endpoint,
+            region=args.region,
+            access_key=args.access_key,
+            secret_key=password)
+        return self.handle_replies(args, replies)
+
+    def modify_ebs(self, args):
+        password = None
+        if args.secret_key is not None:
+            if args.secret_key:
+                password = args.secret_key
+            else:
+                password = getpass.getpass("Secret-key: ")  # read from keyboard
+        replies = self.get_linstorapi().remote_modify_ebs(
+            remote_name=args.name,
+            endpoint=args.endpoint,
+            region=args.region,
+            availability_zone=args.availability_zone,
+            access_key=args.access_key,
+            secret_key=password)
         return self.handle_replies(args, replies)
 
     def delete(self, args):

@@ -63,6 +63,10 @@ class NodeCommands(Commands):
         LONG = "create-remote-spdk-target"
         SHORT = "crspdkt"
 
+    class CreateEbsTarget:
+        LONG = "create-ebs-target"
+        SHORT = "cebst"
+
     class Reconnect:
         LONG = "reconnect"
         SHORT = "rc"
@@ -76,6 +80,7 @@ class NodeCommands(Commands):
             Commands.Subcommands.Create,
             NodeCommands.CreateOpenFlexTarget,
             NodeCommands.CreateRemoteSpdkTarget,
+            NodeCommands.CreateEbsTarget,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
             Commands.Subcommands.Lost,
@@ -200,8 +205,21 @@ class NodeCommands(Commands):
             '--api-pw-env',
             help='Environment variable containing remote SPDK storage device API password'
         )
-
         p_create_remote_spdk_target.set_defaults(func=self.create_remote_spdk_target)
+
+        # ebs create
+        p_create_ebs_target = node_subp.add_parser(
+            NodeCommands.CreateEbsTarget.LONG,
+            aliases=[NodeCommands.CreateEbsTarget.SHORT],
+            description='Creates a virtual on controller EBS target node.'
+        )
+        p_create_ebs_target.add_argument(
+            'node_name',
+            help='Name of the new EBS target node',
+            type=str
+        )
+        p_create_ebs_target.add_argument('ebs_remote_name', help='EBS Remote name')
+        p_create_ebs_target.set_defaults(func=self.create_ebs_target)
 
         # modify node
         p_modify_node = node_subp.add_parser(
@@ -570,6 +588,13 @@ class NodeCommands(Commands):
             apiconsts.VAL_NODE_TYPE_REMOTE_SPDK,
             "127.0.0.1",
             property_dict=props
+        )
+        return self.handle_replies(args, replies)
+
+    def create_ebs_target(self, args):
+        replies = self.get_linstorapi().node_create_ebs(
+            args.node_name,
+            args.ebs_remote_name
         )
         return self.handle_replies(args, replies)
 

@@ -108,12 +108,17 @@ class ResourceCommands(Commands):
         p_new_res.add_argument(
             '--nvme-initiator',
             action="store_true",
-            help='Mark this resource as initiator'
+            help='Mark this resource as NVMe initiator'
         )
         p_new_res.add_argument(
             '--drbd-diskless',
             action="store_true",
-            help='Mark this resource as drbd diskless'
+            help='Mark this resource as DRBD diskless'
+        )
+        p_new_res.add_argument(
+            '--ebs-initiator',
+            action="store_true",
+            help='Mark this resource as EBS initiator'
         )
         p_new_res.add_argument(
             '--inactive',
@@ -507,6 +512,7 @@ class ResourceCommands(Commands):
                     args.layer_list,
                     args.drbd_diskless,
                     args.nvme_initiator,
+                    args.ebs_initiator,
                     not args.inactive
                 )
                 for node_name in args.node_name
