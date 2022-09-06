@@ -62,6 +62,14 @@ class ResourceConnectionCommands(Commands):
             choices=rescon_groubby,
             type=str.lower).completer = res_group_completer
         p_lresconn.add_argument(
+            '-s',
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
+        p_lresconn.add_argument(
             'resource_name',
             help="Resource name"
         ).completer = self.resource_completer
@@ -244,6 +252,7 @@ class ResourceConnectionCommands(Commands):
     def show(cls, args, lstmsg):
         tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         tbl.add_headers(ResourceConnectionCommands._headers)
+        show_props = cls._append_show_props_hdr(tbl, args.show_props)
 
         tbl.set_groupby(args.groupby if args.groupby else [ResourceConnectionCommands._headers[0].name])
 
@@ -252,12 +261,15 @@ class ResourceConnectionCommands(Commands):
         for rsc_con in [x for x in lstmsg.resource_connections if "DELETED" not in x.flags]:
             opts = [os.path.basename(x) + '=' + rsc_con.properties[x] for x in rsc_con.properties]
             props_str = ",".join(opts)
-            tbl.add_row([
+            row = [
                 rsc_con.node_a,
                 rsc_con.node_b,
                 props_str if len(props_str) < props_str_size else props_str[:props_str_size] + '...',
                 rsc_con.port if rsc_con.port else ''
-            ])
+            ]
+            for sprop in show_props:
+                row.append(rsc_con.properties.get(sprop, ''))
+            tbl.add_row(row)
         tbl.show()
 
     def list(self, args):

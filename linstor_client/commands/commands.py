@@ -499,6 +499,24 @@ class Commands(object):
         )
 
     @classmethod
+    def _append_show_props_hdr(cls, tbl, args_props):
+        """
+
+        :param linstor_client.Table tbl: list of table header to add to
+        :param list[str] args_props: show prop arguments
+        :return: list of plain property names for the object
+        :rtype: list[str]
+        """
+        show_props = []
+        for sprop in args_props:
+            show_prop_split = sprop.split("=")
+            prop = show_prop_split[0]
+            col_name = show_prop_split[1] if len(show_prop_split) > 1 else prop
+            show_props.append(prop)
+            tbl.add_header(linstor_client.TableHeader(col_name))
+        return show_props
+
+    @classmethod
     def _print_props(cls, prop_list_map, args):
         """Print properties in machine or human readable format"""
 

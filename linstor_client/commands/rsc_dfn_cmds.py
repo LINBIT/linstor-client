@@ -176,6 +176,14 @@ class ResourceDefinitionCommands(Commands):
                                help='Filter by list of resource definitions').completer = self.resource_dfn_completer
         p_lrscdfs.add_argument('-e', '--external-name', action="store_true", help='Show user specified name.')
         p_lrscdfs.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
+        p_lrscdfs.add_argument(
+            '-s',
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
         p_lrscdfs.set_defaults(func=self.list)
 
         # show properties
@@ -310,6 +318,8 @@ class ResourceDefinitionCommands(Commands):
         for hdr in rsc_dfn_hdr:
             tbl.add_header(hdr)
 
+        show_props = cls._append_show_props_hdr(tbl, args.show_props)
+
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
         for rsc_dfn in lstmsg.resource_definitions:
@@ -321,6 +331,8 @@ class ResourceDefinitionCommands(Commands):
             row.append(rsc_dfn.resource_group_name)
             row.append(tbl.color_cell("DELETING", Color.RED)
                        if FLAG_DELETE in rsc_dfn.flags else tbl.color_cell("ok", Color.DARKGREEN))
+            for sprop in show_props:
+                row.append(rsc_dfn.properties.get(sprop, ''))
             tbl.add_row(row)
         tbl.show()
 

@@ -212,6 +212,14 @@ class ResourceCommands(Commands):
             action="store_true",
             help='Only show faulty resource.')
         p_lreses.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
+        p_lreses.add_argument(
+            '-s',
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
         p_lreses.set_defaults(func=self.list)
 
         p_involved = res_subp.add_parser(
@@ -595,6 +603,8 @@ class ResourceCommands(Commands):
         for hdr in ResourceCommands._resource_headers:
             tbl.add_header(hdr)
 
+        show_props = self._append_show_props_hdr(tbl, args.show_props)
+
         tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
 
         for rsc in lstmsg.resources:
@@ -649,7 +659,7 @@ class ResourceCommands(Commands):
                 show_row = rsc_state_color is not None or not (conns_col == 'Ok' or conns_col == "")
 
             if show_row:
-                tbl.add_row([
+                row = [
                     rsc.name,
                     rsc.node_name,
                     rsc_dfn_port,
@@ -657,7 +667,10 @@ class ResourceCommands(Commands):
                     conns_col,
                     tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color),
                     str(rsc.create_datetime)[:19] if rsc.create_datetime else ""
-                ])
+                ]
+                for sprop in show_props:
+                    row.append(rsc.properties.get(sprop, ''))
+                tbl.add_row(row)
         tbl.show()
 
     def list(self, args):

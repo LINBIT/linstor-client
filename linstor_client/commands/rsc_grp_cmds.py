@@ -105,6 +105,14 @@ class ResourceGroupCommands(Commands):
         p_lrscgrps.add_argument('-r', '--resource-groups', nargs='+', type=str,
                                 help='Filter by list of resource groups').completer = self.resource_grp_completer
         p_lrscgrps.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
+        p_lrscgrps.add_argument(
+            '-s',
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
         p_lrscgrps.set_defaults(func=self.list)
         #  ------------ LIST END
 
@@ -262,6 +270,8 @@ class ResourceGroupCommands(Commands):
         for hdr in self._rsc_grp_headers:
             tbl.add_header(hdr)
 
+        show_props = self._append_show_props_hdr(tbl, args.show_props)
+
         rsc_grps = lstmsg  # type: ResourceGroupResponse
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
@@ -274,6 +284,8 @@ class ResourceGroupCommands(Commands):
                 ",".join([str(x.number) for x in vlm_grps]),
                 rsc_grp.description
             ]
+            for sprop in show_props:
+                row.append(rsc_grp.properties.get(sprop, ''))
             tbl.add_row(row)
         tbl.show()
 

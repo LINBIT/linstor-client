@@ -125,6 +125,14 @@ class VolumeDefinitionCommands(Commands):
         p_lvols.add_argument('-r', '--resource-definitions', nargs='+', type=str,
                              help='Filter by list of resource definitions').completer = self.resource_dfn_completer
         p_lvols.add_argument('-e', '--external-name', action="store_true", help='Show user specified name.')
+        p_lvols.add_argument(
+            '-s',
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
         p_lvols.set_defaults(func=self.list)
 
         # show properties
@@ -229,6 +237,8 @@ class VolumeDefinitionCommands(Commands):
         for hdr in vlm_dfn_hdrs:
             tbl.add_header(hdr)
 
+        show_props = cls._append_show_props_hdr(tbl, args.show_props)
+
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
         for rsc_dfn in lstmsg.resource_definitions:
             for vlmdfn in rsc_dfn.volume_definitions:
@@ -239,14 +249,17 @@ class VolumeDefinitionCommands(Commands):
                     state = tbl.color_cell("resizing", Color.DARKPINK)
 
                 drbd_data = vlmdfn.drbd_data
-                tbl.add_row([
+                row = [
                     rsc_dfn.name,
                     vlmdfn.number,
                     drbd_data.minor if drbd_data else "",
                     SizeCalc.approximate_size_string(vlmdfn.size),
                     "+" if FLAG_GROSS_SIZE in vlmdfn.flags else "",
                     state
-                ])
+                ]
+                for sprop in show_props:
+                    row.append(vlmdfn.properties.get(sprop, ''))
+                tbl.add_row(row)
         tbl.show()
 
     def list(self, args):

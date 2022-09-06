@@ -361,6 +361,13 @@ class StoragePoolCommands(Commands):
         p_lstorpool.add_argument('-n', '--nodes', nargs='+', type=str,
                                  help='Filter by list of nodes').completer = self.node_completer
         p_lstorpool.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
+        p_lstorpool.add_argument(
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
         p_lstorpool.set_defaults(func=self.list)
 
         # show properties
@@ -443,6 +450,8 @@ class StoragePoolCommands(Commands):
         for hdr in self._stor_pool_headers:
             tbl.add_header(hdr)
 
+        show_props = self._append_show_props_hdr(tbl, args.show_props)
+
         storage_pool_resp = lstmsg  # type: StoragePoolListResponse
 
         tbl.set_groupby(args.groupby if args.groupby else [self._stor_pool_headers[0].name])
@@ -464,7 +473,7 @@ class StoragePoolCommands(Commands):
                     errors.append(error)
 
             state_str, state_color = self.get_replies_state(storpool.reports)
-            tbl.add_row([
+            row = [
                 storpool.name,
                 storpool.node_name,
                 storpool.provider_kind,
@@ -474,7 +483,10 @@ class StoragePoolCommands(Commands):
                 storpool.supports_snapshots(),
                 tbl.color_cell(state_str, state_color),
                 storpool.free_space_mgr_name if ':' not in storpool.free_space_mgr_name else ''
-            ])
+            ]
+            for sprop in show_props:
+                row.append(storpool.properties.get(sprop, ''))
+            tbl.add_row(row)
         tbl.show()
         for err in errors:
             Output.handle_ret(

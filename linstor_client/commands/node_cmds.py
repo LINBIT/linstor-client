@@ -396,6 +396,14 @@ class NodeCommands(Commands):
                               help='Filter by list of nodes').completer = self.node_completer
         p_lnodes.add_argument('--show-aux-props', action="store_true", help='Show aux properties for nodes')
         p_lnodes.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
+        p_lnodes.add_argument(
+            '-s',
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
         p_lnodes.set_defaults(func=self.list)
 
         # list info
@@ -608,6 +616,8 @@ class NodeCommands(Commands):
         for hdr in node_hdr:
             tbl.add_header(hdr)
 
+        show_props = cls._append_show_props_hdr(tbl, args.show_props)
+
         conn_stat_dict = {
             apiconsts.ConnectionStatus.OFFLINE.name: ("OFFLINE", Color.RED),
             apiconsts.ConnectionStatus.CONNECTED.name: ("Connected", Color.YELLOW),
@@ -665,6 +675,8 @@ class NodeCommands(Commands):
                 state_text += " (Auto-eviction: {eviction})".format(eviction=eviction)
 
             row += [tbl.color_cell(state_text, conn_stat[1])]
+            for sprop in show_props:
+                row.append(node.properties.get(sprop, ''))
             tbl.add_row(row)
         tbl.show()
 

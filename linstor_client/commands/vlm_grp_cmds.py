@@ -82,6 +82,14 @@ class VolumeGroupCommands(Commands):
                                 type=str.lower).completer = vlm_grp_group_completer
         p_lvlmgrps.add_argument('-R', '--resources', nargs='+', type=str,
                                 help='Filter by list of resource groups').completer = self.resource_grp_completer
+        p_lvlmgrps.add_argument(
+            '-s',
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
         p_lvlmgrps.add_argument('name', help="Resource group name.")
         p_lvlmgrps.set_defaults(func=self.list)
         #  ------------ LIST END
@@ -159,10 +167,14 @@ class VolumeGroupCommands(Commands):
         for hdr in cls._vlm_grp_headers:
             tbl.add_header(hdr)
 
+        show_props = cls._append_show_props_hdr(tbl, args.show_props)
+
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
         for vlm_grp in vlm_grps.volume_groups:
             row = [str(vlm_grp.number), ", ".join(vlm_grp.flags)]
+            for sprop in show_props:
+                row.append(vlm_grp.properties.get(sprop, ''))
             tbl.add_row(row)
         tbl.show()
 
