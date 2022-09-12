@@ -51,6 +51,7 @@ from linstor_client.commands import (
     BackupCommands,
     RemoteCommands,
     FileCommands,
+    KeyValueStoreCommands,
     ScheduleCommands,
     Commands,
     DefaultState,
@@ -124,6 +125,7 @@ class LinStorCLI(object):
         self._remote_commands = RemoteCommands()
         self._file_commands = FileCommands()
         self._schedule_commands = ScheduleCommands()
+        self._key_value_store_commands = KeyValueStoreCommands()
 
         self._command_list = [
             self._controller_commands,
@@ -147,6 +149,7 @@ class LinStorCLI(object):
             self._file_commands,
             self._misc_commands,
             self._schedule_commands,
+            self._key_value_store_commands
         ]
 
         self._zsh_generator = None

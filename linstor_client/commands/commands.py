@@ -68,6 +68,7 @@ class Commands(object):
     REMOTE = "remote"
     FILE = "file"
     SCHEDULE = "schedule"
+    KEY_VALUE_STORE = "key-value-store"
 
     MainList = [
         CONTROLLER,
@@ -95,7 +96,8 @@ class Commands(object):
         BACKUP,
         REMOTE,
         FILE,
-        SCHEDULE
+        SCHEDULE,
+        KEY_VALUE_STORE
     ]
     Hidden = [
         DMMIGRATE,

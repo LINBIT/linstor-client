@@ -22,3 +22,4 @@ from .backup_cmds import BackupCommands
 from .remote_cmds import RemoteCommands
 from .file_cmds import FileCommands
 from .schedule import ScheduleCommands
+from .key_value_store import KeyValueStoreCommands
