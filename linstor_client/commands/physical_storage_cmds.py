@@ -58,6 +58,10 @@ class PhysicalStorageCommands(Commands):
         p_create.add_argument('--vdo-logical-size', help="VDO logical size.")
         p_create.add_argument('--vdo-slab-size', help="VDO slab size.")
         p_create.add_argument("--storage-pool", help="Create a Linstor storage pool with the given name")
+        p_create.add_argument('--sed',
+                              action="store_true",
+                              help="Setup self encrypting drive with Linstor. "
+                                   + "Needs SED/OPAL2 capable drive and sedutil installed and --storage-pool")
         p_create.set_defaults(func=self.create_device_pool)
 
         self.check_subcommands(phys_subp, subcmds)
@@ -113,6 +117,7 @@ class PhysicalStorageCommands(Commands):
             vdo_enable=args.vdo_enable,
             vdo_logical_size_kib=Commands.parse_size_str(args.vdo_logical_size, "KiB"),
             vdo_slab_size_kib=Commands.parse_size_str(args.vdo_slab_size, "KiB"),
-            storage_pool_name=args.storage_pool
+            storage_pool_name=args.storage_pool,
+            sed=args.sed,
         )
         return self.handle_replies(args, replies)
