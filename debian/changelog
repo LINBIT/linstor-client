@@ -1,3 +1,29 @@
+linstor-client (1.15.0-1) experimental; urgency=medium
+
+  [ Johanna Kucera ]
+  * RscGrp: add autoplace-options to spawn command
+
+  [ Johannes Thoma ]
+  * LINSTOR for Windows: Microsoft Storage Spaces support
+
+  [ Michael Troutman ]
+  * corrects some issues w/ the `vd create --help` msg
+
+  [ Rene Peinthor ]
+  * pep: fix flake8 errors
+  * list: add --show-props to all list cmds with properties
+  * physical-storage-create: sed support
+  * advise: Add too many replicas issue and also add filtering
+  * add Changelog.md
+
+  [ Christoph Böhmwalder ]
+  * support key-value-store api
+
+  [ Gabor Hernadi ]
+  * Ebs: Added commands
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 20 Sep 2022 12:38:02 +0000
+
 linstor-client (1.14.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
