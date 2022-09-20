@@ -1,6 +1,7 @@
 import collections
 import json
 import sys
+from enum import Enum
 
 import linstor.responses
 import linstor.sharedconsts as apiconsts
@@ -15,23 +16,130 @@ StateOfTheWorld = collections.namedtuple(
 )
 
 
+class _IssueType(Enum):
+    SINGLE_REPLICA = "single-replica"
+    POTENTIAL_SPLIT_BRAIN = "pot-split-brain"
+    NEEDLESS_DISKLESS_IN_USE = "diskless-in-use"
+    TOO_FEW_REPLICAS = "too-few-replicas"
+    TOO_MANY_REPLICAS = "too-many-replicas"
+    NO_TIEBREAKER = "no-tiebreaker"
+
+
 class _Issue(object):
-    WHAT_SINGLE_REPLICA = 'Node hosts only replica of resource, would become unavailable.'
-    WHAT_POTENTIAL_SPLIT_BRAIN = 'Node hosts one of 2 replicas with no tiebreaker, may lead to split-brain.'
-    WHAT_NEEDLESS_DISKLESS_IN_USE = 'Resource is diskless and in-use, but a matching storage pool exists.'
-    WHAT_TOO_FEW_REPLICAS_F = 'Resource expected to have {expected} replicas, got only {actual}.'
-    WHAT_NO_TIEBREAKER = 'Resource has 2 replicas but no tie-breaker, could lead to split brain.'
-
-    FIX_NEEDLESS_DISKLESS_IN_USE = 'linstor r rd --dflt {node} {rsc}'
-
     FIX_AUTOPLACE_TIEBREAKER = 'linstor rd ap --drbd-diskless --place-count 1 {rsc}'
-
     FIX_AUTOPLACE = 'linstor rd ap --place-count {count} {rsc}'
 
-    def __init__(self, resource, what, fix):
+    def __init__(self, issue_type, resource):
+        """
+
+        :param _IssueType issue_type:
+        :param str resource:
+        """
+        self.issue_type = issue_type
         self.resource = resource
-        self.what = what
-        self.fix = fix
+
+    @property
+    def what(self):
+        raise NotImplementedError()
+
+    @property
+    def fix(self):
+        raise NotImplementedError()
+
+    @property
+    def data(self):
+        return {
+            "resource": self.resource,
+            "what": self.what,
+            "fix": self.fix
+        }
+
+
+class _IssueSingleReplica(_Issue):
+    def __init__(self, resource):
+        super(_IssueSingleReplica, self).__init__(_IssueType.SINGLE_REPLICA, resource)
+
+    @property
+    def what(self):
+        return 'Node hosts only replica of resource, would become unavailable.'
+
+    @property
+    def fix(self):
+        return self.FIX_AUTOPLACE.format(rsc=self.resource, count=2)
+
+
+class _IssuePotentialSplitBrain(_Issue):
+    def __init__(self, resource):
+        super(_IssuePotentialSplitBrain, self).__init__(_IssueType.POTENTIAL_SPLIT_BRAIN, resource)
+
+    @property
+    def what(self):
+        return 'Node hosts one of 2 replicas with no tiebreaker, may lead to split-brain.'
+
+    @property
+    def fix(self):
+        return self.FIX_AUTOPLACE_TIEBREAKER.format(rsc=self.resource)
+
+
+class _IssueNeedlessDisklessInUse(_Issue):
+    def __init__(self, resource, node):
+        super(_IssueNeedlessDisklessInUse, self).__init__(_IssueType.NEEDLESS_DISKLESS_IN_USE, resource)
+        self.node = node
+
+    @property
+    def what(self):
+        return 'Resource is diskless and in-use, but a matching storage pool exists.'
+
+    @property
+    def fix(self):
+        return 'linstor r td --dflt {node} {rsc}'.format(rsc=self.resource, node=self.node)
+
+
+class _IssueTooFewReplicas(_Issue):
+    def __init__(self, resource, expected, actual):
+        super(_IssueTooFewReplicas, self).__init__(_IssueType.TOO_FEW_REPLICAS, resource)
+        self.expected = expected
+        self.actual = actual
+
+    @property
+    def what(self):
+        return 'Resource expected to have {expected} replicas, got only {actual}.'.format(
+            expected=self.expected, actual=self.actual)
+
+    @property
+    def fix(self):
+        return self.FIX_AUTOPLACE.format(rsc=self.resource, count=self.expected)
+
+
+class _IssueTooManyReplicas(_Issue):
+    def __init__(self, resource, expected, actual, removable_nodes):
+        super(_IssueTooManyReplicas, self).__init__(_IssueType.TOO_MANY_REPLICAS, resource)
+        self.expected = expected
+        self.actual = actual
+        self.removable_nodes = removable_nodes
+
+    @property
+    def what(self):
+        return 'Resource should only have {expected} replicas, but has {actual}.'.format(
+            expected=self.expected, actual=self.actual)
+
+    @property
+    def fix(self):
+        return 'linstor r d {nodes} {rsc}'.format(
+            rsc=self.resource, nodes=" ".join(self.removable_nodes[:self.actual - self.expected]))
+
+
+class _IssueNoTiebreaker(_Issue):
+    def __init__(self, resource):
+        super(_IssueNoTiebreaker, self).__init__(_IssueType.NO_TIEBREAKER, resource)
+
+    @property
+    def what(self):
+        return 'Resource has 2 replicas but no tie-breaker, could lead to split brain.'
+
+    @property
+    def fix(self):
+        return self.FIX_AUTOPLACE_TIEBREAKER.format(rsc=self.resource)
 
 
 class AdviceCommands(Commands):
@@ -72,6 +180,8 @@ class AdviceCommands(Commands):
             aliases=[Commands.Subcommands.Resource.SHORT],
             description='Points out potential issues with the currently deployed resources.')
         p_resource.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_resource.add_argument('-f', '--filter', choices=[x.value for x in _IssueType], nargs='+', default=[],
+                                help='Only show given issues types')
         p_resource.add_argument('-r', '--resources', nargs='+', type=str,
                                 help='Filter by list of resources').completer = self.resource_completer
         p_resource.set_defaults(func=self.resource)
@@ -82,6 +192,8 @@ class AdviceCommands(Commands):
             description='Points out potential issues should a node go down for maintenance.'
         )
         p_maintenace.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_maintenace.add_argument('-f', '--filter', choices=[x.value for x in _IssueType], nargs='+', default=[],
+                                  help='Only show given issues types')
         p_maintenace.add_argument('-r', '--resources', nargs='+', type=str,
                                   help='Filter by list of resources').completer = self.resource_completer
         p_maintenace.add_argument('node', type=str, help='The node to check').completer = self.node_completer
@@ -104,13 +216,16 @@ class AdviceCommands(Commands):
             found_issues.extend(_check_needless_diskless(r_def, r_deployed, r_states, rg, state.storage_pools))
             found_issues.extend(_check_expected_replicas(r_def, r_deployed, r_states, rg, state.storage_pools))
 
+        filtered_issues = found_issues if not args.filter else [x for x in found_issues
+                                                                if x.issue_type.value in args.filter]
+
         if args.machine_readable:
-            json.dump([issue.__dict__ for issue in found_issues], sys.stdout)
+            json.dump([issue.data for issue in filtered_issues], sys.stdout)
         else:
             tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_headers(AdviceCommands._issue_headers)
 
-            for issue in found_issues:
+            for issue in filtered_issues:
                 tbl.add_row([issue.resource, issue.what, issue.fix])
             tbl.show()
 
@@ -128,11 +243,7 @@ class AdviceCommands(Commands):
             diskfull_nodes = [node for (node, name), rsc in state.resources.items()
                               if name == rsc_name and apiconsts.FLAG_DISKLESS not in rsc.flags]
             if diskfull_nodes == [args.node]:
-                found_issues.append(_Issue(
-                    resource=rsc_name,
-                    what=_Issue.WHAT_SINGLE_REPLICA,
-                    fix=_Issue.FIX_AUTOPLACE.format(rsc=rsc_name, count=2))
-                )
+                found_issues.append(_IssueSingleReplica(resource=rsc_name))
                 continue
 
             all_deployed = [node for (node, name), rsc in state.resources.items()
@@ -141,19 +252,18 @@ class AdviceCommands(Commands):
             if len(all_deployed) < 3:
                 # TODO: include quorum information: if explicit quorum is set, this advise is likely wrong
                 # Also, in case the node to check is diskless, we may need to advise to add another diskfull replica.
-                found_issues.append(_Issue(
-                    resource=rsc_name,
-                    what=_Issue.WHAT_POTENTIAL_SPLIT_BRAIN,
-                    fix=_Issue.FIX_AUTOPLACE_TIEBREAKER.format(rsc=rsc_name),
-                ))
+                found_issues.append(_IssuePotentialSplitBrain(resource=rsc_name))
+
+        filtered_issues = found_issues if not args.filter else [x for x in found_issues
+                                                                if x.issue_type.value in args.filter]
 
         if args.machine_readable:
-            json.dump([issue.__dict__ for issue in found_issues], sys.stdout)
+            json.dump([issue.data for issue in filtered_issues], sys.stdout)
         else:
             tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
             tbl.add_headers(AdviceCommands._issue_headers)
 
-            for issue in found_issues:
+            for issue in filtered_issues:
                 tbl.add_row([issue.resource, issue.what, issue.fix])
             tbl.show()
 
@@ -203,11 +313,7 @@ def _check_needless_diskless(r_def, r_deployed, r_states, rg, s_pools):
         allowed_pools = rg.select_filter.storage_pool_list or available_disk_pools
 
         if set(allowed_pools) & set(available_disk_pools):
-            return [_Issue(
-                resource=r_def.name,
-                what=_Issue.WHAT_NEEDLESS_DISKLESS_IN_USE,
-                fix=_Issue.FIX_NEEDLESS_DISKLESS_IN_USE.format(rsc=r_def.name, node=node),
-            )]
+            return [_IssueNeedlessDisklessInUse(resource=r_def.name, node=node)]
 
     return []
 
@@ -225,18 +331,19 @@ def _check_expected_replicas(r_def, r_deployed, r_states, rg, s_pools):
     """
     expected = rg.select_filter.place_count or 2
 
-    if len(r_deployed) < expected:
-        return [_Issue(
-            resource=r_def.name,
-            what=_Issue.WHAT_TOO_FEW_REPLICAS_F.format(expected=expected, actual=len(r_deployed)),
-            fix=_Issue.FIX_AUTOPLACE.format(rsc=r_def.name, count=expected)
-        )]
+    r_deployed_len = len(r_deployed)
+    r_deployed_diskful = len([x for x in r_deployed if not r_deployed[x].flags])
+    if r_deployed_len < expected:
+        return [_IssueTooFewReplicas(resource=r_def.name, expected=expected, actual=r_deployed_len)]
 
-    if expected == 2 and len(r_deployed) == 2 and len(set(node for node, _ in s_pools.keys())) > 2:
+    if r_deployed_diskful > expected:
+        remove_from = [x for x in r_states
+                       if not r_states[x].in_use
+                       and all([y.disk_state == "UpToDate" for y in r_states[x].volume_states])]
+        return [_IssueTooManyReplicas(
+            resource=r_def.name, expected=expected, actual=r_deployed_diskful, removable_nodes=remove_from)]
+
+    if expected == 2 and r_deployed_len == 2 and len(set(node for node, _ in s_pools.keys())) > 2:
         # TODO: should learn about ways the automatic tie breaker can be disabled
-        return [_Issue(
-            resource=r_def.name,
-            what=_Issue.WHAT_NO_TIEBREAKER,
-            fix=_Issue.FIX_AUTOPLACE_TIEBREAKER.format(rsc=r_def.name)
-        )]
+        return [_IssueNoTiebreaker(resource=r_def.name)]
     return []
