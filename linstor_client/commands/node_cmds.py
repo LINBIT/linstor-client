@@ -913,7 +913,7 @@ class NodeCommands(Commands):
             # fill table for supported storage providers
             stor_provs = [x.replace("_", "") for x in node.storage_providers]
             for stor_prov_hdr in stor_prov_hdrs:
-                stor_prov_hdr_name = stor_prov_hdr.name.upper()
+                stor_prov_hdr_name = stor_prov_hdr.name.replace("_", "").upper()
                 if "/" in stor_prov_hdr_name:
                     stor_prov_hdr_name = stor_prov_hdr_name.replace("/", "").upper()
                 if stor_prov_hdr_name in stor_provs:
