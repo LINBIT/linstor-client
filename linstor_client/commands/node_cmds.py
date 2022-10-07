@@ -37,7 +37,8 @@ class NodeCommands(Commands):
             linstor_client.TableHeader("SPDK"),
             linstor_client.TableHeader("EXOS"),
             linstor_client.TableHeader("Remote_SPDK"),
-            linstor_client.TableHeader("Storage_Spaces")
+            linstor_client.TableHeader("Storage_Spaces"),
+            linstor_client.TableHeader("Storage_Spaces/Thin")
         ]
     ]
 
