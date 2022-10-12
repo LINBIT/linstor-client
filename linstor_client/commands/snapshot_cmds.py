@@ -323,7 +323,20 @@ class SnapshotCommands(Commands):
                 elif in_backup_restore:
                     state_cell = tbl.color_cell("Restoring", Color.YELLOW)
                 else:
-                    state_cell = tbl.color_cell("Successful", Color.DARKGREEN)
+                    sub_state = ""
+                    # take the first non empty and non "completed" state
+                    for snapshot in snapshot_dfn.snapshots:
+                        for snapshot_volume in snapshot.snapshot_volumes:
+                            if snapshot_volume.state and snapshot_volume.state != "completed":
+                                sub_state = snapshot_volume.state
+                                break
+                        if sub_state:
+                            break
+
+                    state_text = "Successful"
+                    if sub_state:
+                        state_text += " (" + sub_state + ")"
+                    state_cell = tbl.color_cell(state_text, Color.DARKGREEN)
             else:
                 state_cell = tbl.color_cell("Incomplete", Color.DARKBLUE)
 
