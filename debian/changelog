@@ -1,3 +1,14 @@
+linstor-client (1.15.1-1) experimental; urgency=medium
+
+  [ Gabor Hernadi ]
+  * Snap,EBS: Added State message
+
+  [ Johannes Thoma ]
+  * node info: also ignore underliners in table headers
+  * Added column for storage spaces thin for node info
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 18 Oct 2022 07:23:58 +0000
+
 linstor-client (1.15.0-1) experimental; urgency=medium
 
   [ Johanna Kucera ]

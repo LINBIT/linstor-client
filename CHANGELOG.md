@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.1] - 2022-10-18
+
+### Added
+
+- Snap,EBS: Added State message
+- Added column for storage spaces thin for node info
+
+### Fixed
+
+- node info: also ignore underliners in table headers
+
 ## [1.15.0] - 2022-09-20
 
 ### Added
