@@ -48,6 +48,7 @@ class Commands(object):
     INTERACTIVE = 'interactive'
     LIST_COMMANDS = 'list-commands'
     NODE = 'node'
+    NODE_CONN = 'node-connection'
     RESOURCE = 'resource'
     VOLUME = 'volume'
     RESOURCE_CONN = 'resource-connection'
@@ -77,6 +78,7 @@ class Commands(object):
         INTERACTIVE,
         LIST_COMMANDS,
         NODE,
+        NODE_CONN,
         RESOURCE_GRP,
         VOLUME_GRP,
         RESOURCE,

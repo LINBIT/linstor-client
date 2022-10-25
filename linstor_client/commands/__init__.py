@@ -2,6 +2,7 @@ from .commands import DefaultState, Commands, MiscCommands, ArgumentError
 from .drbd_setup_cmds import DrbdOptions
 from .controller_cmds import ControllerCommands
 from .node_cmds import NodeCommands
+from .node_conn_cmds import NodeConnectionCommands
 from .rsc_dfn_cmds import ResourceDefinitionCommands
 from .rsc_grp_cmds import ResourceGroupCommands
 from .vlm_grp_cmds import VolumeGroupCommands

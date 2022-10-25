@@ -39,6 +39,7 @@ from linstor_client.commands import (
     ResourceConnectionCommands,
     VolumeCommands,
     NodeCommands,
+    NodeConnectionCommands,
     SnapshotCommands,
     DrbdProxyCommands,
     MigrateCommands,
@@ -106,6 +107,7 @@ class LinStorCLI(object):
 
         self._controller_commands = ControllerCommands()
         self._node_commands = NodeCommands()
+        self._node_conn_commands = NodeConnectionCommands()
         self._storage_pool_commands = StoragePoolCommands()
         self._resource_dfn_commands = ResourceDefinitionCommands()
         self._resource_grp_commands = ResourceGroupCommands()
@@ -130,6 +132,7 @@ class LinStorCLI(object):
         self._command_list = [
             self._controller_commands,
             self._node_commands,
+            self._node_conn_commands,
             self._resource_dfn_commands,
             self._resource_grp_commands,
             self._volume_grp_commands,
