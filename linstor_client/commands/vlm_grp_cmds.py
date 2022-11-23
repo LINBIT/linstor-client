@@ -43,7 +43,7 @@ class VolumeGroupCommands(Commands):
         p_new_vlm_grp = vlm_grp_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Defines a Linstor volume group for use with linstor.')
+            description='Defines a LINSTOR volume group for use with LINSTOR.')
         p_new_vlm_grp.add_argument('name',
                                    type=str,
                                    help='Name of the resource group.')
@@ -56,7 +56,7 @@ class VolumeGroupCommands(Commands):
         p_rm_vlm_grp = vlm_grp_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description=" Removes a volume group from the linstor cluster.")
+            description=" Removes a volume group from the LINSTOR cluster.")
         p_rm_vlm_grp.add_argument(
             'name',
             help='Name of the resource group').completer = self.resource_grp_completer
@@ -75,7 +75,7 @@ class VolumeGroupCommands(Commands):
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all volume groups for a resource group known to '
-            'linstor. By default, the list is printed as a human readable table.')
+            'LINSTOR. By default, the list is printed as a human readable table.')
         p_lvlmgrps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvlmgrps.add_argument('-g', '--groupby', nargs='+',
                                 choices=vlm_grp_groupby,

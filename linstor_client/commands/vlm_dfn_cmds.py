@@ -25,8 +25,8 @@ class VolumeDefinitionCommands(Commands):
         'Valid units: ' + SizeCalc.UNITS_LIST_STR + '. ' \
         'The default unit is GiB (2 ^ 30 bytes). ' \
         'The unit can be specified with a postfix. ' \
-        'Linstor\'s internal granularity for the capacity of volumes is one ' \
-        'kibibyte (2 ^ 10 bytes). The actual size used by linstor ' \
+        'LINSTOR\'s internal granularity for the capacity of volumes is one ' \
+        'kibibyte (2 ^ 10 bytes). The actual size used by LINSTOR ' \
         'is the smallest natural number of kibibytes that is large enough to ' \
         'accommodate a volume of the requested size in the specified size unit.'
 
@@ -89,10 +89,10 @@ class VolumeDefinitionCommands(Commands):
         p_rm_vol = vol_def_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description='Removes a volume definition from the linstor cluster, and removes '
+            description='Removes a volume definition from the LINSTOR cluster, and removes '
             'the volume definition from the resource definition. The volume is '
             'undeployed from all nodes and the volume entry is marked for removal '
-            "from the resource definition in linstor's data tables. After all "
+            "from the resource definition in LINSTOR's data tables. After all "
             'nodes have undeployed the volume, the volume entry is removed from '
             'the resource definition.')
         p_rm_vol.add_argument(
@@ -116,7 +116,7 @@ class VolumeDefinitionCommands(Commands):
         p_lvols = vol_def_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description=' Prints a list of all volume definitions known to linstor. '
+            description=' Prints a list of all volume definitions known to LINSTOR. '
             'By default, the list is printed as a human readable table.')
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvols.add_argument('-g', '--groupby', nargs='+',

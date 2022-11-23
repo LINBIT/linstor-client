@@ -50,7 +50,7 @@ class ResourceGroupCommands(Commands):
         p_new_res_grp = res_grp_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Defines a Linstor resource group for use with linstor.')
+            description='Defines a LINSTOR resource group for use with LINSTOR.')
         p_new_res_grp.add_argument(
             '-d', '--description',
             help="Description for the resource group."
@@ -66,7 +66,7 @@ class ResourceGroupCommands(Commands):
         p_mod_res_grp = res_grp_subp.add_parser(
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
-            description='Modifies a Linstor resource group')
+            description='Modifies a LINSTOR resource group')
         p_mod_res_grp.add_argument(
             '-d', '--description',
             help="Description for the resource group."
@@ -82,7 +82,7 @@ class ResourceGroupCommands(Commands):
         p_rm_res_grp = res_grp_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description=" Removes a resource group from the linstor cluster.")
+            description=" Removes a resource group from the LINSTOR cluster.")
         p_rm_res_grp.add_argument(
             'name',
             help='Name of the resource group to delete').completer = self.resource_grp_completer
@@ -97,7 +97,7 @@ class ResourceGroupCommands(Commands):
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all resource groups known to '
-            'linstor. By default, the list is printed as a human readable table.')
+            'LINSTOR. By default, the list is printed as a human readable table.')
         p_lrscgrps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscgrps.add_argument('-g', '--groupby', nargs='+',
                                 choices=rsc_grp_groupby,

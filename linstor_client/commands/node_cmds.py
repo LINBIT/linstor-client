@@ -120,7 +120,7 @@ class NodeCommands(Commands):
         p_new_node = node_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Creates a node entry for a node that participates in the linstor cluster.'
+            description='Creates a node entry for a node that participates in the LINSTOR cluster.'
         )
         p_new_node.add_argument('-p', '--port', type=rangecheck(1, 65535),
                                 help='default: Satellite %s for %s; Controller %s for %s; %s for %s' % (
@@ -258,13 +258,13 @@ class NodeCommands(Commands):
         p_rm_node = node_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description='Removes a node from the linstor cluster. '
-            'All linstor resources that are still deployed on the specified '
+            description='Removes a node from the LINSTOR cluster. '
+            'All LINSTOR resources that are still deployed on the specified '
             'node are marked for undeployment, and the node entry is marked for '
-            "removal from linstor's data tables. The specified node is "
+            "removal from LINSTOR's data tables. The specified node is "
             'expected to undeploy all resources. As soon as all resources have been '
             'undeployed from the node, the node entry is removed from '
-            "linstor's data tables.")
+            "LINSTOR's data tables.")
         p_rm_node.add_argument(
             '--async',
             action='store_true',
@@ -278,8 +278,8 @@ class NodeCommands(Commands):
         p_lost_node = node_subp.add_parser(
             Commands.Subcommands.Lost.LONG,
             aliases=[Commands.Subcommands.Lost.SHORT],
-            description='Removes an unrecoverable node from the linstor cluster. '
-            'All linstor resources attached to this node will be deleted from the database.'
+            description='Removes an unrecoverable node from the LINSTOR cluster. '
+            'All LINSTOR resources attached to this node will be deleted from the database.'
         )
         p_lost_node.add_argument(
             '--async',
@@ -406,7 +406,7 @@ class NodeCommands(Commands):
         p_lnodes = node_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of all cluster nodes known to linstor. '
+            description='Prints a list of all cluster nodes known to LINSTOR. '
             'By default, the list is printed as a human readable table.')
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lnodes.add_argument('-g', '--groupby', nargs='+', type=str.lower,
@@ -429,7 +429,7 @@ class NodeCommands(Commands):
         p_info_node = node_subp.add_parser(
             Commands.Subcommands.Info.LONG,
             aliases=[Commands.Subcommands.Info.SHORT],
-            description='Prints detailed info for all cluster nodes known to linstor. '
+            description='Prints detailed info for all cluster nodes known to LINSTOR. '
                         'By default, the list is printed as a human readable table.'
         )
         p_info_node.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')

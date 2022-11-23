@@ -53,7 +53,7 @@ class ResourceDefinitionCommands(Commands):
         p_new_res_dfn = res_def_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Defines a Linstor resource definition for use with linstor.')
+            description='Defines a LINSTOR resource definition for use with LINSTOR.')
         p_new_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_new_res_dfn.add_argument('-e', '--external-name', type=str, help='User specified name.')
         # p_new_res_dfn.add_argument('-s', '--secret', type=str)
@@ -99,7 +99,7 @@ class ResourceDefinitionCommands(Commands):
         p_mod_res_dfn = res_def_subp.add_parser(
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
-            description='Modifies a Linstor resource definition')
+            description='Modifies a LINSTOR resource definition')
         p_mod_res_dfn.add_argument('--peer-slots', type=rangecheck(1, 31), help='(DRBD) peer slots for new resources')
         p_mod_res_dfn.add_argument(
             '--resource-group',
@@ -114,10 +114,10 @@ class ResourceDefinitionCommands(Commands):
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
             description=" Removes a resource definition "
-            "from the linstor cluster. The resource is undeployed from all nodes "
-            "and the resource entry is marked for removal from linstor's data "
+            "from the LINSTOR cluster. The resource is undeployed from all nodes "
+            "and the resource entry is marked for removal from LINSTOR's data "
             "tables. After all nodes have undeployed the resource, the resource "
-            "entry is removed from linstor's data tables.")
+            "entry is removed from LINSTOR's data tables.")
         p_rm_res_dfn.add_argument(
             '--async',
             action='store_true',
@@ -167,7 +167,7 @@ class ResourceDefinitionCommands(Commands):
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all resource definitions known to '
-            'linstor. By default, the list is printed as a human readable table.')
+            'LINSTOR. By default, the list is printed as a human readable table.')
         p_lrscdfs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lrscdfs.add_argument('-g', '--groupby', nargs='+',
                                choices=rsc_dfn_groupby,
