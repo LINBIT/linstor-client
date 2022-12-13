@@ -1,3 +1,13 @@
+linstor-client (1.16.0-1) experimental; urgency=medium
+
+  [ Gabor Hernadi ]
+  * Add node-connection
+
+  [ Michael Troutman ]
+  * corrects Linstor and linstor in user-facing msgs
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 13 Dec 2022 12:32:49 +0000
+
 linstor-client (1.15.1-1) experimental; urgency=medium
 
   [ Gabor Hernadi ]

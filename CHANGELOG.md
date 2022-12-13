@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.16.0] - 2022-12-13
+
+### Added
+
+- Added node connection commands
+
 ## [1.15.1] - 2022-10-18
 
 ### Added
