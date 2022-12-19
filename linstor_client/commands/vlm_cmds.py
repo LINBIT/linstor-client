@@ -5,6 +5,7 @@ import linstor_client.argparse.argparse as argparse
 
 
 from linstor import SizeCalc
+# flake8: noqa
 from linstor.responses import Resource
 from linstor_client import Table
 from linstor_client.commands import Commands

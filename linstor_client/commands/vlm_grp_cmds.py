@@ -1,7 +1,8 @@
 import linstor_client.argparse.argparse as argparse
 
-import linstor
 import linstor_client
+# flake8: noqa
+from linstor.responses import VolumeGroupResponse
 from linstor_client.commands import Commands, DrbdOptions
 
 
@@ -161,7 +162,7 @@ class VolumeGroupCommands(Commands):
 
     @classmethod
     def show(cls, args, lstmsg):
-        vlm_grps = lstmsg  # type: linstor.responses.VolumeGroupResponse
+        vlm_grps = lstmsg  # type: VolumeGroupResponse
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
 
         for hdr in cls._vlm_grp_headers:

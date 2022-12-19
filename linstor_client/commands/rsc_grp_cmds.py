@@ -2,6 +2,7 @@ import linstor_client.argparse.argparse as argparse
 
 import linstor
 import linstor_client
+# flake8: noqa
 from linstor.responses import ResourceGroupResponse
 from linstor_client.commands import Commands, DrbdOptions
 

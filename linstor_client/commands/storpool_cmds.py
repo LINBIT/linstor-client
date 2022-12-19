@@ -3,6 +3,7 @@ import linstor_client
 import linstor_client.argparse.argparse as argparse
 import linstor.sharedconsts as apiconsts
 from linstor import SizeCalc
+# flake8: noqa
 from linstor.responses import StoragePoolListResponse
 from linstor_client.commands import ArgumentError, Commands
 from linstor_client.utils import Output
