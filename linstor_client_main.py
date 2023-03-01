@@ -301,7 +301,13 @@ class LinStorCLI(object):
     def parse_and_execute(self, pargs, is_interactive=False):
         rc = ExitCode.OK
         try:
-            args = self.parse(pargs)
+            try:
+                args = self.parse(pargs)
+            except IOError as ex:
+                import errno
+                if ex.errno == errno.EPIPE:
+                    raise SystemExit(1)
+                raise
 
             local_only_cmds = [
                 self.cmd_list,
