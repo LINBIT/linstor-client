@@ -274,6 +274,13 @@ class ResourceCommands(Commands):
             action="store_true",
             help='Show all resources.'
         )
+        p_lvlms.add_argument(
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
         p_lvlms.set_defaults(func=self.list_volumes)
 
         # show properties

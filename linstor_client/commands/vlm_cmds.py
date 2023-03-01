@@ -62,6 +62,13 @@ class VolumeCommands(Commands):
             action="store_true",
             help='Show all resources.'
         )
+        p_lvlms.add_argument(
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
         p_lvlms.set_defaults(func=self.list_volumes)
 
         # show properties
@@ -166,6 +173,8 @@ class VolumeCommands(Commands):
         tbl.add_column("InUse", color=Output.color(Color.DARKGREEN, args.no_color))
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
+        show_props = cls._append_show_props_hdr(tbl, args.show_props)
+
         rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
 
         reports = []
@@ -198,7 +207,7 @@ class VolumeCommands(Commands):
                 for x in vlm.reports:
                     reports.append(x)
                 vlm_drbd_data = vlm.drbd_data
-                tbl.add_row([
+                row = [
                     rsc.node_name,
                     rsc.name,
                     vlm.storage_pool_name,
@@ -208,7 +217,10 @@ class VolumeCommands(Commands):
                     SizeCalc.approximate_size_string(vlm.allocated_size) if vlm.allocated_size else "",
                     rsc_usage,
                     state
-                ])
+                ]
+                for sprop in show_props:
+                    row.append(vlm.properties.get(sprop, ''))
+                tbl.add_row(row)
 
         tbl.show()
         for x in reports:
