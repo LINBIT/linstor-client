@@ -233,7 +233,8 @@ class ResourceDefinitionCommands(Commands):
             external_name=args.external_name
             if not isinstance(args.external_name, bytes) else args.external_name.decode('utf-8'),  # py2-3
             layer_list=args.layer_list,
-            resource_group=args.resource_group
+            resource_group=args.resource_group,
+            peer_slots=args.peer_slots
         )
         return self.handle_replies(args, replies)
 
