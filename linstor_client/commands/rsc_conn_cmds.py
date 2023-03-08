@@ -30,7 +30,6 @@ class ResourceConnectionCommands(Commands):
             Commands.Subcommands.List,
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
-            Commands.Subcommands.DrbdOptions,
             Commands.Subcommands.DrbdPeerDeviceOptions,
             ResourceConnectionCommands.Path
         ]
@@ -114,10 +113,8 @@ class ResourceConnectionCommands(Commands):
 
         # drbd peer device options
         p_drbd_peer_opts = subp.add_parser(
-            Commands.Subcommands.DrbdOptions.LONG,
+            Commands.Subcommands.DrbdPeerDeviceOptions.LONG,
             aliases=[
-                Commands.Subcommands.DrbdOptions.SHORT,
-                Commands.Subcommands.DrbdPeerDeviceOptions.LONG,
                 Commands.Subcommands.DrbdPeerDeviceOptions.SHORT
             ],
             description=DrbdOptions.description("peer-device")
