@@ -18,12 +18,17 @@ class SnapshotCommands(Commands):
         linstor_client.TableHeader("Status", Color.DARKGREEN, alignment_text=linstor_client.TableHeader.ALIGN_RIGHT)
     ]
 
+    class CreateMulti(object):
+        LONG = "create-multiple"
+        SHORT = "cm"
+
     def __init__(self):
         super(SnapshotCommands, self).__init__()
 
     def setup_commands(self, parser):
         subcmds = [
             Commands.Subcommands.Create,
+            SnapshotCommands.CreateMulti,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
             Commands.Subcommands.Rollback,
@@ -61,7 +66,7 @@ class SnapshotCommands(Commands):
             nargs='*',
             help='Names of the nodes where the snapshot should be created. '
                  'If none are given, the snapshot will be taken on all nodes '
-                 'where the given resources is present.'
+                 'where the given resource is present.'
         ).completer = self.node_completer
         p_new_snapshot.add_argument(
             'resource_definition_name',
@@ -72,6 +77,31 @@ class SnapshotCommands(Commands):
             type=str,
             help='Name of the snapshot local to the resource definition')
         p_new_snapshot.set_defaults(func=self.create)
+
+        # new multisnapshot
+        p_new_multi_snapshot = snapshot_subp.add_parser(
+            SnapshotCommands.CreateMulti.LONG,
+            aliases=[SnapshotCommands.CreateMulti.SHORT],
+            description='Creates snapshots of multiple resources.')
+        p_new_multi_snapshot.add_argument(
+            '--node_names', '-n',
+            type=str,
+            nargs='*',
+            help='Names of the nodes where the snapshots should be created. '
+                 'If none are given, the snapshot will be taken on all nodes '
+                 'where the given resources are present.'
+        ).completer = self.node_completer
+        p_new_multi_snapshot.add_argument(
+            '--resource_names', '-r',
+            type=str,
+            required=True,
+            nargs='+',
+            help='Name of the resource definitions').completer = self.resource_dfn_completer
+        p_new_multi_snapshot.add_argument(
+            'snapshot_name',
+            type=str,
+            help='Name of the snapshot local to the resource definition')
+        p_new_multi_snapshot.set_defaults(func=self.create_multi)
 
         # delete snapshot
         p_delete_snapshot = snapshot_subp.add_parser(
@@ -275,6 +305,11 @@ class SnapshotCommands(Commands):
         async_flag = vars(args)["async"]
         replies = self._linstor.snapshot_create(
             args.node_name, args.resource_definition_name, args.snapshot_name, async_flag)
+        return self.handle_replies(args, replies)
+
+    def create_multi(self, args):
+        replies = self._linstor.snapshot_create_multi(
+            args.node_names, args.resource_names, args.snapshot_name)
         return self.handle_replies(args, replies)
 
     def restore_volume_definition(self, args):
