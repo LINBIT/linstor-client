@@ -1,3 +1,17 @@
+linstor-client (1.17.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * flake8: fix/ignore errors
+  * vlm-list: add --show-props option
+  * improve broken pipe error handling
+  * add rg query-size-info command
+  * changelog.md: update
+
+  [ Gabor Hernadi ]
+  * NodeCon,RscCon: Remove DrbdOptions subcommand
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 14 Mar 2023 12:54:31 +0000
+
 linstor-client (1.16.0-1) experimental; urgency=medium
 
   [ Gabor Hernadi ]
