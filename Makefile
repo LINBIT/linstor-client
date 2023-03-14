@@ -11,10 +11,7 @@ ARCH ?= amd64
 ifneq ($(strip $(ARCH)),)
 DOCKERREGISTRY := $(DOCKERREGISTRY)/$(ARCH)
 endif
-DOCKERREGISTRY_QUAY = quay.io
 DOCKERREGPATH = $(DOCKERREGISTRY)/linstor-client
-DOCKERREGPATH_QUAY = $(DOCKERREGISTRY_QUAY)/linbit/linstor-client
-DOCKERREGPATH_DOCKER = linbit/linstor-client
 DOCKER_TAG ?= latest
 NO_DOC ?=
 
@@ -61,17 +58,11 @@ dockerimage:
 endif
 	docker build -t $(DOCKERREGPATH):$(DOCKER_TAG) $(EXTRA_DOCKER_BUILDARGS) .
 	docker tag $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH):latest
-	docker tag $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH_QUAY):$(DOCKER_TAG)
-	docker tag $(DOCKERREGPATH_QUAY):$(DOCKER_TAG) $(DOCKERREGPATH_QUAY):latest
-	docker tag $(DOCKERREGPATH):$(DOCKER_TAG) $(DOCKERREGPATH_DOCKER):$(DOCKER_TAG)
-	docker tag $(DOCKERREGPATH_DOCKER):$(DOCKER_TAG) $(DOCKERREGPATH_DOCKER):latest
 	@echo && echo "Did you run distclean?"
 
 .PHONY: dockerpath
 dockerpath:
-	@echo $(DOCKERREGPATH):latest $(DOCKERREGPATH):$(DOCKER_TAG) \
-		$(DOCKERREGPATH_QUAY):latest $(DOCKERREGPATH_QUAY):$(DOCKER_TAG) \
-		$(DOCKERREGPATH_DOCKER):latest $(DOCKERREGPATH_DOCKER):$(DOCKER_TAG)
+	@echo $(DOCKERREGPATH):latest $(DOCKERREGPATH):$(DOCKER_TAG)
 
 # no gensrc here, that is in debian/rules
 deb: up2date
