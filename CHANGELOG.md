@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added rg query-size-info command
+- volume list: added --show-props option
+
+### Changed
+
+- NodeCon,RscCon: Remove DrbdOptions subcommand
+
+### Fixed
+
+- Improved broken pipe error handling
+
 ## [1.16.0] - 2022-12-13
 
 ### Added
