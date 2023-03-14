@@ -2,9 +2,11 @@ import linstor_client.argparse.argparse as argparse
 
 import linstor
 import linstor_client
+from linstor import SizeCalc
 # flake8: noqa
 from linstor.responses import ResourceGroupResponse
 from linstor_client.commands import Commands, DrbdOptions
+from linstor_client.consts import ExitCode
 
 
 class ResourceGroupCommands(Commands):
@@ -31,6 +33,7 @@ class ResourceGroupCommands(Commands):
             Commands.Subcommands.DrbdOptions,
             Commands.Subcommands.Spawn,
             Commands.Subcommands.QueryMaxVlmSize,
+            Commands.Subcommands.QuerySizeInfo,
             Commands.Subcommands.Adjust
         ]
 
@@ -193,7 +196,7 @@ class ResourceGroupCommands(Commands):
         p_qmvs = res_grp_subp.add_parser(
             Commands.Subcommands.QueryMaxVlmSize.LONG,
             aliases=[Commands.Subcommands.QueryMaxVlmSize.SHORT],
-            description="Queries maximum volume size for a given resource-group"
+            description="[DEPRECATED] Queries maximum volume size for a given resource-group",
         )
         p_qmvs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_qmvs.add_argument(
@@ -201,6 +204,20 @@ class ResourceGroupCommands(Commands):
         ).completer = self.resource_grp_completer
         p_qmvs.set_defaults(func=self.qmvs)
         #  ------------ QMVS END
+
+        #  ------------ QSI START
+        p_qsi = res_grp_subp.add_parser(
+            Commands.Subcommands.QuerySizeInfo.LONG,
+            aliases=[Commands.Subcommands.QuerySizeInfo.SHORT],
+            description="Query size info for a given resource-group"
+        )
+        p_qsi.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_qsi.add_argument(
+            'resource_group_name', help="Resource group name to read auto-config settings from"
+        ).completer = self.resource_grp_completer
+        self.add_auto_select_argparse_arguments(p_qsi, use_place_count=True, use_p_for_providers=False)
+        p_qsi.set_defaults(func=self.qsi)
+        #  ------------ QSI END
 
         #  ------------ ADJUST START
         p_adjust = res_grp_subp.add_parser(
@@ -361,6 +378,55 @@ class ResourceGroupCommands(Commands):
             return self.handle_replies(args, api_responses)
 
         return self.output_list(args, replies, self._show_query_max_volume)
+
+    @staticmethod
+    def _show_query_size_info(args, info):
+        """
+
+        :param args:
+        :param linstor.responses.QuerySizeInfoResponseSpaceInfo info:
+        :return:
+        """
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl.add_column("MaxVolumeSize", just_txt='>')
+        tbl.add_column("AvailableSize", just_txt='>')
+        tbl.add_column("Capacity", just_txt='>')
+        tbl.add_column("MaxOverSubscriptionRatio", just_txt='>')
+
+        row = [
+            SizeCalc.approximate_size_string(info.max_vlm_size_in_kib),
+            SizeCalc.approximate_size_string(info.available_size_in_kib),
+            SizeCalc.approximate_size_string(info.capacity_in_kib),
+            info.default_max_oversubscription_ratio
+        ]
+
+        tbl.add_row(row)
+        tbl.show()
+        return ExitCode.OK
+
+    def qsi(self, args):
+        info = self.get_linstorapi().resource_group_query_size_info(
+            args.resource_group_name,
+            place_count=args.place_count,
+            storage_pool=args.storage_pool,
+            do_not_place_with=self.prepare_argparse_list(args.do_not_place_with),
+            do_not_place_with_regex=args.do_not_place_with_regex,
+            replicas_on_same=self.prepare_argparse_list(args.replicas_on_same, linstor.consts.NAMESPC_AUXILIARY + '/'),
+            replicas_on_different=self.prepare_argparse_list(
+                args.replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
+            diskless_on_remaining=self.parse_diskless_on_remaining(args),
+            layer_list=self.prepare_argparse_list(args.layer_list),
+            provider_list=self.prepare_argparse_list(args.providers),
+            diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool)
+        )
+
+        if info is None:  # --curl
+            return ExitCode.OK
+
+        if info.reports:
+            return self.handle_replies(args, info.reports)
+
+        return self._show_query_size_info(args, info.space_info)
 
     def adjust(self, args):
         replies = self.get_linstorapi().resource_group_adjust(
