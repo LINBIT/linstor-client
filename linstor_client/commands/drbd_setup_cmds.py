@@ -145,7 +145,11 @@ class DrbdOptions(object):
                 deletes.append(key)
             else:
                 if DrbdOptions._is_byte_unit(option):
-                    unit = SizeCalc.UNIT_KiB if option.get('unit_prefix') == 'k' else SizeCalc.UNIT_B
+                    unit = SizeCalc.UNIT_B
+                    if option.get('unit_prefix') == 'k':
+                        unit = SizeCalc.UNIT_KiB
+                    elif option.get('unit_prefix') == 's':
+                        unit = SizeCalc.UNIT_S
                     value = SizeCalc.auto_convert(value, unit)
                     if option['min'] <= value <= option['max']:
                         value = str(value)
