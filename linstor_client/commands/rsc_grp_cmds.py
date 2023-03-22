@@ -4,6 +4,7 @@ import linstor
 import linstor_client
 from linstor import SizeCalc
 # flake8: noqa
+import json
 from linstor.responses import ResourceGroupResponse
 from linstor_client.commands import Commands, DrbdOptions
 from linstor_client.consts import ExitCode
@@ -391,13 +392,18 @@ class ResourceGroupCommands(Commands):
         tbl.add_column("MaxVolumeSize", just_txt='>')
         tbl.add_column("AvailableSize", just_txt='>')
         tbl.add_column("Capacity", just_txt='>')
-        tbl.add_column("MaxOverSubscriptionRatio", just_txt='>')
+        tbl.add_column("Next Spawn Result (OversubscriptionRatio)", just_txt='<')
 
+        if info.next_spawn_result:
+            next_result = '\n'.join([x.stor_pool_name + " on " + x.node_name + " (" + str(x.stor_pool_oversubscription_ratio) + ")"
+                                     for x in info.next_spawn_result])
+        else:
+            next_result = "-"
         row = [
             SizeCalc.approximate_size_string(info.max_vlm_size_in_kib),
             SizeCalc.approximate_size_string(info.available_size_in_kib),
             SizeCalc.approximate_size_string(info.capacity_in_kib),
-            info.default_max_oversubscription_ratio
+            next_result
         ]
 
         tbl.add_row(row)
@@ -425,6 +431,10 @@ class ResourceGroupCommands(Commands):
 
         if info.reports:
             return self.handle_replies(args, info.reports)
+
+        if args.machine_readable:
+            print(self._to_json(info.data(args.output_version)))
+            return ExitCode.OK
 
         return self._show_query_size_info(args, info.space_info)
 
