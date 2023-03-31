@@ -38,15 +38,27 @@ class BackupCommands(Commands):
         LONG = "s3key"
         SHORT = "s3"
 
-    _backup_headers = [
+    class Queue(object):
+        LONG = "queue"
+        SHORT = "q"
+
+    _backup_list_headers = [
         linstor_client.TableHeader("Resource"),
         linstor_client.TableHeader("Snapshot"),
         linstor_client.TableHeader("Finished at"),
         linstor_client.TableHeader("Based On"),
         linstor_client.TableHeader("Status")
     ]
-    _backup_other_headers = [
+    _backup_list_other_headers = [
         linstor_client.TableHeader("S3 Key"),
+    ]
+    _backup_queue_headers = [
+        linstor_client.TableHeader("Resource"),
+        linstor_client.TableHeader("Snapshot"),
+        linstor_client.TableHeader("Remote"),
+        linstor_client.TableHeader("Based On"),
+        linstor_client.TableHeader("Created at"),
+        linstor_client.TableHeader("Preferred Node"),
     ]
 
     def __init__(self):
@@ -62,6 +74,7 @@ class BackupCommands(Commands):
             BackupCommands.Ship,
             BackupCommands.Info,
             Commands.Subcommands.Schedule,
+            BackupCommands.Queue,
         ]
 
         bkp_parser = parser.add_parser(
@@ -260,6 +273,53 @@ class BackupCommands(Commands):
             help="Only abort a creation of the given resource")
         p_crtabort.set_defaults(func=self.abort)
 
+        # queue commands
+        subcmd_queue = [
+            Commands.Subcommands.List,
+        ]
+
+        p_queuebak = bkp_sub.add_parser(
+            BackupCommands.Queue.LONG,
+            aliases=[BackupCommands.Queue.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description="Commands for backup queue")
+        p_queuebak_subp = p_queuebak.add_subparsers(
+            title="Backup queue subcommands",
+            metavar="",
+            description=Commands.Subcommands.generate_desc(subcmd_queue))
+
+        # list queue
+        p_lstqueue = p_queuebak_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
+            description="Lists all queued backups by listing each node and all backups queued on it.")
+        p_lstqueue.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_lstqueue.add_argument(
+            "-n", "--nodes",
+            nargs='*',
+            help="Only show queued backups on the given node name(s)"
+        ).completer = Commands.node_completer
+        p_lstqueue.add_argument(
+            "-s", "--snaps", "--snapshots",
+            nargs='*',
+            help="Only show queued backups matching the given snapshot name(s)")
+        p_lstqueue.add_argument(
+            "--rscs", "--resources",
+            nargs='*',
+            help="Only show queued backups belonging to the given resource name(s)"
+        ).completer = Commands.resource_completer
+        p_lstqueue.add_argument(
+            "--remotes",
+            nargs='*',
+            help="Only show queued backups with the given remote name(s) as destination"
+        ).completer = Commands.remote_completer
+        p_lstqueue.add_argument(
+            "--snap-to-node", "--stn", "--s2n",
+            action="store_true",
+            help="Inverts the table by listing the backups and on which nodes they are queued instead of"
+                 "the nodes with all backups queued on them")
+        p_lstqueue.set_defaults(func=self.queue_list)
+
         # ship backup
         p_shipbak = bkp_sub.add_parser(
             BackupCommands.Ship.LONG,
@@ -292,7 +352,7 @@ class BackupCommands(Commands):
         # TODO: add stor_pool_renaming
         p_shipbak.set_defaults(func=self.ship)
 
-        # restore backup
+        # backup info
         p_infobak = bkp_sub.add_parser(
             BackupCommands.Info.LONG,
             aliases=[BackupCommands.Info.SHORT],
@@ -399,13 +459,15 @@ class BackupCommands(Commands):
 
         self.check_subcommands(p_schedbak_subp, subcmd_schedule)
 
+        self.check_subcommands(p_queuebak_subp, subcmd_queue)
+
         self.check_subcommands(bkp_sub, subcmds)
 
     def _add_remote(self, parser):
         parser.add_argument(
             "remote",
-            help="Remote used for deletion of backup(s)"
-        ).completer = self.remote_completer
+            help="Remote name for backup command"
+        ).completer = Commands.remote_completer
 
     @classmethod
     def _add_cascading(cls, *parsers):
@@ -439,13 +501,13 @@ class BackupCommands(Commands):
         tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
 
         if args.others:
-            for hdr in cls._backup_other_headers:
+            for hdr in cls._backup_list_other_headers:
                 tbl.add_header(hdr)
 
             for entry in lstmsg.other.files:
                 tbl.add_row([entry])
         else:
-            backup_hdr = list(cls._backup_headers)
+            backup_hdr = list(cls._backup_list_headers)
             for hdr in backup_hdr:
                 tbl.add_header(hdr)
 
@@ -486,6 +548,73 @@ class BackupCommands(Commands):
             snap_name=args.snapshot
         )
         return self.output_list(args, lstmsg, BackupCommands.show_backups, machine_readable_raw=True)
+
+    def queue_list(self, args):
+        lstmsg = self.get_linstorapi().backup_queue_list(
+            nodes=args.nodes,
+            snaps=args.snaps,
+            rscs=args.rscs,
+            remotes=args.remotes,
+            snap_to_node=args.snap_to_node
+        )
+        return self.output_list(args, lstmsg, BackupCommands.show_queue, machine_readable_raw=True)
+
+    @classmethod
+    def show_queue(cls, args, lstmsg):
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        if args.snap_to_node:
+            for hdr in cls._backup_queue_headers:
+                tbl.add_header(hdr)
+            tbl.add_header(linstor_client.TableHeader("Node"))
+            for snap in lstmsg.snap_queues:
+                # resource, snapshot, remote, based on, created at, pref node, nodes
+                row = [snap.resource_name, snap.snapshot_name, snap.remote_name]
+                if snap.incremental:
+                    row += [snap.based_on]
+                else:
+                    row += [""]
+                row += [datetime.fromtimestamp(int(snap.start_timestamp / 1000))]
+                row += [snap.pref_node]
+
+                nodes = []
+                for node in snap.queue:
+                    nodes += [node.node_name]
+                row += ["\n".join(nodes)]
+
+                tbl.add_row(row)
+        else:
+            tbl.add_header(linstor_client.TableHeader("Node"))
+            for hdr in cls._backup_queue_headers:
+                tbl.add_header(hdr)
+            for node in lstmsg.node_queues:
+                rscs = []
+                snaps = []
+                remotes = []
+                based_on = []
+                times = []
+                prefs = []
+                for snap in node.queue:
+                    rscs += [snap.resource_name]
+                    snaps += [snap.snapshot_name]
+                    remotes += [snap.remote_name]
+                    if snap.incremental:
+                        based_on += [snap.based_on]
+                    else:
+                        based_on += [""]
+                    times += [str(datetime.fromtimestamp(int(snap.start_timestamp / 1000)))]
+                    prefs += [snap.pref_node if snap.pref_node else ""]
+
+                # node, resource, snapshot, remote, based on, created at, pref node
+                row = [node.node_name,
+                       "\n".join(rscs),
+                       "\n".join(snaps),
+                       "\n".join(remotes),
+                       "\n".join(based_on),
+                       "\n".join(times),
+                       "\n".join(prefs)]
+
+                tbl.add_row(row)
+        tbl.show()
 
     def create(self, args):
         replies = self.get_linstorapi().backup_create(
