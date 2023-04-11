@@ -314,7 +314,7 @@ class NodeConnectionCommands(Commands):
     def _path_list(cls, args, lstmsg):
         result = []
         if lstmsg:
-            for node_con in lstmsg.resource_connections:
+            for node_con in lstmsg.node_connections:
                 if (node_con.node_a == args.node_a and node_con.node_b == args.node_b) or \
                         (node_con.node_b == args.node_a and node_con.node_a == args.node_b):
                     result.append({x: node_con.properties[x] for x in node_con.properties
@@ -323,7 +323,7 @@ class NodeConnectionCommands(Commands):
         return result
 
     def path_list(self, args):
-        lstmsg = self._linstor.node_conn_list(args.node_name_a, args.node_name_b)
+        lstmsg = self._linstor.node_conn_list(args.node_a, args.node_b)
         return self.output_props_list(args, lstmsg, self._path_list)
 
     def path_delete(self, args):
