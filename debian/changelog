@@ -1,3 +1,19 @@
+linstor-client (1.18.0-1) experimental; urgency=medium
+
+  [ Roland Kammerer ]
+  * containers: rm quay and docker hub
+
+  [ Gabor Hernadi ]
+  * RscDfn,create: Do not ignore peer slots
+  * Qsi: Print new oversubscription ratios
+  * NodeCon: Fixed issues with path list
+  * snap: New subcommand: create-multiple
+
+  [ Rene Peinthor ]
+  * drbd-opts: now works with sector units
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 17 Apr 2023 12:07:53 +0000
+
 linstor-client (1.17.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]

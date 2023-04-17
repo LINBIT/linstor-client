@@ -8,6 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.18.0] - 2023-04-17
+
+### Added
+
+- Subcommand for snapshots create-multiple
+
+### Changed
+
+- drbd-options(opts) now correctly handle sector units
+
+### Fixed
+
+- RscDfn create do not ignore peerslots
+- NodeCon fixed issues with path list
+
 ## [1.17.0] - 2023-03-14
 
 ### Added
