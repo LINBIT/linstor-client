@@ -170,7 +170,7 @@ class LinStorCLI(object):
         ATTENTION OVER! ATTENTION OVER!
         """
         parser.add_argument('--version', '-v', action='version',
-                            version='%(prog)s ' + VERSION + '; ' + GITHASH)
+                            version='%(prog)s-client ' + VERSION + '; ' + GITHASH)
         parser.add_argument('--no-color', action="store_true",
                             help='Do not use colors in output. Useful for old terminals/scripting.')
         parser.add_argument('--no-utf8', action="store_true", default=not sys.stdout.isatty(),
