@@ -937,16 +937,14 @@ class Commands(object):
     @classmethod
     def prepare_argparse_list(cls, pre_list, prefix=''):
         """
-        argparse returns either None or a list with values,
-        but to unset a fields you have to use field= or field='' as argparse syntax.
-        that will return following list [''], we have to convert such lists to empty lists
+        argparse returns either None, a empty list, or a list with values.
         :param list[str] pre_list: list to prefix ith Aux/ and convert
         :param str prefix: will prefix every list value with this str
         :return: converted list
         :rtype: Optional[list[str]]
         """
-        if pre_list:
-            if pre_list[0]:
+        if pre_list is not None:
+            if pre_list and pre_list[0]:
                 return [prefix + x for x in pre_list]
             else:
                 return []
