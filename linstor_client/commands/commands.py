@@ -614,13 +614,13 @@ class Commands(object):
         parser.add_argument(
             '--replicas-on-same',
             nargs='*',
-            metavar="REPLICAS_ON_SAME",
+            metavar="AUX_PROPERTY",
             help='Tries to place resources on nodes with the same given auxiliary node property values.'
         )
         parser.add_argument(
             '--replicas-on-different',
             nargs='*',
-            metavar="REPLICAS_ON_DIFFERENT",
+            metavar="AUX_PROPERTY",
             help='Tries to place resources on nodes with a different value for the given auxiliary node property.'
         )
         parser.add_argument(
