@@ -1,3 +1,15 @@
+linstor-client (1.19.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * linstor -v: state that this is the client version
+  * fix aux arguments list handling (replicas-on-same, replica...) for empty
+  * improve replicas{-on-same,-on-different} metavar description
+
+  [ Johanna Kucera ]
+  * BackupShipping: add queue list command
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 19 Jul 2023 10:46:35 +0000
+
 linstor-client (1.18.0-1) experimental; urgency=medium
 
   [ Roland Kammerer ]

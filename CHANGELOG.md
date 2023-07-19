@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.19.0] - 2023-07-19
+
+### Added
+
+- Backup queue list command
+
+### Changed
+
+- `linstor -v` now shows that it is the client version
+
+### Fixed
+
+- Fix aux argument list handling for replicas-on-same and similar
+
 ## [1.18.0] - 2023-04-17
 
 ### Added
