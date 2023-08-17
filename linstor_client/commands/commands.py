@@ -343,7 +343,7 @@ class Commands(object):
 
             return "\n".join([
                 " - {} ({})".format(sub.LONG, sub.SHORT) if hasattr(sub, 'SHORT') else " - {}".format(sub.LONG)
-                for sub in sorted(subcommands, key=lambda x:x.LONG)])
+                for sub in sorted(subcommands, key=lambda x: x.LONG)])
 
     @classmethod
     def check_subcommands(cls, subp, subcmds):
