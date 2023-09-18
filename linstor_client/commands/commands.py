@@ -107,6 +107,14 @@ class Commands(object):
         GEN_ZSH_COMPLETER
     ]
 
+    EFFECTIVE_PROPS_TYPES = {
+        "SATELLITE": "C",
+        "NODE": "N",
+        "RESOURCE_DEFINITION": "RD",
+        "RESOURCE": "R",
+        "STORAGEPOOL": "SP"
+    }
+
     def __init__(self):
         self._linstor = None  # type: Optional[linstor.Linstor]
         # _linstor_completer is just here as a cache for completer calls

@@ -652,6 +652,19 @@ class ResourceCommands(Commands):
                     if rsc_state_color is not None:
                         break
 
+            if not self.get_linstorapi().api_version_smaller("1.20.2"):
+                if "DrbdOptions/SkipDisk" in rsc.effective_properties:
+                    skip_disk_eff_prop = rsc.effective_properties["DrbdOptions/SkipDisk"]
+                    if skip_disk_eff_prop.value == "True":
+                        occurrences = [Commands.EFFECTIVE_PROPS_TYPES[skip_disk_eff_prop.type]]
+                        if skip_disk_eff_prop.other:
+                            occurrences += [self._skip_disk_mapping[other.type]
+                                            for other in skip_disk_eff_prop.other]
+                        rsc_state += ", Skip-Disk (" + ', '.join(occurrences) + ")"
+
+                        if not rsc_state_color or rsc_state_color == Color.GREEN:
+                            rsc_state_color = Color.YELLOW
+
             # check if connections failed
             conns_col = ""
             conns_col_entries = None
