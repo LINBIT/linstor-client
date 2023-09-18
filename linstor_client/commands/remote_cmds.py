@@ -180,7 +180,7 @@ class RemoteCommands(Commands):
         )
         p_mod_ebs.add_argument("name", help="Remote name").completer = self.remote_completer
         p_mod_ebs.add_argument("--endpoint", help="Endpoint of the EBS remote")
-        p_mod_ebs.add_argument("--availabiliy-zone", "--az",
+        p_mod_ebs.add_argument("--availability-zone", "--az",
                                help="Availability Zone of the EBS remote. Example: eu-central-1b")
         p_mod_ebs.add_argument("--region", help="Region of the EBS remote")
         p_mod_ebs.add_argument("--access_key", help="Access key of the EBS remote")
