@@ -160,7 +160,7 @@ class ExosCommands(Commands):
         p_list_encl = exos_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Deletes the given EXOS enclosure'
+            description='Lists the given EXOS enclosure'
         )
         p_list_encl.add_argument(
             '--nocache',
