@@ -625,7 +625,7 @@ class ResourceCommands(Commands):
             if rsc.name in rsc_dfn_map:
                 drbd_data = rsc_dfn_map[rsc.name].drbd_data
                 rsc_dfn_port = drbd_data.port if drbd_data else ""
-            marked_delete = apiconsts.FLAG_DELETE in rsc.flags
+            marked_delete = apiconsts.FLAG_DELETE in rsc.flags or apiconsts.FLAG_DRBD_DELETE in rsc.flags
             rsc_state_obj = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_state_color = Color.YELLOW
             rsc_state = "Unknown"
