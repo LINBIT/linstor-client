@@ -245,6 +245,14 @@ class ResourceCommands(Commands):
             default=None,
             help='Only show resource bundles that have less diskful replicas.')
         p_involved.add_argument(
+            '-s',
+            '--show-props',
+            nargs='+',
+            type=str,
+            default=[],
+            help='Show these props in the list. '
+                 + 'Can be key=value pairs where key is the property name and value column header')
+        p_involved.add_argument(
             'node',
             type=str,
             help='Node name where a resource is used').completer = self.node_completer
