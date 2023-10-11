@@ -1,3 +1,18 @@
+linstor-client (1.20.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * fix pep8 error
+  * Fix resource involved command AttributeError
+  * update CHANGELOG.md
+
+  [ Gabor Hernadi ]
+  * Exos,list: Fixed help message
+  * Rsc,List: Show DELETING state for DRBD_DELETE rsc flag
+  * Remote: Fix typo
+  * Rsc,List: Show SkipDisk
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 11 Oct 2023 07:42:02 +0000
+
 linstor-client (1.19.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
