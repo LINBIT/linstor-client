@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Show skip-disk property and level resource list
+
+### Changed
+
+- Typo in remote command argument --availability-zone
+
+### Fixed
+
+- Fixed exos help message
+- Show deleting state for DRBD_DELETE flag
+- Fixed resource involved command AttributeError
+
 ## [1.19.0] - 2023-07-19
 
 ### Added
