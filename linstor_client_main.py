@@ -335,7 +335,7 @@ class LinStorCLI(object):
                         self._linstorapi = linstor.Linstor(
                             contrl,
                             timeout=args.timeout,
-                            keep_alive=args.func == self.cmd_interactive,
+                            keep_alive=True,
                             agent_info="Client " + VERSION
                         )
                         self._linstorapi.username = username
