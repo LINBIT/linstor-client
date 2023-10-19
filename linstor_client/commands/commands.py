@@ -338,6 +338,10 @@ class Commands(object):
             LONG = "schedule"
             SHORT = "sched"
 
+        class LogLevel(object):
+            LONG = "set-log-level"
+            SHORT = "setloglevel"
+
         @staticmethod
         def generate_desc(subcommands):
             """

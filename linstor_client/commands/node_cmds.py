@@ -6,7 +6,7 @@ import sys
 import linstor.sharedconsts as apiconsts
 import linstor_client
 import linstor_client.argparse.argparse as argparse
-from linstor import SizeCalc
+from linstor import SizeCalc, LogLevelEnum
 from linstor_client.commands import Commands
 from linstor_client.consts import Color, ExitCode
 from linstor_client.tree import TreeNode
@@ -515,6 +515,23 @@ class NodeCommands(Commands):
 
         self.check_subcommands(interface_subp, netif_subcmds)
         self.check_subcommands(node_subp, subcmds)
+
+        # node set-log-level
+        p_set_log_level = node_subp.add_parser(
+            Commands.Subcommands.LogLevel.LONG,
+            aliases=[Commands.Subcommands.LogLevel.SHORT],
+            description="Sets the log level")
+        p_set_log_level.add_argument(
+            'node_name',
+            help="Node to set the log level"
+        ).completer = self.node_completer
+        p_set_log_level.add_argument('level',
+                                     type=LogLevelEnum.check,
+                                     choices=list(LogLevelEnum))
+        p_set_log_level.add_argument('--library', '--lib',
+                                     action='store_true',
+                                     help='Modify the log level of external libraries instead of LINSTOR itself')
+        p_set_log_level.set_defaults(func=self.set_log_level)
 
     @classmethod
     def _resolve_remote_ip(cls, hostname):
@@ -1027,4 +1044,12 @@ class NodeCommands(Commands):
     def delete_netif(self, args):
         # execute delete netinterfaces and flatten result list
         replies = [x for subx in args.interface_name for x in self._linstor.netinterface_delete(args.node_name, subx)]
+        return self.handle_replies(args, replies)
+
+    def set_log_level(self, args):
+        replies = self._linstor.node_set_log_level(
+            args.node_name,
+            args.level,
+            args.library if args.library else False)
+
         return self.handle_replies(args, replies)

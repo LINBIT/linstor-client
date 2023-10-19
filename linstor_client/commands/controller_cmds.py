@@ -1,6 +1,7 @@
 import json
 
 import linstor
+from linstor import LogLevelEnum
 import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands, DrbdOptions
 
@@ -21,6 +22,7 @@ class ControllerCommands(Commands):
             Commands.Subcommands.QueryMaxVlmSize,
             Commands.Subcommands.Which,
             Commands.Subcommands.BackupDb,
+            Commands.Subcommands.LogLevel
         ]
 
         con_parser = parser.add_parser(
@@ -59,6 +61,23 @@ class ControllerCommands(Commands):
         )
         DrbdOptions.add_arguments(c_drbd_opts, self.OBJECT_NAME)
         c_drbd_opts.set_defaults(func=self.cmd_controller_drbd_opts)
+
+        # Controller - set-log-level
+        c_set_log_level = con_subp.add_parser(
+            Commands.Subcommands.LogLevel.LONG,
+            aliases=[Commands.Subcommands.LogLevel.SHORT],
+            description="Sets the log level")
+        c_set_log_level.add_argument('level',
+                                     type=LogLevelEnum.check,
+                                     choices=list(LogLevelEnum))
+        c_set_log_level.add_argument('--library', '--lib',
+                                     action='store_true',
+                                     help='Modify the log level of external libraries instead of LINSTOR itself')
+        c_set_log_level.add_argument('--global',
+                                     action='store_true',
+                                     dest='glob',  # "global" is a reserved keyword
+                                     help='Set the log level for the controller and ALL satellites')
+        c_set_log_level.set_defaults(func=self.cmd_controller_set_log_level)
 
         # Controller - version
         c_shutdown = con_subp.add_parser(
@@ -167,6 +186,14 @@ class ControllerCommands(Commands):
 
         for delkey in del_props:
             replies.extend(self._linstor.controller_del_prop(delkey))
+
+        return self.handle_replies(args, replies)
+
+    def cmd_controller_set_log_level(self, args):
+        replies = self._linstor.controller_set_log_level(
+            args.level,
+            args.glob if args.glob else False,
+            args.library if args.library else False)
 
         return self.handle_replies(args, replies)
 
