@@ -1,3 +1,13 @@
+linstor-client (1.20.1-1) experimental; urgency=medium
+
+  [ Christoph Böhmwalder ]
+  * linstor: always enable keep_alive
+
+  [ Gabor Hernadi ]
+  * Ctrl,Node: Add set-log-level
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 25 Oct 2023 04:31:12 +0000
+
 linstor-client (1.20.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
