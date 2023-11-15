@@ -8,6 +8,7 @@ import json
 from linstor.responses import ResourceGroupResponse
 from linstor_client.commands import Commands, DrbdOptions
 from linstor_client.consts import ExitCode
+from linstor_client.utils import rangecheck
 
 
 class ResourceGroupCommands(Commands):
@@ -60,6 +61,10 @@ class ResourceGroupCommands(Commands):
             '-d', '--description',
             help="Description for the resource group."
         )
+        p_new_res_grp.add_argument(
+            '--peer-slots',
+            type=rangecheck(1, 31),
+            help='(DRBD) peer slots for new resources')
         self.add_auto_select_argparse_arguments(p_new_res_grp, use_place_count=True)
         p_new_res_grp.add_argument('name',
                                    type=str,
@@ -76,6 +81,10 @@ class ResourceGroupCommands(Commands):
             '-d', '--description',
             help="Description for the resource group."
         )
+        p_mod_res_grp.add_argument(
+            '--peer-slots',
+            type=rangecheck(1, 31),
+            help='(DRBD) peer slots for new resources')
         self.add_auto_select_argparse_arguments(p_mod_res_grp, use_place_count=True)
         p_mod_res_grp.add_argument(
             'name',
@@ -189,6 +198,10 @@ class ResourceGroupCommands(Commands):
             'volume_sizes',
             nargs='*'
         )
+        p_spawn.add_argument(
+            '--peer-slots',
+            type=rangecheck(1, 31),
+            help='(DRBD) peer slots for new resources')
         self.add_auto_select_argparse_arguments(p_spawn, use_place_count=True, use_p_for_providers=False)
         p_spawn.set_defaults(func=self.spawn)
         #  ------------ SPAWN END
@@ -255,7 +268,8 @@ class ResourceGroupCommands(Commands):
             diskless_on_remaining=self.parse_diskless_on_remaining(args),
             layer_list=self.prepare_argparse_list(args.layer_list),
             provider_list=self.prepare_argparse_list(args.providers),
-            diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool)
+            diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool),
+            peer_slots=args.peer_slots
         )
         return self.handle_replies(args, replies)
 
@@ -275,7 +289,8 @@ class ResourceGroupCommands(Commands):
             provider_list=args.providers,
             property_dict={},
             delete_props=[],
-            diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool)
+            diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool),
+            peer_slots=args.peer_slots
         )
         return self.handle_replies(args, replies)
 
@@ -366,7 +381,8 @@ class ResourceGroupCommands(Commands):
             diskless_on_remaining=self.parse_diskless_on_remaining(args),
             layer_list=self.prepare_argparse_list(args.layer_list),
             provider_list=self.prepare_argparse_list(args.providers),
-            diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool)
+            diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool),
+            peer_slots=args.peer_slots
         )
         return self.handle_replies(args, replies)
 
