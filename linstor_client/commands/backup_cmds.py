@@ -345,11 +345,15 @@ class BackupCommands(Commands):
             "--target-storage-pool",
             help="Specify in which target storage pool the backup should be received")
         p_shipbak.add_argument(
+            "--storpool-rename",
+            nargs='*',
+            help="Rename storage pool names. Format: $oldname=$newname",
+            action=BackupCommands._KeyValue)
+        p_shipbak.add_argument(
             "--download-only",
             action='store_true',
             help="Only download backups"
         )
-        # TODO: add stor_pool_renaming
         p_shipbak.set_defaults(func=self.ship)
 
         # backup info
@@ -702,6 +706,7 @@ class BackupCommands(Commands):
             dst_node=args.target_node,
             dst_net_if=args.target_net_if,
             dst_stor_pool=args.target_storage_pool,
+            stor_pool_rename=args.storpool_rename,
             download_only=args.download_only)
         return self.handle_replies(args, replies)
 
