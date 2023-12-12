@@ -408,11 +408,10 @@ class ResourceGroupCommands(Commands):
         tbl.add_column("MaxVolumeSize", just_txt='>')
         tbl.add_column("AvailableSize", just_txt='>')
         tbl.add_column("Capacity", just_txt='>')
-        tbl.add_column("Next Spawn Result (OversubscriptionRatio)", just_txt='<')
+        tbl.add_column("Next Spawn Result", just_txt='<')
 
         if info.next_spawn_result:
-            next_result = '\n'.join([x.stor_pool_name + " on " + x.node_name + " (" + str(x.stor_pool_oversubscription_ratio) + ")"
-                                     for x in info.next_spawn_result])
+            next_result = '\n'.join([x.stor_pool_name + " on " + x.node_name for x in info.next_spawn_result])
         else:
             next_result = "-"
         row = [
