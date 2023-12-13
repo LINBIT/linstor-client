@@ -414,6 +414,14 @@ class BackupCommands(Commands):
         p_bak_sched_enable.add_argument(
             "--node", "--preferred-node",
             help="Preferred node name")
+        p_bak_sched_enable.add_argument(
+            "--target-storage-pool",
+            help="Specify in which target storage pool the backup should be received")
+        p_bak_sched_enable.add_argument(
+            "--storpool-rename",
+            nargs='*',
+            help="Rename storage pool names. Format: $oldname=$newname",
+            action=BackupCommands._KeyValue)
         p_bak_sched_enable_mut_group = p_bak_sched_enable.add_mutually_exclusive_group(required=False)
         p_bak_sched_enable_mut_group.add_argument(
             "--rd", "--resource-definition",
@@ -795,7 +803,9 @@ class BackupCommands(Commands):
             schedule_name=args.schedule_name,
             preferred_node=args.node,
             resource_name=args.rd,
-            resource_group_name=args.rg)
+            resource_group_name=args.rg,
+            dst_stor_pool=args.target_storage_pool,
+            storpool_rename_map=args.storpool_rename)
         return self.handle_replies(args, replies)
 
     def schedule_disable(self, args):
