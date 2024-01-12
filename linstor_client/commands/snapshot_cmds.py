@@ -7,6 +7,7 @@ from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLO
 from linstor.sharedconsts import FLAG_BACKUP, FLAG_SHIPPING, FLAG_BACKUP_TARGET, FLAG_BACKUP_SOURCE
 from linstor_client.utils import Output
 from linstor import SizeCalc, consts
+from linstor_client.commands.backup_cmds import BackupCommands
 
 
 class SnapshotCommands(Commands):
@@ -297,6 +298,11 @@ class SnapshotCommands(Commands):
             type=str,
             help='Name of the resource definition in which to create the resource from this snapshot'
         ).completer = self.resource_dfn_completer
+        p_restore_snapshot.add_argument(
+            "--storpool-rename",
+            nargs='*',
+            help="Rename storage pool names. Format: oldname=newname",
+            action=BackupCommands._KeyValue)
         p_restore_snapshot.set_defaults(func=self.restore)
 
         self.check_subcommands(snapshot_subp, subcmds)
@@ -319,7 +325,7 @@ class SnapshotCommands(Commands):
 
     def restore(self, args):
         replies = self._linstor.snapshot_resource_restore(
-            args.node_name, args.from_resource, args.from_snapshot, args.to_resource)
+            args.node_name, args.from_resource, args.from_snapshot, args.to_resource, args.storpool_rename)
         return self.handle_replies(args, replies)
 
     def delete(self, args):

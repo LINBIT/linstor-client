@@ -244,7 +244,7 @@ class BackupCommands(Commands):
         p_rstbak.add_argument(
             "--storpool-rename",
             nargs='*',
-            help="Rename storage pool names. Format: $oldname=$newname",
+            help="Rename storage pool names. Format: oldname=newname",
             action=BackupCommands._KeyValue)
         p_rstbak.add_argument(
             "--download-only",
@@ -347,7 +347,7 @@ class BackupCommands(Commands):
         p_shipbak.add_argument(
             "--storpool-rename",
             nargs='*',
-            help="Rename storage pool names. Format: $oldname=$newname",
+            help="Rename storage pool names. Format: oldname=newname",
             action=BackupCommands._KeyValue)
         p_shipbak.add_argument(
             "--download-only",
@@ -420,7 +420,7 @@ class BackupCommands(Commands):
         p_bak_sched_enable.add_argument(
             "--storpool-rename",
             nargs='*',
-            help="Rename storage pool names. Format: $oldname=$newname",
+            help="Rename storage pool names. Format: oldname=newname",
             action=BackupCommands._KeyValue)
         p_bak_sched_enable_mut_group = p_bak_sched_enable.add_mutually_exclusive_group(required=False)
         p_bak_sched_enable_mut_group.add_argument(
