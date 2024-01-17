@@ -246,10 +246,16 @@ class BackupCommands(Commands):
             nargs='*',
             help="Rename storage pool names. Format: oldname=newname",
             action=BackupCommands._KeyValue)
-        p_rstbak.add_argument(
+        p_rstbak_mut_excl = p_rstbak.add_mutually_exclusive_group(required=False)
+        p_rstbak_mut_excl.add_argument(
             "--download-only",
             action='store_true',
             help="Only download backups"
+        )
+        p_rstbak_mut_excl.add_argument(
+            "--force-restore",
+            action='store_true',
+            help="Restore the backup even if a single replica already exists in the target resource"
         )
         p_rstbak.set_defaults(func=self.restore)
 
@@ -349,10 +355,16 @@ class BackupCommands(Commands):
             nargs='*',
             help="Rename storage pool names. Format: oldname=newname",
             action=BackupCommands._KeyValue)
-        p_shipbak.add_argument(
+        p_shipbak_mut_excl = p_shipbak.add_mutually_exclusive_group(required=False)
+        p_shipbak_mut_excl.add_argument(
             "--download-only",
             action='store_true',
             help="Only download backups"
+        )
+        p_shipbak_mut_excl.add_argument(
+            "--force-restore",
+            action='store_true',
+            help="Restore the backup even if a single replica already exists in the target resource"
         )
         p_shipbak.set_defaults(func=self.ship)
 
@@ -429,6 +441,11 @@ class BackupCommands(Commands):
         p_bak_sched_enable_mut_group.add_argument(
             "--rg", "--resource-group",
             help="Resource group name")
+        p_bak_sched_enable.add_argument(
+            "--force-restore",
+            action='store_true',
+            help="Restore the backup even if a single replica already exists in the target resource"
+        )
         p_bak_sched_enable.set_defaults(func=self.schedule_enable)
 
         p_bak_sched_disable = p_schedbak_subp.add_parser(
@@ -693,6 +710,7 @@ class BackupCommands(Commands):
             passphrase=self._get_passphrase(args, "Origin clusters passphrase: "),
             stor_pool_map=args.storpool_rename,
             download_only=args.download_only,
+            force_restore=args.force_restore,
             snap_name=args.snapshot,
         )
         return self.handle_replies(args, replies)
@@ -715,7 +733,8 @@ class BackupCommands(Commands):
             dst_net_if=args.target_net_if,
             dst_stor_pool=args.target_storage_pool,
             stor_pool_rename=args.storpool_rename,
-            download_only=args.download_only)
+            download_only=args.download_only,
+            force_restore=args.force_restore)
         return self.handle_replies(args, replies)
 
     @classmethod
@@ -805,7 +824,8 @@ class BackupCommands(Commands):
             resource_name=args.rd,
             resource_group_name=args.rg,
             dst_stor_pool=args.target_storage_pool,
-            storpool_rename_map=args.storpool_rename)
+            storpool_rename_map=args.storpool_rename,
+            force_restore=args.force_restore)
         return self.handle_replies(args, replies)
 
     def schedule_disable(self, args):
