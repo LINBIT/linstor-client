@@ -666,7 +666,7 @@ class ResourceCommands(Commands):
                     if skip_disk_eff_prop.value == "True":
                         occurrences = [Commands.EFFECTIVE_PROPS_TYPES[skip_disk_eff_prop.type]]
                         if skip_disk_eff_prop.other:
-                            occurrences += [self._skip_disk_mapping[other.type]
+                            occurrences += [self.EFFECTIVE_PROPS_TYPES[other.type]
                                             for other in skip_disk_eff_prop.other]
                         rsc_state += ", Skip-Disk (" + ', '.join(occurrences) + ")"
 
