@@ -8,13 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.21.0] - 2024-01-22
+
 ### Added
 
 - Added --peer-slots to "rg c", "rg m" and "rg spawn"
+- Added storpool rename for schedule enable, restore and l2l shippings
 
 ### Changed
 
 - "rg query-size-info" no longer shows 'OversubscriptionRatio' (multiple ambiguous sources)
+
+### Fixed
+
+- skipDisk property access on list commands
 
 ## [1.20.1] - 2023-10-25
 

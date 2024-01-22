@@ -1,3 +1,20 @@
+linstor-client (1.21.0-1) experimental; urgency=medium
+
+  [ Gabor Hernadi ]
+  * RscGrp: Added --peer-slots option
+  * QSI: Remove "(OversubscriptionRatio)"
+  * Rsc,List: Fix skipDisk prop access
+
+  [ Johanna Kucera ]
+  * Backups: add storpool-rename for l2l shippings
+  * Schedules: allow storpool-rename on schedule enable
+  * Snapshots: add storpool-rename option for restore
+
+  [ Rene Peinthor ]
+  * gitlab-ci: build special version on branch
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 22 Jan 2024 08:10:33 +0000
+
 linstor-client (1.20.1-1) experimental; urgency=medium
 
   [ Christoph Böhmwalder ]
