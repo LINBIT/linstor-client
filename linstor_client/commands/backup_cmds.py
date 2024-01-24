@@ -92,7 +92,7 @@ class BackupCommands(Commands):
         p_lbackups = bkp_sub.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of backups.')
+            description='Prints a list of backups on an S3 remote.')
         p_lbackups.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lbackups.add_argument(
             '-r', '--resource',
@@ -102,7 +102,7 @@ class BackupCommands(Commands):
             help='Only show backups with the given snapshot name')
         p_lbackups.add_argument(
             'remote_name',
-            help='Remote name to show backups for').completer = Commands.remote_completer
+            help='S3 remote name to show backups for').completer = Commands.remote_completer
         p_lbackups.add_argument(
             '-o', '--others',
             action="store_true",
