@@ -179,7 +179,7 @@ class VolumeCommands(Commands):
 
         reports = []
         for rsc in lstmsg.resources:
-            if apiconsts.FLAG_RSC_INACTIVE in rsc.flags:
+            if apiconsts.FLAG_RSC_INACTIVE in rsc.flags and not apiconsts.FLAG_EVICTED in rsc.flags:
                 continue  # do not show non existing volumes for inactive resources
 
             rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)
@@ -190,11 +190,15 @@ class VolumeCommands(Commands):
                 else:
                     rsc_usage = "Unused"
             for vlm in rsc.volumes:
-                vlm_state = cls.get_volume_state(
-                    rsc_state.volume_states,
-                    vlm.number
-                ) if rsc_state else None
-                state_txt, color = cls.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
+                if apiconsts.FLAG_RSC_INACTIVE in rsc.flags:
+                    state_txt = apiconsts.FLAG_RSC_INACTIVE
+                    color = Color.YELLOW
+                else:
+                    vlm_state = cls.get_volume_state(
+                        rsc_state.volume_states,
+                        vlm.number
+                    ) if rsc_state else None
+                    state_txt, color = cls.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
                 has_errors = any([x.is_error() for x in vlm.reports])
                 conn_failed = (rsc.layer_data.drbd_resource
                                and any(not v.connected for k, v in rsc.layer_data.drbd_resource.connections.items()))

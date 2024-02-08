@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Do not hide evicted resources in volume list
+
 ## [1.21.0] - 2024-01-22
 
 ### Added
