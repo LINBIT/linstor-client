@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- PhysicalStorageCreate: Allow zfsthin as provider kind
+
 ### Fixed
 
 - Do not hide evicted resources in volume list
