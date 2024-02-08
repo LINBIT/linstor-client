@@ -12,7 +12,7 @@ from linstor import SizeCalc
 import linstor_client
 from linstor_client.utils import LinstorClientError, Output
 from linstor_client.consts import ExitCode, Color
-from linstor.sharedconsts import KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO
+from linstor.sharedconsts import KEY_STOR_POOL_MAX_OVERSUBSCRIPTION_RATIO
 
 
 class ArgumentError(Exception):
@@ -1019,7 +1019,7 @@ class Commands(object):
 
             storage_pool_props = [x for x in storage_pool_dfns if x.name == candidate.storage_pool][0].properties
             max_oversubscription_ratio = float(storage_pool_props.get(
-                KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO, lstmsg.default_max_oversubscription_ratio))
+                KEY_STOR_POOL_MAX_OVERSUBSCRIPTION_RATIO, lstmsg.default_max_oversubscription_ratio))
 
             tbl.add_row([
                 candidate.storage_pool,
