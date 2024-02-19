@@ -46,10 +46,6 @@ class StoragePoolCommands(Commands):
         LONG = "remotespdk"
         SHORT = "remotespdk"
 
-    class OpenFlex(object):
-        LONG = "openflex"
-        SHORT = "openflex"
-
     class Exos(object):
         LONG = "exos"
         SHORT = "exos"
@@ -134,7 +130,6 @@ class StoragePoolCommands(Commands):
             StoragePoolCommands.FileThin,
             StoragePoolCommands.SPDK,
             StoragePoolCommands.RemoteSPDK,
-            StoragePoolCommands.OpenFlex,
             StoragePoolCommands.Exos,
             StoragePoolCommands.StorageSpaces,
             StoragePoolCommands.StorageSpacesThin,
@@ -297,19 +292,6 @@ class StoragePoolCommands(Commands):
             help='The directory to use.'
         )
         p_new_file_thin_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.FILEThin)
-
-        p_new_openflex_pool = create_subp.add_parser(
-            StoragePoolCommands.OpenFlex.LONG,
-            aliases=[StoragePoolCommands.OpenFlex.SHORT],
-            description='Create an openflex storage pool'
-        )
-        self._create_pool_args(p_new_openflex_pool, shared_space=False)
-        p_new_openflex_pool.add_argument(
-            'driver_pool_name',
-            type=str,
-            help='OpenFlex pool index'
-        )
-        p_new_openflex_pool.set_defaults(func=self.create, driver=linstor.StoragePoolDriver.OPENFLEX_TARGET)
 
         p_new_exos_pool = create_subp.add_parser(
             StoragePoolCommands.Exos.LONG,
