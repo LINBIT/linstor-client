@@ -633,6 +633,7 @@ class NodeCommands(Commands):
             apiconsts.ConnectionStatus.ONLINE.name: ("Online", Color.GREEN),
             apiconsts.ConnectionStatus.VERSION_MISMATCH.name: ("OFFLINE(VERSION MISMATCH)", Color.RED),
             apiconsts.ConnectionStatus.FULL_SYNC_FAILED.name: ("OFFLINE(FULL SYNC FAILED)", Color.RED),
+            apiconsts.ConnectionStatus.MISSING_EXT_TOOLS.name: ("OFFLINE(MISSING EXTERNAL TOOLS)", Color.RED),
             apiconsts.ConnectionStatus.AUTHENTICATION_ERROR.name: ("OFFLINE(AUTHENTICATION ERROR)", Color.RED),
             apiconsts.ConnectionStatus.UNKNOWN.name: ("Unknown", Color.YELLOW),
             apiconsts.ConnectionStatus.HOSTNAME_MISMATCH.name: ("OFFLINE(HOSTNAME MISMATCH)", Color.RED),
