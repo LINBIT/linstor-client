@@ -8,13 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.21.1] - 2024-02-22
+
 ### Added
 
 - PhysicalStorageCreate: Allow zfsthin as provider kind
+- Added node connectionstatus MISSING_EXT_TOOLS handler
 
 ### Fixed
 
 - Do not hide evicted resources in volume list
+
+### Removed
+
+- OpenFlex commands removed
 
 ## [1.21.0] - 2024-01-22
 

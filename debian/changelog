@@ -1,3 +1,17 @@
+linstor-client (1.21.1-1) experimental; urgency=medium
+
+  [ Gabor Hernadi ]
+  * Backup,list: Clarify help text
+  * OpenFlex: Removed commands
+  * ConnStatus: Added handler for MISSING_EXT_TOOLS
+
+  [ Rene Peinthor ]
+  * vlm_cmds: Do not hide evicted resources in volume list
+  * PhysicalStorageCreate: Allow zfsthin as provider kind
+  * linstor-common: rename KEY_STOR_POOL_DFN_MAX_OVERSUBSCRIPTION_RATIO var
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 22 Feb 2024 05:32:39 +0000
+
 linstor-client (1.21.0-1) experimental; urgency=medium
 
   [ Gabor Hernadi ]
