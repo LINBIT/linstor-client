@@ -1,11 +1,13 @@
 import re
+import getpass
 
 import linstor_client
 import linstor_client.argparse.argparse as argparse
 from linstor import SizeCalc
 from linstor.sharedconsts import FLAG_DELETE, FLAG_RESIZE, FLAG_GROSS_SIZE
 from linstor_client.commands import Commands, DrbdOptions
-from linstor_client.consts import Color
+from linstor_client.consts import Color, ExitCode
+from linstor_client.utils import LinstorClientError
 
 
 class VolumeDefinitionCommands(Commands):
@@ -77,6 +79,14 @@ class VolumeDefinitionCommands(Commands):
             action="store_true",
             help="DEPCRECATED - use --layer-list ...,LUKS,... instead (when creating resource /-definition)")
         p_new_vol.add_argument('--gross', action="store_true")
+        p_new_vol.add_argument(
+            '--passphrase',
+            type=str,
+            action='store',
+            nargs='?',
+            const='',
+            help='User provided passphrase for encrypted volumes. If not provided LINSTOR will create one',
+        )
         p_new_vol.add_argument('resource_name', type=str,
                                help='Name of an existing resource').completer = self.resource_dfn_completer
         p_new_vol.add_argument(
@@ -210,6 +220,12 @@ class VolumeDefinitionCommands(Commands):
         self.check_subcommands(vol_def_subp, subcmds)
 
     def create(self, args):
+        passphrase = None
+        if args.passphrase != '':
+            passphrase = args.passphrase
+        elif args.passphrase == '':
+            # read from keyboard
+            passphrase = self._ask_passphrase()
         replies = self._linstor.volume_dfn_create(
             args.resource_name,
             Commands.parse_size_str(args.size),
@@ -217,7 +233,8 @@ class VolumeDefinitionCommands(Commands):
             args.minor,
             args.encrypt,
             args.storage_pool,
-            args.gross
+            args.gross,
+            passphrase=passphrase
         )
         return self.handle_replies(args, replies)
 
@@ -337,3 +354,11 @@ class VolumeDefinitionCommands(Commands):
             gross=args.gross
         )
         return self.handle_replies(args, replies)
+
+    @staticmethod
+    def _ask_passphrase():
+        passphrase = getpass.getpass("Passphrase: ")
+        passphrase2 = getpass.getpass("Retype new passphrase: ")
+        if passphrase != passphrase2:
+            raise LinstorClientError("Passphrase doesn't match.", ExitCode.ARGPARSE_ERROR)
+        return passphrase

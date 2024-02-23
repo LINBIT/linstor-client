@@ -185,6 +185,9 @@ class ResourceGroupCommands(Commands):
             '-d', '--definition-only', action='store_true', help="Do not auto-place resource, only create definitions"
         )
         p_spawn.add_argument(
+            '--volume-passphrase', nargs='*', help="User provided volume passphrases"
+        )
+        p_spawn.add_argument(
             'resource_group_name', help="Resource group name to spawn from."
         ).completer = self.resource_grp_completer
         p_spawn.add_argument(
@@ -383,7 +386,8 @@ class ResourceGroupCommands(Commands):
             layer_list=self.prepare_argparse_list(args.layer_list),
             provider_list=self.prepare_argparse_list(args.providers),
             diskless_storage_pool=self.prepare_argparse_list(args.diskless_storage_pool),
-            peer_slots=args.peer_slots
+            peer_slots=args.peer_slots,
+            volume_passphrases=args.volume_passphrase,
         )
         return self.handle_replies(args, replies)
 
