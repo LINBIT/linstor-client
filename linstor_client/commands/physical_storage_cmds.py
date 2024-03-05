@@ -33,15 +33,19 @@ class PhysicalStorageCommands(Commands):
         p_lphys = phys_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of all usable physical storage '
-            'By default, the list is printed as a human readable table.')
+            description='Prints a list of all physical storage available for LINSTOR use. By default, the list is '
+            'printed as a human readable table. Criteria are:\n'
+            '  * Device size must be greater than 1GiB\n'
+            '  * Device must be a root device, for example, `/dev/vda`, `/dev/sda`, and not have any children.\n'
+            '  * Device must not have any file system or other `blkid` marker.\n'
+            '  * Device must not be an existing DRBD device.')
         p_lphys.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lphys.set_defaults(func=self.list)
 
         p_create = phys_subp.add_parser(
             Commands.Subcommands.CreateDevicePool.LONG,
             aliases=[Commands.Subcommands.CreateDevicePool.SHORT],
-            description='Creates a LVM/ZFS(thin) pool with an optional VDO on the device'
+            description='Creates an LVM or ZFS(thin) pool with an optional VDO on the device.'
         )
         p_create.add_argument('provider_kind',
                               choices=[x.lower() for x in ["LVM", "LVMTHIN", "ZFS", "ZFSTHIN", "SPDK"]],

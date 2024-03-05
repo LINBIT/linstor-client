@@ -29,7 +29,7 @@ class DrbdOptions(object):
 
     @staticmethod
     def description(_type):
-        return "Set drbd {t} options.  Use --unset-[option_name] to unset.".format(t=_type)
+        return "Set DRBD {t} options on the given LINSTOR object. Use --unset-[option_name] to unset.".format(t=_type)
 
     @staticmethod
     def numeric_symbol(_min, _max, _symbols):

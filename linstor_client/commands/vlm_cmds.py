@@ -83,7 +83,7 @@ class VolumeCommands(Commands):
         p_lp = vlm_sub.add_parser(
             Commands.Subcommands.ListProperties.LONG,
             aliases=[Commands.Subcommands.ListProperties.SHORT],
-            description="Prints all properties of the given volume.")
+            description="Lists all properties set on the specified volume.")
         p_lp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lp.add_argument(
             'node_name',
@@ -99,7 +99,7 @@ class VolumeCommands(Commands):
             Commands.Subcommands.SetProperty.LONG,
             aliases=[Commands.Subcommands.SetProperty.SHORT],
             formatter_class=argparse.RawTextHelpFormatter,
-            description='Sets properties for the given volume on the given resource.')
+            description='Sets properties for the specified volume of a specified resource and node.')
         p_setprop.add_argument(
             'node_name',
             type=str,

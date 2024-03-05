@@ -66,7 +66,7 @@ class ResourceDefinitionCommands(Commands):
         p_new_res_dfn.add_argument('--peer-slots', type=rangecheck(1, 31), help='(DRBD) peer slots for new resources')
         p_new_res_dfn.add_argument(
             '--resource-group',
-            help="Attach the resource definition to this resource group"
+            help="Attach the resource definition to this resource group."
         ).completer = self.resource_grp_completer
         p_new_res_dfn.add_argument('name',
                                    nargs="?",
@@ -77,7 +77,7 @@ class ResourceDefinitionCommands(Commands):
         p_auto_place = res_def_subp.add_parser(
             Commands.Subcommands.AutoPlace.LONG,
             aliases=[Commands.Subcommands.AutoPlace.SHORT],
-            description='Auto place a resource definition')
+            description='Auto place a resource definition.')
         self.add_auto_select_argparse_arguments(p_auto_place, use_place_count=True)
         p_auto_place.add_argument(
             'resource_definition_name',
@@ -99,7 +99,7 @@ class ResourceDefinitionCommands(Commands):
         p_mod_res_dfn = res_def_subp.add_parser(
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
-            description='Modifies a LINSTOR resource definition')
+            description='Modifies a LINSTOR resource definition.')
         p_mod_res_dfn.add_argument('--peer-slots', type=rangecheck(1, 31), help='(DRBD) peer slots for new resources')
         p_mod_res_dfn.add_argument(
             '--resource-group',
@@ -135,10 +135,11 @@ class ResourceDefinitionCommands(Commands):
         p_clone_rscdfn = res_def_subp.add_parser(
             Commands.Subcommands.Clone.LONG,
             aliases=[Commands.Subcommands.Clone.SHORT],
-            description="Clones a resource definition with all resources and volumes(including data).")
+            description="Clones a resource definition with all resources and volumes (including data).")
         p_clone_rscdfn.add_argument('-e', '--external-name', type=str, help='User specified name.')
         p_clone_rscdfn.add_argument('--no-wait', action="store_true", help="Wait till cloning is done.")
-        p_clone_rscdfn.add_argument('--wait-timeout', type=int, help="Wait this seconds for the clone to finish.")
+        p_clone_rscdfn.add_argument('--wait-timeout',
+                                    type=int, help="Wait specified number of seconds for the clone to finish.")
         p_clone_rscdfn.add_argument(
             '--use-zfs-clone',
             action="store_true",
@@ -160,7 +161,12 @@ class ResourceDefinitionCommands(Commands):
         p_wait_sync = res_def_subp.add_parser(
             Commands.Subcommands.WaitSync.LONG,
             aliases=[Commands.Subcommands.WaitSync.SHORT],
-            description="Wait till the given resource is synced or e.g. ready to be resized.")
+            description="Wait until the specified resource is synchronized (DRBD peers are up-to-date). "
+            "For use when cloning a resource definition (see `linstor resource-definition clone --help`). Cloning a "
+            "resource definition might take longer than the LINSTOR client's default timeout period (5 "
+            "minutes). To prevent a potentially endless wait, in case something goes wrong and DRBD peers never reach "
+            "an up-to-date state, you can specify a `--wait-timeout` value. If the wait timeout is exceeded, the "
+            "command will exit, even if the resource is not synchronized.")
         p_wait_sync.add_argument('--wait-timeout', type=int, help="Wait this seconds for the clone to finish.")
         p_wait_sync.add_argument(
             "resource_name", help="Resource name to be checked.").completer = self.resource_dfn_completer
@@ -193,7 +199,7 @@ class ResourceDefinitionCommands(Commands):
         p_sp = res_def_subp.add_parser(
             Commands.Subcommands.ListProperties.LONG,
             aliases=[Commands.Subcommands.ListProperties.SHORT],
-            description="Prints all properties of the given resource definitions.")
+            description="Prints all properties of the specified resource definitions.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'resource_name',

@@ -46,14 +46,14 @@ class FileCommands(Commands):
         p_file_list = file_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Lists all files in the cluster')
-        p_file_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+            description='Lists all files in the cluster.')
+        p_file_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output.')
         p_file_list.set_defaults(func=self.list)
 
         p_file_show = file_subp.add_parser(
             Commands.Subcommands.Show.LONG,
             aliases=[Commands.Subcommands.Show.SHORT],
-            description='Show a single file, including its content')
+            description='Show a single file, including its content.')
         p_file_show.add_argument(
             'file_name',
             type=str,
@@ -63,7 +63,7 @@ class FileCommands(Commands):
         p_file_modify = file_subp.add_parser(
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
-            description='Modify the contents of a file')
+            description='Modify the contents of a file.')
         p_file_modify.add_argument(
             'file_name',
             type=str,
@@ -73,7 +73,7 @@ class FileCommands(Commands):
         p_file_delete = file_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description='Delete a file')
+            description='Delete a file.')
         p_file_delete.add_argument(
             'file_name',
             type=str,
@@ -83,7 +83,7 @@ class FileCommands(Commands):
         p_file_deploy = file_subp.add_parser(
             Commands.Subcommands.Deploy.LONG,
             aliases=[Commands.Subcommands.Deploy.SHORT],
-            description='Deploy a file with a resource definition')
+            description='Deploy a file with a resource definition.')
         p_file_deploy.add_argument(
             'file_name',
             type=str,
@@ -97,7 +97,7 @@ class FileCommands(Commands):
         p_file_undeploy = file_subp.add_parser(
             Commands.Subcommands.Undeploy.LONG,
             aliases=[Commands.Subcommands.Undeploy.SHORT],
-            description='Undeploy a file with a resource definition')
+            description='Undeploy a file from a resource definition.')
         p_file_undeploy.add_argument(
             'file_name',
             type=str,
@@ -105,7 +105,7 @@ class FileCommands(Commands):
         p_file_undeploy.add_argument(
             'resource_name',
             type=str,
-            help='Name of the resource definition to undeploy the file with')
+            help='Name of the resource definition to undeploy the file from')
         p_file_undeploy.set_defaults(func=self.undeploy)
 
         self.check_subcommands(file_subp, subcmds)

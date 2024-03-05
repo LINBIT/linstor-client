@@ -83,14 +83,15 @@ class ControllerCommands(Commands):
         c_shutdown = con_subp.add_parser(
             Commands.Subcommands.Version.LONG,
             aliases=[Commands.Subcommands.Version.SHORT],
-            description='Prints the linstor controller version'
+            description='Prints the LINSTOR controller version.'
         )
         c_shutdown.set_defaults(func=self.cmd_version)
 
         p_query_max_vlm_size = con_subp.add_parser(
             Commands.Subcommands.QueryMaxVlmSize.LONG,
             aliases=[Commands.Subcommands.QueryMaxVlmSize.SHORT],
-            description='Queries the controller for storage pools maximum volume size.')
+            description='Queries the controller for the maximum volume size of storage pools, given a specified '
+            'replica count.')
         p_query_max_vlm_size.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_query_max_vlm_size.add_argument(
             '--storage-pool', '-s',

@@ -142,7 +142,7 @@ class ResourceCommands(Commands):
         p_mkavial = res_subp.add_parser(
             Commands.Subcommands.MakeAvailable.LONG,
             aliases=[Commands.Subcommands.MakeAvailable.SHORT],
-            description='Make a resource available on a node, noop if already exists.')
+            description='Make a resource available on a node. Does nothing if resource already exists on the node.')
         p_mkavial.add_argument(
             '--diskful',
             action="store_true",
@@ -170,9 +170,9 @@ class ResourceCommands(Commands):
             aliases=[Commands.Subcommands.Delete.SHORT],
             description='Removes a resource. '
             'The resource is undeployed from the node '
-            "and the resource entry is marked for removal from linstor's data "
+            "and the resource entry is marked for removal from LINSTOR's data "
             'tables. After the node has undeployed the resource, the resource '
-            "entry is removed from linstor's data tables.")
+            "entry is removed from LINSTOR's data tables.")
         p_rm_res.add_argument(
             '--async',
             action='store_true',
@@ -192,7 +192,7 @@ class ResourceCommands(Commands):
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of all resource definitions known to '
-            'linstor. By default, the list is printed as a human readable table.')
+            'LINSTOR. By default, the list is printed as a human readable table.')
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lreses.add_argument(
             '-g', '--groupby',
@@ -236,7 +236,7 @@ class ResourceCommands(Commands):
         p_involved = res_subp.add_parser(
             Commands.Subcommands.Involved.LONG,
             aliases=[Commands.Subcommands.Involved.SHORT],
-            description='Prints a list of resourced involved on a given node')
+            description='Prints a list of resources involved on a given node.')
         p_involved.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_involved.add_argument('-i', '--inuse', action="store_true", help='Only show resource bundles that are used.')
         p_involved.add_argument(
@@ -329,7 +329,7 @@ class ResourceCommands(Commands):
         Commands.add_parser_keyvalue(p_setprop, "resource")
         p_setprop.set_defaults(func=self.set_props)
 
-        # drbd peer device options
+        # drbd peer device Options
         p_drbd_peer_opts = res_subp.add_parser(
             Commands.Subcommands.DrbdPeerDeviceOptions.LONG,
             aliases=[Commands.Subcommands.DrbdPeerDeviceOptions.SHORT],
@@ -358,7 +358,7 @@ class ResourceCommands(Commands):
         p_toggle_disk = res_subp.add_parser(
             Commands.Subcommands.ToggleDisk.LONG,
             aliases=[Commands.Subcommands.ToggleDisk.SHORT],
-            description='Toggles a resource between diskless and having disks.')
+            description='Toggles a resource between diskless and diskful (backed by disk/s).')
         p_toggle_disk_group_storage = p_toggle_disk.add_mutually_exclusive_group(required=False)
         p_toggle_disk_group_storage.add_argument(
             '--storage-pool', '-s',
@@ -452,11 +452,11 @@ class ResourceCommands(Commands):
         p_transactional_create_begin = transactional_create_subp.add_parser(
             Commands.Subcommands.Begin.LONG,
             aliases=[Commands.Subcommands.Begin.SHORT],
-            description='Start group of resources to create in a single transaction.')
+            description='Define a list of resources to create in a single transaction.')
         p_transactional_create_begin.add_argument(
             '--terminate-on-error',
             action='store_true',
-            help='Abort the transaction when any command fails'
+            help='Abort the transaction when any command fails.'
         )
         p_transactional_create_begin.set_defaults(func=self.transactional_create_begin)
 

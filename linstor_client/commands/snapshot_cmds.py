@@ -148,7 +148,7 @@ class SnapshotCommands(Commands):
         p_ship_list = snapshot_subp.add_parser(
             Commands.Subcommands.ShipList.LONG,
             aliases=[Commands.Subcommands.ShipList.SHORT],
-            description='List overview over snapshot shippings')
+            description='Shows an overview list of snapshot shippings.')
         p_ship_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_ship_list.add_argument(
             '-r', '--resources',
@@ -196,7 +196,7 @@ class SnapshotCommands(Commands):
         p_lsnapshots = snapshot_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description=' Prints a list of all snapshots known to linstor. '
+            description='Prints a list of all snapshots known to LINSTOR. '
                         'By default, the list is printed as a human readable table.')
         p_lsnapshots.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lsnapshots.add_argument(
@@ -231,9 +231,11 @@ class SnapshotCommands(Commands):
         p_restore_volume_definition = volume_definition_subp.add_parser(
             Commands.Subcommands.Restore.LONG,
             aliases=[Commands.Subcommands.Restore.SHORT],
-            description='Creates volume definitions from a snapshot. '
-                        'Only the basic structure is restored, that is volume numbers and sizes. '
-                        'Additional configuration such as properties is not restored.')
+            description='Creates a volume definition (or definitions) by restoring a snapshot of a specified source '
+            'resource to a specified target resource. '
+            'Only the basic structure of the volume definition is restored, that is, volume numbers and sizes. '
+            'Additional aspects of the source volume definition, such as DRBD options or LINSTOR object properties, '
+            'are not restored.')
         p_restore_volume_definition.add_argument(
             '--from-resource', '--fr',
             required=True,
@@ -272,7 +274,7 @@ class SnapshotCommands(Commands):
         p_restore_snapshot = resource_subp.add_parser(
             Commands.Subcommands.Restore.LONG,
             aliases=[Commands.Subcommands.Restore.SHORT],
-            description='Restores a snapshot on a node. '
+            description='Restores a snapshot on a node (or nodes). '
                         'Creates a new resource initialized with the data from a given snapshot. '
                         'The volume definitions of the target resource must match those from the snapshot.')
         p_restore_snapshot.add_argument(

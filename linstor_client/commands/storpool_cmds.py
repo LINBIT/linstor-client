@@ -143,7 +143,7 @@ class StoragePoolCommands(Commands):
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
             formatter_class=argparse.RawTextHelpFormatter,
-            description='Defines a Linstor storage pool for use with Linstor.'
+            description='Defines a LINSTOR storage pool.'
         )
         create_subp = sp_c_parser.add_subparsers(
             title="Storage pool create commands",
@@ -333,7 +333,7 @@ class StoragePoolCommands(Commands):
         p_rm_storpool = sp_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description=' Removes a storage pool ')
+            description=' Removes a storage pool.')
         p_rm_storpool.add_argument(
             '-q', '--quiet',
             action="store_true",
@@ -354,8 +354,8 @@ class StoragePoolCommands(Commands):
         p_lstorpool = sp_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of all storage pool known to '
-            'linstor. By default, the list is printed as a human readable table.')
+            description='Prints a list of all storage pools in the LINSTOR cluster. '
+            'By default, the list is printed as a human readable table.')
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
                                  choices=storpoolgroupby,

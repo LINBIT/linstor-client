@@ -63,9 +63,9 @@ class VolumeDefinitionCommands(Commands):
         p_new_vol = vol_def_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Defines a volume with a capacity of `size` for use with '
+            description='Creates a volume with a capacity of `size` for use with '
             'LINSTOR. If the resource `resource_name` exists already, a new volume is '
-            'added to that resource, otherwise the resource is created automatically '
+            'added to that resource, otherwise the resource is assigned automatically '
             'with default settings. Unless `--minor MINOR` is specified, a minor number '
             "for the volume's DRBD block device is assigned automatically by the "
             'LINSTOR server.')
@@ -200,10 +200,9 @@ class VolumeDefinitionCommands(Commands):
             Commands.Subcommands.SetSize.LONG,
             aliases=[Commands.Subcommands.SetSize.SHORT],
             description='Change the size of a volume. '
-                        'Decreasing the size is only supported when the resource definition does not have any '
-                        'resources. '
-                        'Increasing the size is supported even when the resource definition has resources. '
-                        'Filesystems present on the volumes will not be resized.')
+            'Decreasing the size is only supported when the specified resource definition does not have any resources. '
+            'Increasing the size is supported even when the associated resource definition has resources. '
+            'File systems present on the volumes will not be resized.')
         p_set_size.add_argument('resource_name', type=str,
                                 help='Name of an existing resource').completer = self.resource_dfn_completer
         p_set_size.add_argument(

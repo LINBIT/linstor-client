@@ -66,25 +66,25 @@ class KeyValueStoreCommands(Commands):
         p_kv_list = kv_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Lists all key-value store instances')
+            description='Lists all key-value store instances.')
         p_kv_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_kv_list.set_defaults(func=self.list)
 
         p_kv_show = kv_subp.add_parser(
             Commands.Subcommands.Show.LONG,
             aliases=[Commands.Subcommands.Show.SHORT],
-            description='Lists all key-value pairs in a key-value store instance')
+            description='Lists all key-value pairs in a key-value store instance.')
         p_kv_show.add_argument(
             'instance',
             type=str,
             help='Key-value store instance to operate on').completer = self.instance_completer
-        p_kv_show.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_kv_show.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output.')
         p_kv_show.set_defaults(func=self.show)
 
         p_kv_modify = kv_subp.add_parser(
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
-            description='Modify the value for a given key in the key-value store')
+            description='Modify the value for a given key in the key-value store.')
         p_kv_modify.add_argument(
             'instance',
             type=str,

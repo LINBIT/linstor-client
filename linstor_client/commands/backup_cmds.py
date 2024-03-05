@@ -106,7 +106,7 @@ class BackupCommands(Commands):
         p_lbackups.add_argument(
             '-o', '--others',
             action="store_true",
-            help='Only show s3 objects that are unknown to Linstor')
+            help='Only show S3 objects that are unknown to LINSTOR')
         p_lbackups.add_argument(
             '-i', '--show-id',
             action="store_true",
@@ -145,7 +145,7 @@ class BackupCommands(Commands):
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Delete backup(s) from a remote")
+            description="Delete backup(s) from a remote.")
         p_delbak_subp = p_delbak.add_subparsers(
             title="Delete backup commands",
             metavar="",
@@ -188,18 +188,18 @@ class BackupCommands(Commands):
         p_delbak_all = p_delbak_subp.add_parser(
             BackupCommands.DeleteAll.LONG,
             aliases=[BackupCommands.DeleteAll.SHORT],
-            description="Delete all Linstor backups of the given remote. Will NOT delete non-Linstor S3 objects")
+            description="Delete all LINSTOR backups of the given remote. Will NOT delete non-LINSTOR S3 objects")
         self._add_remote(p_delbak_all)
         p_delbak_all.add_argument(
             "-c", "--cluster",
             action="store_true",
-            help="Only delete Linstor backups created by the local cluster")
+            help="Only delete LINSTOR backups created by the local cluster")
         p_delbak_all.set_defaults(func=self.del_all)
 
         p_delbak_s3 = p_delbak_subp.add_parser(
             BackupCommands.DeleteS3Key.LONG,
             aliases=[BackupCommands.DeleteS3Key.SHORT],
-            description="Delete a given S3 object. Use this option to delete non-Linstor S3 objects")
+            description="Delete a given S3 object. Use this option to delete non-LINSTOR S3 objects")
         self._add_remote(p_delbak_s3)
         p_delbak_s3.add_argument(
             "s3key",
@@ -264,7 +264,7 @@ class BackupCommands(Commands):
             Commands.Subcommands.Abort.LONG,
             aliases=[Commands.Subcommands.Abort.SHORT],
             description="Aborts a backup. If neither --create nor --restore is given, both will be aborted (if any in "
-                        "progress)")
+                        "progress).")
         self._add_remote(p_crtabort)
         p_crtabort.add_argument(
             "resource",
@@ -298,7 +298,7 @@ class BackupCommands(Commands):
         p_lstqueue = p_queuebak_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description="Lists all queued backups by listing each node and all backups queued on it.")
+            description="Lists backups that are queued on nodes.")
         p_lstqueue.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lstqueue.add_argument(
             "-n", "--nodes",
@@ -330,23 +330,23 @@ class BackupCommands(Commands):
         p_shipbak = bkp_sub.add_parser(
             BackupCommands.Ship.LONG,
             aliases=[BackupCommands.Ship.SHORT],
-            description="Ships a backup to another Linstor cluster")
+            description="Ships a backup to another LINSTOR cluster.")
         self._add_remote(p_shipbak)
         p_shipbak.add_argument(
             "source_resource",
             help="The local resource name to ship")
         p_shipbak.add_argument(
             "target_resource",
-            help="The resource name on the target Linstor cluster")
+            help="The resource name on the target LINSTOR cluster")
         p_shipbak.add_argument(
             "--source-node",
             help="Prefer the given node to send the backup")
         p_shipbak.add_argument(
             "--target-node",
-            help="Specify which node in the target Linstor cluster should receive the backup")
+            help="Specify which node in the target LINSTOR cluster should receive the backup")
         p_shipbak.add_argument(
             "--target-net-if",
-            help="Specify on which Linstor network interface the target node should listen")
+            help="Specify on which LINSTOR network interface the target node should listen")
         p_shipbak.add_argument(
             "--target-storage-pool",
             help="Specify in which target storage pool the backup should be received")
@@ -373,7 +373,7 @@ class BackupCommands(Commands):
             BackupCommands.Info.LONG,
             aliases=[BackupCommands.Info.SHORT],
             description="Retrieve information about a given backup. Either --id OR --resource must be used (not both)."
-                        " Option --storpool-rename must be used in combination with --target-node")
+                        " Option --storpool-rename must be used in combination with --target-node.")
         self._add_remote(p_infobak)
         p_infobak.add_argument(
             "-r", "--resource",
@@ -407,7 +407,7 @@ class BackupCommands(Commands):
             Commands.Subcommands.Schedule.LONG,
             aliases=[Commands.Subcommands.Schedule.SHORT],
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Schedule backup(s) from a remote")
+            description="Schedule backup(s) from a remote.")
         p_schedbak_subp = p_schedbak.add_subparsers(
             title="Schedule backup commands",
             metavar="",

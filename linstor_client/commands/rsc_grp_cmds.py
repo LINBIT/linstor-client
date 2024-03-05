@@ -56,7 +56,7 @@ class ResourceGroupCommands(Commands):
         p_new_res_grp = res_grp_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Defines a LINSTOR resource group for use with LINSTOR.')
+            description='Creates a LINSTOR resource group.')
         p_new_res_grp.add_argument(
             '-d', '--description',
             help="Description for the resource group."
@@ -76,7 +76,7 @@ class ResourceGroupCommands(Commands):
         p_mod_res_grp = res_grp_subp.add_parser(
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
-            description='Modifies a LINSTOR resource group')
+            description='Modifies the specified attribute(s) of a LINSTOR resource group.')
         p_mod_res_grp.add_argument(
             '-d', '--description',
             help="Description for the resource group."
@@ -139,7 +139,7 @@ class ResourceGroupCommands(Commands):
         p_sp = res_grp_subp.add_parser(
             Commands.Subcommands.ListProperties.LONG,
             aliases=[Commands.Subcommands.ListProperties.SHORT],
-            description="Prints all properties of the given resource group.")
+            description="Prints all properties set on a given resource group.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'name',
@@ -181,7 +181,7 @@ class ResourceGroupCommands(Commands):
         p_spawn = res_grp_subp.add_parser(
             Commands.Subcommands.Spawn.LONG,
             aliases=[Commands.Subcommands.Spawn.SHORT],
-            description="Spawns new resource with the settings of the resource group."
+            description="Spawns a new resource with the settings of the specified resource group."
         )
         p_spawn.add_argument(
             '-p', '--partial', action='store_true', help="Allow mismatching volume sizes."
@@ -218,7 +218,7 @@ class ResourceGroupCommands(Commands):
         p_qmvs = res_grp_subp.add_parser(
             Commands.Subcommands.QueryMaxVlmSize.LONG,
             aliases=[Commands.Subcommands.QueryMaxVlmSize.SHORT],
-            description="[DEPRECATED] Queries maximum volume size for a given resource-group",
+            description="[DEPRECATED] Use `linstor resource-group query-size-info` instead. Shows maximum volume size information for a specified resource group.",
         )
         p_qmvs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_qmvs.add_argument(
@@ -231,7 +231,7 @@ class ResourceGroupCommands(Commands):
         p_qsi = res_grp_subp.add_parser(
             Commands.Subcommands.QuerySizeInfo.LONG,
             aliases=[Commands.Subcommands.QuerySizeInfo.SHORT],
-            description="Query size info for a given resource-group"
+            description="Shows volume size information for a specified resource group."
         )
         p_qsi.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_qsi.add_argument(
@@ -245,8 +245,8 @@ class ResourceGroupCommands(Commands):
         p_adjust = res_grp_subp.add_parser(
             Commands.Subcommands.Adjust.LONG,
             aliases=[Commands.Subcommands.Adjust.SHORT],
-            description="Adjusts all resource-definition of the given resource-group.\n"
-                        "CAUTION: This operation might take a long time and even exceed the default 5 min timeout!"
+            description="Adjusts all resource definitions of the given resource group.\n"
+                        "CAUTION: This operation might take a long time and even exceed the default five minute timeout!"
         )
         p_adjust.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_adjust.add_argument(

@@ -160,7 +160,7 @@ class ResourceConnectionCommands(Commands):
         path_create = path_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Creates a new resource connection path'
+            description='Creates a new resource connection path.'
         )
         path_create.add_argument(
             "node_a",
@@ -195,7 +195,7 @@ class ResourceConnectionCommands(Commands):
         path_delete = path_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description='Deletes an existing resource connection path'
+            description='Deletes an existing resource connection path.'
         )
         path_delete.add_argument(
             "node_a",
@@ -222,7 +222,7 @@ class ResourceConnectionCommands(Commands):
         path_list = path_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='List all existing resource connection paths'
+            description='List all existing resource connection paths.'
         )
         path_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         path_list.add_argument(

@@ -1132,29 +1132,31 @@ class MiscCommands(Commands):
         c_sos_create = sos_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Create a sos report on the controller'
+            description='Create an SOS report on the controller (by default in the `/var/log/linstor-controller` '
+            'directory).'
         )
-        c_sos_create.add_argument('-s', '--since', help='Create sos-report with logs since n days. e.g. "3days"')
+        c_sos_create.add_argument('-s', '--since',
+                                  help='Create an SOS report with logs since n days, for example, "3days"')
         c_sos_create.add_argument(
             '-n',
             '--nodes',
             nargs='+',
             type=str,
-            help='Only include the given nodes in the sos-report'
+            help='Only include the specified nodes in the SOS report'
         ).completer = self.node_completer
         c_sos_create.add_argument(
             '-r',
             '--resources',
             nargs='+',
             type=str,
-            help='Only include nodes that have the given resources deployed in the sos-report'
+            help='Only include in the SOS report nodes that have the specified resources deployed.'
         ).completer = self.resource_completer
         c_sos_create.add_argument(
             '-e',
             '--exclude-nodes',
             nargs='+',
             type=str,
-            help='Do not include the given nodes in the sos-report'
+            help='Do not include the specified nodes in the SOS report.'
         ).completer = self.node_completer
         c_sos_create.add_argument(
             '--no-controller',
@@ -1218,7 +1220,7 @@ class MiscCommands(Commands):
         c_spc_report_query = spc_rep_subp.add_parser(
             Commands.Subcommands.Query.LONG,
             aliases=[Commands.Subcommands.Query.SHORT],
-            description='Queries the space reporting string'
+            description='Show a report of monthly storage space tracking for the LINSTOR cluster.'
         )
         c_spc_report_query.add_argument(
             '--from-file',

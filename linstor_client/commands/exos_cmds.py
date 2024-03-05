@@ -65,11 +65,11 @@ class ExosCommands(Commands):
         exos_parser = parser.add_parser(
             Commands.EXOS,
             formatter_class=argparse.RawTextHelpFormatter,
-            description='EXOS subcommands'
+            description='Exos subcommands'
         )
 
         exos_subp = exos_parser.add_subparsers(
-            title='EXOS commands',
+            title='Exos commands',
             metavar='',
             description=Commands.Subcommands.generate_desc(subcmds)
         )
@@ -77,7 +77,7 @@ class ExosCommands(Commands):
         # get defaults
         p_get_dflts = exos_subp.add_parser(
             ExosCommands.GetDefaults.LONG,
-            description='Lists the default configuration')
+            description='Lists the default configuration.')
         p_get_dflts.add_argument(
             '-p',
             '--pastable',
@@ -88,7 +88,7 @@ class ExosCommands(Commands):
         # set defaults
         p_set_dftls = exos_subp.add_parser(
             ExosCommands.SetDefaults.LONG,
-            description='Sets the default configuration for all enclosures'
+            description='Sets the default configuration for all enclosures.'
         )
         p_set_dftls.add_argument(
             '--username', type=str, help='Default username')
@@ -129,7 +129,7 @@ class ExosCommands(Commands):
         p_new_encl = exos_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Create a new EXOS enclosure'
+            description='Create a new Exos enclosure.'
         )
         self._add_create_mod_args(p_new_encl, True)
         p_new_encl.set_defaults(func=self.create_encl)
@@ -138,7 +138,7 @@ class ExosCommands(Commands):
         p_mod_encl = exos_subp.add_parser(
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
-            description='Modifies the given EXOS enclosure'
+            description='Modifies the specified Exos enclosure.'
         )
         self._add_create_mod_args(p_mod_encl, False)
         p_mod_encl.set_defaults(func=self.modify_encl)
@@ -147,7 +147,7 @@ class ExosCommands(Commands):
         p_del_encl = exos_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description='Deletes the given EXOS enclosure'
+            description='Deletes the specified Exos enclosure.'
         )
         p_del_encl.add_argument(
             'name',
@@ -160,7 +160,7 @@ class ExosCommands(Commands):
         p_list_encl = exos_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Lists the given EXOS enclosure'
+            description='Lists the Exos enclosures known to LINSTOR.'
         )
         p_list_encl.add_argument(
             '--nocache',
@@ -177,7 +177,7 @@ class ExosCommands(Commands):
         p_events_encl = exos_subp.add_parser(
             ExosCommands.Events.LONG,
             aliases=[ExosCommands.Events.SHORT],
-            description='Lists events from both given EXOS controllers'
+            description='Lists events from the controllers in the specified Exos enclosure.'
         )
         p_events_encl.add_argument(
             'name',
@@ -194,7 +194,7 @@ class ExosCommands(Commands):
         # exec
         p_exec = exos_subp.add_parser(
             ExosCommands.Exec.LONG,
-            description="Passthrough to the EXOS API"
+            description="Pass Exos API command(s) to the specified Exos enclosure."
         )
         p_exec.add_argument(
             'name',
@@ -211,8 +211,8 @@ class ExosCommands(Commands):
         # map
         p_map = exos_subp.add_parser(
             ExosCommands.Map.LONG,
-            description='Lists to which Exos controller.ports each Linstor \
-                 node is connected')
+            description='Lists to which Exos controller.ports each LINSTOR \
+                 node is connected.')
         p_map.add_argument('-p', '--pastable', action="store_true",
                            help='Generate pastable output')
         p_map.set_defaults(func=self.exos_map)
@@ -227,36 +227,36 @@ class ExosCommands(Commands):
         )
         sub_parser.add_argument(
             'ctrl_a_ip' if create else '--ctrl-a-ip',
-            help='IP address of the first EXOS controller',
+            help='IP address of the first Exos controller',
             # nargs = 1 if create else '?',
             type=str
         )
         sub_parser.add_argument(
             'ctrl_b_ip' if create else '--ctrl-b-ip',
-            help='IP address of the second EXOS controller',
+            help='IP address of the second Exos controller',
             nargs='?' if create else 1,
             type=str
         )
         sub_parser.add_argument(
             '--username',
-            help='Username for this EXOS enclosure',
+            help='Username for this Exos enclosure',
             type=str
         )
         sub_parser.add_argument(
             '--username-env',
-            help='Environment variable containing the username for this EXOS \
+            help='Environment variable containing the username for this Exos \
                 enclosure',
             type=str
         )
         sub_parser.add_argument(
             '--password',
-            help='Password for this EXOS enclosure',
+            help='Password for this Exos enclosure',
             nargs='?',
             type=str
         )
         sub_parser.add_argument(
             '--password-env',
-            help='Environment variable containing the username for this EXOS \
+            help='Environment variable containing the username for this Exos \
                 enclosure',
             type=str
         )

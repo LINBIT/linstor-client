@@ -44,7 +44,7 @@ class VolumeGroupCommands(Commands):
         p_new_vlm_grp = vlm_grp_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Defines a LINSTOR volume group for use with LINSTOR.')
+            description='Creates a LINSTOR volume group.')
         p_new_vlm_grp.add_argument('name',
                                    type=str,
                                    help='Name of the resource group.')
@@ -75,8 +75,7 @@ class VolumeGroupCommands(Commands):
         p_lvlmgrps = vlm_grp_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of all volume groups for a resource group known to '
-            'LINSTOR. By default, the list is printed as a human readable table.')
+            description='Lists all volume groups for a specified resource group. By default, the list is printed as a human readable table.')
         p_lvlmgrps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvlmgrps.add_argument('-g', '--groupby', nargs='+',
                                 choices=vlm_grp_groupby,
@@ -97,7 +96,7 @@ class VolumeGroupCommands(Commands):
         p_sp = vlm_grp_subp.add_parser(
             Commands.Subcommands.ListProperties.LONG,
             aliases=[Commands.Subcommands.ListProperties.SHORT],
-            description="Prints all properties of the given volume group.")
+            description="Shows all properties of the specified volume group.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
             'name',

@@ -161,7 +161,7 @@ class NodeCommands(Commands):
         p_create_remote_spdk_target = node_subp.add_parser(
             NodeCommands.CreateRemoteSpdkTarget.LONG,
             aliases=[NodeCommands.CreateRemoteSpdkTarget.SHORT],
-            description='Creates a virtual on controller remote SPDK target node.'
+            description='Creates a virtual remote SPDK target node on the LINSTOR controller.'
         )
         p_create_remote_spdk_target.add_argument(
             'node_name',
@@ -193,7 +193,7 @@ class NodeCommands(Commands):
         p_create_ebs_target = node_subp.add_parser(
             NodeCommands.CreateEbsTarget.LONG,
             aliases=[NodeCommands.CreateEbsTarget.SHORT],
-            description='Creates a virtual on controller EBS target node.'
+            description='Creates a virtual EBS target node on the LINSTOR controller.'
         )
         p_create_ebs_target.add_argument(
             'node_name',
@@ -207,7 +207,7 @@ class NodeCommands(Commands):
         p_modify_node = node_subp.add_parser(
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
-            description='Modify a node'
+            description='Modify node type for a specified node.'
         )
         p_modify_node.add_argument(
             '--node-type', '-t',
@@ -226,8 +226,8 @@ class NodeCommands(Commands):
         p_desc_node = node_subp.add_parser(
             Commands.Subcommands.Describe.LONG,
             aliases=[Commands.Subcommands.Describe.SHORT],
-            description='describe a node (or all nodes), list storage pools, resources and volumes under this node, '
-            'in this order')
+            description='Shows a tree view of storage pools, resources, and volumes, in that order, on a specified '
+            'node (or all nodes if none specified).')
         p_desc_node.add_argument(
             'name',
             nargs='?',
@@ -276,7 +276,7 @@ class NodeCommands(Commands):
         p_recon_node = node_subp.add_parser(
             NodeCommands.Reconnect.LONG,
             aliases=[NodeCommands.Reconnect.SHORT],
-            description='Reconnect a node reinitializing the nodes state.'
+            description='Reconnect a node to the LINSTOR controller, reinitializing the node\'s state.'
         )
         p_recon_node.add_argument(
             'nodes',
@@ -308,8 +308,8 @@ class NodeCommands(Commands):
         p_create_netinterface = interface_subp.add_parser(
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
-            description='Creates and adds a new netinterface to a given node.'
-                        ' If port is specified this net interface is used as satellite port'
+            description='Creates and adds a new network interface to a given node. '
+                        'If a port is specified this network interface is used as satellite port.'
         )
         p_create_netinterface.add_argument(
             '-p', '--port',
@@ -340,7 +340,8 @@ class NodeCommands(Commands):
         p_mod_netif = interface_subp.add_parser(
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
-            description='Change the ip listen address of a netinterface on the given node.'
+            description='Modify the network interface of a specified node: port number, communication type, active '
+            'satellite connection state, IP address listening on.'
         )
         p_mod_netif.add_argument(
             '-p', '--port', type=rangecheck(1, 65535),
@@ -367,7 +368,7 @@ class NodeCommands(Commands):
         p_delete_netinterface = interface_subp.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description='Delete a netinterface from a node.'
+            description='Delete a network interface from a node.'
         )
         p_delete_netinterface.add_argument(
             "node_name",
@@ -415,8 +416,8 @@ class NodeCommands(Commands):
         p_info_node = node_subp.add_parser(
             Commands.Subcommands.Info.LONG,
             aliases=[Commands.Subcommands.Info.SHORT],
-            description='Prints detailed info for all cluster nodes known to LINSTOR. '
-                        'By default, the list is printed as a human readable table.'
+            description='Prints detailed information about supported storage technologies for all cluster nodes '
+            'known to LINSTOR. By default, the list is printed as a human readable table.'
         )
         p_info_node.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_info_node.add_argument('-f', '--full', action="store_true", help="Also shows provider/layer errors")
@@ -429,7 +430,7 @@ class NodeCommands(Commands):
         p_lnetif = interface_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of netinterfaces of a node.'
+            description='Prints a list of network interfaces for a specified node.'
         )
         p_lnetif.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lnetif.add_argument(

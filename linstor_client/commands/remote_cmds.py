@@ -59,7 +59,7 @@ class RemoteCommands(Commands):
             Commands.Subcommands.Create.LONG,
             aliases=[Commands.Subcommands.Create.SHORT],
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Create a new remote"
+            description="Create a new remote."
         )
         p_crt_sub = p_crt_remote.add_subparsers(
             title="remote create commands",
@@ -127,7 +127,7 @@ class RemoteCommands(Commands):
             Commands.Subcommands.Modify.LONG,
             aliases=[Commands.Subcommands.Modify.SHORT],
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Modify a remote"
+            description="Modify a remote."
         )
         p_mod_sub = p_mod_remote.add_subparsers(
             title="remote modify commands",
@@ -195,7 +195,7 @@ class RemoteCommands(Commands):
         p_del_remote = rmo_sub.add_parser(
             Commands.Subcommands.Delete.LONG,
             aliases=[Commands.Subcommands.Delete.SHORT],
-            description="Delete a remote"
+            description="Delete a remote."
         )
         p_del_remote.add_argument("name").completer = self.remote_completer
         p_del_remote.set_defaults(func=self.delete)
