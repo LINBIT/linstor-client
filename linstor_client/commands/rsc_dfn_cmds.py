@@ -145,6 +145,9 @@ class ResourceDefinitionCommands(Commands):
             default=None,
             help="Use ZFS clone instead send/recv, but have a dependent snapshot")
         p_clone_rscdfn.add_argument(
+            '--volume-passphrase', nargs='*', help="User provided volume passphrases"
+        )
+        p_clone_rscdfn.add_argument(
             'source_resource',
             help="Source resource definition name").completer = self.resource_dfn_completer
         p_clone_rscdfn.add_argument('clone_name',
@@ -260,7 +263,12 @@ class ResourceDefinitionCommands(Commands):
 
     def clone(self, args):
         clone_resp = self.get_linstorapi().resource_dfn_clone(
-            args.source_resource, args.clone_name, args.external_name, use_zfs_clone=args.use_zfs_clone)
+            args.source_resource,
+            args.clone_name,
+            args.external_name,
+            use_zfs_clone=args.use_zfs_clone,
+            volume_passphrases=args.volume_passphrase
+        )
 
         rc = self.handle_replies(args, clone_resp.messages)
 
