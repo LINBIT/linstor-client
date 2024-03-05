@@ -44,7 +44,8 @@ class VolumeDefinitionCommands(Commands):
             Commands.Subcommands.SetSize,
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
-            Commands.Subcommands.DrbdOptions
+            Commands.Subcommands.DrbdOptions,
+            Commands.Subcommands.ModifyPassphrase,
         ]
 
         vol_def_parser = parser.add_parser(
@@ -217,6 +218,26 @@ class VolumeDefinitionCommands(Commands):
         p_set_size.add_argument('--gross', action="store_true")
         p_set_size.set_defaults(func=self.set_volume_size)
 
+        # modify passphrase
+        p_modifypass = vol_def_subp.add_parser(
+            Commands.Subcommands.ModifyPassphrase.LONG,
+            aliases=[Commands.Subcommands.ModifyPassphrase.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description='Sets properties for the given volume definition.')
+        p_modifypass.add_argument(
+            'resource_name',
+            help="Resource name").completer = self.resource_dfn_completer
+        p_modifypass.add_argument(
+            'volume_nr',
+            type=int,
+            help="Volume number")
+        p_modifypass.add_argument(
+            'new_passphrase',
+            nargs='?',
+            help="New volume definition passphrase",
+        )
+        p_modifypass.set_defaults(func=self.modify_pass)
+
         self.check_subcommands(vol_def_subp, subcmds)
 
     def create(self, args):
@@ -362,3 +383,17 @@ class VolumeDefinitionCommands(Commands):
         if passphrase != passphrase2:
             raise LinstorClientError("Passphrase doesn't match.", ExitCode.ARGPARSE_ERROR)
         return passphrase
+
+    def modify_pass(self, args):
+        if args.new_passphrase:
+            passphrase = args.new_passphrase
+        else:
+            # read from keyboard
+            passphrase = self._ask_passphrase()
+
+        replies = self._linstor.volume_dfn_modify_passphrase(
+            args.resource_name,
+            args.volume_nr,
+            new_passphrase=passphrase
+        )
+        return self.handle_replies(args, replies)
