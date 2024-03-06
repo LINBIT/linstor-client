@@ -81,8 +81,6 @@ class VolumeGroupCommands(Commands):
         p_lvlmgrps.add_argument('-g', '--groupby', nargs='+',
                                 choices=vlm_grp_groupby,
                                 type=str.lower).completer = vlm_grp_group_completer
-        p_lvlmgrps.add_argument('-R', '--resources', nargs='+', type=str,
-                                help='Filter by list of resource groups').completer = self.resource_grp_completer
         p_lvlmgrps.add_argument(
             '-s',
             '--show-props',
