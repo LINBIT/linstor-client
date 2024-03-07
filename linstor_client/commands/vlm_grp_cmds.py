@@ -178,6 +178,7 @@ class VolumeGroupCommands(Commands):
         tbl.show()
 
     def list(self, args):
+        args = self.merge_config_args('volume-group.list', args)
         lstmsg = [self._linstor.volume_group_list_raise(args.name)]
         return self.output_list(args, lstmsg, self.show)
 

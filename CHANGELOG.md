@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Allow to specify options for list commands in the client config file
+
 ### Removed
 
 - Unused vg l -R option

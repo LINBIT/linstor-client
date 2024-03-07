@@ -708,11 +708,13 @@ class ResourceCommands(Commands):
         tbl.show()
 
     def list(self, args):
+        args = self.merge_config_args('resource.list', args)
         lstmsg = self._linstor.resource_list(
             filter_by_nodes=args.nodes, filter_by_resources=args.resources, filter_by_props=args.props)
         return self.output_list(args, lstmsg, self.show)
 
     def list_volumes(self, args):
+        args = self.merge_config_args('volume.list', args)
         lstmsg = self._linstor.volume_list(args.nodes, args.storage_pools, args.resources)
         return self.output_list(args, lstmsg, VolumeCommands.show_volumes)
 

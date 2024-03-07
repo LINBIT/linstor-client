@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import linstor
 import linstor.sharedconsts as apiconsts
 from linstor.properties import properties
-from linstor import SizeCalc
+from linstor import SizeCalc, Config
 import linstor_client
 from linstor_client.utils import LinstorClientError, Output
 from linstor_client.consts import ExitCode, Color
@@ -441,6 +441,28 @@ class Commands(object):
 
         Commands._print_props(result, args)
         return ExitCode.OK
+
+    @classmethod
+    def _merge_config_argparseargs(cls, section, args):
+        for k, v in section.items():
+            safe_key = k.replace("-", "_")
+            try:
+                current = getattr(args, safe_key)
+            except AttributeError:
+                current = None
+            config_val = json.loads(v)
+            if isinstance(current, list):
+                setattr(args, safe_key, current + config_val)
+            else:
+                setattr(args, safe_key, config_val)
+        return args
+
+    @classmethod
+    def merge_config_args(cls, section, args):
+        if not args.disable_config:
+            list_config = Config.get_section(section)
+            return cls._merge_config_argparseargs(list_config, args)
+        return args
 
     @classmethod
     def _to_json(cls, data):

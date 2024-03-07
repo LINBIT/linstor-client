@@ -696,6 +696,7 @@ class NodeCommands(Commands):
             print("See 'linstor controller set-property --help' or 'linstor node set-property --help' for more details")
 
     def list(self, args):
+        args = self.merge_config_args('node.list', args)
         lstmsg = self._linstor.node_list(args.nodes, args.props)
         return self.output_list(args, lstmsg, self.show_nodes)
 

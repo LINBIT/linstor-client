@@ -263,6 +263,7 @@ class VolumeDefinitionCommands(Commands):
         tbl.show()
 
     def list(self, args):
+        args = self.merge_config_args('volume-definition.list', args)
         lstmsg = self._linstor.resource_dfn_list(
             query_volume_definitions=True,
             filter_by_resource_definitions=args.resource_definitions

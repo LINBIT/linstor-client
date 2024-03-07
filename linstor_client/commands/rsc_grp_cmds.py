@@ -324,6 +324,7 @@ class ResourceGroupCommands(Commands):
         tbl.show()
 
     def list(self, args):
+        args = self.merge_config_args('resource-group.list', args)
         lstmsg = [self._linstor.resource_group_list_raise(args.resource_groups, filter_by_props=args.props)]
         return self.output_list(args, lstmsg, self.show)
 

@@ -231,8 +231,8 @@ class VolumeCommands(Commands):
             Output.handle_ret(x, args.no_color, warn_as_error=args.warn_as_error)
 
     def list_volumes(self, args):
+        args = self.merge_config_args('volume.list', args)
         lstmsg = self._linstor.volume_list(args.nodes, args.storage_pools, args.resources)
-
         return self.output_list(args, lstmsg, VolumeCommands.show_volumes)
 
     @classmethod
