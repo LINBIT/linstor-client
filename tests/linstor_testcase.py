@@ -81,7 +81,7 @@ class LinstorTestCase(unittest.TestCase):
         jout = None
         try:
             sys.stdout = StringIO()
-            retcode = linstor_cli.parse_and_execute(["-m"] + cmd_args)
+            retcode = linstor_cli.parse_and_execute(["-m", "--output-version", "v0"] + cmd_args)
             self.assertEqual(0, retcode)
         finally:
             stdval = sys.stdout.getvalue()

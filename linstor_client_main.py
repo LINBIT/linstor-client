@@ -188,8 +188,8 @@ class LinStorCLI(object):
         parser.add_argument(
             '--output-version',
             choices=['v0', 'v1'],
-            default=os.environ.get(ENV_OUTPUT_VERSION, "v0"),
-            help="Machine readable output format, default 'v0'. "
+            default=os.environ.get(ENV_OUTPUT_VERSION, "v1"),
+            help="Machine readable output format, default 'v1'. "
                  "Can also be set via environment variable '{env}'".format(env=ENV_OUTPUT_VERSION)
         )
         parser.add_argument('--verbose', '-V', action='store_true')
