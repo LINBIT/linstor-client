@@ -2,7 +2,9 @@ import collections
 import getpass
 import socket
 import sys
+import json
 
+import linstor.responses
 import linstor.sharedconsts as apiconsts
 import linstor_client
 import linstor_client.argparse.argparse as argparse
@@ -402,6 +404,11 @@ class NodeCommands(Commands):
             default=[],
             help='Show these props in the list. '
                  + 'Can be key=value pairs where key is the property name and value column header')
+        p_lnodes.add_argument(
+            '--from-file',
+            type=argparse.FileType('r'),
+            help="Read data to display from the given json file",
+        )
         p_lnodes.set_defaults(func=self.list)
 
         # list info
@@ -697,7 +704,10 @@ class NodeCommands(Commands):
 
     def list(self, args):
         args = self.merge_config_args('node.list', args)
-        lstmsg = self._linstor.node_list(args.nodes, args.props)
+        if args.from_file:
+            lstmsg = [linstor.responses.NodeListResponse(json.load(args.from_file))]
+        else:
+            lstmsg = self._linstor.node_list(args.nodes, args.props)
         return self.output_list(args, lstmsg, self.show_nodes)
 
     def describe(self, args=None):

@@ -1,5 +1,8 @@
 from __future__ import print_function
 
+import json
+
+import linstor.responses
 import linstor.sharedconsts as apiconsts
 import linstor_client.argparse.argparse as argparse
 
@@ -69,6 +72,11 @@ class VolumeCommands(Commands):
             default=[],
             help='Show these props in the list. '
                  + 'Can be key=value pairs where key is the property name and value column header')
+        p_lvlms.add_argument(
+            '--from-file',
+            type=argparse.FileType('r'),
+            help="Read data to display from the given json file",
+        )
         p_lvlms.set_defaults(func=self.list_volumes)
 
         # show properties
@@ -232,7 +240,10 @@ class VolumeCommands(Commands):
 
     def list_volumes(self, args):
         args = self.merge_config_args('volume.list', args)
-        lstmsg = self._linstor.volume_list(args.nodes, args.storage_pools, args.resources)
+        if args.from_file:
+            lstmsg = [linstor.responses.ResourceResponse(json.load(args.from_file))]
+        else:
+            lstmsg = self._linstor.volume_list(args.nodes, args.storage_pools, args.resources)
         return self.output_list(args, lstmsg, VolumeCommands.show_volumes)
 
     @classmethod

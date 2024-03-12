@@ -344,7 +344,7 @@ class LinStorCLI(object):
                         self._linstorapi.keyfile = args.keyfile
                         self._linstorapi.cafile = args.cafile
                         self._linstorapi.allow_insecure = args.allow_insecure_auth
-                        self._linstorapi.curl = args.curl
+                        self._linstorapi.curl = args.curl or (hasattr(args, 'from_file') and args.from_file)
                         for cmd in self._command_list:
                             cmd._linstor = self._linstorapi
                         self._linstorapi.connect()

@@ -1,4 +1,5 @@
 from __future__ import print_function
+import json
 
 import linstor_client.argparse.argparse as argparse
 
@@ -225,6 +226,11 @@ class ResourceCommands(Commands):
             default=[],
             help='Show these props in the list. '
                  + 'Can be key=value pairs where key is the property name and value column header')
+        p_lreses.add_argument(
+            '--from-file',
+            type=argparse.FileType('r'),
+            help="Read data to display from the given json file",
+        )
         p_lreses.set_defaults(func=self.list)
 
         p_involved = res_subp.add_parser(
@@ -615,7 +621,9 @@ class ResourceCommands(Commands):
         :param RscRespWrapper lstmsg:
         :return:
         """
-        rsc_dfns = self._linstor.resource_dfn_list_raise(query_volume_definitions=False)
+        rsc_dfns = linstor.responses.ResourceDefinitionResponse([])
+        if not args.from_file:
+            self._linstor.resource_dfn_list_raise(query_volume_definitions=False)
 
         rsc_dfn_map = {x.name: x for x in rsc_dfns.resource_definitions}
         rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
@@ -709,8 +717,11 @@ class ResourceCommands(Commands):
 
     def list(self, args):
         args = self.merge_config_args('resource.list', args)
-        lstmsg = self._linstor.resource_list(
-            filter_by_nodes=args.nodes, filter_by_resources=args.resources, filter_by_props=args.props)
+        if args.from_file:
+            lstmsg = [linstor.responses.ResourceResponse(json.load(args.from_file))]
+        else:
+            lstmsg = self._linstor.resource_list(
+                filter_by_nodes=args.nodes, filter_by_resources=args.resources, filter_by_props=args.props)
         return self.output_list(args, lstmsg, self.show)
 
     def list_volumes(self, args):

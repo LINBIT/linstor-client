@@ -127,6 +127,11 @@ class ResourceGroupCommands(Commands):
             default=[],
             help='Show these props in the list. '
                  + 'Can be key=value pairs where key is the property name and value column header')
+        p_lrscgrps.add_argument(
+            '--from-file',
+            type=argparse.FileType('r'),
+            help="Read data to display from the given json file",
+        )
         p_lrscgrps.set_defaults(func=self.list)
         #  ------------ LIST END
 
@@ -314,7 +319,9 @@ class ResourceGroupCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
         for rsc_grp in rsc_grps.resource_groups:
-            vlm_grps = self.get_linstorapi().volume_group_list_raise(rsc_grp.name).volume_groups
+            vlm_grps = []
+            if not args.from_file:
+                vlm_grps = self.get_linstorapi().volume_group_list_raise(rsc_grp.name).volume_groups
             row = [
                 rsc_grp.name,
                 str(rsc_grp.select_filter),
@@ -328,7 +335,10 @@ class ResourceGroupCommands(Commands):
 
     def list(self, args):
         args = self.merge_config_args('resource-group.list', args)
-        lstmsg = [self._linstor.resource_group_list_raise(args.resource_groups, filter_by_props=args.props)]
+        if args.from_file:
+            lstmsg = [linstor.responses.ResourceGroupResponse(json.load(args.from_file))]
+        else:
+            lstmsg = [self._linstor.resource_group_list_raise(args.resource_groups, filter_by_props=args.props)]
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod

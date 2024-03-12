@@ -1,3 +1,6 @@
+from __future__ import print_function
+import json
+
 import linstor
 import linstor_client
 import linstor_client.argparse.argparse as argparse
@@ -369,6 +372,11 @@ class StoragePoolCommands(Commands):
             default=[],
             help='Show these props in the list. '
                  + 'Can be key=value pairs where key is the property name and value column header')
+        p_lstorpool.add_argument(
+            '--from-file',
+            type=argparse.FileType('r'),
+            help="Read data to display from the given json file",
+        )
         p_lstorpool.set_defaults(func=self.list)
 
         # show properties
@@ -516,7 +524,11 @@ class StoragePoolCommands(Commands):
             )
 
     def list(self, args):
-        lstmsg = self._linstor.storage_pool_list(args.nodes, args.storage_pools, args.props)
+        args = self.merge_config_args('storage-pool.list', args)
+        if args.from_file:
+            lstmsg = [linstor.responses.StoragePoolListResponse(json.load(args.from_file))]
+        else:
+            lstmsg = self._linstor.storage_pool_list(args.nodes, args.storage_pools, args.props)
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod

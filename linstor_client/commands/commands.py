@@ -1220,6 +1220,11 @@ class MiscCommands(Commands):
             aliases=[Commands.Subcommands.Query.SHORT],
             description='Queries the space reporting string'
         )
+        c_spc_report_query.add_argument(
+            '--from-file',
+            type=argparse.FileType('r'),
+            help="Read data to display from the given json file",
+        )
         c_spc_report_query.set_defaults(func=self.cmd_spc_report_query)
 
         self.check_subcommands(spc_rep_subp, space_reporting_subcmds)
@@ -1304,5 +1309,8 @@ class MiscCommands(Commands):
         print(space_report.report)
 
     def cmd_spc_report_query(self, args):
-        reply = self.get_linstorapi().space_reporting_query()
+        if args.from_file:
+            reply = [linstor.responses.SpaceReport(json.load(args.from_file))]
+        else:
+            reply = self.get_linstorapi().space_reporting_query()
         return self.output_list(args, reply, self.show_space_report)

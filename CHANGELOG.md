@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Allow to specify options for list commands in the client config file
+- Added --from-file to most list commands to read input data from a file
 
 ### Changed
 - Default machine-readable output-version is now v1
