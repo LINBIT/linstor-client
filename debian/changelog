@@ -1,3 +1,22 @@
+linstor-client (1.22.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * remove unused vg list -R option
+  * Allow to specify options for list commands in the client config file
+  * Default machine-readable output-version is now v1
+  * encryption: allow setting user volume passphrases
+  * rd-clone: added --volume-passphrase option
+  * vlm-dfn: added modify-passphrase command
+  * Added --from-file to most list commands to read input data from a file
+
+  [ Johanna Kucera ]
+  * Backups: add --force-restore option
+
+  [ Michael Troutman ]
+  * improve LINSTOR client command help text
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 02 Apr 2024 07:30:33 +0000
+
 linstor-client (1.21.1-1) experimental; urgency=medium
 
   [ Gabor Hernadi ]

@@ -8,12 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.22.0] - 2024-04-02
+
 ### Added
 - Allow to specify options for list commands in the client config file
 - Added --from-file to most list commands to read input data from a file
+- Added --volume-passphrase and modify-passphrase options/commands
+- Backups added --force-restore option
 
 ### Changed
 - Default machine-readable output-version is now v1
+- Improved command help descriptions
 
 ### Removed
 - Unused vg l -R option
