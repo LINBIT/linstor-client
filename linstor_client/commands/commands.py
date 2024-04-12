@@ -1268,6 +1268,9 @@ class MiscCommands(Commands):
         else:
             # read from keyboard
             new_passphrase = getpass.getpass("New passphrase: ")
+            passphrase2 = getpass.getpass("Retype new passphrase: ")
+            if new_passphrase != passphrase2:
+                raise LinstorClientError("Passphrase doesn't match.", ExitCode.ARGPARSE_ERROR)
 
         replies = self._linstor.crypt_modify_passphrase(old_passphrase, new_passphrase)
         return self.handle_replies(args, replies)

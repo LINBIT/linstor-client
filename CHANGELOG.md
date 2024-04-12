@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- encryption modify-passphrase now asks again for the new password
+
 ## [1.22.0] - 2024-04-02
 
 ### Added
