@@ -623,7 +623,7 @@ class ResourceCommands(Commands):
         """
         rsc_dfns = linstor.responses.ResourceDefinitionResponse([])
         if not args.from_file:
-            self._linstor.resource_dfn_list_raise(query_volume_definitions=False)
+            rsc_dfns = self._linstor.resource_dfn_list_raise(query_volume_definitions=False)
 
         rsc_dfn_map = {x.name: x for x in rsc_dfns.resource_definitions}
         rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
