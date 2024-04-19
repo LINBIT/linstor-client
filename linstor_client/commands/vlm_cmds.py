@@ -123,21 +123,45 @@ class VolumeCommands(Commands):
         return None
 
     @staticmethod
-    def volume_state_cell(vlm_state, rsc_flags, vlm_flags):
+    def volume_expects_disk_state(vlm):
+        """
+        Returns true if we expect disk state to be set for this resource, i.e. the top layer is of type DRBD
+
+        :param vlm: vlm proto
+        :return: True if the volume should have a disk state, False otherwise
+        """
+        layer_data = vlm.data_v1.get('layer_data_list', [])
+        if len(layer_data) == 0:
+            return False
+        return layer_data[0].get('type') == linstor.consts.DeviceLayerKind.DRBD.value
+
+    @staticmethod
+    def volume_disk_state(vlm):
+        """
+        Returns the disk state, if any, on the volume
+
+        :param vlm: vlm proto
+        :return: The disk state as a string, None otherwise
+        """
+        return vlm.data_v1.get('state', {}).get('disk_state')
+
+    @staticmethod
+    def volume_state_cell(vlm, rsc_flags):
         """
         Determains the status of a drbd volume for table display.
 
-        :param vlm_state: vlm_state proto
+        :param vlm: vlm proto
         :param rsc_flags: rsc flags
-        :param vlm_flags: vlm flags
         :return: A tuple (state_text, color)
         """
         tbl_color = None
-        state_prefix = 'Resizing, ' if apiconsts.FLAG_RESIZE in vlm_flags else ''
+        state_prefix = 'Resizing, ' if apiconsts.FLAG_RESIZE in vlm.flags else ''
         state = state_prefix + "Unknown"
-        if vlm_state and vlm_state.disk_state:
-            disk_state = vlm_state.disk_state
-
+        expect_state = VolumeCommands.volume_expects_disk_state(vlm)
+        disk_state = VolumeCommands.volume_disk_state(vlm)
+        if not expect_state:
+            state = state_prefix + 'Created'
+        elif disk_state:
             if disk_state == 'DUnknown':
                 state = state_prefix + "Unknown"
                 tbl_color = Color.YELLOW
@@ -202,11 +226,7 @@ class VolumeCommands(Commands):
                     state_txt = apiconsts.FLAG_RSC_INACTIVE
                     color = Color.YELLOW
                 else:
-                    vlm_state = cls.get_volume_state(
-                        rsc_state.volume_states,
-                        vlm.number
-                    ) if rsc_state else None
-                    state_txt, color = cls.volume_state_cell(vlm_state, rsc.flags, vlm.flags)
+                    state_txt, color = cls.volume_state_cell(vlm, rsc.flags)
                 has_errors = any([x.is_error() for x in vlm.reports])
                 conn_failed = (rsc.layer_data.drbd_resource
                                and any(not v.connected for k, v in rsc.layer_data.drbd_resource.connections.items()))
