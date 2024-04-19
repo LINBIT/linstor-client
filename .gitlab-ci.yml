@@ -139,7 +139,11 @@ deploy_client:
     - NO_DOC="-no-doc" make debrelease
     - curl -isSf -u $LINBIT_REGISTRY_USER:$LINBIT_REGISTRY_PASSWORD --upload-file dist/linstor-client-$LINSTOR_CLIENT_VERSION.tar.gz $LINBIT_REGISTRY_URL/repository/lbbuild-upstream/
     - curl -X DELETE -u $LINBIT_REGISTRY_USER:$LINBIT_REGISTRY_PASSWORD $LINBIT_REGISTRY_URL/repository/rhel8/x86_64/linstor-client-$LINSTOR_CLIENT_VERSION-1.noarch.rpm
-    - lbbuildctl build linstor-client --arch amd64 --ci -v "$LINSTOR_CLIENT_VERSION" -p "$PYTHON_LINSTOR_VERSION" -l -e LINBIT_REGISTRY_USER=$LINBIT_REGISTRY_USER -e LINBIT_REGISTRY_PASSWORD=$LINBIT_REGISTRY_PASSWORD -e LINBIT_REGISTRY_URL=$LINBIT_REGISTRY_URL -d ubuntu-bionic,ubuntu-focal,rhel7.0,rhel8.0
+    - lbbuildctl build linstor-client --arch amd64 --ci -v "$LINSTOR_CLIENT_VERSION" -p "$PYTHON_LINSTOR_VERSION"
+        -e LINBIT_REGISTRY_USER=$LINBIT_REGISTRY_USER
+        -e LINBIT_REGISTRY_PASSWORD=$LINBIT_REGISTRY_PASSWORD
+        -e LINBIT_REGISTRY_URL=$LINBIT_REGISTRY_URL
+        -d ubuntu-bionic,ubuntu-focal,ubuntu-noble,rhel7.0,rhel8.0
 
 staging:
   stage: deploy_tests
