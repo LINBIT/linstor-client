@@ -1,3 +1,15 @@
+linstor-client (1.22.1-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * encrypt-modify: ask for new password again(verify)
+  * gitlab: add ubuntu-noble build
+
+  [ Moritz Wanzenböck ]
+  * r l: fix ports not showing
+  * r l/v l/r lv: do not show "Unknown" state for non-DRBD resources.
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 25 Apr 2024 11:26:18 +0000
+
 linstor-client (1.22.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]

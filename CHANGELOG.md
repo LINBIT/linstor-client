@@ -8,8 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.22.1] - 2024-04-25
+
 ### Changed
 - encryption modify-passphrase now asks again for the new password
+- non-DRBD resource now show Created instead of Unknown
+
+### Fixed
+- resource list not showing ports
 
 ## [1.22.0] - 2024-04-02
 

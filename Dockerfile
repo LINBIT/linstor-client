@@ -1,7 +1,7 @@
 ARG BUILDER=registry.access.redhat.com/ubi8/ubi
 FROM $BUILDER as builder
 
-ENV LINSTOR_CLI_VERSION 1.22.0
+ENV LINSTOR_CLI_VERSION 1.22.1
 ENV PYTHON_LINSTOR_VERSION 1.22.0
 
 ENV LINSTOR_CLI_PKGNAME linstor-client
@@ -42,7 +42,7 @@ FROM registry.access.redhat.com/ubi8/ubi
 MAINTAINER Roland Kammerer <roland.kammerer@linbit.com>
 
 # ENV can not be shared between builder and "main"
-ENV LINSTOR_CLI_VERSION 1.22.0
+ENV LINSTOR_CLI_VERSION 1.22.1
 ARG release=1
 
 LABEL name="linstor-client" \
