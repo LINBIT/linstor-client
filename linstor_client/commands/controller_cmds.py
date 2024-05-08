@@ -126,6 +126,13 @@ class ControllerCommands(Commands):
             help='Tries to place resources on nodes with a different value for the given auxiliary node property.'
         )
         p_query_max_vlm_size.add_argument(
+            '--x-replicas-on-different',
+            nargs='*',
+            metavar="AUX_PROPERTY",
+            help='Accepts a list of pairs as argument. Example: "--x-replicas-on-different datacenter 2" will allow 2 '
+            'replicas on nodes that have the same value for the property "Aux/datacenter"'
+        )
+        p_query_max_vlm_size.add_argument(
             'replica_count',
             type=int,
             metavar="REPLICA_COUNT",
@@ -214,7 +221,8 @@ class ControllerCommands(Commands):
             args.do_not_place_with,
             args.do_not_place_with_regex,
             [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_same],
-            [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different]
+            [linstor.consts.NAMESPC_AUXILIARY + '/' + x for x in args.replicas_on_different],
+            self.prepare_argparse_dict_str_int(args.x_replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/')
         )
 
         api_responses = self.get_linstorapi().filter_api_call_response(replies)

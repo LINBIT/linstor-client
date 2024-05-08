@@ -273,6 +273,8 @@ class ResourceGroupCommands(Commands):
             replicas_on_same=self.prepare_argparse_list(args.replicas_on_same, linstor.consts.NAMESPC_AUXILIARY + '/'),
             replicas_on_different=self.prepare_argparse_list(
                 args.replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
+            x_replicas_on_different=self.prepare_argparse_dict_str_int(
+                args.x_replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
             diskless_on_remaining=self.parse_diskless_on_remaining(args),
             layer_list=self.prepare_argparse_list(args.layer_list),
             provider_list=self.prepare_argparse_list(args.providers),
@@ -292,6 +294,8 @@ class ResourceGroupCommands(Commands):
             replicas_on_same=self.prepare_argparse_list(args.replicas_on_same, linstor.consts.NAMESPC_AUXILIARY + '/'),
             replicas_on_different=self.prepare_argparse_list(
                 args.replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
+            x_replicas_on_different=self.prepare_argparse_dict_str_int(
+                args.x_replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
             diskless_on_remaining=self.parse_diskless_on_remaining(args),
             layer_list=args.layer_list,
             provider_list=args.providers,
@@ -392,6 +396,8 @@ class ResourceGroupCommands(Commands):
             replicas_on_same=self.prepare_argparse_list(args.replicas_on_same, linstor.consts.NAMESPC_AUXILIARY + '/'),
             replicas_on_different=self.prepare_argparse_list(
                 args.replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
+            x_replicas_on_different=self.prepare_argparse_dict_str_int(
+                args.x_replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
             diskless_on_remaining=self.parse_diskless_on_remaining(args),
             layer_list=self.prepare_argparse_list(args.layer_list),
             provider_list=self.prepare_argparse_list(args.providers),
@@ -450,6 +456,8 @@ class ResourceGroupCommands(Commands):
             replicas_on_same=self.prepare_argparse_list(args.replicas_on_same, linstor.consts.NAMESPC_AUXILIARY + '/'),
             replicas_on_different=self.prepare_argparse_list(
                 args.replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
+            x_replicas_on_different=self.prepare_argparse_dict_str_int(
+                args.x_replicas_on_different, linstor.consts.NAMESPC_AUXILIARY + '/'),
             diskless_on_remaining=self.parse_diskless_on_remaining(args),
             layer_list=self.prepare_argparse_list(args.layer_list),
             provider_list=self.prepare_argparse_list(args.providers),

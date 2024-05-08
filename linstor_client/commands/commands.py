@@ -658,6 +658,13 @@ class Commands(object):
             help='Tries to place resources on nodes with a different value for the given auxiliary node property.'
         )
         parser.add_argument(
+            '--x-replicas-on-different',
+            nargs='*',
+            metavar="AUX_PROPERTY",
+            help='Accepts a list of pairs as argument. Example: "--x-replicas-on-different datacenter 2" will allow 2 '
+            'replicas on nodes that have the same value for the property "Aux/datacenter"'
+        )
+        parser.add_argument(
             '--diskless-on-remaining',
             nargs='?',
             default=argparse.SUPPRESS,
@@ -972,7 +979,7 @@ class Commands(object):
     def prepare_argparse_list(cls, pre_list, prefix=''):
         """
         argparse returns either None, a empty list, or a list with values.
-        :param list[str] pre_list: list to prefix ith Aux/ and convert
+        :param list[str] pre_list: list to prefix with Aux/ and convert
         :param str prefix: will prefix every list value with this str
         :return: converted list
         :rtype: Optional[list[str]]
@@ -982,6 +989,28 @@ class Commands(object):
                 return [prefix + x for x in pre_list]
             else:
                 return []
+        return None
+
+    @classmethod
+    def prepare_argparse_dict_str_int(cls, pre_list, prefix=''):
+        """
+        argparse returns either None, a empty list, or a list with values.
+        we interpret the (optional) list of values as key/value pairs and build a map from it
+        :param list[str] pre_list: list to prefix with Aux/ and convert
+        :param str prefix: will prefix every list value that is interpreted as a key (not the values of the dict)
+            with this string
+        :return: converted dict
+        :rtype: Optional[dict[str, int]]
+        """
+        if pre_list is not None:
+            pre_list_len = len(pre_list)
+            if pre_list_len > 0 and pre_list_len % 2 == 0:
+                ret = {}
+                for i in range(0, pre_list_len, 2):
+                    ret[prefix + pre_list[i]] = int(pre_list[i + 1])
+                return ret
+            else:
+                return {}
         return None
 
     @classmethod
