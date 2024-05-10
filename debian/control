@@ -18,6 +18,7 @@ Architecture: all
 # keep python-natsort on its own line!
 Depends: ${misc:Depends},
          python3-natsort,
+         python3-setuptools,
          python-linstor (>=1.22.0),
          ${python3:Depends}
 Description: Linstor client command line tool
