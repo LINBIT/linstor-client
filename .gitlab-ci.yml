@@ -27,7 +27,7 @@ before_script:
   - make gensrc
   - ../venv/bin/python setup.py install
   # and also install xmlrunner package
-  - ../venv/bin/pip install xmlrunner
+  - ../venv/bin/pip install --trusted-host pypi.python.org xmlrunner
   - popd
 
 services:
