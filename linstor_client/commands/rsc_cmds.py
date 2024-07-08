@@ -178,6 +178,11 @@ class ResourceCommands(Commands):
             action='store_true',
             help='Deprecated, kept for compatibility'
         )
+        p_rm_res.add_argument(
+            '--keep-tiebreaker',
+            action='store_true',
+            help="Keeps the tiebreaker instead of accidentally deleting it. Also removes the RD property if necessary "
+            "in order to keep the resource as a tiebreaker")
         p_rm_res.add_argument('node_name',
                               nargs="+",
                               help='Name of the node').completer = self.node_completer
@@ -558,7 +563,11 @@ class ResourceCommands(Commands):
         async_flag = vars(args)["async"]
 
         # execute delete resource and flatten result list
-        replies = [x for subx in args.node_name for x in self._linstor.resource_delete(subx, args.name, async_flag)]
+        replies = [x for node_name in args.node_name for x in self._linstor.resource_delete(
+            node_name,
+            args.name,
+            async_flag,
+            args.keep_tiebreaker)]
         return self.handle_replies(args, replies)
 
     @classmethod
