@@ -1,3 +1,15 @@
+linstor-client (1.23.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * debian: add python3-setuptools dependency
+  * gitlab: fix pip xmlrunner install
+
+  [ Gabor Hernadi ]
+  * Autoplacer: Add --x-replicas-on-different option
+  * r d: Add --keep-tiebreaker
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 11 Jul 2024 09:28:12 +0000
+
 linstor-client (1.22.1-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
