@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- parse_time_str/since argument: better wrong input handling
+
 ## [1.23.0] - 2024-07-11
 
 ### Added

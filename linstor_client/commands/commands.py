@@ -735,17 +735,24 @@ class Commands(object):
         :return: datetime of the timestr
         :rtype: datetime
         """
-        m = re.match(r'(\d+\W*d)?(\d+\W*h)?', timestr)
-        if m:
-            since_dt = datetime.now()
-            if m.group(1):
-                since_dt -= timedelta(days=int(m.group(1)[:-1]))
-            if m.group(2):
-                since_dt -= timedelta(hours=int(m.group(2)[:-1]))
-            return since_dt
-        else:
+        m = re.match(r'(\d+\W*d)?(\d+\W*h?)?', timestr)
+        try:
+            if m and any(m.groups()):
+                since_dt = datetime.now()
+                if m.group(1):
+                    since_dt -= timedelta(days=int(m.group(1)[:-1]))
+                if m.group(2):
+                    hours = m.group(2)
+                    if m.group(2).endswith('h'):
+                        hours = m.group(2)[:-1]
+                    since_dt -= timedelta(hours=int(hours))
+                return since_dt
+            else:
+                raise ValueError()
+        except ValueError:
             raise LinstorClientError(
-                "Unable to parse since string: '{s_str}'. e.g.: 1d10h or 3h'".format(s_str=timestr),
+                "Unable to parse since time string: '{s_str}'. Format should be e.g.: '1d10h' or '3h'".format(
+                    s_str=timestr),
                 ExitCode.ARGPARSE_ERROR
             )
 
