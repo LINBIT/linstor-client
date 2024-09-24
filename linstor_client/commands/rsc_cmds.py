@@ -9,6 +9,7 @@ import linstor.sharedconsts as apiconsts
 from linstor_client.commands import DefaultState, Commands, DrbdOptions, ArgumentError
 from linstor_client.commands.vlm_cmds import VolumeCommands
 from linstor_client.consts import Color, ExitCode
+from linstor_client.commands.utils.skip_disk_utils import print_skip_disk_info, get_skip_disk_state_str
 
 
 class ResourceCreateTransactionState(object):
@@ -643,6 +644,7 @@ class ResourceCommands(Commands):
         for hdr in ResourceCommands._resource_headers:
             tbl.add_header(hdr)
 
+        show_skip_disk_info = False
         show_props = self._append_show_props_hdr(tbl, args.show_props)
 
         tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
@@ -677,18 +679,13 @@ class ResourceCommands(Commands):
                     if rsc_state_color is not None:
                         break
 
-            if not self.get_linstorapi().api_version_smaller("1.20.2"):
-                if "DrbdOptions/SkipDisk" in rsc.effective_properties:
-                    skip_disk_eff_prop = rsc.effective_properties["DrbdOptions/SkipDisk"]
-                    if skip_disk_eff_prop.value == "True":
-                        occurrences = [Commands.EFFECTIVE_PROPS_TYPES[skip_disk_eff_prop.type]]
-                        if skip_disk_eff_prop.other:
-                            occurrences += [self.EFFECTIVE_PROPS_TYPES[other.type]
-                                            for other in skip_disk_eff_prop.other]
-                        rsc_state += ", Skip-Disk (" + ', '.join(occurrences) + ")"
+            skip_disk_state_str = get_skip_disk_state_str(rsc)
+            if skip_disk_state_str:
+                rsc_state += skip_disk_state_str
+                show_skip_disk_info = True
 
-                        if not rsc_state_color or rsc_state_color == Color.GREEN:
-                            rsc_state_color = Color.YELLOW
+                if not rsc_state_color or rsc_state_color == Color.GREEN:
+                    rsc_state_color = Color.YELLOW
 
             # check if connections failed
             conns_col = ""
@@ -723,6 +720,9 @@ class ResourceCommands(Commands):
                     row.append(rsc.properties.get(sprop, ''))
                 tbl.add_row(row)
         tbl.show()
+
+        if show_skip_disk_info:
+            print_skip_disk_info(args.no_color)
 
     def list(self, args):
         args = self.merge_config_args('resource.list', args)

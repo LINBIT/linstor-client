@@ -10,10 +10,11 @@ import linstor_client.argparse.argparse as argparse
 from linstor import SizeCalc
 # flake8: noqa
 from linstor.responses import Resource
-from linstor_client import Table
+from linstor_client import Table, utils
 from linstor_client.commands import Commands
 from linstor_client.utils import Output
 from linstor_client.consts import Color
+from linstor_client.commands.utils.skip_disk_utils import print_skip_disk_info, get_skip_disk_state_str
 
 
 class VolumeCommands(Commands):
@@ -205,6 +206,7 @@ class VolumeCommands(Commands):
         tbl.add_column("InUse", color=Output.color(Color.DARKGREEN, args.no_color))
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
+        show_skip_disk_info = False
         show_props = cls._append_show_props_hdr(tbl, args.show_props)
 
         rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
@@ -221,6 +223,9 @@ class VolumeCommands(Commands):
                     rsc_usage = tbl.color_cell("InUse", Color.GREEN)
                 else:
                     rsc_usage = "Unused"
+
+            skip_disk_state_str = get_skip_disk_state_str(rsc)
+
             for vlm in rsc.volumes:
                 if apiconsts.FLAG_RSC_INACTIVE in rsc.flags:
                     state_txt = apiconsts.FLAG_RSC_INACTIVE
@@ -232,6 +237,14 @@ class VolumeCommands(Commands):
                                and any(not v.connected for k, v in rsc.layer_data.drbd_resource.connections.items()))
                 if conn_failed:
                     color = Color.RED
+
+                # would make sense to do this within cls.volume_state_cell method, but someone needs
+                # to set show_skip_disk_info = True
+                if skip_disk_state_str:
+                    if not color or color == Color.GREEN:
+                        color = Color.YELLOW
+                    state_txt += skip_disk_state_str
+                    show_skip_disk_info = True
 
                 state = tbl.color_cell(state_txt, color) if color else state_txt
                 if has_errors:
@@ -255,6 +268,8 @@ class VolumeCommands(Commands):
                 tbl.add_row(row)
 
         tbl.show()
+        if show_skip_disk_info:
+            print_skip_disk_info(args.no_color)
         for x in reports:
             Output.handle_ret(x, args.no_color, warn_as_error=args.warn_as_error)
 
