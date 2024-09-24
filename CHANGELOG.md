@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Added info text for SkipDisk scenarios
+- error-report delete: allow 5d or 3d10h strings to be used for --to and --since
 
 ### Fixed
 - parse_time_str/since argument: better wrong input handling

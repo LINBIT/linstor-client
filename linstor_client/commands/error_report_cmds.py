@@ -1,7 +1,7 @@
 import linstor_client.argparse.argparse as argparse
 
 from linstor_client.table import Table, TableHeader
-from linstor_client.utils import Output
+from linstor_client.utils import Output, LinstorClientError
 from linstor_client.commands import Commands
 
 from datetime import datetime
@@ -67,9 +67,11 @@ class ErrorReportCommands(Commands):
         )
         c_del_err_report.add_argument("--nodes", nargs="+", help="Only delete error reports from the given nodes")
         c_del_err_report.add_argument(
-            "--since", help="Datetime since when to delete error reports. Date format: 2020-08-30 13:40:00")
+            "--since",
+            help="Datetime since when to delete error reports. Date format: '2020-08-30 13:40:00' or '5d6h'")
         c_del_err_report.add_argument(
-            "--to", type=str, help="Datetime until to delete error reports. Date format: 2020-08-30 13:40:00")
+            "--to",
+            help="Datetime until to delete error reports. Date format: '2020-08-30 13:40:00' or '5d6h'")
         c_del_err_report.add_argument("--exception", help="Only delete error reports matching the exception")
         c_del_err_report.add_argument("id", nargs="*", help="Delete error reports matching the given ids")
         c_del_err_report.set_defaults(func=self.cmd_del_error_report)
@@ -148,12 +150,24 @@ class ErrorReportCommands(Commands):
         def_dt_str = '0000-00-00 23:59:59'
 
         if args.since:
-            since_str = self.fill_str_part(args.since, def_dt_str)
-            since_dt = datetime.strptime(since_str, dt_format)
+            try:
+                since_dt = self.parse_time_str(args.since)
+            except LinstorClientError:
+                since_str = self.fill_str_part(args.since, def_dt_str)
+                try:
+                    since_dt = datetime.strptime(since_str, dt_format)
+                except ValueError as ve:
+                    raise LinstorClientError("Unable to parse 'since' date: " + str(ve), exit_code=2)
 
         if args.to:
-            to_str = self.fill_str_part(args.to, def_dt_str)
-            to_dt = datetime.strptime(to_str, dt_format)
+            try:
+                to_dt = self.parse_time_str(args.to)
+            except LinstorClientError:
+                to_str = self.fill_str_part(args.to, def_dt_str)
+                try:
+                    to_dt = datetime.strptime(to_str, dt_format)
+                except ValueError as ve:
+                    raise LinstorClientError("Unable to parse 'to' date: " + str(ve), exit_code=2)
 
         replies = self.get_linstorapi().error_report_delete(
             args.nodes,

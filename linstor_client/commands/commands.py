@@ -735,7 +735,7 @@ class Commands(object):
         :return: datetime of the timestr
         :rtype: datetime
         """
-        m = re.match(r'(\d+\W*d)?(\d+\W*h?)?', timestr)
+        m = re.match(r'^(\d+\W*d)?(\d+\W*h?)?$', timestr)
         try:
             if m and any(m.groups()):
                 since_dt = datetime.now()
@@ -751,7 +751,7 @@ class Commands(object):
                 raise ValueError()
         except ValueError:
             raise LinstorClientError(
-                "Unable to parse since time string: '{s_str}'. Format should be e.g.: '1d10h' or '3h'".format(
+                "Unable to parse time string: '{s_str}'. Format should be e.g.: '1d10h' or '3h'".format(
                     s_str=timestr),
                 ExitCode.ARGPARSE_ERROR
             )
