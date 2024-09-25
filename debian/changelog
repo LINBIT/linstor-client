@@ -1,3 +1,14 @@
+linstor-client (1.23.1-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * parse_time_str: better wrong input handling
+  * error-report delete: allow 5d or 3d10h strings to be used for --to and [...]
+
+  [ Gabor Hernadi ]
+  * SkipDisk: Add info text when SkipDisk is enabled
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 25 Sep 2024 07:23:57 +0000
+
 linstor-client (1.23.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]

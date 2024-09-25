@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.23.1] - 2024-09-25
+
 ### Changed
 - Added info text for SkipDisk scenarios
 - error-report delete: allow 5d or 3d10h strings to be used for --to and --since
