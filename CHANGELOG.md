@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- missing commands.utils package
+
 ## [1.23.1] - 2024-09-25
 
 ### Changed
