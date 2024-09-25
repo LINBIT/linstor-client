@@ -1,3 +1,9 @@
+linstor-client (1.23.2-1) experimental; urgency=medium
+
+  * Fix missing commands.utils package
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 25 Sep 2024 09:36:16 +0000
+
 linstor-client (1.23.1-1) experimental; urgency=medium
 
   [ Rene Peinthor ]
