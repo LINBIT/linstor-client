@@ -93,22 +93,26 @@ class DrbdOptions(object):
                 default = option['default']
                 unit = ""
                 if "unit" in option:
-                    unit = "; Unit: " + cls.unit_str(option['unit'], option['unit_prefix'])
+                    unit = " in " + option['unit']
                 # sp.add_argument('--' + opt, type=rangecheck(min_, max_),
                 #                 default=default, help="Range: [%d, %d]; Default: %d" %(min_, max_, default))
                 # setting a default sets the option to != None, which makes
                 # filterNew relatively complex
                 if DrbdOptions._is_byte_unit(option):
+                    default_unit_prefix = option.get('unit_prefix', '')
+                    if default_unit_prefix != "1":
+                        dflt_unit_prefix_txt = "; Default unit: %s" % default_unit_prefix
+                    else:
+                        dflt_unit_prefix_txt = ""
                     parser.add_argument(
                         '--' + opt_key,
                         type=str,
-                        help="Range: [%d%s, %d%s]; Default: %s%s" % (
-                            min_, option.get('unit_prefix', ''),
-                            max_, option.get('unit_prefix', ''), str(default), unit)
+                        help="Range: [%d, %d]%s; Default value: %s%s" %
+                             (min_, max_, unit, str(default), dflt_unit_prefix_txt)
                     )
                 else:
                     parser.add_argument('--' + opt_key, type=rangecheck(min_, max_),
-                                        help="Range: [%d, %d]; Default: %s%s" % (min_, max_, str(default), unit))
+                                        help="Range: [%d, %d]%s; Default: %s" % (min_, max_, unit, str(default)))
             else:
                 raise LinstorError('Unknown option type ' + option['type'])
 
