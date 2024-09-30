@@ -149,6 +149,12 @@ class ResourceDefinitionCommands(Commands):
             '--volume-passphrase', nargs='*', help="User provided volume passphrases"
         )
         p_clone_rscdfn.add_argument(
+            '-l', '--layer-list',
+            type=self.layer_data_check,
+            help="Comma separated layer list, order is from right to left. "
+                 "This means the top most layer is on the left. "
+                 "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
+        p_clone_rscdfn.add_argument(
             'source_resource',
             help="Source resource definition name").completer = self.resource_dfn_completer
         p_clone_rscdfn.add_argument('clone_name',
@@ -275,7 +281,8 @@ class ResourceDefinitionCommands(Commands):
             args.clone_name,
             args.external_name,
             use_zfs_clone=args.use_zfs_clone,
-            volume_passphrases=args.volume_passphrase
+            volume_passphrases=args.volume_passphrase,
+            layer_list=args.layer_list
         )
 
         rc = self.handle_replies(args, clone_resp.messages)
