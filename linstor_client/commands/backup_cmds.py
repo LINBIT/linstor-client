@@ -257,6 +257,7 @@ class BackupCommands(Commands):
             action='store_true',
             help="Restore the backup even if a single replica already exists in the target resource"
         )
+        BackupCommands.add_target_rsc_grp_and_force_arg(p_rstbak)
         p_rstbak.set_defaults(func=self.restore)
 
         # abort backup
@@ -366,6 +367,7 @@ class BackupCommands(Commands):
             action='store_true',
             help="Restore the backup even if a single replica already exists in the target resource"
         )
+        BackupCommands.add_target_rsc_grp_and_force_arg(p_shipbak)
         p_shipbak.set_defaults(func=self.ship)
 
         # backup info
@@ -446,6 +448,7 @@ class BackupCommands(Commands):
             action='store_true',
             help="Restore the backup even if a single replica already exists in the target resource"
         )
+        BackupCommands.add_target_rsc_grp_and_force_arg(p_bak_sched_enable)
         p_bak_sched_enable.set_defaults(func=self.schedule_enable)
 
         p_bak_sched_disable = p_schedbak_subp.add_parser(
@@ -497,6 +500,18 @@ class BackupCommands(Commands):
             "remote",
             help="Remote name for backup command"
         ).completer = Commands.remote_completer
+
+    @staticmethod
+    def add_target_rsc_grp_and_force_arg(parser):
+        parser.add_argument(
+            "--target-resource-group",
+            metavar="RESOURCE_GROUP_NAME",
+            help="The resource group name in which the target resource should be put in.")
+        parser.add_argument(
+            "--force-move-resource-group", "--force-mv-rg",
+            action="store_true",
+            help="Forcefully changes the target resource definition's resource group, possibly causing a different "
+                 "autoplacer configuration")
 
     @classmethod
     def _add_cascading(cls, *parsers):
@@ -712,6 +727,8 @@ class BackupCommands(Commands):
             download_only=args.download_only,
             force_restore=args.force_restore,
             snap_name=args.snapshot,
+            dst_rsc_grp=args.target_resource_group,
+            force_mv_rsc_grp=args.force_move_resource_group
         )
         return self.handle_replies(args, replies)
 
@@ -734,7 +751,9 @@ class BackupCommands(Commands):
             dst_stor_pool=args.target_storage_pool,
             stor_pool_rename=args.storpool_rename,
             download_only=args.download_only,
-            force_restore=args.force_restore)
+            force_restore=args.force_restore,
+            dst_rsc_grp=args.target_resource_group,
+            force_mv_rsc_grp=args.force_move_resource_group)
         return self.handle_replies(args, replies)
 
     @classmethod
@@ -825,7 +844,9 @@ class BackupCommands(Commands):
             resource_group_name=args.rg,
             dst_stor_pool=args.target_storage_pool,
             storpool_rename_map=args.storpool_rename,
-            force_restore=args.force_restore)
+            force_restore=args.force_restore,
+            dst_rsc_grp=args.target_resource_group,
+            force_mv_rsc_grp=args.force_move_resource_group)
         return self.handle_replies(args, replies)
 
     def schedule_disable(self, args):
