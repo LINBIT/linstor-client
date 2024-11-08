@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added options --target-resource-group and --force-move-resource-group to backup ship, restore and schedule enable.
 - Added --layer-list argument to resource-definition clone
+- Added --resource-group argument to resource-definition clone
 
 ## [1.23.2] - 2024-09-25
 

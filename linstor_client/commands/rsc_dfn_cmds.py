@@ -155,6 +155,10 @@ class ResourceDefinitionCommands(Commands):
                  "This means the top most layer is on the left. "
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
         p_clone_rscdfn.add_argument(
+            '--resource-group', '--rsc-grp',
+            help="Resource group the cloned resource should use, this will also use storage pools of the defined RG."
+        ).completer = self.resource_grp_completer
+        p_clone_rscdfn.add_argument(
             'source_resource',
             help="Source resource definition name").completer = self.resource_dfn_completer
         p_clone_rscdfn.add_argument('clone_name',
@@ -282,7 +286,8 @@ class ResourceDefinitionCommands(Commands):
             args.external_name,
             use_zfs_clone=args.use_zfs_clone,
             volume_passphrases=args.volume_passphrase,
-            layer_list=args.layer_list
+            layer_list=args.layer_list,
+            resource_group=args.resource_group
         )
 
         rc = self.handle_replies(args, clone_resp.messages)
