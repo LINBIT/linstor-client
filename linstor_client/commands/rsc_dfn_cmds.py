@@ -17,6 +17,7 @@ class ResourceDefinitionCommands(Commands):
         linstor_client.TableHeader("ResourceName"),
         linstor_client.TableHeader("Port"),
         linstor_client.TableHeader("ResourceGroup"),
+        linstor_client.TableHeader("Layers"),
         linstor_client.TableHeader("State", color=Color.DARKGREEN)
     ]
 
@@ -337,6 +338,12 @@ class ResourceDefinitionCommands(Commands):
 
     @classmethod
     def show(cls, args, lstmsg):
+        """
+
+        :param args:
+        :param linstor.responses.ResourceDefinitionResponse lstmsg:
+        :return:
+        """
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
 
         rsc_dfn_hdr = list(cls._rsc_dfn_headers)
@@ -358,6 +365,8 @@ class ResourceDefinitionCommands(Commands):
                 row.append(rsc_dfn.external_name)
             row.append(drbd_data.port if drbd_data else "")
             row.append(rsc_dfn.resource_group_name)
+            layer_data_col = ",".join([x.type for x in rsc_dfn.layer_data])
+            row.append(layer_data_col)
             row.append(tbl.color_cell("DELETING", Color.RED)
                        if FLAG_DELETE in rsc_dfn.flags else tbl.color_cell("ok", Color.DARKGREEN))
             for sprop in show_props:
