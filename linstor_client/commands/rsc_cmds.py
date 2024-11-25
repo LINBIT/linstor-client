@@ -46,8 +46,8 @@ class ResourceCommands(Commands):
     _resource_headers = [
         linstor_client.TableHeader("ResourceName"),
         linstor_client.TableHeader("Node"),
-        linstor_client.TableHeader("Port"),
-        linstor_client.TableHeader("Usage", Color.DARKGREEN),
+        linstor_client.TableHeader("Layers"),
+        linstor_client.TableHeader("Usage"),
         linstor_client.TableHeader("Conns", Color.DARKGREEN),
         linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
         linstor_client.TableHeader("CreatedOn")
@@ -626,6 +626,11 @@ class ResourceCommands(Commands):
                 del res_response.resources[ri]
         return res_response
 
+    @staticmethod
+    def ordered_unique(seq):  # Order preserving
+        seen = set()
+        return [x for x in seq if x not in seen and not seen.add(x)]
+
     def show(self, args, lstmsg):
         """
 
@@ -633,11 +638,6 @@ class ResourceCommands(Commands):
         :param RscRespWrapper lstmsg:
         :return:
         """
-        rsc_dfns = linstor.responses.ResourceDefinitionResponse([])
-        if not args.from_file:
-            rsc_dfns = self._linstor.resource_dfn_list_raise(query_volume_definitions=False)
-
-        rsc_dfn_map = {x.name: x for x in rsc_dfns.resource_definitions}
         rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
 
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
@@ -650,10 +650,8 @@ class ResourceCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
 
         for rsc in lstmsg.resources:
-            rsc_dfn_port = ''
-            if rsc.name in rsc_dfn_map:
-                drbd_data = rsc_dfn_map[rsc.name].drbd_data
-                rsc_dfn_port = drbd_data.port if drbd_data else ""
+            layer_stack = rsc.layer_data.layer_stack
+            layer_data_col = ",".join(self.ordered_unique(layer_stack))
             marked_delete = apiconsts.FLAG_DELETE in rsc.flags or apiconsts.FLAG_DRBD_DELETE in rsc.flags
             rsc_state_obj = rsc_state_lkup.get(rsc.node_name + rsc.name)
             rsc_state_color = Color.YELLOW
@@ -710,7 +708,7 @@ class ResourceCommands(Commands):
                 row = [
                     rsc.name,
                     rsc.node_name,
-                    rsc_dfn_port,
+                    layer_data_col,
                     tbl.color_cell(rsc_usage, rsc_usage_color) if rsc_usage_color else rsc_usage,
                     conns_col,
                     tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color),
