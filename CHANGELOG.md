@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added --layer-list argument to resource-definition clone
 - Added --resource-group argument to resource-definition clone
 
+### Changed
+
+- Column order and coloring in volume list
+
 ## [1.23.2] - 2024-09-25
 
 ### Fixed

@@ -196,14 +196,14 @@ class VolumeCommands(Commands):
         :return: None
         """
         tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        tbl.add_column("Node")
         tbl.add_column("Resource")
+        tbl.add_column("Node")
         tbl.add_column("StoragePool")
         tbl.add_column("VolNr", just_txt='>')
         tbl.add_column("MinorNr", just_txt='>')
         tbl.add_column("DeviceName")
         tbl.add_column("Allocated", just_txt='>')
-        tbl.add_column("InUse", color=Output.color(Color.DARKGREEN, args.no_color))
+        tbl.add_column("InUse")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
 
         show_skip_disk_info = False
@@ -253,8 +253,8 @@ class VolumeCommands(Commands):
                     reports.append(x)
                 vlm_drbd_data = vlm.drbd_data
                 row = [
-                    rsc.node_name,
                     rsc.name,
+                    rsc.node_name,
                     vlm.storage_pool_name,
                     str(vlm.number),
                     str(vlm_drbd_data.drbd_volume_definition.minor) if vlm_drbd_data else "",
