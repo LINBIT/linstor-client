@@ -590,6 +590,20 @@ class Commands(object):
             print(Output.color_str("Unexpected additional property data, ignoring.", Color.YELLOW, args.no_color))
 
     @classmethod
+    def get_inuse_lookup(cls, rsc_states):
+        """
+        Creates a lookup dictionary where key is the resource name and the value the count of primary/inUse.
+        :param List[ResourceState] rsc_states:
+        :return:
+        :rtype: Dict[str, int]
+        """
+        inuse_lookup = {}
+        for state in rsc_states:
+            if state.in_use:
+                inuse_lookup[state.name] = inuse_lookup.get(state.name, 0) + 1
+        return inuse_lookup
+
+    @classmethod
     def get_allowed_props(cls, objname):
         return [x for x in properties[objname] if not x.get('internal', False)] if objname in properties else []
 

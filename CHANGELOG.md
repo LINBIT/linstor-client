@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Column order and coloring in volume list
 - Show layer-list instead of ports column in resource-list
+- resource/volume list show multiple primaries as yellow
 
 ## [1.23.2] - 2024-09-25
 

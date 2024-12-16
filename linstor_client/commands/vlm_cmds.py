@@ -210,6 +210,7 @@ class VolumeCommands(Commands):
         show_props = cls._append_show_props_hdr(tbl, args.show_props)
 
         rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
+        rsc_inuse_lkup = cls.get_inuse_lookup(lstmsg.resource_states)
 
         reports = []
         for rsc in lstmsg.resources:
@@ -220,7 +221,9 @@ class VolumeCommands(Commands):
             rsc_usage = ""
             if rsc_state and rsc_state.in_use is not None:
                 if rsc_state.in_use:
-                    rsc_usage = tbl.color_cell("InUse", Color.GREEN)
+                    # use yellow if there are 2 primaries (could be a problem or ok(livemigrate))
+                    rsc_usage_color = Color.YELLOW if rsc_inuse_lkup[rsc.name] > 1 else Color.GREEN
+                    rsc_usage = tbl.color_cell("InUse", rsc_usage_color)
                 else:
                     rsc_usage = "Unused"
 

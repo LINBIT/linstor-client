@@ -639,6 +639,7 @@ class ResourceCommands(Commands):
         :return:
         """
         rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
+        rsc_inuse_lkup = self.get_inuse_lookup(lstmsg.resource_states)
 
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
         for hdr in ResourceCommands._resource_headers:
@@ -666,7 +667,8 @@ class ResourceCommands(Commands):
             elif rsc_state_obj:
                 if rsc_state_obj.in_use is not None:
                     if rsc_state_obj.in_use:
-                        rsc_usage_color = Color.GREEN
+                        # use yellow if there are 2 primaries (could be a problem or ok(livemigrate))
+                        rsc_usage_color = Color.YELLOW if rsc_inuse_lkup[rsc.name] > 1 else Color.GREEN
                         rsc_usage = "InUse"
                     else:
                         rsc_usage = "Unused"
