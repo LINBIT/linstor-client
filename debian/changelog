@@ -1,3 +1,20 @@
+linstor-client (1.24.0-1) experimental; urgency=medium
+
+  [ Gabor Hernadi ]
+  * DRBD-Options: Fix help text
+  * Backup: Added --target-resource-group and --force-move-resource-group
+
+  [ Rene Peinthor ]
+  * linstor-cloudstack: add orphaned resources helper script
+  * rscdfn-clone: add --layer-list argument
+  * rscdfn: add resource-group argument to clone
+  * vlm-list: change column order rsc,node
+  * rsc-dfn-list: show layers as column
+  * rsc-list: show layers instead of port in table
+  * resource/volume-list: show multiple primaries as yellow
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 17 Dec 2024 10:12:23 +0000
+
 linstor-client (1.23.2-1) experimental; urgency=medium
 
   * Fix missing commands.utils package

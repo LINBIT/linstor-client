@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.24.0] - 2024-12-17
+
 ### Added
 
 - Added options --target-resource-group and --force-move-resource-group to backup ship, restore and schedule enable.
