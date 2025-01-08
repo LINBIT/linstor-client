@@ -492,7 +492,7 @@ class NodeCommands(Commands):
             Commands.Subcommands.Evacuate.LONG,
             aliases=[Commands.Subcommands.Evacuate.SHORT],
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Evacuate a node."
+            description="Prepares a node for deletion, by first evacuating all resource from this node."
         )
         p_evacuate_node.add_argument(
             'node_name',
