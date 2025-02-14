@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - resource-definition-list: add more state values CLONING/FAILED...
+- volume-list: show drbd replication state in its own column
 
 ## [1.24.0] - 2024-12-17
 

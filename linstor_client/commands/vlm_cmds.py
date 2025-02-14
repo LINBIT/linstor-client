@@ -187,6 +187,18 @@ class VolumeCommands(Commands):
             tbl_color = Color.YELLOW
         return state, tbl_color
 
+
+    @classmethod
+    def color_repl_state(cls, tbl, replication_state, done_percentage):
+        repl_state = replication_state
+        if replication_state in ["SyncTarget", "PausedSyncS", "PausedSyncT", "WFBitMapS", "WFBitMapT", "Unknown"]:
+            repl_state = tbl.color_cell("{s}({p:.2f}%)".format(s=replication_state, p=done_percentage), Color.YELLOW)
+        elif replication_state in ["VerifyT"]:
+            repl_state = tbl.color_cell("{s}({p:.2f}%)".format(s=replication_state, p=done_percentage), Color.GRAY)
+        elif replication_state == "Established":
+            repl_state = tbl.color_cell(replication_state, Color.GREEN)
+        return repl_state
+
     @classmethod
     def show_volumes(cls, args, lstmsg):
         """
@@ -205,6 +217,7 @@ class VolumeCommands(Commands):
         tbl.add_column("Allocated", just_txt='>')
         tbl.add_column("InUse")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
+        tbl.add_column("Repl")
 
         show_skip_disk_info = False
         show_props = cls._append_show_props_hdr(tbl, args.show_props)
@@ -264,7 +277,8 @@ class VolumeCommands(Commands):
                     vlm.device_path,
                     SizeCalc.approximate_size_string(vlm.allocated_size) if vlm.allocated_size else "",
                     rsc_usage,
-                    state
+                    state,
+                    cls.color_repl_state(tbl, vlm.state.replication_state, vlm.state.done_percentage)
                 ]
                 for sprop in show_props:
                     row.append(vlm.properties.get(sprop, ''))

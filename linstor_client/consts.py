@@ -59,7 +59,7 @@ class ExitCode(object):
 class Color(object):
     # Do not reorder
     (BLACK,
-     DARKRE,
+     DARKRED,
      DARKGREEN,
      BROWN,
      DARKBLUE,
