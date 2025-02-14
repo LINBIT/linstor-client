@@ -6,7 +6,7 @@ import linstor
 import linstor_client
 from linstor_client.commands import Commands, DrbdOptions, ArgumentError
 from linstor_client.consts import Color, ExitCode
-from linstor.sharedconsts import FLAG_DELETE
+from linstor.sharedconsts import FLAG_DELETE, FLAG_CLONING, FLAG_FAILED, FLAG_RESTORE_TARGET
 from linstor_client.utils import rangecheck, Output
 
 
@@ -18,7 +18,7 @@ class ResourceDefinitionCommands(Commands):
         linstor_client.TableHeader("Port"),
         linstor_client.TableHeader("ResourceGroup"),
         linstor_client.TableHeader("Layers"),
-        linstor_client.TableHeader("State", color=Color.DARKGREEN)
+        linstor_client.TableHeader("State")
     ]
 
     def __init__(self):
@@ -337,6 +337,21 @@ class ResourceDefinitionCommands(Commands):
         return self.handle_replies(args, replies)
 
     @classmethod
+    def state_value(cls, tbl, rsc_dfn):
+        """
+
+        :param Table tbl: table for state value
+        :param linstor.responses.ResourceDefinition rsc_dfn: resource definition data
+        :return: table cell value (+ color)
+        """
+        state = tbl.color_cell("ok", Color.DARKGREEN)
+        if FLAG_DELETE in rsc_dfn.flags or FLAG_FAILED in rsc_dfn.flags:
+            state = tbl.color_cell(FLAG_DELETE, Color.RED)
+        elif FLAG_CLONING in rsc_dfn.flags or FLAG_RESTORE_TARGET in rsc_dfn.flags:
+            state = tbl.color_cell(FLAG_CLONING, Color.YELLOW)
+        return state
+
+    @classmethod
     def show(cls, args, lstmsg):
         """
 
@@ -367,8 +382,7 @@ class ResourceDefinitionCommands(Commands):
             row.append(rsc_dfn.resource_group_name)
             layer_data_col = ",".join([x.type for x in rsc_dfn.layer_data])
             row.append(layer_data_col)
-            row.append(tbl.color_cell("DELETING", Color.RED)
-                       if FLAG_DELETE in rsc_dfn.flags else tbl.color_cell("ok", Color.DARKGREEN))
+            row.append(cls.state_value(tbl, rsc_dfn))
             for sprop in show_props:
                 row.append(rsc_dfn.properties.get(sprop, ''))
             tbl.add_row(row)
