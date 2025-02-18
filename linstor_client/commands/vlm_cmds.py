@@ -190,11 +190,14 @@ class VolumeCommands(Commands):
 
     @classmethod
     def color_repl_state(cls, tbl, replication_state, done_percentage):
+        disp_perc = "?" if done_percentage is None else "{p:.2f}%".format(p=done_percentage)
         repl_state = replication_state
-        if replication_state in ["SyncTarget", "PausedSyncS", "PausedSyncT", "WFBitMapS", "WFBitMapT", "Unknown"]:
-            repl_state = tbl.color_cell("{s}({p:.2f}%)".format(s=replication_state, p=done_percentage), Color.YELLOW)
+        if replication_state in ["WFBitMapS", "WFBitMapT", "Unknown"]:
+            repl_state = tbl.color_cell("{s}".format(s=replication_state))
+        if replication_state in ["SyncTarget", "PausedSyncS", "PausedSyncT"]:
+            repl_state = tbl.color_cell("{s}({p})".format(s=replication_state, p=disp_perc), Color.YELLOW)
         elif replication_state in ["VerifyT"]:
-            repl_state = tbl.color_cell("{s}({p:.2f}%)".format(s=replication_state, p=done_percentage), Color.GRAY)
+            repl_state = tbl.color_cell("{s}({p})".format(s=replication_state, p=disp_perc), Color.GRAY)
         elif replication_state == "Established":
             repl_state = tbl.color_cell(replication_state, Color.GREEN)
         return repl_state
