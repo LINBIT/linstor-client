@@ -143,7 +143,7 @@ deploy_client:
         -e LINBIT_REGISTRY_USER=$LINBIT_REGISTRY_USER
         -e LINBIT_REGISTRY_PASSWORD=$LINBIT_REGISTRY_PASSWORD
         -e LINBIT_REGISTRY_URL=$LINBIT_REGISTRY_URL
-        -d ubuntu-bionic,ubuntu-focal,ubuntu-noble,rhel7.0,rhel8.0
+        -d ubuntu-bionic,ubuntu-focal,ubuntu-noble,debian-bookworm,rhel7.0,rhel8.0
 
 staging:
   stage: deploy_tests
