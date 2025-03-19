@@ -1,3 +1,14 @@
+linstor-client (1.25.0-1) experimental; urgency=medium
+
+  * node: improve evacuate help message
+  * rsc-dfn: add more state values
+  * volume-list: show drbd replication state in its own column
+  * vlm_cmd: Fix trying to display None type percentage
+  * gitlab: build for debian-bookworm
+  * fix incorrect --controllers environment priority if arg was given
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 19 Mar 2025 15:22:38 +0000
+
 linstor-client (1.24.0-1) experimental; urgency=medium
 
   [ Gabor Hernadi ]
