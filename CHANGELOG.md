@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - resource-definition-list: add more state values CLONING/FAILED...
 - volume-list: show drbd replication state in its own column
 
+### Fixed
+
+- Incorrect environment controllers priority if given by commandline
+
 ## [1.24.0] - 2024-12-17
 
 ### Added

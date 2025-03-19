@@ -155,6 +155,8 @@ class LinStorCLI(object):
             self._key_value_store_commands
         ]
 
+        self._dflt_ctrl = 'localhost:%d' % linstor.Linstor.REST_PORT
+
         self._zsh_generator = None
         self._parser = self.setup_parser()
         self._all_commands = self.parser_cmds(self._parser)
@@ -180,7 +182,7 @@ class LinStorCLI(object):
         parser.add_argument('--curl',
                             action="store_true",
                             help="Do not execute the action, only output a curl equivalent command.")
-        parser.add_argument('--controllers', default='localhost:%d' % linstor.Linstor.REST_PORT,
+        parser.add_argument('--controllers', default=self._dflt_ctrl,
                             help='Comma separated list of controllers (e.g.: "host1:port,host2:port"). '
                             'If the environment variable %s is set, '
                             'the ones set via this argument get appended.' % KEY_LS_CONTROLLERS)
@@ -318,8 +320,14 @@ class LinStorCLI(object):
 
             # only connect if not already connected or a local only command was executed
             conn_errors = []
-            contrl_list = linstor.MultiLinstor.controller_uri_list(
-                os.environ.get(KEY_LS_CONTROLLERS, "") + ',' + args.controllers)
+            ctrls = []
+            if args.controllers != self._dflt_ctrl:
+                ctrls.append(args.controllers)
+            if os.environ.get(KEY_LS_CONTROLLERS):
+                ctrls.append(os.environ.get(KEY_LS_CONTROLLERS))
+            if not ctrls:
+                ctrls.append(self._dflt_ctrl)
+            contrl_list = linstor.MultiLinstor.controller_uri_list(','.join(ctrls))
             if self._linstorapi is None and args.func not in local_only_cmds:
                 username = None
                 password = None
