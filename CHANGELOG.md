@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Missing color argument in color_repl_state
+
 ## [1.25.0] - 2025-03-19
 
 ### Changed

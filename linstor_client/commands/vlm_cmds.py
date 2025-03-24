@@ -193,7 +193,7 @@ class VolumeCommands(Commands):
         disp_perc = "?" if done_percentage is None else "{p:.2f}%".format(p=done_percentage)
         repl_state = replication_state
         if replication_state in ["WFBitMapS", "WFBitMapT", "Unknown"]:
-            repl_state = tbl.color_cell("{s}".format(s=replication_state))
+            repl_state = tbl.color_cell("{s}".format(s=replication_state), Color.YELLOW)
         if replication_state in ["SyncTarget", "PausedSyncS", "PausedSyncT"]:
             repl_state = tbl.color_cell("{s}({p})".format(s=replication_state, p=disp_perc), Color.YELLOW)
         elif replication_state in ["VerifyT"]:
