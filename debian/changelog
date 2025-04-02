@@ -1,3 +1,9 @@
+linstor-client (1.25.1-1) experimental; urgency=medium
+
+  * Fix: Missing color argument in color_repl_state
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Wed, 02 Apr 2025 07:58:33 +0000
+
 linstor-client (1.25.0-1) experimental; urgency=medium
 
   * node: improve evacuate help message
