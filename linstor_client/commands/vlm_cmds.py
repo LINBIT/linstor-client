@@ -74,6 +74,12 @@ class VolumeCommands(Commands):
             help='Show these props in the list. '
                  + 'Can be key=value pairs where key is the property name and value column header')
         p_lvlms.add_argument(
+            '--hide-replication-states', '--hrep',
+            action="store_true",
+            default=False,
+            help="Hide the replication states column."
+        )
+        p_lvlms.add_argument(
             '--from-file',
             type=argparse.FileType('r'),
             help="Read data to display from the given json file",
@@ -189,18 +195,53 @@ class VolumeCommands(Commands):
 
 
     @classmethod
-    def color_repl_state(cls, tbl, replication_state, done_percentage):
+    def _format_repl_state(cls, peer_name, replication_state, done_percentage):
         disp_perc = "?" if done_percentage is None else "{p:.2f}%".format(p=done_percentage)
-        repl_state = replication_state
+        repl_state = repl_state = "{pn}: {s}".format(pn=peer_name, s=replication_state)
         if replication_state in ["WFBitMapS", "WFBitMapT", "Unknown"]:
-            repl_state = tbl.color_cell("{s}".format(s=replication_state), Color.YELLOW)
+            repl_state = "{pn}: {s}".format(pn=peer_name, s=replication_state)
         if replication_state in ["SyncTarget", "PausedSyncS", "PausedSyncT"]:
-            repl_state = tbl.color_cell("{s}({p})".format(s=replication_state, p=disp_perc), Color.YELLOW)
+            repl_state = "{pn}: {s}({p})".format(pn=peer_name, s=replication_state, p=disp_perc)
         elif replication_state in ["VerifyT"]:
-            repl_state = tbl.color_cell("{s}({p})".format(s=replication_state, p=disp_perc), Color.GRAY)
-        elif replication_state == "Established":
-            repl_state = tbl.color_cell(replication_state, Color.GREEN)
+            repl_state = "{pn}: {s}({p})".format(pn=peer_name, s=replication_state, p=disp_perc)
         return repl_state
+
+    @classmethod
+    def _has_repl_states(cls, states, search_states):
+        """
+        Checks if given states have the state
+
+        :param dict[str, linstor.responses.ReplicationState] states: replication states
+        :param list[str] search_states: state to search for
+        :rtype: bool
+        """
+        for val in states.values():
+            if val in search_states:
+                return True
+        return False
+
+    @classmethod
+    def format_repl_states(cls, tbl, states, rsc_count):
+        """
+
+        :param Table tbl: table object to render in
+        :param dict[str, linstor.responses.ReplicationState] states: replication states
+        :param int rsc_count: how many resource are involved
+        :return: string or Tuple[color, str]
+        """
+        cell = ""
+        established = [x for x in states.values() if x.replication_state == "Established"]
+        established_count = len(established)
+        if established_count == len(states):
+            cell_color = Color.GREEN if (established_count + 1) == rsc_count else Color.YELLOW
+            cell = tbl.color_cell("Established({})".format(len(established)), cell_color)
+        else:
+            cell_color = Color.YELLOW if not cls._has_repl_states(states, ["VerifyT"]) else Color.GRAY
+            cell_entry = []
+            for k, v in states.items():
+                cell_entry.append(cls._format_repl_state(k, v.replication_state, v.done_percentage))
+            cell = tbl.color_cell("\n".join(cell_entry), Color.YELLOW)
+        return cell
 
     @classmethod
     def show_volumes(cls, args, lstmsg):
@@ -220,7 +261,8 @@ class VolumeCommands(Commands):
         tbl.add_column("Allocated", just_txt='>')
         tbl.add_column("InUse")
         tbl.add_column("State", color=Output.color(Color.DARKGREEN, args.no_color), just_txt='>')
-        tbl.add_column("Repl")
+        if not args.hide_replication_states:
+            tbl.add_column("Repl")
 
         show_skip_disk_info = False
         show_props = cls._append_show_props_hdr(tbl, args.show_props)
@@ -230,6 +272,7 @@ class VolumeCommands(Commands):
 
         reports = []
         for rsc in lstmsg.resources:
+            rsc_count = len([x for x in lstmsg.resources if x.name == rsc.name])
             if apiconsts.FLAG_RSC_INACTIVE in rsc.flags and not apiconsts.FLAG_EVICTED in rsc.flags:
                 continue  # do not show non existing volumes for inactive resources
 
@@ -281,8 +324,9 @@ class VolumeCommands(Commands):
                     SizeCalc.approximate_size_string(vlm.allocated_size) if vlm.allocated_size else "",
                     rsc_usage,
                     state,
-                    cls.color_repl_state(tbl, vlm.state.replication_state, vlm.state.done_percentage)
                 ]
+                if not args.hide_replication_states:
+                    row.append(cls.format_repl_states(tbl, vlm.state.replication_states, rsc_count))
                 for sprop in show_props:
                     row.append(vlm.properties.get(sprop, ''))
                 tbl.add_row(row)

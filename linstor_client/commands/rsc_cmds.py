@@ -295,6 +295,12 @@ class ResourceCommands(Commands):
             help='Show all resources.'
         )
         p_lvlms.add_argument(
+            '--hide-replication-states', '--hrep',
+            action="store_true",
+            default=False,
+            help="Hide the replication states column."
+        )
+        p_lvlms.add_argument(
             '--show-props',
             nargs='+',
             type=str,
