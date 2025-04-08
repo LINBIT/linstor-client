@@ -1,3 +1,9 @@
+linstor-client (1.25.2-1) experimental; urgency=medium
+
+  * replication column is now resolved by checking the replication_states map
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 08 Apr 2025 07:08:49 +0000
+
 linstor-client (1.25.1-1) experimental; urgency=medium
 
   * Fix: Missing color argument in color_repl_state
