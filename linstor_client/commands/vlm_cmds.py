@@ -221,26 +221,30 @@ class VolumeCommands(Commands):
         return False
 
     @classmethod
-    def format_repl_states(cls, tbl, states, rsc_count):
+    def format_repl_states(cls, tbl, states, conn_count):
         """
 
         :param Table tbl: table object to render in
         :param dict[str, linstor.responses.ReplicationState] states: replication states
-        :param int rsc_count: how many resource are involved
+        :param int conn_count: how many resource connections are involved
         :return: string or Tuple[color, str]
         """
         cell = ""
+        if not states:
+            return cell
         established = [x for x in states.values() if x.replication_state == "Established"]
         established_count = len(established)
         if established_count == len(states):
-            cell_color = Color.GREEN if (established_count + 1) == rsc_count else Color.YELLOW
+            # TODO connection count can't be easily calculeted, so alway color green
+            # cell_color = Color.GREEN if (established_count + 1) == conn_count else Color.YELLOW
+            cell_color = Color.GREEN
             cell = tbl.color_cell("Established({})".format(len(established)), cell_color)
         else:
             cell_color = Color.YELLOW if not cls._has_repl_states(states, ["VerifyT"]) else Color.GRAY
             cell_entry = []
             for k, v in states.items():
                 cell_entry.append(cls._format_repl_state(k, v.replication_state, v.done_percentage))
-            cell = tbl.color_cell("\n".join(cell_entry), Color.YELLOW)
+            cell = tbl.color_cell("\n".join(cell_entry), cell_color)
         return cell
 
     @classmethod
@@ -326,6 +330,7 @@ class VolumeCommands(Commands):
                     state,
                 ]
                 if not args.hide_replication_states:
+                    # TODO use connection count instead of rsc_count
                     row.append(cls.format_repl_states(tbl, vlm.state.replication_states, rsc_count))
                 for sprop in show_props:
                     row.append(vlm.properties.get(sprop, ''))

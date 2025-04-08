@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- volume-list: show empty replication states if there is no data provided
+
 ## [1.25.2] - 2025-04-08
 
 ### Changed
