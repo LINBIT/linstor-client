@@ -1,3 +1,9 @@
+linstor-client (1.25.3-1) experimental; urgency=medium
+
+  * volume-list: show empty replication states if there is no data provided
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 08 Apr 2025 09:05:31 +0000
+
 linstor-client (1.25.2-1) experimental; urgency=medium
 
   * replication column is now resolved by checking the replication_states map
