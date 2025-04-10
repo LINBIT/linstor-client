@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- rd clone: fix crash if --curl was set
+
 ## [1.25.3] - 2025-04-08
 
 ### Fixed

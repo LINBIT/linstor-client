@@ -291,28 +291,31 @@ class ResourceDefinitionCommands(Commands):
             resource_group=args.resource_group
         )
 
-        rc = self.handle_replies(args, clone_resp.messages)
+        if not args.curl:
+            rc = self.handle_replies(args, clone_resp.messages)
 
-        if rc == ExitCode.OK and not args.no_wait:
-            if not args.machine_readable:
-                print("Waiting for cloning to complete...")
-            try:
-                res = self.get_linstorapi().resource_dfn_clone_wait_complete(
-                    clone_resp.source_name, clone_resp.clone_name, timeout=args.wait_timeout)
-                if not res:
-                    rc = ExitCode.API_ERROR
+            if rc == ExitCode.OK and not args.no_wait:
                 if not args.machine_readable:
-                    if res:
-                        print("{msg} cloning {c}.".format(
-                            c=clone_resp.clone_name, msg=Output.color_str("Completed", Color.GREEN, args.no_color)))
-                    else:
-                        print("{msg} cloning {c}, please check resource status or satellite errors.".format(
-                            c=clone_resp.clone_name, msg=Output.color_str("Failed", Color.RED, args.no_color)))
-            except linstor.LinstorApiCallError as e:
-                rc = ExitCode.API_ERROR
-                Output.handle_ret(e.main_error, args.no_color, False, sys.stderr)
+                    print("Waiting for cloning to complete...")
+                try:
+                    res = self.get_linstorapi().resource_dfn_clone_wait_complete(
+                        clone_resp.source_name, clone_resp.clone_name, timeout=args.wait_timeout)
+                    if not res:
+                        rc = ExitCode.API_ERROR
+                    if not args.machine_readable:
+                        if res:
+                            print("{msg} cloning {c}.".format(
+                                c=clone_resp.clone_name,
+                                msg=Output.color_str("Completed", Color.GREEN, args.no_color)))
+                        else:
+                            print("{msg} cloning {c}, please check resource status or satellite errors.".format(
+                                c=clone_resp.clone_name, msg=Output.color_str("Failed", Color.RED, args.no_color)))
+                except linstor.LinstorApiCallError as e:
+                    rc = ExitCode.API_ERROR
+                    Output.handle_ret(e.main_error, args.no_color, False, sys.stderr)
 
-        return rc
+            return rc
+        return ExitCode.OK
 
     def wait_sync(self, args):
         # this method either returns True or raises
