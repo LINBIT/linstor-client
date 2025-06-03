@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - snapshot list and set property commands
+- r l: optional --show-drbd-ports
+
+### Changed
+
+- rd l: Ports column now hidden by default (moved to resource level)
 
 ### Fixed
 

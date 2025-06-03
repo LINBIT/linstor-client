@@ -15,7 +15,6 @@ class ResourceDefinitionCommands(Commands):
 
     _rsc_dfn_headers = [
         linstor_client.TableHeader("ResourceName"),
-        linstor_client.TableHeader("Port"),
         linstor_client.TableHeader("ResourceGroup"),
         linstor_client.TableHeader("Layers"),
         linstor_client.TableHeader("State")
@@ -102,6 +101,7 @@ class ResourceDefinitionCommands(Commands):
             aliases=[Commands.Subcommands.Modify.SHORT],
             description='Modifies a LINSTOR resource definition.')
         p_mod_res_dfn.add_argument('--peer-slots', type=rangecheck(1, 31), help='(DRBD) peer slots for new resources')
+        p_mod_res_dfn.add_argument('-p', '--port', type=rangecheck(1, 65535))
         p_mod_res_dfn.add_argument(
             '--resource-group',
             help='Change resource group to the given one.').completer = self.resource_grp_completer
@@ -133,6 +133,7 @@ class ResourceDefinitionCommands(Commands):
         rsc_dfn_groupby = [x.name.lower() for x in self._rsc_dfn_headers]
         rsc_dfn_group_completer = Commands.show_group_completer(rsc_dfn_groupby, "groupby")
 
+        # clone
         p_clone_rscdfn = res_def_subp.add_parser(
             Commands.Subcommands.Clone.LONG,
             aliases=[Commands.Subcommands.Clone.SHORT],
@@ -183,6 +184,7 @@ class ResourceDefinitionCommands(Commands):
             "resource_name", help="Resource name to be checked.").completer = self.resource_dfn_completer
         p_wait_sync.set_defaults(func=self.wait_sync)
 
+        # list
         p_lrscdfs = res_def_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
@@ -204,6 +206,12 @@ class ResourceDefinitionCommands(Commands):
             default=[],
             help='Show these props in the list. '
                  + 'Can be key=value pairs where key is the property name and value column header')
+        p_lrscdfs.add_argument(
+            '--show-preferred-drbd-ports',
+            '--ports',
+            action="store_true",
+            help="Show the preferred DRBD TCP ports"
+        )
         p_lrscdfs.set_defaults(func=self.list)
 
         # show properties
@@ -328,7 +336,8 @@ class ResourceDefinitionCommands(Commands):
             {},
             [],
             args.peer_slots,
-            resource_group=args.resource_group
+            resource_group=args.resource_group,
+            port=args.port
         )
         return self.handle_replies(args, replies)
 
@@ -355,19 +364,30 @@ class ResourceDefinitionCommands(Commands):
         return state
 
     @classmethod
+    def _build_header_list(cls, show_ext_name, show_preferred_drbd_ports):
+        ret = list(cls._rsc_dfn_headers)
+        offset = 0
+        if show_ext_name:
+            ret.insert(1, linstor_client.TableHeader("External"))
+            offset += 1
+
+        if show_preferred_drbd_ports:
+            ret.insert(offset + 1, linstor_client.TableHeader("Port"))
+
+        return ret
+
+    @classmethod
     def show(cls, args, lstmsg):
         """
-
         :param args:
         :param linstor.responses.ResourceDefinitionResponse lstmsg:
         :return:
         """
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
 
-        rsc_dfn_hdr = list(cls._rsc_dfn_headers)
-
-        if args.external_name:
-            rsc_dfn_hdr.insert(1, linstor_client.TableHeader("External"))
+        show_ext_name = args.external_name
+        show_preferred_drbd_ports = args.show_preferred_drbd_ports
+        rsc_dfn_hdr = cls._build_header_list(show_ext_name, show_preferred_drbd_ports)
 
         for hdr in rsc_dfn_hdr:
             tbl.add_header(hdr)
@@ -377,11 +397,21 @@ class ResourceDefinitionCommands(Commands):
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
         for rsc_dfn in lstmsg.resource_definitions:
-            drbd_data = rsc_dfn.drbd_data
             row = [rsc_dfn.name]
-            if args.external_name and isinstance(rsc_dfn.external_name, str):
-                row.append(rsc_dfn.external_name)
-            row.append(drbd_data.port if drbd_data else "")
+            if show_ext_name:
+                if isinstance(rsc_dfn.external_name, str):
+                    row.append(rsc_dfn.external_name)
+                else:
+                    row.append("-")
+            if show_preferred_drbd_ports:
+                found_port = False
+                for layer_data in rsc_dfn.layer_data:
+                    if layer_data.type == "DRBD" and layer_data.drbd_resource:
+                        row.append(str(layer_data.drbd_resource.port))
+                        found_port = True
+                        break
+                if not found_port:
+                    row.append("-")
             row.append(rsc_dfn.resource_group_name)
             layer_data_col = ",".join([x.type for x in rsc_dfn.layer_data])
             row.append(layer_data_col)

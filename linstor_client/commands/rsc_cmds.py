@@ -10,6 +10,7 @@ from linstor_client.commands import DefaultState, Commands, DrbdOptions, Argumen
 from linstor_client.commands.vlm_cmds import VolumeCommands
 from linstor_client.consts import Color, ExitCode
 from linstor_client.commands.utils.skip_disk_utils import print_skip_disk_info, get_skip_disk_state_str
+from linstor_client.utils import rangecheck
 
 
 class ResourceCreateTransactionState(object):
@@ -42,16 +43,6 @@ class RscRespWrapper(object):
 
 class ResourceCommands(Commands):
     CONN_OBJECT_NAME = 'rsc-conn'
-
-    _resource_headers = [
-        linstor_client.TableHeader("ResourceName"),
-        linstor_client.TableHeader("Node"),
-        linstor_client.TableHeader("Layers"),
-        linstor_client.TableHeader("Usage"),
-        linstor_client.TableHeader("Conns", Color.DARKGREEN),
-        linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
-        linstor_client.TableHeader("CreatedOn")
-    ]
 
     def __init__(self, state_service):
         super(ResourceCommands, self).__init__()
@@ -127,6 +118,10 @@ class ResourceCommands(Commands):
             action="store_true",
             help="Marks the resource created as inactive"
         )
+        p_new_res.add_argument(
+            '--drbd-tcp-port',
+            type=rangecheck(1, 65535),
+            help='Set the TCP port for DRBD to use')
         self.add_auto_select_argparse_arguments(p_new_res)
         p_new_res.add_argument(
             'node_name',
@@ -155,6 +150,10 @@ class ResourceCommands(Commands):
             help="Comma separated layer list, order is from left to right top-down "
                  "This means the top most layer is on the left. "
                  "Possible layers are: " + ",".join(linstor.Linstor.layer_list()))
+        p_mkavial.add_argument(
+            '--drbd-tcp-port',
+            type=rangecheck(1, 65535),
+            help='Set the TCP port for DRBD to use')
         p_mkavial.add_argument(
             'node_name',
             type=str,
@@ -191,14 +190,15 @@ class ResourceCommands(Commands):
                               help='Name of the resource to delete').completer = self.resource_completer
         p_rm_res.set_defaults(func=self.delete)
 
-        resgroupby = [x.name.lower() for x in ResourceCommands._resource_headers]
+        resgroupby = [x.name.lower() for x in self._get_headers(False)]
         res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
 
+        # list resources
         p_lreses = res_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Prints a list of all resource definitions known to '
-            'LINSTOR. By default, the list is printed as a human readable table.')
+            description='Prints a list of all resource known to LINSTOR. By default, the list is printed as a human '
+            'readable table.')
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lreses.add_argument(
             '-g', '--groupby',
@@ -237,8 +237,13 @@ class ResourceCommands(Commands):
             type=argparse.FileType('r'),
             help="Read data to display from the given json file",
         )
+        p_lreses.add_argument(
+            '--show-drbd-ports',
+            action='store_true',
+            help="Show the 'DRBD Ports' column")
         p_lreses.set_defaults(func=self.list)
 
+        # involved resources
         p_involved = res_subp.add_parser(
             Commands.Subcommands.Involved.LONG,
             aliases=[Commands.Subcommands.Involved.SHORT],
@@ -414,7 +419,7 @@ class ResourceCommands(Commands):
         ).completer = self.resource_dfn_completer
         p_toggle_disk.set_defaults(func=self.toggle_disk, parser=p_toggle_disk)
 
-        # activate/deactivate resource commands
+        # activate resource
         p_activate = res_subp.add_parser(
             Commands.Subcommands.Activate.LONG,
             aliases=[Commands.Subcommands.Activate.SHORT],
@@ -429,6 +434,7 @@ class ResourceCommands(Commands):
             help='Name of the resource').completer = self.resource_dfn_completer
         p_activate.set_defaults(func=self.activate)
 
+        # deactivate resource
         p_deactivate = res_subp.add_parser(
             Commands.Subcommands.Deactivate.LONG,
             aliases=[Commands.Subcommands.Deactivate.SHORT],
@@ -496,6 +502,22 @@ class ResourceCommands(Commands):
         self.check_subcommands(transactional_create_subp, transactional_create_subcmds)
         self.check_subcommands(res_subp, subcmds)
 
+    def _get_headers(self, include_drbd_props=False):
+        ret = [
+            linstor_client.TableHeader("ResourceName"),
+            linstor_client.TableHeader("Node")
+        ]
+        if include_drbd_props:
+            ret.append(linstor_client.TableHeader("DRBD Ports"))
+        ret += [
+            linstor_client.TableHeader("Layers"),
+            linstor_client.TableHeader("Usage"),
+            linstor_client.TableHeader("Conns", Color.DARKGREEN),
+            linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
+            linstor_client.TableHeader("CreatedOn")
+        ]
+        return ret
+
     def create(self, args):
         async_flag = vars(args)["async"]
         current_state = self._state_service.get_state()
@@ -548,7 +570,8 @@ class ResourceCommands(Commands):
                     args.drbd_diskless,
                     args.nvme_initiator,
                     args.ebs_initiator,
-                    not args.inactive
+                    not args.inactive,
+                    [args.drbd_tcp_port] if args.drbd_tcp_port else None
                 )
                 for node_name in args.node_name
             ]
@@ -563,7 +586,11 @@ class ResourceCommands(Commands):
 
     def make_available(self, args):
         replies = self.get_linstorapi().resource_make_available(
-            args.node_name, args.resource_name, args.diskful, args.layer_list)
+            args.node_name,
+            args.resource_name,
+            args.diskful,
+            args.layer_list,
+            [args.drbd_tcp_port] if args.drbd_tcp_port else None)
         return self.handle_replies(args, replies)
 
     def delete(self, args):
@@ -639,7 +666,6 @@ class ResourceCommands(Commands):
 
     def show(self, args, lstmsg):
         """
-
         :param args:
         :param RscRespWrapper lstmsg:
         :return:
@@ -648,13 +674,17 @@ class ResourceCommands(Commands):
         rsc_inuse_lkup = self.get_inuse_lookup(lstmsg.resource_states)
 
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        for hdr in ResourceCommands._resource_headers:
+
+        show_drbd_ports = args.show_drbd_ports
+
+        headers = self._get_headers(show_drbd_ports)
+        for hdr in headers:
             tbl.add_header(hdr)
 
         show_skip_disk_info = False
         show_props = self._append_show_props_hdr(tbl, args.show_props)
 
-        tbl.set_groupby(args.groupby if args.groupby else [ResourceCommands._resource_headers[0].name])
+        tbl.set_groupby(args.groupby if args.groupby else [headers[0].name])
 
         for rsc in lstmsg.resources:
             layer_stack = rsc.layer_data.layer_stack
@@ -696,9 +726,11 @@ class ResourceCommands(Commands):
             # check if connections failed
             conns_col = ""
             conns_col_entries = None
+            drbd_ports = []
             if rsc_state != "Unknown" and not self.get_linstorapi().api_version_smaller("1.0.15"):
                 failed_conns = {}
                 if rsc.layer_data.drbd_resource is not None:
+                    drbd_ports = rsc.layer_data.drbd_resource.tcp_ports
                     connections = rsc.layer_data.drbd_resource.connections
                     for k, v in connections.items():
                         if not v.connected:
@@ -713,9 +745,10 @@ class ResourceCommands(Commands):
                 show_row = rsc_state_color is not None or not (conns_col == 'Ok' or conns_col == "")
 
             if show_row:
-                row = [
-                    rsc.name,
-                    rsc.node_name,
+                row = [rsc.name, rsc.node_name]
+                if show_drbd_ports:
+                    row.append(", ".join([str(port) for port in drbd_ports]) if drbd_ports else "")
+                row += [
                     layer_data_col,
                     tbl.color_cell(rsc_usage, rsc_usage_color) if rsc_usage_color else rsc_usage,
                     conns_col,
