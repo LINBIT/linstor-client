@@ -31,6 +31,8 @@ class SnapshotCommands(Commands):
             Commands.Subcommands.Create,
             SnapshotCommands.CreateMulti,
             Commands.Subcommands.List,
+            Commands.Subcommands.ListProperties,
+            Commands.Subcommands.SetProperty,
             Commands.Subcommands.Delete,
             Commands.Subcommands.Rollback,
             Commands.Subcommands.Resource,
@@ -210,6 +212,36 @@ class SnapshotCommands(Commands):
             type=str,
             help='Filter by list of nodes').completer = self.node_completer
         p_lsnapshots.set_defaults(func=self.list)
+
+        # show properties
+        p_sp = snapshot_subp.add_parser(
+            Commands.Subcommands.ListProperties.LONG,
+            aliases=[Commands.Subcommands.ListProperties.SHORT],
+            description="Prints all properties of the specified snapshot definition.")
+        p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_sp.add_argument(
+            'resource_name',
+            help="Resource definition for which to print the properties"
+        ).completer = self.resource_dfn_completer
+        p_sp.add_argument(
+            'snapshot_name',
+            help="Snapshot for which to print the properties"
+        )
+        p_sp.set_defaults(func=self.print_props)
+
+        # set properties
+        p_setprop = snapshot_subp.add_parser(
+            Commands.Subcommands.SetProperty.LONG,
+            aliases=[Commands.Subcommands.SetProperty.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description='Sets properties for the given snapshot definition.')
+        p_setprop.add_argument('resource_name', type=str, help='Name of the snapshot definition')
+        p_setprop.add_argument(
+            'snapshot_name',
+            help="Snapshot for which to set the properties"
+        )
+        Commands.add_parser_keyvalue(p_setprop, 'snapshot-definition')
+        p_setprop.set_defaults(func=self.set_props)
 
         # volume definition commands
         volume_definition_subcmds = [
@@ -438,3 +470,33 @@ class SnapshotCommands(Commands):
             filter_by_snapshots=args.snapshots,
             filter_by_status=args.status)
         return self.output_list(args, lstmsg, self.show_ship_list)
+
+    @classmethod
+    def _props_show(cls, args, snap_resp):
+        """
+
+        :param args:
+        :param snap_resp: SnapshotResponse
+        :return:
+        """
+        result = []
+        for snap in snap_resp.snapshots:
+            if snap.name == args.snapshot_name:
+                result.append(snap.properties)
+        return result
+
+    def print_props(self, args):
+        lstmsg = self._linstor.snapshot_dfn_list(
+            filter_by_resources=[args.resource_name]
+        )
+        return self.output_props_list(args, lstmsg, self._props_show)
+
+    def set_props(self, args):
+        args = self._attach_aux_prop(args)
+        mod_prop_dict = Commands.parse_key_value_pairs([(args.key, args.value)])
+        replies = self._linstor.snapshot_dfn_modify(
+            args.resource_name,
+            args.snapshot_name,
+            mod_prop_dict['pairs'],
+            mod_prop_dict['delete'])
+        return self.handle_replies(args, replies)

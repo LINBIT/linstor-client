@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- snapshot list and set property commands
+
 ## [1.25.4] - 2025-04-10
 
 ### Fixed
