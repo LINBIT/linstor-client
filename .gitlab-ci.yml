@@ -119,7 +119,7 @@ deploy_client:
     - |
       case "$CI_COMMIT_REF_NAME" in
         "master") VERSION_SUFFIX="" ;;
-        *) VERSION_SUFFIX=.dev$(echo -n $CI_COMMIT_REF_NAME | md5sum| sed -e 's/[^0-9]//g' | cut -c -9) ;;
+        *) VERSION_SUFFIX=.dev$(echo -n $CI_COMMIT_REF_NAME | md5sum| sed -e 's/[^1-9]//g' | cut -c -9) ;;
       esac
     - LINSTOR_CLIENT_VERSION=1.99.0$VERSION_SUFFIX
     - PYTHON_LINSTOR_VERSION=1.99.0
