@@ -159,11 +159,13 @@ class DrbdOptions(object):
                         value = str(value)
                     else:
                         raise ArgumentError(
-                            prop_name + " value {v}{u} is out of range [{mi}-{ma}]".format(
+                            prop_name + " value {v}{u} is out of range [{mi}-{ma}]{un}".format(
                                 v=value,
                                 u=SizeCalc.unit_to_str(unit),
-                                mi=str(option['min']) + option.get('unit_prefix', ''),
-                                ma=str(option['max']) + option.get('unit_prefix', '')))
+                                mi=option['min'],
+                                ma=option['max'],
+                                un=option.get('unit', ''),
+                            ))
                 modify[key] = str(value)
 
         return modify, deletes
