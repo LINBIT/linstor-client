@@ -6,19 +6,11 @@ from linstor_client.consts import Color
 from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
 from linstor.sharedconsts import FLAG_BACKUP, FLAG_SHIPPING, FLAG_BACKUP_TARGET, FLAG_BACKUP_SOURCE
 from linstor_client.utils import Output
-from linstor import SizeCalc, consts
+from linstor import SizeCalc
 from linstor_client.commands.backup_cmds import BackupCommands
 
 
 class SnapshotCommands(Commands):
-    _shipping_headers = [
-        linstor_client.TableHeader("ResName"),
-        linstor_client.TableHeader("SnapName"),
-        linstor_client.TableHeader("FromNode"),
-        linstor_client.TableHeader("ToNode"),
-        linstor_client.TableHeader("Status", Color.DARKGREEN, alignment_text=linstor_client.TableHeader.ALIGN_RIGHT)
-    ]
-
     class CreateMulti(object):
         LONG = "create-multiple"
         SHORT = "cm"
@@ -37,8 +29,6 @@ class SnapshotCommands(Commands):
             Commands.Subcommands.Rollback,
             Commands.Subcommands.Resource,
             Commands.Subcommands.VolumeDefinition,
-            Commands.Subcommands.Ship,
-            Commands.Subcommands.ShipList
         ]
 
         # Snapshot subcommands
@@ -125,55 +115,6 @@ class SnapshotCommands(Commands):
             nargs='+',
             help='Only delete the snapshot from the given nodes. Default: Delete given snapshot from all nodes')
         p_delete_snapshot.set_defaults(func=self.delete)
-
-        p_ship = snapshot_subp.add_parser(
-            Commands.Subcommands.Ship.LONG,
-            aliases=[Commands.Subcommands.Ship.SHORT],
-            description='Ship a snapshot to another node.')
-        p_ship.add_argument(
-            '--from-node',
-            required=True,
-            type=str,
-            help='Source node name').completer = self.node_completer
-        p_ship.add_argument(
-            '--to-node',
-            required=True,
-            type=str,
-            help='Destination node name').completer = self.node_completer
-        p_ship.add_argument(
-            '--resource',
-            required=True,
-            type=str,
-            help='Name of the resource to ship').completer = self.resource_dfn_completer
-        p_ship.set_defaults(func=self.ship)
-
-        p_ship_list = snapshot_subp.add_parser(
-            Commands.Subcommands.ShipList.LONG,
-            aliases=[Commands.Subcommands.ShipList.SHORT],
-            description='Shows an overview list of snapshot shippings.')
-        p_ship_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
-        p_ship_list.add_argument(
-            '-r', '--resources',
-            nargs='+',
-            type=str,
-            help='Filter by list of resources').completer = self.resource_completer
-        p_ship_list.add_argument(
-            '-n', '--nodes',
-            nargs='+',
-            type=str,
-            help='Filter by list of nodes').completer = self.node_completer
-        p_ship_list.add_argument(
-            '-s', '--snapshots',
-            nargs='+',
-            type=str,
-            help='Filter by list of snapshots').completer = self.node_completer
-        p_ship_list.add_argument(
-            '--status',
-            nargs='+',
-            choices=[x.value.lower() for x in consts.SnapshotShipStatus],
-            type=str.lower,
-            help='Filter by list of statuses').completer = self.node_completer
-        p_ship_list.set_defaults(func=self.shiplist)
 
         # roll back to snapshot
         p_rollback_snapshot = snapshot_subp.add_parser(
@@ -435,41 +376,6 @@ class SnapshotCommands(Commands):
         lstmsg = self._linstor.snapshot_dfn_list(filter_by_nodes=args.nodes, filter_by_resources=args.resources)
 
         return self.output_list(args, lstmsg, self.show)
-
-    def ship(self, args):
-        replies = self.get_linstorapi().snapshot_ship(
-            rsc_name=args.resource,
-            from_node=args.from_node,
-            to_node=args.to_node)
-        return self.handle_replies(args, replies)
-
-    def show_ship_list(self, args, shipping_resp):
-        """
-
-        :param args:
-        :param shipping_resp: ShippingResponse
-        :return:
-        """
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        tbl.add_headers(self._shipping_headers)
-        for shipping in shipping_resp.shippings:
-            tbl.add_row([
-                shipping.snapshot_dfn.resource_name,
-                shipping.snapshot_dfn.snapshot_name,
-                shipping.from_node_name,
-                shipping.to_node_name,
-                tbl.color_cell(shipping.status.value,
-                               None if shipping.status == consts.SnapshotShipStatus.COMPLETE else Color.YELLOW)
-            ])
-        tbl.show()
-
-    def shiplist(self, args):
-        lstmsg = self.get_linstorapi().snapshot_shipping_list(
-            filter_by_nodes=args.nodes,
-            filter_by_resources=args.resources,
-            filter_by_snapshots=args.snapshots,
-            filter_by_status=args.status)
-        return self.output_list(args, lstmsg, self.show_ship_list)
 
     @classmethod
     def _props_show(cls, args, snap_resp):

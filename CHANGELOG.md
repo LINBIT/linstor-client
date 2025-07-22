@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Removed "exos" commands
+- Removed "snapshot ship" command. Use "backup ship" instead
 
 ## [1.25.4] - 2025-04-10
 
