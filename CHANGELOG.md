@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed incorrect unit in out of range error message
 
+### Removed
+
+- Removed "exos" commands
+
 ## [1.25.4] - 2025-04-10
 
 ### Fixed

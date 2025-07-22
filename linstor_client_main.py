@@ -45,7 +45,6 @@ from linstor_client.commands import (
     MigrateCommands,
     PhysicalStorageCommands,
     ErrorReportCommands,
-    ExosCommands,
     AdviceCommands,
     ZshGenerator,
     MiscCommands,
@@ -121,7 +120,6 @@ class LinStorCLI(object):
         self._misc_commands = MiscCommands()
         self._physical_storage_commands = PhysicalStorageCommands()
         self._error_report_commands = ErrorReportCommands()
-        self._exos_commands = ExosCommands()
         self._advise_commands = AdviceCommands()
         self._backup_commands = BackupCommands()
         self._remote_commands = RemoteCommands()
@@ -145,7 +143,6 @@ class LinStorCLI(object):
             self._volume_dfn_commands,
             self._physical_storage_commands,
             self._error_report_commands,
-            self._exos_commands,
             self._advise_commands,
             self._backup_commands,
             self._remote_commands,

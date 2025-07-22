@@ -14,7 +14,6 @@ from .vlm_dfn_cmds import VolumeDefinitionCommands
 from .snapshot_cmds import SnapshotCommands
 from .drbd_proxy_cmds import DrbdProxyCommands
 from .migrate_cmds import MigrateCommands
-from .exos_cmds import ExosCommands
 from .zsh_completer import ZshGenerator
 from .physical_storage_cmds import PhysicalStorageCommands
 from .error_report_cmds import ErrorReportCommands

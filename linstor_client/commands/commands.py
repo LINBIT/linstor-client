@@ -63,7 +63,6 @@ class Commands(object):
     PHYSICAL_STORAGE = 'physical-storage'
     SOS_REPORT = 'sos-report'
     SPACE_REPORTING = 'space-reporting'
-    EXOS = "exos"
     ADVISE = "advise"
     BACKUP = "backup"
     REMOTE = "remote"
@@ -93,7 +92,6 @@ class Commands(object):
         PHYSICAL_STORAGE,
         SOS_REPORT,
         SPACE_REPORTING,
-        EXOS,
         ADVISE,
         BACKUP,
         REMOTE,
