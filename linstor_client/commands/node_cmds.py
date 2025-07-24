@@ -690,7 +690,7 @@ class NodeCommands(Commands):
                     eviction = datetime.fromtimestamp(int(node.eviction_timestamp / 1000))
                 else:
                     eviction = "Disabled"
-                state_text += " (Auto-eviction: {eviction})".format(eviction=eviction)
+                state_text += " (Auto-eviction at {eviction})".format(eviction=eviction)
 
             row += [tbl.color_cell(state_text, conn_stat[1])]
             for sprop in show_props:
