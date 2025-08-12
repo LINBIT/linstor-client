@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - snapshot list and set property commands
 - r l: optional --show-drbd-ports
+- s rb: optional --zfs-rollback-strategy
 
 ### Changed
 

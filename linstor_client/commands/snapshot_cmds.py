@@ -133,6 +133,11 @@ class SnapshotCommands(Commands):
             'snapshot_name',
             type=str,
             help='Name of the snapshot local to the resource definition')
+        p_rollback_snapshot.add_argument(
+            '--zfs-rollback-strategy',
+            type=str,
+            choices=['rollback', 'clone', 'dynamic'],
+            help='Overrides the property to choose a rollback strategy for this command')
         p_rollback_snapshot.set_defaults(func=self.rollback)
 
         # list snapshot definitions
@@ -308,7 +313,10 @@ class SnapshotCommands(Commands):
         return self.handle_replies(args, replies)
 
     def rollback(self, args):
-        replies = self._linstor.snapshot_rollback(args.resource_definition_name, args.snapshot_name)
+        replies = self._linstor.snapshot_rollback(
+            args.resource_definition_name,
+            args.snapshot_name,
+            args.zfs_rollback_strategy)
         return self.handle_replies(args, replies)
 
     @classmethod
