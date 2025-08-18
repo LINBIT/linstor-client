@@ -1,3 +1,19 @@
+linstor-client (1.26.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * Add snapshot list-properties and set property commands
+  * gitlab: python version shouldn't contain 0
+  * drbd-opts: fix out of range, unit display
+
+  [ Gabor Hernadi ]
+  * Node,list: Improve Auto-eviction message
+  * Drbd: Move Ports column from RscDfn to Rsc
+  * Removed EXOS
+  * Snap,ship: Remove
+  * Snap,rollback: Add --zfs-rollback-strategy option
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 18 Aug 2025 09:10:21 +0000
+
 linstor-client (1.25.4-1) experimental; urgency=medium
 
   * rd/clone: fix crash if --curl was set
