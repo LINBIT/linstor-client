@@ -10,6 +10,7 @@ import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands
 from linstor_client import Table
 from linstor_client.consts import Color
+from linstor_client.argparse.argparse import ArgumentError
 
 
 class BackupCommands(Commands):
@@ -432,6 +433,10 @@ class BackupCommands(Commands):
             "--target-storage-pool",
             help="Specify in which target storage pool the backup should be received")
         p_bak_sched_enable.add_argument(
+            "--target-resource-name",
+            help="Specify in the resource name on the target cluster. Only usable in combination with --rd! "
+                 "Only works with linstor-to-linstor shipment (not S3)")
+        p_bak_sched_enable.add_argument(
             "--storpool-rename",
             nargs='*',
             help="Rename storage pool names. Format: oldname=newname",
@@ -836,6 +841,9 @@ class BackupCommands(Commands):
         stor_pool_tbl.show()
 
     def schedule_enable(self, args):
+        if args.target_resource_name and not args.rd:
+            raise ArgumentError("--target-resource-name is only allowed in combination with --rd!")
+
         replies = self.get_linstorapi().backup_schedule_enable(
             remote_name=args.remote_name,
             schedule_name=args.schedule_name,
@@ -846,6 +854,7 @@ class BackupCommands(Commands):
             storpool_rename_map=args.storpool_rename,
             force_restore=args.force_restore,
             dst_rsc_grp=args.target_resource_group,
+            dst_rsc_name=args.target_resource_name,
             force_mv_rsc_grp=args.force_move_resource_group)
         return self.handle_replies(args, replies)
 
