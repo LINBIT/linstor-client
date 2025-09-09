@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added new option to "backup ship": --source-snapshot
+- Added new option to "backup ship": --full
+- Added new alias for "backup create -s": --source-snapshot
+
+### Fixed
+
+- Fixed help-text for "backup restore --snapshot"
+
 ## [1.26.1] - 2025-08-26
 
 ### Added

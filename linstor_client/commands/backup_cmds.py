@@ -128,7 +128,7 @@ class BackupCommands(Commands):
             "-n", "--node",
             help="Node to prefer to upload backup")
         p_crtbak.add_argument(
-            "-s", "--snapshot",
+            "-s", "--snapshot", "--source-snapshot",
             help="Name of the local snapshot to create")
         p_crtbak.add_argument(
             "resource",
@@ -231,7 +231,7 @@ class BackupCommands(Commands):
             help="Restore the latest backup of the given resource")
         p_rstbak.add_argument(
             "-s", "--snapshot",
-            help="Restore the latest backup with the given snapshot name")
+            help="Restore the given snapshot of the specified resource (must be used with -r)")
         p_rstbak.add_argument(
             "--id",
             help="Specific backup to restore")
@@ -262,24 +262,27 @@ class BackupCommands(Commands):
         p_rstbak.set_defaults(func=self.restore)
 
         # abort backup
-        p_crtabort = bkp_sub.add_parser(
+        p_abort = bkp_sub.add_parser(
             Commands.Subcommands.Abort.LONG,
             aliases=[Commands.Subcommands.Abort.SHORT],
             description="Aborts a backup. If neither --create nor --restore is given, both will be aborted (if any in "
                         "progress).")
-        self._add_remote(p_crtabort)
-        p_crtabort.add_argument(
+        self._add_remote(p_abort)
+        p_abort.add_argument(
             "resource",
             help="The resource to abort")
-        p_crtabort.add_argument(
+        p_abort.add_argument(
             "-r", "--restore",
             action="store_true",
             help="Only abort a restoration of the given resource")
-        p_crtabort.add_argument(
+        p_abort.add_argument(
             "-c", "--create",
             action="store_true",
             help="Only abort a creation of the given resource")
-        p_crtabort.set_defaults(func=self.abort)
+        p_abort.add_argument(
+            "-s", "--snapshot",
+            help="Aborts only the specified snapshot")
+        p_abort.set_defaults(func=self.abort)
 
         # queue commands
         subcmd_queue = [
@@ -367,6 +370,15 @@ class BackupCommands(Commands):
             "--force-restore",
             action='store_true',
             help="Restore the backup even if a single replica already exists in the target resource"
+        )
+        p_shipbak.add_argument(
+            '--force-full', '--full',
+            action='store_true',
+            help="Force a full backup"
+        )
+        p_shipbak.add_argument(
+            "--source-snapshot",
+            help="Ship the given snapshot. Creates the snapshot if necessary"
         )
         BackupCommands.add_target_rsc_grp_and_force_arg(p_shipbak)
         p_shipbak.set_defaults(func=self.ship)
@@ -671,7 +683,7 @@ class BackupCommands(Commands):
             resource_name=args.resource,
             incremental=not args.full,
             node_name=args.node,
-            snap_name=args.snapshot
+            snap_name=args.snapshot,
         )
         return self.handle_replies(args, replies)
 
@@ -742,7 +754,8 @@ class BackupCommands(Commands):
             args.remote,
             args.resource,
             restore=args.restore,
-            create=args.create)
+            create=args.create,
+            snapshot=args.snapshot)
         return self.handle_replies(args, replies)
 
     def ship(self, args):
@@ -758,7 +771,9 @@ class BackupCommands(Commands):
             download_only=args.download_only,
             force_restore=args.force_restore,
             dst_rsc_grp=args.target_resource_group,
-            force_mv_rsc_grp=args.force_move_resource_group)
+            force_mv_rsc_grp=args.force_move_resource_group,
+            force_full=args.force_full,
+            src_snap=args.source_snapshot,)
         return self.handle_replies(args, replies)
 
     @classmethod
