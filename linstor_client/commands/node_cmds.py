@@ -497,6 +497,17 @@ class NodeCommands(Commands):
             'node_name',
             help="Node to evacuate"
         ).completer = self.node_completer
+        p_evacuate_node_target_mut_excl = p_evacuate_node.add_mutually_exclusive_group(required=False)
+        p_evacuate_node_target_mut_excl.add_argument(
+            '--target',
+            nargs="+",
+            metavar="NODE_NAME",
+            help="A list of allowed nodes to evacuate the resources to")
+        p_evacuate_node_target_mut_excl.add_argument(
+            '--do-not-target',
+            nargs="+",
+            metavar="NODE_NAME",
+            help="A list of prohibited nodes to evacuate the resources to")
         p_evacuate_node.set_defaults(func=self.evacuate_node)
 
         self.check_subcommands(interface_subp, netif_subcmds)
@@ -991,7 +1002,9 @@ class NodeCommands(Commands):
 
     def evacuate_node(self, args):
         replies = self.get_linstorapi().node_evacuate(
-            node_name=args.node_name
+            node_name=args.node_name,
+            target=args.target,
+            do_not_target=args.do_not_target
         )
         return self.handle_replies(args, replies)
 

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added new option to "backup ship": --source-snapshot
 - Added new option to "backup ship": --full
 - Added new alias for "backup create -s": --source-snapshot
+- Added --target and --do-not-target to 'node evacuate'
 
 ### Fixed
 
