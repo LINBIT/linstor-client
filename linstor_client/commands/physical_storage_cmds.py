@@ -66,6 +66,15 @@ class PhysicalStorageCommands(Commands):
                               action="store_true",
                               help="Setup self encrypting drive with Linstor. "
                                    + "Needs SED/OPAL2 capable drive and sedutil installed and --storage-pool")
+        p_create.add_argument(
+            '--pv-create-arguments', nargs='*', help='Arguments to pass to pvcreate', action='append', default=[])
+        p_create.add_argument(
+            '--vg-create-arguments', nargs='*', help='Arguments to pass to vgcreate', action='append', default=[])
+        p_create.add_argument(
+            '--lv-create-arguments', nargs='*', help='Arguments to pass to lvcreate', action='append', default=[])
+        p_create.add_argument(
+            '--zpool-create-arguments', nargs='*', help='Arguments to pass to zpool create', action='append',
+            default=[])
         p_create.set_defaults(func=self.create_device_pool)
 
         self.check_subcommands(phys_subp, subcmds)
@@ -123,5 +132,9 @@ class PhysicalStorageCommands(Commands):
             vdo_slab_size_kib=Commands.parse_size_str(args.vdo_slab_size, "KiB"),
             storage_pool_name=args.storage_pool,
             sed=args.sed,
+            pv_create_arguments=[x for subargs in args.pv_create_arguments for x in subargs],
+            vg_create_arguments=[x for subargs in args.vg_create_arguments for x in subargs],
+            lv_create_arguments=[x for subargs in args.lv_create_arguments for x in subargs],
+            zpool_create_arguments=[x for subargs in args.zpool_create_arguments for x in subargs],
         )
         return self.handle_replies(args, replies)
