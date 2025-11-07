@@ -1,4 +1,5 @@
 import sys
+import json
 
 import linstor_client.argparse.argparse as argparse
 
@@ -207,6 +208,11 @@ class ResourceDefinitionCommands(Commands):
             help='Show these props in the list. '
                  + 'Can be key=value pairs where key is the property name and value column header')
         p_lrscdfs.add_argument(
+            '--from-file',
+            type=argparse.FileType('r'),
+            help="Read data to display from the given json file",
+        )
+        p_lrscdfs.add_argument(
             '--show-preferred-drbd-ports',
             '--ports',
             action="store_true",
@@ -220,6 +226,11 @@ class ResourceDefinitionCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the specified resource definitions.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_sp.add_argument(
+            '--from-file',
+            type=argparse.FileType('r'),
+            help="Read data to display from the given json file",
+        )
         p_sp.add_argument(
             'resource_name',
             help="Resource definition for which to print the properties"
@@ -423,11 +434,14 @@ class ResourceDefinitionCommands(Commands):
 
     def list(self, args):
         args = self.merge_config_args('resource-definition.list', args)
-        lstmsg = self._linstor.resource_dfn_list(
-            query_volume_definitions=False,
-            filter_by_resource_definitions=args.resource_definitions,
-            filter_by_props=args.props
-        )
+        if args.from_file:
+            lstmsg = [linstor.responses.ResourceDefinitionResponse(json.load(args.from_file))]
+        else:
+            lstmsg = self._linstor.resource_dfn_list(
+                query_volume_definitions=False,
+                filter_by_resource_definitions=args.resource_definitions,
+                filter_by_props=args.props
+            )
         return self.output_list(args, lstmsg, self.show)
 
     @classmethod
@@ -439,10 +453,15 @@ class ResourceDefinitionCommands(Commands):
         return result
 
     def print_props(self, args):
-        lstmsg = self._linstor.resource_dfn_list(
-            query_volume_definitions=False,
-            filter_by_resource_definitions=[args.resource_name]
-        )
+        if args.from_file:
+            file_data = json.load(args.from_file)
+            rsc_dfn = filter(lambda rsc: rsc["name"] == args.resource_name, file_data)
+            lstmsg = [linstor.responses.ResourceDefinitionResponse(rsc_dfn)]
+        else:
+            lstmsg = self._linstor.resource_dfn_list(
+                query_volume_definitions=False,
+                filter_by_resource_definitions=[args.resource_name]
+            )
         return self.output_props_list(args, lstmsg, self._props_show)
 
     def set_props(self, args):
