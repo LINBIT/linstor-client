@@ -445,6 +445,11 @@ class NodeCommands(Commands):
             description="Prints all properties of the given node.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
+            '--from-file',
+            type=argparse.FileType('r'),
+            help="Read data to display from the given json file",
+        )
+        p_sp.add_argument(
             'node_name',
             help="Node for which to print the properties").completer = self.node_completer
         p_sp.set_defaults(func=self.print_props)
@@ -979,7 +984,12 @@ class NodeCommands(Commands):
         return result
 
     def print_props(self, args):
-        lstmsg = self._linstor.node_list([args.node_name])
+        if args.from_file:
+            file_data = json.load(args.from_file)
+            node_data = filter(lambda node: node["name"] == args.node_name, file_data)
+            lstmsg = [linstor.responses.NodeListResponse(node_data)]
+        else:
+            lstmsg = self._linstor.node_list([args.node_name])
         return self.output_props_list(args, lstmsg, self._props_list)
 
     def set_props(self, args):

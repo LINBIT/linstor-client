@@ -142,6 +142,11 @@ class ResourceGroupCommands(Commands):
             description="Prints all properties set on a given resource group.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_sp.add_argument(
+            '--from-file',
+            type=argparse.FileType('r'),
+            help="Read data to display from the given json file",
+        )
+        p_sp.add_argument(
             'name',
             help="Resource group for which to print the properties"
         ).completer = self.resource_grp_completer
@@ -354,7 +359,12 @@ class ResourceGroupCommands(Commands):
         return result
 
     def print_props(self, args):
-        lstmsg = [self._linstor.resource_group_list_raise(filter_by_resource_groups=[args.name])]
+        if args.from_file:
+            file_data = json.load(args.from_file)
+            rsc_grp = filter(lambda rscgrp: rscgrp["name"] == args.name, file_data)
+            lstmsg = [linstor.responses.ResourceGroupResponse(rsc_grp)]
+        else:
+            lstmsg = [self._linstor.resource_group_list_raise(filter_by_resource_groups=[args.name])]
 
         return self.output_props_list(args, lstmsg, self._props_show)
 
