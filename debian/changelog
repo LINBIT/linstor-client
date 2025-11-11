@@ -1,3 +1,19 @@
+linstor-client (1.27.0-1) experimental; urgency=medium
+
+  [ Moritz Wanzenböck ]
+  * physical-storage: pass arguments to pv/vg/lv/zpool create
+
+  [ Rene Peinthor ]
+  * setup.py: add missing python3-setuptools requirement
+  * rsc_dfn: from-file parameter to list and list-properties
+  * node/rg: from-file parameter to node lp and resource-group lp
+
+  [ Gabor Hernadi ]
+  * Added options for ship existing snapshots
+  * Node,evac: Added --target and --do-not-target
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Tue, 11 Nov 2025 07:12:07 +0000
+
 linstor-client (1.26.1-1) experimental; urgency=medium
 
   [ Gabor Hernadi ]

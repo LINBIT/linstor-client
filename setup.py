@@ -199,7 +199,7 @@ setup(
     ],
     install_requires=[
         "python3-setuptools"
-        "python-linstor>=1.26.1"
+        "python-linstor>=1.27.0"
     ],
     py_modules=["linstor_client_main"],
     scripts=["scripts/linstor"],
