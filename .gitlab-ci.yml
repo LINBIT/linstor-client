@@ -36,7 +36,7 @@ services:
 
 pep8:
   stage: lint
-  image: pipelinecomponents/flake8
+  image: registry.gitlab.com/pipeline-components/flake8:latest
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "jenkins"'
