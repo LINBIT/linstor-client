@@ -328,6 +328,10 @@ class Commands(object):
             LONG = "backupdb"
             SHORT = "bakdb"
 
+        class ExportDb(object):
+            LONG = "export-db"
+            SHORT = "expdb"
+
         class Enable(object):
             LONG = "enable"
             SHORT = "en"

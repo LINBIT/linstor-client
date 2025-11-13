@@ -22,6 +22,7 @@ class ControllerCommands(Commands):
             Commands.Subcommands.QueryMaxVlmSize,
             Commands.Subcommands.Which,
             Commands.Subcommands.BackupDb,
+            Commands.Subcommands.ExportDb,
             Commands.Subcommands.LogLevel
         ]
 
@@ -148,7 +149,8 @@ class ControllerCommands(Commands):
         p_backup_db = con_subp.add_parser(
             Commands.Subcommands.BackupDb.LONG,
             aliases=[Commands.Subcommands.BackupDb.SHORT],
-            description='Create a backup of the controller database.'
+            description=f'DEPRECATED: Use "linstor {Commands.CONTROLLER} '
+                        f'{Commands.Subcommands.ExportDb.LONG} [EXPORT_NAME]" instead'
         )
         p_backup_db.add_argument(
             'backup_name',
@@ -156,6 +158,19 @@ class ControllerCommands(Commands):
             help='Base name of the backup'
         )
         p_backup_db.set_defaults(func=self.backup_controller_db)
+
+        p_export_db = con_subp.add_parser(
+            Commands.Subcommands.ExportDb.LONG,
+            aliases=[Commands.Subcommands.ExportDb.SHORT],
+            description='Exports the database of the controller into a JSON format.'
+        )
+        p_export_db.add_argument(
+            'export_name',
+            metavar="EXPORT_NAME",
+            nargs="?",
+            help='Name of the backup'
+        )
+        p_export_db.set_defaults(func=self.export_controller_db)
 
         self.check_subcommands(con_subp, subcmds)
 
@@ -240,4 +255,8 @@ class ControllerCommands(Commands):
 
     def backup_controller_db(self, args):
         replies = self.get_linstorapi().controller_backupdb(args.backup_name)
+        return self.handle_replies(args, replies)
+
+    def export_controller_db(self, args):
+        replies = self.get_linstorapi().controller_exportdb(args.export_name)
         return self.handle_replies(args, replies)

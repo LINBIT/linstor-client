@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added "linstor controller export-db [EXPORT_NAME]"
+
 ### Changed
 
 - Removed py2 support

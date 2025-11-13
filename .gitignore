@@ -1,6 +1,9 @@
 # ide files and dirs
 .idea/
 *.iml
+.project
+.pydevproject
+.settings
 
 # ignore "compiled" python
 *.pyc
