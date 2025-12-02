@@ -389,7 +389,7 @@ class ResourceCommands(Commands):
                  "objects to which the volumes belong"
         )
         p_toggle_disk_group_storage.add_argument(
-            '--diskless', '-d',
+            '--diskless', '-d', '--drbd-diskless',
             action='store_true',
             help="Remove the disks from a resource (toggles --drbd-diskless)"
         )

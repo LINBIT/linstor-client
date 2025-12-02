@@ -19,3 +19,5 @@ linstor_client/consts_githash.py
 build/
 test-reports/
 .cache/
+/.project
+/.pydevproject
