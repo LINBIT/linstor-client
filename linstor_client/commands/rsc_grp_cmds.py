@@ -3,9 +3,8 @@ import linstor_client.argparse.argparse as argparse
 import linstor
 import linstor_client
 from linstor import SizeCalc
-# flake8: noqa
 import json
-from linstor.responses import ResourceGroupResponse
+from linstor.responses import ResourceGroupResponse  # noqa: F401
 from linstor_client.commands import Commands, DrbdOptions
 from linstor_client.consts import ExitCode
 from linstor_client.utils import rangecheck
@@ -223,7 +222,8 @@ class ResourceGroupCommands(Commands):
         p_qmvs = res_grp_subp.add_parser(
             Commands.Subcommands.QueryMaxVlmSize.LONG,
             aliases=[Commands.Subcommands.QueryMaxVlmSize.SHORT],
-            description="[DEPRECATED] Use `linstor resource-group query-size-info` instead. Shows maximum volume size information for a specified resource group.",
+            description="[DEPRECATED] Use `linstor resource-group query-size-info` instead. "
+                        "Shows maximum volume size information for a specified resource group.",
         )
         p_qmvs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_qmvs.add_argument(
@@ -251,7 +251,8 @@ class ResourceGroupCommands(Commands):
             Commands.Subcommands.Adjust.LONG,
             aliases=[Commands.Subcommands.Adjust.SHORT],
             description="Adjusts all resource definitions of the given resource group.\n"
-                        "CAUTION: This operation might take a long time and even exceed the default five minute timeout!"
+                        "CAUTION: This operation might take a long time and "
+                        "even exceed the default five minute timeout!"
         )
         p_adjust.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_adjust.add_argument(

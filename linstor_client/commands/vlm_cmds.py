@@ -8,9 +8,8 @@ import linstor_client.argparse.argparse as argparse
 
 
 from linstor import SizeCalc
-# flake8: noqa
-from linstor.responses import Resource
-from linstor_client import Table, utils
+from linstor.responses import Resource  # noqa: F401
+from linstor_client import Table
 from linstor_client.commands import Commands
 from linstor_client.utils import Output
 from linstor_client.consts import Color
@@ -193,7 +192,6 @@ class VolumeCommands(Commands):
             tbl_color = Color.YELLOW
         return state, tbl_color
 
-
     @classmethod
     def _format_repl_state(cls, peer_name, replication_state, done_percentage):
         disp_perc = "?" if done_percentage is None else "{p:.2f}%".format(p=done_percentage)
@@ -277,7 +275,7 @@ class VolumeCommands(Commands):
         reports = []
         for rsc in lstmsg.resources:
             rsc_count = len([x for x in lstmsg.resources if x.name == rsc.name])
-            if apiconsts.FLAG_RSC_INACTIVE in rsc.flags and not apiconsts.FLAG_EVICTED in rsc.flags:
+            if apiconsts.FLAG_RSC_INACTIVE in rsc.flags and apiconsts.FLAG_EVICTED not in rsc.flags:
                 continue  # do not show non existing volumes for inactive resources
 
             rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)

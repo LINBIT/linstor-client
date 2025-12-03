@@ -1,8 +1,7 @@
 import linstor_client.argparse.argparse as argparse
 
 import linstor_client
-# flake8: noqa
-from linstor.responses import VolumeGroupResponse
+from linstor.responses import VolumeGroupResponse  # noqa: F401
 from linstor_client.commands import Commands, DrbdOptions
 
 
@@ -75,7 +74,8 @@ class VolumeGroupCommands(Commands):
         p_lvlmgrps = vlm_grp_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
-            description='Lists all volume groups for a specified resource group. By default, the list is printed as a human readable table.')
+            description='Lists all volume groups for a specified resource group. '
+                        'By default, the list is printed as a human readable table.')
         p_lvlmgrps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         p_lvlmgrps.add_argument('-g', '--groupby', nargs='+',
                                 choices=vlm_grp_groupby,
