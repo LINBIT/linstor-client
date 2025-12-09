@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added new alias --drbd-diskless to command "r td" to mimic the option from "r c"
+- Added new sub-command "encryption status" to show the current locked-state of the controller
 
 ## [1.27.0] - 2025-11-11
 

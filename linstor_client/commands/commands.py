@@ -192,6 +192,10 @@ class Commands(object):
             LONG = "modify-passphrase"
             SHORT = "mp"
 
+        class Status(object):
+            LONG = "status"
+            SHORT = "status"
+
         class Shutdown(object):
             LONG = "shutdown"
             SHORT = "off"
@@ -1110,6 +1114,7 @@ class MiscCommands(Commands):
             Commands.Subcommands.EnterPassphrase,
             Commands.Subcommands.CreatePassphrase,
             Commands.Subcommands.ModifyPassphrase,
+            Commands.Subcommands.Status,
         ]
         crypt_parser = parser.add_parser(
             Commands.CRYPT,
@@ -1158,6 +1163,12 @@ class MiscCommands(Commands):
             help="New passphrase used for encryption."
         )
         c_crypt_modify_passphr.set_defaults(func=self.cmd_crypt_modify_passphrase)
+
+        c_crypt_status = crypt_subp.add_parser(
+            Commands.Subcommands.Status.LONG,
+            description="Show the encryption status of LINSTOR"
+        )
+        c_crypt_status.set_defaults(func=self.cmd_crypt_status)
 
         self.check_subcommands(crypt_subp, crypt_subcmds)
 
@@ -1322,6 +1333,26 @@ class MiscCommands(Commands):
 
         replies = self._linstor.crypt_modify_passphrase(old_passphrase, new_passphrase)
         return self.handle_replies(args, replies)
+
+    def cmd_crypt_status(self, args):
+        reply = self._linstor.crypt_status()
+        return self.output_list(args, reply, self._show_crypt_status)
+
+    def _show_crypt_status(self, args, crypt_status):
+        status = crypt_status.status
+        if status:
+            if status == "locked":
+                print("The controller is locked.")
+                print("To unlock please use the following command:")
+                print("   linstor encryption enter-passphrase")
+            if status == "unlocked":
+                print("The controller is unlocked.")
+            if status == "unset":
+                print("The controller's encryption has not been initialized yet.")
+                print("You can use the following command to initialize encryption:")
+                print("   linstor encryption create-passphrase")
+        else:
+            print("Could not determine the encryption status. Please check for errors")
 
     def cmd_sos_report_create(self, args):
         since_dt = None
