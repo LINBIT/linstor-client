@@ -325,7 +325,7 @@ class LinStorCLI(object):
             if not ctrls:
                 ctrls.append(self._dflt_ctrl)
             contrl_list = linstor.MultiLinstor.controller_uri_list(','.join(ctrls))
-            if self._linstorapi is None and args.func not in local_only_cmds:
+            if self._linstorapi is None and vars(args).get("func") not in local_only_cmds:
                 username = None
                 password = None
                 if args.user:
@@ -598,12 +598,7 @@ class LinStorCLI(object):
             return rc
 
         # try to load readline
-        # if loaded, raw_input makes use of it
-        if sys.version_info < (3,):
-            my_input = raw_input
-        else:
-            my_input = input
-
+        # if loaded, input makes use of it
         abs_readline_hist_path = None
         try:
             import readline
@@ -621,7 +616,7 @@ class LinStorCLI(object):
         last_rc = ExitCode.OK
         while self._state_service.has_state():
             try:
-                cmds = my_input('{state.prompt}{h} ==> '.format(
+                cmds = input('{state.prompt}{h} ==> '.format(
                     state=self._state_service.get_state(),
                     h='(' + self._linstorapi.controller_host() + ')' if verbose else ""
                 )).strip()

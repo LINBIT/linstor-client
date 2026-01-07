@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import linstor_client
 import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands

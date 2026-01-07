@@ -1,21 +1,12 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function
-import os
-import sys
 import errno
 import operator
 import locale
+import shutil
 from linstor_client.consts import (
     DEFAULT_TERM_HEIGHT,
     DEFAULT_TERM_WIDTH,
     Color
 )
-
-PYTHON2 = True
-
-if sys.version_info > (3, 0):
-    PYTHON2 = False
-    unicode = str
 
 
 # TODO(rck): still a hack
@@ -24,33 +15,8 @@ class SyntaxException(Exception):
 
 
 def get_terminal_size():
-    def ioctl_GWINSZ(term_fd):
-        term_dim = None
-        try:
-            import termios
-            import struct
-            import fcntl
-            term_dim = struct.unpack(
-                'hh',
-                fcntl.ioctl(term_fd, termios.TIOCGWINSZ, '1234')
-            )
-        except (ImportError, IOError, OSError):
-            pass
-        return term_dim
-    # Assign the first value that's not a NoneType
-    term_dim = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
-    if not term_dim:
-        try:
-            with os.open(os.ctermid(), os.O_RDONLY) as term_fd:
-                term_dim = ioctl_GWINSZ(term_fd)
-        except (AttributeError, IOError, OSError):
-            pass
-    try:
-        (term_width, term_height) = int(term_dim[1]), int(term_dim[0])
-    except (IndexError, TypeError):
-        term_width = DEFAULT_TERM_WIDTH
-        term_height = DEFAULT_TERM_HEIGHT
-    return term_width, term_height
+    size = shutil.get_terminal_size(fallback=(DEFAULT_TERM_WIDTH, DEFAULT_TERM_HEIGHT))
+    return size.columns, size.lines
 
 
 class TableHeader(object):
@@ -151,17 +117,8 @@ class Table(object):
     @classmethod
     def to_unicode(cls, t):
         if isinstance(t, str):
-            if PYTHON2:
-                return unicode(t, 'UTF-8')
-            else:
-                return t
-        elif isinstance(t, unicode):
             return t
-        else:
-            if PYTHON2:
-                return unicode(t)
-            else:
-                return str(t)
+        return str(t)
 
     def add_row(self, row):
         self.got_row = True

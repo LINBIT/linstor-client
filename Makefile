@@ -4,7 +4,6 @@ PYTHON ?= python3
 LINSTORAPI = ../linstor-api-py
 override GITHEAD := $(shell test -e .git && $(GIT) rev-parse HEAD)
 
-U := $(shell $(PYTHON) ./setup.py versionup2date >/dev/null 2>&1; echo $$?;)
 TESTS = $(wildcard unit-tests/*_test.py)
 DOCKERREGISTRY := drbd.io
 ARCH ?= amd64
@@ -21,25 +20,17 @@ all: doc
 doc:
 	PYTHONPATH=$(LINSTORAPI):. $(PYTHON) setup.py build_man
 
-install:
+install: linstor_client/consts_githash.py
 	$(PYTHON) setup.py install --record $(INSTALLFILES)
 
 uninstall:
 	test -f $(INSTALLFILES) && cat $(INSTALLFILES) | xargs rm -rf || true
 	rm -f $(INSTALLFILES)
 
-ifneq ($(U),0)
-up2date:
-	$(error "Update your Version strings/Changelogs")
-else
-up2date: linstor_client/consts_githash.py
-	$(info "Version strings/Changelogs up to date")
-endif
-
 release: doc
 	make release-no-doc
 
-release-no-doc: up2date clean
+release-no-doc: clean
 	$(PYTHON) setup.py sdist
 	@echo && echo "Did you run distclean?"
 
@@ -65,12 +56,12 @@ dockerpath:
 	@echo $(DOCKERREGPATH):latest $(DOCKERREGPATH):$(DOCKER_TAG)
 
 # no gensrc here, that is in debian/rules
-deb: up2date
+deb:
 	[ -d ./debian ] || (echo "Your checkout/tarball does not contain a debian directory" && false)
 	debuild -i -us -uc -b
 
 # it is up to you (or the buildenv) to provide a distri specific setup.cfg
-rpm: up2date
+rpm:
 	$(PYTHON) setup.py bdist_rpm --python /usr/bin/$(PYTHON)
 
 .PHONY: linstor_client/consts_githash.py
@@ -95,7 +86,3 @@ clean:
 
 distclean: clean
 	git clean -d -f || true
-
-check:
-	# currently none
-	# $(PYTHON) $(TESTS)

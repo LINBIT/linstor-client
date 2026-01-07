@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from linstor.sharedconsts import VAL_DRBD_PROXY_COMPRESSION_NONE, VAL_DRBD_PROXY_COMPRESSION_ZLIB, \
     VAL_DRBD_PROXY_COMPRESSION_LZMA, VAL_DRBD_PROXY_COMPRESSION_LZ4, VAL_DRBD_PROXY_COMPRESSION_ZSTD
 import linstor_client.argparse.argparse as argparse

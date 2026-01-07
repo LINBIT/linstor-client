@@ -1,4 +1,3 @@
-from __future__ import print_function
 import json
 
 import linstor_client.argparse.argparse as argparse

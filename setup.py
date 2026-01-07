@@ -21,54 +21,15 @@
 import os
 import glob
 import sys
-import codecs
 
 from setuptools import setup, Command
 
 
 def get_version():
-    from linstor_client.consts import VERSION
-    return VERSION
-
-
-# used to overwrite version tag by internal build tools
-# keep it, even if you don't understand it.
-def get_setup_version():
-    return get_version()
-
-
-class CheckUpToDate(Command):
-    description = "Check if version strings are up to date"
-    user_options = []
-
-    def initialize_options(self):
-        self.cwd = None
-
-    def finalize_options(self):
-        self.cwd = os.getcwd()
-
-    def run(self):
-        version = get_version()
-        try:
-            with codecs.open("debian/changelog", encoding='utf8', errors='ignore') as f:
-                firstline = f.readline()
-                if version not in firstline:
-                    # returning false is not promoted
-                    sys.exit(1)
-            with open("Dockerfile") as f:
-                found = 0
-                content = [line.strip() for line in f.readlines()]
-                for line in content:
-                    fields = [f.strip() for f in line.split()]
-                    if len(fields) == 3 and fields[0] == 'ENV' and \
-                       fields[1] == 'LINSTOR_CLI_VERSION' and fields[2] == version:
-                        found += 1
-                if found != 2:
-                    # returning false is not promoted
-                    sys.exit(1)
-        except IOError:
-            # probably a release tarball without the debian directory but with Makefile
-            return True
+    main_ns = {}
+    with open("linstor_client/consts.py") as ver_file:
+        exec(ver_file.read(), main_ns)
+    return main_ns['VERSION']
 
 
 class BuildManCommand(Command):
@@ -180,7 +141,7 @@ def gen_data_files():
 
 setup(
     name="linstor-client",
-    version=get_setup_version(),
+    version=get_version(),
     description="DRBD distributed resource management utility",
     long_description="This client program communicates to controller node which manages the resources",
     author="Robert Altnoeder <robert.altnoeder@linbit.com>, Roland Kammerer <roland.kammerer@linbit.com>"
@@ -190,6 +151,7 @@ setup(
     maintainer_email="drbd-user@lists.linbit.com",
     url="https://www.linbit.com",
     license="GPLv3",
+    python_requires=">=3.6",
     packages=[
         "linstor_client",
         "linstor_client.argparse",
@@ -198,7 +160,6 @@ setup(
         "linstor_client.commands.utils",
     ],
     install_requires=[
-        "python3-setuptools",
         "python-linstor>=1.27.1"
     ],
     py_modules=["linstor_client_main"],
@@ -206,7 +167,6 @@ setup(
     data_files=gen_data_files(),
     cmdclass={
         "build_man": BuildManCommand,
-        "versionup2date": CheckUpToDate
     },
     test_suite="tests.test_without_controller"
 )

@@ -46,43 +46,9 @@ pep8:
   script:
     flake8 .
 
-test:2.7:
+test:3.6:
   stage: test
-  image: python:2.7
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == "jenkins"'
-    - if: $CI_COMMIT_BRANCH == 'master'
-  before_script:
-    # setup ssh access to clone python-linstor dep
-    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
-    - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
-    - ssh-keyscan $GIT_HOST >> ~/.ssh/known_hosts
-    - pip install virtualenv
-    # now install python-linstor into venv
-    - pushd /tmp
-    - python -m virtualenv venv
-    - git clone --recursive git@$GIT_HOST:$PYTHON_LINSTOR_PATH
-    - cd linstor-api-py
-    - git checkout $CI_COMMIT_REF_NAME || true
-    - git submodule update
-    - make gensrc
-    - ../venv/bin/python setup.py install
-    # and also install xmlrunner package
-    - ../venv/bin/pip install xmlrunner
-    - popd
-  script:
-    - /tmp/venv/bin/python tests.py
-  artifacts:
-    reports:
-      junit: test-reports/TEST-*.xml
-
-test:3.5:
-  stage: test
-  image: python:3.5
+  image: python:3.6
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == "jenkins"'
@@ -132,10 +98,9 @@ deploy_client:
     - mv debian/changelog{.tmp,}
     - sed -i "s/LINSTOR_CLI_VERSION [0-9.]*/LINSTOR_CLI_VERSION $LINSTOR_CLIENT_VERSION/g" Dockerfile
     - sed -i "s/PYTHON_LINSTOR_VERSION [0-9.]*/PYTHON_LINSTOR_VERSION $LINSTOR_CLIENT_VERSION/g" Dockerfile
-    - sed -i "s/python-linstor >= [0-9.]*/python-linstor >= $LINSTOR_CLIENT_VERSION/g" setup.cfg setup.cfg.py2
-    - sed -i "s/\"python-linstor>=[0-9.]*\"/\"python-linstor>=$LINSTOR_CLIENT_VERSION\"/g" setup.py
+    - sed -i "s/python-linstor >= [0-9.]*/python-linstor >= $LINSTOR_CLIENT_VERSION/g" setup.cfg
+    - sed -i "s/\"python-linstor>=[0-9.]*\"/\"python-linstor>=$LINSTOR_CLIENT_VERSION\"/g" setup.py pyproject.toml
     - sed -i "s/VERSION = \"[0-9.]*\"/VERSION = \"$LINSTOR_CLIENT_VERSION\"/g" linstor_client/consts.py
-#    - dummy-release.sh linstor-client $LINSTOR_CLIENT_VERSION ignore
     - NO_DOC="-no-doc" make debrelease
     - curl -isSf -u $LINBIT_REGISTRY_USER:$LINBIT_REGISTRY_PASSWORD --upload-file dist/linstor-client-$LINSTOR_CLIENT_VERSION.tar.gz $LINBIT_REGISTRY_URL/repository/lbbuild-upstream/
     - curl -X DELETE -u $LINBIT_REGISTRY_USER:$LINBIT_REGISTRY_PASSWORD $LINBIT_REGISTRY_URL/repository/rhel8/x86_64/linstor-client-$LINSTOR_CLIENT_VERSION-1.noarch.rpm
@@ -143,7 +108,7 @@ deploy_client:
         -e LINBIT_REGISTRY_USER=$LINBIT_REGISTRY_USER
         -e LINBIT_REGISTRY_PASSWORD=$LINBIT_REGISTRY_PASSWORD
         -e LINBIT_REGISTRY_URL=$LINBIT_REGISTRY_URL
-        -d ubuntu-focal,ubuntu-noble,debian-bookworm,rhel8.0
+        -d ubuntu-jammy,ubuntu-noble,debian-bookworm,rhel8.0
 
 staging:
   stage: deploy_tests

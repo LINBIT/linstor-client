@@ -1,0 +1,75 @@
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linstor-client"
+dynamic = ["version"]
+description = "DRBD distributed resource management utility"
+readme = "README.md"
+license = { "text" = "GPL-3.0-or-later" }
+authors = [
+    {name = "Robert Altnoeder", email = "robert.altnoeder@linbit.com"},
+    {name = "Roland Kammerer", email = "roland.kammerer@linbit.com"},
+    {name = "Rene Peinthor", email = "rene.peinthor@linbit.com"},
+    {name = "Gabor Hernadi", email = "gabor.hernadi@linbit.com"}
+]
+maintainers = [
+    {name = "Rene Peinthor", email = "rene.peinthor@linbit.com"},
+]
+requires-python = ">=3.6"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = [
+    "python-linstor>=1.27.1",
+]
+
+[project.urls]
+Homepage = "https://www.linbit.com"
+Repository = "https://github.com/LINBIT/linstor-client.git"
+Issues = "https://github.com/LINBIT/linstor-client/issues"
+Changelog = "https://github.com/LINBIT/linstor-client/blob/master/CHANGELOG.md"
+
+[project.scripts]
+linstor = "linstor_client_main:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "linstor_client.consts.VERSION"}
+
+[tool.setuptools]
+packages = ["linstor_client", "linstor_client.commands", "linstor_client.commands.utils"]
+py-modules = ["linstor_client_main"]
+
+[tool.flake8]
+count = true
+show-source = true
+statistics = true
+ignore = ["C901", "W503", "F541"]
+max-complexity = 10
+max-line-length = 120
+extend-exclude = [
+    "dist/",
+    "test-reports/",
+    "venv/",
+    "build/",
+    "doc/",
+    "scripts/",
+    "debian/",
+    "linstor_client/argcomplete/",
+    "linstor_client/argparse/",
+    "linstor_client/consts_githash.py",
+]
+per-file-ignores = ["__init__.py:F401"]
