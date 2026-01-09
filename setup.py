@@ -131,11 +131,9 @@ class BuildManCommand(Command):
 
 
 def gen_data_files():
-    data_files = [("/etc/bash_completion.d", ["scripts/bash_completion/linstor"])]
-
+    data_files = []
     for manpage in glob.glob(os.path.join("man-pages", "*.8.gz")):
         data_files.append(("/usr/share/man/man8", [manpage]))
-
     return data_files
 
 
