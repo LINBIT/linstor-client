@@ -1,14 +1,14 @@
 from datetime import datetime
 
 import getpass
+import argparse
+from argparse import ArgumentError
 
 from linstor import SizeCalc
 import linstor_client
-import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands
 from linstor_client import Table
 from linstor_client.consts import Color
-from linstor_client.argparse.argparse import ArgumentError
 
 
 class BackupCommands(Commands):

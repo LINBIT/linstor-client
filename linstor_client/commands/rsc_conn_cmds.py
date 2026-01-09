@@ -1,6 +1,6 @@
 import os
 
-import linstor_client.argparse.argparse as argparse
+import argparse
 from linstor_client.commands import Commands, DrbdOptions
 from linstor_client import TableHeader, Table
 from linstor import consts as apiconsts

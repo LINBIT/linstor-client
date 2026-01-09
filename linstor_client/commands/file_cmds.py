@@ -7,7 +7,7 @@ from subprocess import call
 import linstor
 
 import linstor_client
-import linstor_client.argparse.argparse as argparse
+import argparse
 from linstor_client.commands import Commands
 
 

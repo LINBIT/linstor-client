@@ -1,6 +1,6 @@
 import json
 
-import linstor_client.argparse.argparse as argparse
+import argparse
 
 import linstor
 import linstor_client

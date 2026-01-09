@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 """
     LINSTOR - management of distributed storage/DRBD9 resources
     Copyright (C) 2013 - 2018  LINBIT HA-Solutions GmbH
@@ -25,8 +26,8 @@ import itertools
 import getpass
 
 import linstor
-import linstor_client.argparse.argparse as argparse
-import linstor_client.argcomplete as argcomplete
+import argparse
+import argcomplete
 import linstor_client.utils as utils
 from linstor_client.commands import (
     ControllerCommands,

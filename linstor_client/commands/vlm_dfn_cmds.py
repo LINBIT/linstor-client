@@ -2,7 +2,7 @@ import re
 import getpass
 
 import linstor_client
-import linstor_client.argparse.argparse as argparse
+import argparse
 from linstor import SizeCalc
 from linstor.sharedconsts import FLAG_DELETE, FLAG_RESIZE, FLAG_GROSS_SIZE
 from linstor_client.commands import Commands, DrbdOptions

@@ -2,7 +2,7 @@ import json
 
 import linstor
 import linstor_client
-import linstor_client.argparse.argparse as argparse
+import argparse
 import linstor.sharedconsts as apiconsts
 from linstor import SizeCalc
 from linstor.responses import StoragePoolListResponse  # noqa: F401

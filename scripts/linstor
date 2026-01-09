@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 """
     linstor - LINBIT storage management CLI
     Copyright (C) 2017  LINBIT HA-Solutions GmbH

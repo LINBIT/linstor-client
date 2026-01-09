@@ -2,7 +2,7 @@ import json
 
 import linstor.responses
 import linstor.sharedconsts as apiconsts
-import linstor_client.argparse.argparse as argparse
+import argparse
 
 
 from linstor import SizeCalc

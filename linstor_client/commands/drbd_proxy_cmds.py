@@ -1,6 +1,7 @@
+import argparse
+
 from linstor.sharedconsts import VAL_DRBD_PROXY_COMPRESSION_NONE, VAL_DRBD_PROXY_COMPRESSION_ZLIB, \
     VAL_DRBD_PROXY_COMPRESSION_LZMA, VAL_DRBD_PROXY_COMPRESSION_LZ4, VAL_DRBD_PROXY_COMPRESSION_ZSTD
-import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands, DrbdOptions, ArgumentError
 from linstor_client.utils import rangecheck
 

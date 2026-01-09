@@ -154,13 +154,12 @@ setup(
     python_requires=">=3.6",
     packages=[
         "linstor_client",
-        "linstor_client.argparse",
-        "linstor_client.argcomplete",
         "linstor_client.commands",
         "linstor_client.commands.utils",
     ],
     install_requires=[
-        "python-linstor>=1.27.1"
+        "python-linstor>=1.27.1",
+        "argcomplete>=1.8.1",
     ],
     py_modules=["linstor_client_main"],
     scripts=["scripts/linstor"],

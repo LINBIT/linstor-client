@@ -35,6 +35,7 @@ classifiers = [
 ]
 dependencies = [
     "python-linstor>=1.27.1",
+    "argcomplete>=1.8.1",
 ]
 
 [project.urls]
@@ -68,8 +69,6 @@ extend-exclude = [
     "doc/",
     "scripts/",
     "debian/",
-    "linstor_client/argcomplete/",
-    "linstor_client/argparse/",
     "linstor_client/consts_githash.py",
 ]
 per-file-ignores = ["__init__.py:F401"]

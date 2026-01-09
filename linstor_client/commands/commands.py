@@ -1,5 +1,5 @@
-import linstor_client.argparse.argparse as argparse
 import getpass
+import argparse
 import json
 import re
 import sys

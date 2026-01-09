@@ -1,4 +1,4 @@
-import linstor_client.argparse.argparse as argparse
+import argparse
 from linstor_client.utils import rangecheck, filter_new_args
 from linstor.properties import properties
 from linstor_client.commands import ArgumentError

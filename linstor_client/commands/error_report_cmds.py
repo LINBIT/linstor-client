@@ -1,4 +1,4 @@
-import linstor_client.argparse.argparse as argparse
+import argparse
 
 from linstor_client.table import Table, TableHeader
 from linstor_client.utils import Output, LinstorClientError

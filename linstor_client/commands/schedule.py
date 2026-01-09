@@ -1,5 +1,5 @@
 import linstor_client
-import linstor_client.argparse.argparse as argparse
+import argparse
 from linstor_client.commands import Commands
 from linstor_client import Table
 from linstor_client.consts import Color

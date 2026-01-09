@@ -1,4 +1,4 @@
-import linstor_client.argparse.argparse as argparse
+import argparse
 
 import linstor_client
 from linstor.responses import VolumeGroupResponse  # noqa: F401

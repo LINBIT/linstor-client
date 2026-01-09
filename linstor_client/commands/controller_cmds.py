@@ -1,8 +1,8 @@
 import json
+import argparse
 
 import linstor
 from linstor import LogLevelEnum
-import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands, DrbdOptions
 
 

@@ -1,13 +1,13 @@
 import collections
 import json
 import sys
+import argparse
 from enum import Enum
 
 import linstor.responses
 import linstor.sharedconsts as apiconsts
 
 import linstor_client
-import linstor_client.argparse.argparse as argparse
 from linstor_client.commands import Commands
 
 StateOfTheWorld = collections.namedtuple(

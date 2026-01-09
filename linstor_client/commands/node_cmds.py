@@ -3,11 +3,11 @@ import getpass
 import socket
 import sys
 import json
+import argparse
 
 import linstor.responses
 import linstor.sharedconsts as apiconsts
 import linstor_client
-import linstor_client.argparse.argparse as argparse
 from linstor import SizeCalc, LogLevelEnum
 from linstor_client.commands import Commands
 from linstor_client.consts import Color, ExitCode
