@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import os
-import sys
 import errno
-import operator
 import locale
+import operator
+import os
+import shutil
+import sys
 from linstor_client.consts import (
     DEFAULT_TERM_HEIGHT,
     DEFAULT_TERM_WIDTH,
@@ -23,7 +24,7 @@ class SyntaxException(Exception):
     pass
 
 
-def get_terminal_size():
+def _get_terminal_size():
     def ioctl_GWINSZ(term_fd):
         term_dim = None
         try:
@@ -51,6 +52,15 @@ def get_terminal_size():
         term_width = DEFAULT_TERM_WIDTH
         term_height = DEFAULT_TERM_HEIGHT
     return term_width, term_height
+
+
+def get_terminal_size():
+    if sys.version_info >= (3, 3):
+        default_size = (DEFAULT_TERM_HEIGHT, DEFAULT_TERM_HEIGHT)
+        size = shutil.get_terminal_size(fallback=default_size)
+        return size.columns, size.lines
+    else:
+        return _get_terminal_size()
 
 
 class TableHeader(object):
