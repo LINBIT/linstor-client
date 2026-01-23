@@ -489,7 +489,10 @@ class Commands(object):
                 output = [x.data_v1 for x in data]
 
         s = cls._to_json(output)
-        print(s)
+        try:
+            print(s)
+        except BrokenPipeError:
+            pass
         return True
 
     @classmethod

@@ -693,6 +693,9 @@ def main():
     except KeyboardInterrupt:
         sys.stderr.write("\nlinstor: Client exiting (received SIGINT)\n")
         return 1
+    except BrokenPipeError:
+        # sys.stderr.write("\nlinstor: Client exiting (received BrokenPipeError)\n")
+        return 1
     return 0
 
 
