@@ -316,6 +316,9 @@ class LinStorCLI(object):
                     raise SystemExit(1)
                 raise
 
+            if vars(args).get('func') is None:
+                raise ArgumentError("No subcommand specified")
+
             local_only_cmds = [
                 self.cmd_list,
                 MigrateCommands.cmd_dmmigrate,
