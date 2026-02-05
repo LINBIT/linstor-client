@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added Satellite Platform to node list if the controller is reporting it
 - Added "linstor controller export-db [EXPORT_NAME]"
 
 ### Changed
@@ -17,9 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed py2 support
 - Updated build system to use python build module
 
-### Added
+### Fixed
 
-- Added Satellite Platform to node list if the controller is reporting it
+- Table: groupby/sorting raised type error if sorting column only had numbers and natsort not installed
 
 ## [1.27.1] - 2025-12-11
 

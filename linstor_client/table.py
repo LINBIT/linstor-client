@@ -245,12 +245,6 @@ class Table(object):
         if self.groups and self.table:
             low_hdrnames = [h.lower() for h in hdrnames]
             group_bys = [low_hdrnames.index(g.lower()) for g in self.groups if g.lower() in low_hdrnames]
-            for row in self.table:
-                for idx in group_bys:
-                    try:
-                        row[idx] = int(row[idx])
-                    except ValueError:
-                        pass
             for idx, row in enumerate(self.table):
                 row += [idx]  # add table index for remap coloroverrides later
             orig_coloroverride = self.coloroverride[:]
