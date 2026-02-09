@@ -641,9 +641,18 @@ class NodeCommands(Commands):
     def show_nodes(cls, args, lstmsg):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
 
+        show_platform = False
+        for node in lstmsg.nodes:
+            if node.platform is not None and node.platform != "":
+                show_platform = True
+                break
+
         node_hdr = list(cls._node_headers)
         if args.show_aux_props:
             node_hdr.insert(-1, linstor_client.TableHeader("AuxProps"))
+
+        if show_platform:
+            node_hdr.insert(1, linstor_client.TableHeader("Platform"))
 
         for hdr in node_hdr:
             tbl.add_header(hdr)
@@ -696,6 +705,8 @@ class NodeCommands(Commands):
             row = [node.name, node.type, active_ip]
             if args.show_aux_props:
                 row.append("\n".join(aux_props))
+            if show_platform:
+                row.insert(1, node.platform)
 
             state_text = conn_stat[0]
             node_is_offline = conn_stat_dict.get(node.connection_status)[0] == apiconsts.ConnectionStatus.OFFLINE.name
