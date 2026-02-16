@@ -27,7 +27,11 @@ import getpass
 
 import linstor
 import argparse
-import argcomplete
+try:
+    import argcomplete
+except ImportError:
+    pass
+
 import linstor_client.utils as utils
 from linstor_client.commands import (
     ControllerCommands,
@@ -255,7 +259,10 @@ class LinStorCLI(object):
         )
         zsh_compl.set_defaults(func=self._zsh_generator.cmd_completer)
 
-        argcomplete.autocomplete(parser)
+        try:
+            argcomplete.autocomplete(parser)
+        except NameError:
+            pass
 
         subp.metavar = "{%s}" % ", ".join(sorted(Commands.MainList))
 
@@ -611,7 +618,7 @@ class LinStorCLI(object):
             abs_readline_hist_path = os.path.expanduser(self.readline_history_file)
             if os.path.exists(abs_readline_hist_path):
                 readline.read_history_file(abs_readline_hist_path)
-        except ImportError:
+        except (ImportError, NameError):
             pass
 
         last_rc = ExitCode.OK
