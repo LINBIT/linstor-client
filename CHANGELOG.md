@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added Satellite Platform to node list if the controller is reporting it
 - Added "linstor controller export-db [EXPORT_NAME]"
+- Added commands and support for linstor-controller token authentication
 
 ### Changed
 

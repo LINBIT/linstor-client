@@ -120,6 +120,14 @@ class Commands(object):
 
     class Subcommands(object):
 
+        class Auth(object):
+            LONG = "auth"
+            SHORT = "auth"
+
+        class Init(object):
+            LONG = "init"
+            SHORT = "i"
+
         class List(object):
             LONG = "list"
             SHORT = "l"

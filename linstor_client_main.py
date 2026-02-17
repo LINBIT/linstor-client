@@ -206,6 +206,7 @@ class LinStorCLI(object):
         parser.add_argument('--certfile', help="SSL certificate file")
         parser.add_argument('--keyfile', help="SSL key file")
         parser.add_argument('--cafile', help="SSL CA certificate file")
+        parser.add_argument('--auth-token', help="Linstor Controller auth token")
         parser.add_argument(
             '--allow-insecure-auth',
             action='store_true',
@@ -352,7 +353,8 @@ class LinStorCLI(object):
                             contrl,
                             timeout=args.timeout,
                             keep_alive=True,
-                            agent_info="Client " + VERSION
+                            agent_info="Client " + VERSION,
+                            auth_token=args.auth_token,
                         )
                         self._linstorapi.username = username
                         self._linstorapi.password = password
@@ -663,7 +665,6 @@ class LinStorCLI(object):
         sys.exit(ExitCode.OK)
 
     def run(self):
-        # TODO(rck): try/except
         rc = self.parse_and_execute(sys.argv[1:])
         sys.exit(rc)
 

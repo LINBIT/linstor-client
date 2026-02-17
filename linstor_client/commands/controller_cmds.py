@@ -1,13 +1,26 @@
 import json
 import argparse
+import textwrap
 
 import linstor
-from linstor import LogLevelEnum
+import linstor_client
+from linstor import LogLevelEnum, ApiCallResponse
 from linstor_client.commands import Commands, DrbdOptions
+from linstor.config import Config, ConfigFileLevel
 
 
 class ControllerCommands(Commands):
     OBJECT_NAME = 'controller'
+
+    _auth_token_headers = [
+        linstor_client.TableHeader("ID"),
+        linstor_client.TableHeader("Description"),
+        linstor_client.TableHeader("Created"),
+        linstor_client.TableHeader("Active"),
+        linstor_client.TableHeader("UserToken"),
+        linstor_client.TableHeader("IpFilter"),
+        linstor_client.TableHeader("Expires"),
+    ]
 
     def __init__(self):
         super(ControllerCommands, self).__init__()
@@ -23,7 +36,8 @@ class ControllerCommands(Commands):
             Commands.Subcommands.Which,
             Commands.Subcommands.BackupDb,
             Commands.Subcommands.ExportDb,
-            Commands.Subcommands.LogLevel
+            Commands.Subcommands.LogLevel,
+            Commands.Subcommands.Auth,
         ]
 
         con_parser = parser.add_parser(
@@ -172,6 +186,142 @@ class ControllerCommands(Commands):
         )
         p_export_db.set_defaults(func=self.export_controller_db)
 
+        # Auth commands
+        auth_subcmds = [
+            Commands.Subcommands.Init,
+            Commands.Subcommands.Create,
+            Commands.Subcommands.List,
+            Commands.Subcommands.Modify,
+            Commands.Subcommands.Delete
+        ]
+
+        auth_parser = con_subp.add_parser(
+            Commands.Subcommands.Auth.LONG,
+            formatter_class=argparse.RawTextHelpFormatter,
+            aliases=[Commands.Subcommands.Auth.SHORT],
+            description="%s subcommands" % Commands.Subcommands.Auth.LONG)
+
+        auth_subp = auth_parser.add_subparsers(
+            title="%s subcommands" % Commands.Subcommands.Auth.LONG,
+            metavar="",
+            description=Commands.Subcommands.generate_desc(auth_subcmds))
+
+        # init auth token
+        p_init_auth_token = auth_subp.add_parser(
+            Commands.Subcommands.Init.LONG,
+            aliases=[Commands.Subcommands.Init.SHORT],
+            description='Initializes auth token authentication on the controller.'
+        )
+        p_init_auth_token.add_argument(
+            'token_description', help="Description for the initial auth token."
+        )
+        p_init_auth_token.add_argument(
+            '--only-satellites',
+            action="store_true",
+            help="Only initialize auth for satellites, not for client connections."
+        )
+        p_init_auth_token.add_argument(
+            '--no-https',
+            action="store_true",
+            help="Allow non-HTTPS connections with token authentication."
+        )
+        p_init_auth_token.add_argument(
+            '--do-not-save-token',
+            action="store_true",
+            help="Don't save the new auth token to linstor-client configuration file."
+        )
+        p_init_auth_token.set_defaults(func=self.init_auth_token)
+
+        # create auth token
+        p_create_auth_token = auth_subp.add_parser(
+            Commands.Subcommands.Create.LONG,
+            aliases=[Commands.Subcommands.Create.SHORT],
+            description='Creates a new auth token.'
+        )
+        p_create_auth_token.add_argument(
+            'token_description', help="Name/Description of the new auth token."
+        )
+        p_create_auth_token.add_argument(
+            '--ip-filter',
+            type=str,
+            help="IP filter to restrict token usage to specific IP addresses or ranges."
+        )
+        p_create_auth_token.add_argument(
+            '--expires-at',
+            type=str,
+            help="Expiration date in ISO format (e.g. 2025-12-31)."
+        )
+        p_create_auth_token.add_argument(
+            '--save-token',
+            action="store_true",
+            help="save the new auth token to linstor-client configuration file."
+        )
+        p_create_auth_token.set_defaults(func=self.create_auth_token)
+
+        # list auth tokens
+        auth_token_groupby = [h.name.lower() for h in self._auth_token_headers]
+        p_list_auth_token = auth_subp.add_parser(
+            Commands.Subcommands.List.LONG,
+            aliases=[Commands.Subcommands.List.SHORT],
+            description='Lists all auth tokens.'
+        )
+        p_list_auth_token.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        p_list_auth_token.add_argument(
+            '-g', '--groupby',
+            nargs='+',
+            choices=auth_token_groupby,
+            type=str.lower,
+            help='Group by specified column(s)'
+        )
+        p_list_auth_token.add_argument(
+            '-a', '--all',
+            action="store_true",
+            help='Show all tokens including system/satellite tokens'
+        )
+        p_list_auth_token.set_defaults(func=self.list_auth_tokens)
+
+        # modify auth token
+        p_modify_auth_token = auth_subp.add_parser(
+            Commands.Subcommands.Modify.LONG,
+            aliases=[Commands.Subcommands.Modify.SHORT],
+            description='Modifies an existing auth token.'
+        )
+        p_modify_auth_token.add_argument(
+            'id',
+            type=int,
+            help="The auth token ID to modify."
+        )
+        p_modify_auth_token.add_argument(
+            '--description',
+            type=str,
+            help="New description for the token."
+        )
+        p_modify_auth_token.add_argument(
+            '--active',
+            choices=['true', 'false'],
+            help="Set token active or inactive."
+        )
+        p_modify_auth_token.add_argument(
+            '--ip-filter',
+            type=str,
+            help="IP filter to restrict token usage to specific IP address, to unset specify empty string ''."
+        )
+        p_modify_auth_token.set_defaults(func=self.modify_auth_token)
+
+        # delete auth token
+        p_delete_auth_token = auth_subp.add_parser(
+            Commands.Subcommands.Delete.LONG,
+            aliases=[Commands.Subcommands.Delete.SHORT],
+            description='Deletes/revokes an auth token.'
+        )
+        p_delete_auth_token.add_argument(
+            'id',
+            type=int,
+            help="The auth token ID to delete."
+        )
+        p_delete_auth_token.set_defaults(func=self.delete_auth_token)
+
+        self.check_subcommands(auth_subp, auth_subcmds)
         self.check_subcommands(con_subp, subcmds)
 
     @classmethod
@@ -260,3 +410,65 @@ class ControllerCommands(Commands):
     def export_controller_db(self, args):
         replies = self.get_linstorapi().controller_exportdb(args.export_name)
         return self.handle_replies(args, replies)
+
+    def init_auth_token(self, args):
+        replies = self.get_linstorapi().controller_init_auth_token(
+            args.token_description,
+            only_satellites=args.only_satellites,
+            no_https=args.no_https
+        )
+        if not args.do_not_save_token and replies[0].is_success():
+            Config.set_value("global", "auth-token", replies[0].object_refs["token"])
+            print("Token saved to config file: " + ConfigFileLevel.USER.to_config_path())
+        return self.handle_replies(args, replies)
+
+    def create_auth_token(self, args):
+        replies: list[ApiCallResponse] = self.get_linstorapi().controller_create_auth_token(
+            args.token_description,
+            ip_filter=args.ip_filter,
+            expires_at=args.expires_at
+        )
+        if args.save_token and replies[0].is_success():
+            Config.set_value("global", "auth-token", replies[0].object_refs["token"])
+            print("Token saved to config file: " + ConfigFileLevel.USER.to_config_path())
+        return self.handle_replies(args, replies)
+
+    def list_auth_tokens(self, args):
+        lstmsg = self.get_linstorapi().controller_list_auth_tokens()
+        return self.output_list(args, lstmsg, self.show_auth_tokens, machine_readable_raw=True)
+
+    def modify_auth_token(self, args):
+        replies = self.get_linstorapi().controller_modify_auth_token(
+            args.id,
+            description=args.description,
+            is_active=args.active.lower() == 'true' if args.active else None,
+            ip_filter=args.ip_filter
+        )
+        return self.handle_replies(args, replies)
+
+    def delete_auth_token(self, args):
+        replies = self.get_linstorapi().controller_delete_auth_token(args.id)
+        return self.handle_replies(args, replies)
+
+    @classmethod
+    def show_auth_tokens(cls, args, lstmsg):
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        for hdr in cls._auth_token_headers:
+            tbl.add_header(hdr)
+
+        tbl.set_groupby(args.groupby if args.groupby else ["Created"])
+
+        for token in lstmsg.auth_tokens:
+            if not args.all and not token.is_user_token:
+                continue
+            tbl.add_row([
+                token.id,
+                textwrap.fill(token.description, width=80) if token.description else "",
+                token.created_at.strftime("%Y-%m-%d %H:%M:%S") if token.created_at else "",
+                "Yes" if token.is_active else "No",
+                "Yes" if token.is_user_token else "No",
+                token.ip_filter or "-",
+                token.expires_at.strftime("%Y-%m-%d") if token.expires_at else "-"
+            ])
+
+        tbl.show()
