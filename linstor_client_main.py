@@ -340,8 +340,11 @@ class LinStorCLI(object):
                             help='Do not use colors in output. Useful for old terminals/scripting.')
         parser.add_argument('--no-pager', action="store_true",
                             help='Do not pipe output into a pager.')
-        parser.add_argument('--no-utf8', action="store_true", default=not sys.stdout.isatty(),
+        parser.add_argument('--no-utf8', action="store_true", default=False,
                             help='Do not use utf-8 characters in output (i.e., tables).')
+        parser.add_argument('--utf8', action="store_false", dest="no_utf8",
+                            default=argparse.SUPPRESS,
+                            help='Use utf-8 characters in output (i.e., tables). This is the default.')
         parser.add_argument('--warn-as-error', action="store_true",
                             help='Treat WARN return code as error (i.e., return code > 0).')
         parser.add_argument('--curl',
