@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed py2 support
 - Updated build system to use python build module
 
+### Added
+
+- Added Satellite Platform to node list if the controller is reporting it
+
 ## [1.27.1] - 2025-12-11
 
 ### Added
