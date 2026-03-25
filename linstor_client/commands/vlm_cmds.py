@@ -153,6 +153,16 @@ class VolumeCommands(Commands):
         return vlm.data_v1.get('state', {}).get('disk_state')
 
     @staticmethod
+    def volume_has_corrupt_crypt_key(vlm):
+        """
+        Returns True if the volume has a corrupted key error
+
+        :param vlm: The volume that should be inspected
+        :return: True if 'corrupted_key' is set
+        """
+        return vlm.luks_data and vlm.luks_data.corrupted_key
+
+    @staticmethod
     def volume_state_cell(vlm, rsc_flags):
         """
         Determains the status of a drbd volume for table display.
@@ -191,6 +201,11 @@ class VolumeCommands(Commands):
                 tbl_color = Color.YELLOW
         else:
             tbl_color = Color.YELLOW
+
+        if VolumeCommands.volume_has_corrupt_crypt_key(vlm):
+            state += ", Decrypt Error"
+            if not tbl_color:
+                tbl_color = Color.YELLOW
         return state, tbl_color
 
     @classmethod
