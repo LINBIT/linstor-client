@@ -31,6 +31,7 @@ except ImportError:
 # Default terminal dimensions
 # Used by get_terminal_size()
 DEFAULT_TERM_WIDTH, DEFAULT_TERM_HEIGHT = 80, 25
+MIN_COLUMN_WIDTH = 10
 
 FILE_GLOBAL_COMMON_CONF = "linstor_global_common.conf"
 

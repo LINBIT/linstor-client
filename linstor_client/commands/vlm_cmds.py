@@ -49,6 +49,7 @@ class VolumeCommands(Commands):
             description='Prints a list of all volumes.'
         )
         p_lvlms.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lvlms)
         p_lvlms.add_argument(
             '-n', '--nodes',
             nargs='+',
@@ -92,6 +93,7 @@ class VolumeCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Lists all properties set on the specified volume.")
         p_lp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lp)
         p_lp.add_argument(
             'node_name',
             help="Node name where the resource is deployed.").completer = self.node_completer
@@ -269,7 +271,7 @@ class VolumeCommands(Commands):
         :param responses.ResourceResponse lstmsg: resource response data to display
         :return: None
         """
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
         tbl.add_column("Resource")
         tbl.add_column("Node")
         tbl.add_column("StoragePool")

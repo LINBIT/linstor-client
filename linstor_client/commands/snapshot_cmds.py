@@ -151,6 +151,7 @@ class SnapshotCommands(Commands):
             description='Prints a list of all snapshots known to LINSTOR. '
                         'By default, the list is printed as a human readable table.')
         p_lsnapshots.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lsnapshots)
         p_lsnapshots.add_argument(
             '-r', '--resources',
             nargs='+',
@@ -169,6 +170,7 @@ class SnapshotCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the specified snapshot definition.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_sp)
         p_sp.add_argument(
             'resource_name',
             help="Resource definition for which to print the properties"
@@ -325,7 +327,8 @@ class SnapshotCommands(Commands):
 
     @classmethod
     def show(cls, args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
         tbl.add_column("ResourceName")
         tbl.add_column("SnapshotName")
         tbl.add_column("NodeNames")

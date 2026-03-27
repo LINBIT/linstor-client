@@ -108,6 +108,7 @@ class ScheduleCommands(Commands):
             aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of schedules.')
         list_sched.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(list_sched)
         list_sched.set_defaults(func=self.list)
 
         # list schedule by resources
@@ -116,6 +117,7 @@ class ScheduleCommands(Commands):
             aliases=[ScheduleCommands.ListByResource.SHORT],
             description='Prints a list of schedules for resources.')
         list_sched_by_rsc.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(list_sched_by_rsc)
         list_sched_by_rsc.add_argument(
             '-r', '--resource',
             type=str,
@@ -140,6 +142,7 @@ class ScheduleCommands(Commands):
             aliases=[ScheduleCommands.ListByResourceDetails.SHORT],
             description='Prints details of schedules for a resource.')
         list_sched_by_rsc_det.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(list_sched_by_rsc_det)
         list_sched_by_rsc_det.add_argument('resource_name').completer = self.resource_dfn_completer
         list_sched_by_rsc_det.set_defaults(func=self.list_by_resource_details)
 
@@ -256,7 +259,7 @@ Every 5 minutes past hour 3 on every day between 2 and 4 and on every Saturday i
         :param linstor.responses.ScheduleListResponse lstmsg:
         :return:
         """
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
         for hdr in cls._schedule_headers:
             tbl.add_header(hdr)
         for schedule in lstmsg.schedules:
@@ -298,7 +301,7 @@ Every 5 minutes past hour 3 on every day between 2 and 4 and on every Saturday i
         :param linstor.responses.ScheduleResourceListResponse lstmsg:
         :return:
         """
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
         for hdr in cls._schedule_by_resource_headers:
             tbl.add_header(hdr)
         for schedule in lstmsg.schedule_resources:
@@ -340,7 +343,7 @@ Every 5 minutes past hour 3 on every day between 2 and 4 and on every Saturday i
         :param linstor.responses.ScheduleResourceDetailsListResponse lstmsg:
         :return:
         """
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
         for hdr in cls._schedule_by_resource_details_headers:
             tbl.add_header(hdr)
         for schedule in lstmsg.schedule_resources:

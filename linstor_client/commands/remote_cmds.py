@@ -54,6 +54,7 @@ class RemoteCommands(Commands):
             description='Prints a list of all remotes.'
         )
         p_lremotes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lremotes)
         p_lremotes.set_defaults(func=self.list_remotes)
 
         # create
@@ -214,7 +215,7 @@ class RemoteCommands(Commands):
         :param linstor.responses.RemoteListResponse remotes:
         :return:
         """
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
         tbl.add_column("Name")
         tbl.add_column("Type")
         tbl.add_column("Info")

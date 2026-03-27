@@ -96,6 +96,7 @@ class BackupCommands(Commands):
             aliases=[Commands.Subcommands.List.SHORT],
             description='Prints a list of backups on an S3 remote.')
         p_lbackups.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lbackups)
         p_lbackups.add_argument(
             '-r', '--resource',
             help='Only show backups for given resource')
@@ -306,6 +307,7 @@ class BackupCommands(Commands):
             aliases=[Commands.Subcommands.List.SHORT],
             description="Lists backups that are queued on nodes.")
         p_lstqueue.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lstqueue)
         p_lstqueue.add_argument(
             "-n", "--nodes",
             nargs='*',
@@ -410,6 +412,7 @@ class BackupCommands(Commands):
             help="Rename storage pool names. Format: $oldname=$newname",
             action=BackupCommands._KeyValue)
         p_infobak.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_infobak)
         p_infobak.set_defaults(func=self.info)
 
         # schedule backup
@@ -560,7 +563,7 @@ class BackupCommands(Commands):
 
     @classmethod
     def show_backups(cls, args, lstmsg):
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
 
         if args.others:
             for hdr in cls._backup_list_other_headers:
@@ -623,7 +626,7 @@ class BackupCommands(Commands):
 
     @classmethod
     def show_queue(cls, args, lstmsg):
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
         if args.snap_to_node:
             for hdr in cls._backup_queue_headers:
                 tbl.add_header(hdr)
@@ -799,7 +802,7 @@ class BackupCommands(Commands):
 
     @classmethod
     def show_backups_info(cls, args, lstmsg):
-        rsc_tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        rsc_tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
 
         rsc_tbl.add_column("Resource")
         rsc_tbl.add_column("Snapshot")
@@ -816,7 +819,8 @@ class BackupCommands(Commands):
         rsc_tbl.add_row(row)
         rsc_tbl.show()
 
-        stor_pool_tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        stor_pool_tbl = Table(utf8=not args.no_utf8, colors=not args.no_color,
+                              pastable=args.pastable, truncate=args.truncate)
 
         stor_pool_tbl.add_column("Origin StorPool (Type)")
         if args.target_node:

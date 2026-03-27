@@ -5,6 +5,7 @@ import shutil
 from linstor_client.consts import (
     DEFAULT_TERM_HEIGHT,
     DEFAULT_TERM_WIDTH,
+    MIN_COLUMN_WIDTH,
     Color
 )
 
@@ -55,7 +56,7 @@ class TableHeader(object):
 
 
 class Table(object):
-    def __init__(self, colors=True, utf8=False, pastable=False):
+    def __init__(self, colors=True, utf8=False, pastable=False, truncate=False):
         self.r_just = False
         self.got_column = False
         self.got_row = False
@@ -74,6 +75,7 @@ class Table(object):
         else:
             self.colors = colors
             self.utf8 = utf8
+        self.truncate = truncate
 
     def add_column(self, name, color=None, align_column=TableHeader.ALIGN_LEFT, just_txt=TableHeader.ALIGN_LEFT):
         self.got_column = True
@@ -168,6 +170,87 @@ class Table(object):
             maxline = max(len(line), maxline)
         return maxline
 
+    def _shrink_columns(self, columnmax, maxwidth):
+        """
+        Shrink column widths proportionally to fit within maxwidth.
+
+        Columns at or below their floor (max of MIN_COLUMN_WIDTH and header label length)
+        are left untouched. Remaining space is distributed proportionally among
+        oversized columns. If even floor-width columns exceed maxwidth, returns
+        columnmax unchanged (no truncation possible).
+
+        :param list[int] columnmax: current maximum width per column
+        :param int maxwidth: target maximum table width
+        :return: adjusted column widths
+        :rtype: list[int]
+        """
+        num_columns = len(columnmax)
+        overhead = 3 * num_columns + 1
+        available = maxwidth - overhead
+
+        if sum(columnmax) <= available:
+            return columnmax
+
+        # compute floor per column
+        floors = []
+        for idx, col in enumerate(self.header):
+            header_len = len(col['name'].replace('_', ' '))
+            floors.append(max(MIN_COLUMN_WIDTH, header_len))
+
+        # if even floors don't fit, skip truncation
+        if sum(floors) > available:
+            return columnmax
+
+        # separate locked (at/below floor) from shrinkable columns
+        locked_total = 0
+        shrinkable_indices = []
+        shrinkable_total = 0
+        for idx, width in enumerate(columnmax):
+            if width <= floors[idx]:
+                locked_total += width
+            else:
+                shrinkable_indices.append(idx)
+                shrinkable_total += width
+
+        remaining = available - locked_total
+        result = list(columnmax)
+
+        if not shrinkable_indices or remaining <= 0:
+            return columnmax
+
+        # distribute remaining space proportionally among shrinkable columns
+        allocated = 0
+        for i, idx in enumerate(shrinkable_indices):
+            if i == len(shrinkable_indices) - 1:
+                # last column gets whatever is left to avoid rounding drift
+                result[idx] = remaining - allocated
+            else:
+                share = int(remaining * columnmax[idx] / shrinkable_total)
+                result[idx] = max(floors[idx], share)
+                allocated += result[idx]
+
+        return result
+
+    @classmethod
+    def _truncate_cell(cls, text, max_width, utf8=False):
+        """
+        Truncate text to fit within max_width, appending an ellipsis if truncated.
+
+        :param str text: cell text (single line)
+        :param int max_width: maximum allowed width
+        :param bool utf8: if True use unicode ellipsis, else use '...'
+        :return: truncated text
+        :rtype: str
+        """
+        if len(text) <= max_width:
+            return text
+        if utf8:
+            return text[:max_width - 1] + '\u2026'
+        else:
+            if max_width < 3:
+                return text[:max_width]
+            return text[:max_width - 3] + '...'
+
     @classmethod
     def _str_print(cls, output):
         """
@@ -239,7 +322,7 @@ class Table(object):
             maxwidth = self.maxwidth
         else:
             term_width, _ = get_terminal_size()
-            maxwidth = 110 if term_width > 110 else term_width
+            maxwidth = term_width
 
         hdrnames = [h['name'] for h in self.header]
         if self.groups and self.table:
@@ -288,6 +371,9 @@ class Table(object):
                 if not multi_line_row:
                     multi_line_row = str(row[idx]).find("\n") >= 0
                 columnmax[idx] = max(self._determine_column_width(row[idx]), columnmax[idx])
+
+        if self.truncate:
+            columnmax = self._shrink_columns(columnmax, maxwidth)
 
         # insert frames
         self.table.insert(0, [None])
@@ -374,6 +460,9 @@ class Table(object):
                     data_idx += 1  # we wrote a data row, so increase the data_idx
                     # split rows into row lines (for multiline support)
                     for singlerow in self._row_expand(row):
+                        if self.truncate:
+                            for i in range(len(columnmax)):
+                                singlerow[i] = self._truncate_cell(singlerow[i], columnmax[i], self.utf8)
                         output_table_str += self._str_print(fstr.format(*singlerow))
 
                     # if multiline rows and not disabled draw row separators between real rows

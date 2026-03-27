@@ -116,6 +116,7 @@ class ResourceGroupCommands(Commands):
             description='Prints a list of all resource groups known to '
             'LINSTOR. By default, the list is printed as a human readable table.')
         p_lrscgrps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lrscgrps)
         p_lrscgrps.add_argument('-g', '--groupby', nargs='+',
                                 choices=rsc_grp_groupby,
                                 type=str.lower).completer = rsc_grp_group_completer
@@ -144,6 +145,7 @@ class ResourceGroupCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties set on a given resource group.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_sp)
         p_sp.add_argument(
             '--from-file',
             type=argparse.FileType('r'),
@@ -230,6 +232,7 @@ class ResourceGroupCommands(Commands):
                         "Shows maximum volume size information for a specified resource group.",
         )
         p_qmvs.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_qmvs)
         p_qmvs.add_argument(
             'resource_group_name', help="Resource group name to read auto-config settings from"
         ).completer = self.resource_grp_completer
@@ -243,6 +246,7 @@ class ResourceGroupCommands(Commands):
             description="Shows volume size information for a specified resource group."
         )
         p_qsi.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_qsi)
         p_qsi.add_argument(
             'resource_group_name', help="Resource group name to read auto-config settings from"
         ).completer = self.resource_grp_completer
@@ -259,6 +263,7 @@ class ResourceGroupCommands(Commands):
                         "even exceed the default five minute timeout!"
         )
         p_adjust.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_adjust)
         p_adjust.add_argument(
             'resource_group_name',
             nargs="?",
@@ -321,7 +326,8 @@ class ResourceGroupCommands(Commands):
         return self.handle_replies(args, replies)
 
     def show(self, args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
 
         for hdr in self._rsc_grp_headers:
             tbl.add_header(hdr)
@@ -440,7 +446,8 @@ class ResourceGroupCommands(Commands):
         :param linstor.responses.QuerySizeInfoResponseSpaceInfo info:
         :return:
         """
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
         tbl.add_column("MaxVolumeSize", just_txt='>')
         tbl.add_column("AvailableSize", just_txt='>')
         tbl.add_column("Capacity", just_txt='>')

@@ -336,6 +336,7 @@ class StoragePoolCommands(Commands):
             description='Prints a list of all storage pools in the LINSTOR cluster. '
             'By default, the list is printed as a human readable table.')
         p_lstorpool.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lstorpool)
         p_lstorpool.add_argument('-g', '--groupby', nargs='+',
                                  choices=storpoolgroupby,
                                  type=str.lower).completer = storpool_group_completer
@@ -364,6 +365,7 @@ class StoragePoolCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given storage pool.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_sp)
         p_sp.add_argument(
             'node_name',
             type=str,
@@ -434,7 +436,8 @@ class StoragePoolCommands(Commands):
         return self.handle_replies(args, replies)
 
     def show(self, args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
         for hdr in self._stor_pool_headers:
             tbl.add_header(hdr)
 

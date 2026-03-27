@@ -48,6 +48,7 @@ class ErrorReportCommands(Commands):
             nargs='+'
         )
         c_list_error_reports.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(c_list_error_reports)
         c_list_error_reports.add_argument(
             '--report-id',
             nargs='+',
@@ -90,7 +91,7 @@ class ErrorReportCommands(Commands):
         :param list[linstor.responses.ErrorReport] lstmsg:
         :return:
         """
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
         tbl.add_header(TableHeader("Id"))
         tbl.add_header(TableHeader("Datetime"))
         tbl.add_header(TableHeader("Node"))

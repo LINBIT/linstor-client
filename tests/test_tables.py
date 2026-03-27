@@ -219,3 +219,165 @@ class TestUtils(unittest.TestCase):
 """,
             table_out
         )
+
+    def test_shrink_columns_no_shrink_needed(self):
+        """Table fits within maxwidth - no shrinking."""
+        tbl = Table(utf8=False, truncate=True)
+        tbl.add_header(TableHeader("Name"))
+        tbl.add_header(TableHeader("Value"))
+        # overhead = 3 * 2 + 1 = 7
+        # columnmax = [10, 10], sum = 20, total = 27
+        columnmax = [10, 10]
+        result = tbl._shrink_columns(columnmax, maxwidth=40)
+        self.assertEqual([10, 10], result)
+
+    def test_shrink_columns_proportional(self):
+        """Two equally wide columns should be shrunk equally."""
+        tbl = Table(utf8=False, truncate=True)
+        tbl.add_header(TableHeader("Name"))
+        tbl.add_header(TableHeader("Value"))
+        # overhead = 3 * 2 + 1 = 7
+        # columnmax = [50, 50], sum = 100, total = 107
+        # available content = 80 - 7 = 73
+        # both columns above floor (10), both shrinkable
+        # each gets 73 * 50/100 = 36.5 -> 36 and 37
+        columnmax = [50, 50]
+        result = tbl._shrink_columns(columnmax, maxwidth=80)
+        self.assertEqual(73, sum(result))
+        # both should be within 1 of each other (rounding)
+        self.assertTrue(abs(result[0] - result[1]) <= 1)
+
+    def test_shrink_columns_small_untouched(self):
+        """Small columns at or below floor should not be shrunk."""
+        tbl = Table(utf8=False, truncate=True)
+        tbl.add_header(TableHeader("Id"))
+        tbl.add_header(TableHeader("Name"))
+        tbl.add_header(TableHeader("Description"))
+        # overhead = 3 * 3 + 1 = 10
+        # columnmax = [5, 50, 40], sum = 95, total = 105
+        # available content = 80 - 10 = 70
+        # Id (5) is below floor (10), but its actual width is 5 so lock at 5
+        # remaining available = 70 - 5 = 65 for Name(50) + Description(40)
+        # Name: 65 * 50/90 = 36.1 -> 36
+        # Description: 65 * 40/90 = 28.9 -> 29
+        columnmax = [5, 50, 40]
+        result = tbl._shrink_columns(columnmax, maxwidth=80)
+        self.assertEqual(5, result[0])  # small column untouched
+        self.assertEqual(70, sum(result))  # total fits available
+
+    def test_shrink_columns_respects_header_floor(self):
+        """Column floor should be at least the header label length."""
+        tbl = Table(utf8=False, truncate=True)
+        tbl.add_header(TableHeader("ResourceName"))  # 12 chars > MIN_COLUMN_WIDTH(10)
+        tbl.add_header(TableHeader("State"))          # 5 chars < MIN_COLUMN_WIDTH(10)
+        # The floor for ResourceName should be 12 (header length)
+        # The floor for State should be 10 (MIN_COLUMN_WIDTH)
+        columnmax = [60, 60]
+        result = tbl._shrink_columns(columnmax, maxwidth=50)
+        self.assertTrue(result[0] >= 12, f"ResourceName column {result[0]} below header length 12")
+        self.assertTrue(result[1] >= 10, f"State column {result[1]} below MIN_COLUMN_WIDTH 10")
+
+    def test_shrink_columns_too_narrow_skips(self):
+        """If terminal is too narrow for even floor-width columns, skip truncation."""
+        tbl = Table(utf8=False, truncate=True)
+        tbl.add_header(TableHeader("Name"))
+        tbl.add_header(TableHeader("Value"))
+        tbl.add_header(TableHeader("Description"))
+        # overhead = 3 * 3 + 1 = 10
+        # floor per column = 10, total floors = 30, 30 + 10 = 40 > maxwidth of 30
+        columnmax = [50, 50, 50]
+        result = tbl._shrink_columns(columnmax, maxwidth=30)
+        self.assertEqual([50, 50, 50], result)  # unchanged, skip truncation
+
+    def test_truncation_basic(self):
+        """Table with truncation enabled should fit within maxwidth."""
+        tbl = Table(utf8=False, truncate=True)
+        tbl.maxwidth = 40
+        tbl.add_header(TableHeader("Name"))
+        tbl.add_header(TableHeader("Description"))
+
+        tbl.add_row(["short", "This is a very long description that exceeds width"])
+        table_out = tbl.show()
+
+        # every line should fit within maxwidth
+        for line in table_out.strip().splitlines():
+            self.assertLessEqual(len(line), 40, f"Line too long: {repr(line)}")
+
+    def test_truncation_ellipsis_ascii(self):
+        """Truncated cells should end with '...' in ascii mode."""
+        tbl = Table(utf8=False, truncate=True)
+        tbl.maxwidth = 40
+        tbl.add_header(TableHeader("Name"))
+        tbl.add_header(TableHeader("Value"))
+
+        tbl.add_row(["a_very_long_name_that_will_be_truncated", "also_a_very_long_value_here_too_yes"])
+        table_out = tbl.show()
+
+        # find the data row (skip header, separators)
+        data_lines = [line for line in table_out.strip().splitlines() if '...' in line]
+        self.assertTrue(len(data_lines) > 0, "Expected at least one line with '...' ellipsis")
+
+    def test_truncation_ellipsis_utf8(self):
+        """Truncated cells should end with unicode ellipsis in utf8 mode."""
+        tbl = Table(utf8=True, truncate=True)
+        tbl.maxwidth = 40
+        tbl.add_header(TableHeader("Name"))
+        tbl.add_header(TableHeader("Value"))
+
+        tbl.add_row(["a_very_long_name_that_will_be_truncated", "also_a_very_long_value_here_too_yes"])
+        table_out = tbl.show()
+
+        data_lines = [line for line in table_out.strip().splitlines()
+                      if '\u2026' in line or '...' in line]
+        self.assertTrue(len(data_lines) > 0, "Expected at least one line with ellipsis")
+
+    def test_truncation_disabled(self):
+        """With truncate=False, table should render at full width as before."""
+        tbl = Table(utf8=False, truncate=False)
+        tbl.maxwidth = 40
+        tbl.add_header(TableHeader("Name"))
+        tbl.add_header(TableHeader("Description"))
+
+        tbl.add_row(["short", "This is a very long description that exceeds width"])
+        table_out = tbl.show()
+
+        # at least one line should exceed maxwidth (no truncation)
+        max_line = max(len(line) for line in table_out.strip().splitlines())
+        self.assertGreater(max_line, 40)
+
+    def test_truncation_multiline(self):
+        """Multiline cells should have each line truncated independently."""
+        tbl = Table(utf8=False, truncate=True)
+        tbl.maxwidth = 45
+        tbl.add_header(TableHeader("Id"))
+        tbl.add_header(TableHeader("Text"))
+
+        tbl.add_row(["1", "first_very_long_line_that_needs_truncation\nsecond_very_long_line_also_needs_truncation"])
+        table_out = tbl.show()
+
+        for line in table_out.strip().splitlines():
+            self.assertLessEqual(len(line), 45, f"Line too long: {repr(line)}")
+
+    def test_truncation_equal_columns(self):
+        """Two equally wide columns should be truncated to roughly equal widths."""
+        tbl = Table(utf8=False, truncate=True)
+        tbl.maxwidth = 50
+        tbl.add_header(TableHeader("ColumnA"))
+        tbl.add_header(TableHeader("ColumnB"))
+
+        long_a = "a" * 60
+        long_b = "b" * 60
+        tbl.add_row([long_a, long_b])
+        table_out = tbl.show()
+
+        # find the data row
+        for line in table_out.strip().splitlines():
+            if 'aaa' in line and 'bbb' in line:
+                # extract the two cell contents (between pipes)
+                parts = line.split('|')
+                # parts[0] is empty (before first pipe), parts[1] is col A, parts[2] is col B
+                col_a = parts[1].strip()
+                col_b = parts[2].strip()
+                self.assertTrue(abs(len(col_a) - len(col_b)) <= 1,
+                                f"Columns not equally truncated: {len(col_a)} vs {len(col_b)}")
+                break

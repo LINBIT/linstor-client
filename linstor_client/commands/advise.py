@@ -184,6 +184,7 @@ class AdviceCommands(Commands):
             aliases=[Commands.Subcommands.Resource.SHORT],
             description='Points out potential issues with the currently deployed resources.')
         p_resource.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_resource)
         p_resource.add_argument('-f', '--filter', choices=[x.value for x in _IssueType], nargs='+', default=[],
                                 help='Only show given issues types')
         p_resource.add_argument('-r', '--resources', nargs='+', type=str,
@@ -196,6 +197,7 @@ class AdviceCommands(Commands):
             description='Points out potential issues should a node go down for maintenance.'
         )
         p_maintenace.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_maintenace)
         p_maintenace.add_argument('-f', '--filter', choices=[x.value for x in _IssueType], nargs='+', default=[],
                                   help='Only show given issues types')
         p_maintenace.add_argument('-r', '--resources', nargs='+', type=str,
@@ -226,7 +228,8 @@ class AdviceCommands(Commands):
         if args.machine_readable:
             json.dump([issue.data for issue in filtered_issues], sys.stdout)
         else:
-            tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                       pastable=args.pastable, truncate=args.truncate)
             tbl.add_headers(AdviceCommands._issue_headers)
 
             for issue in filtered_issues:
@@ -264,7 +267,8 @@ class AdviceCommands(Commands):
         if args.machine_readable:
             json.dump([issue.data for issue in filtered_issues], sys.stdout)
         else:
-            tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                       pastable=args.pastable, truncate=args.truncate)
             tbl.add_headers(AdviceCommands._issue_headers)
 
             for issue in filtered_issues:

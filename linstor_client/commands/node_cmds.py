@@ -394,6 +394,7 @@ class NodeCommands(Commands):
             description='Prints a list of all cluster nodes known to LINSTOR. '
             'By default, the list is printed as a human readable table.')
         p_lnodes.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lnodes)
         p_lnodes.add_argument('-g', '--groupby', nargs='+', type=str.lower,
                               choices=node_groupby).completer = node_group_completer
         p_lnodes.add_argument('-n', '--nodes', nargs='+', type=str,
@@ -423,6 +424,7 @@ class NodeCommands(Commands):
             'known to LINSTOR. By default, the list is printed as a human readable table.'
         )
         p_info_node.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_info_node)
         p_info_node.add_argument('-f', '--full', action="store_true", help="Also shows provider/layer errors")
         p_info_node.add_argument(
             '-n', '--nodes', nargs='+', type=str, help='Filter by list of nodes'
@@ -436,6 +438,7 @@ class NodeCommands(Commands):
             description='Prints a list of network interfaces for a specified node.'
         )
         p_lnetif.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lnetif)
         p_lnetif.add_argument(
             'node_name',
             help='Node name for which to print the net interfaces'
@@ -448,6 +451,7 @@ class NodeCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given node.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_sp)
         p_sp.add_argument(
             '--from-file',
             type=argparse.FileType('r'),
@@ -643,7 +647,8 @@ class NodeCommands(Commands):
 
     @classmethod
     def show_nodes(cls, args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
 
         show_platform = False
         for node in lstmsg.nodes:
@@ -883,7 +888,8 @@ class NodeCommands(Commands):
     def show_netinterfaces(cls, args, lstnodes):
         node = lstnodes.node(args.node_name)
         if node:
-            tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+            tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                       pastable=args.pastable, truncate=args.truncate)
             tbl.add_column(node.name, color=Color.GREEN)
             tbl.add_column("NetInterface")
             tbl.add_column("IP")
@@ -908,8 +914,10 @@ class NodeCommands(Commands):
 
     @classmethod
     def show_info(cls, args, lstmsg):
-        tbl_provs = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
-        tbl_lrs = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl_provs = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                         pastable=args.pastable, truncate=args.truncate)
+        tbl_lrs = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                       pastable=args.pastable, truncate=args.truncate)
 
         tbl_provs.add_header(cls._info_headers_provs[0])
         tbl_lrs.add_header(cls._info_headers_lrs[0])

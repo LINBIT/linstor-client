@@ -81,6 +81,7 @@ class VolumeGroupCommands(Commands):
             description='Lists all volume groups for a specified resource group. '
                         'By default, the list is printed as a human readable table.')
         p_lvlmgrps.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lvlmgrps)
         p_lvlmgrps.add_argument('-g', '--groupby', nargs='+',
                                 choices=vlm_grp_groupby,
                                 type=str.lower).completer = vlm_grp_group_completer
@@ -102,6 +103,7 @@ class VolumeGroupCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Shows all properties of the specified volume group.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_sp)
         p_sp.add_argument(
             'name',
             help="Resource group for which to print the properties"
@@ -164,7 +166,8 @@ class VolumeGroupCommands(Commands):
     @classmethod
     def show(cls, args, lstmsg):
         vlm_grps = lstmsg  # type: VolumeGroupResponse
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
 
         for hdr in cls._vlm_grp_headers:
             tbl.add_header(hdr)

@@ -203,6 +203,7 @@ class ResourceCommands(Commands):
             description='Prints a list of all resource known to LINSTOR. By default, the list is printed as a human '
             'readable table.')
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lreses)
         p_lreses.add_argument(
             '-g', '--groupby',
             nargs='+',
@@ -252,6 +253,7 @@ class ResourceCommands(Commands):
             aliases=[Commands.Subcommands.Involved.SHORT],
             description='Prints a list of resources involved on a given node.')
         p_involved.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_involved)
         p_involved.add_argument('-i', '--inuse', action="store_true", help='Only show resource bundles that are used.')
         p_involved.add_argument(
             '-d',
@@ -285,6 +287,7 @@ class ResourceCommands(Commands):
             description='Prints a list of all volumes.'
         )
         p_lvlms.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lvlms)
         p_lvlms.add_argument(
             '-n', '--nodes',
             nargs='+',
@@ -323,6 +326,7 @@ class ResourceCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given resource.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_sp)
         p_sp.add_argument(
             'node_name',
             help="Node name where the resource is deployed.").completer = self.node_completer
@@ -676,7 +680,8 @@ class ResourceCommands(Commands):
         rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
         rsc_inuse_lkup = self.get_inuse_lookup(lstmsg.resource_states)
 
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
 
         show_drbd_ports = args.show_drbd_ports
 

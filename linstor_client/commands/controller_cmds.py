@@ -62,6 +62,7 @@ class ControllerCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description='Print current controller config properties.')
         c_ctrl_props.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(c_ctrl_props)
         c_ctrl_props.set_defaults(func=self.cmd_print_controller_props)
 
         #  controller - set props
@@ -112,6 +113,7 @@ class ControllerCommands(Commands):
             description='Queries the controller for the maximum volume size of storage pools, given a specified '
             'replica count.')
         p_query_max_vlm_size.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_query_max_vlm_size)
         p_query_max_vlm_size.add_argument(
             '--storage-pool', '-s',
             type=str,
@@ -270,6 +272,7 @@ class ControllerCommands(Commands):
             description='Lists all auth tokens.'
         )
         p_list_auth_token.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_list_auth_token)
         p_list_auth_token.add_argument(
             '-g', '--groupby',
             nargs='+',
@@ -456,7 +459,8 @@ class ControllerCommands(Commands):
 
     @classmethod
     def show_auth_tokens(cls, args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
         for hdr in cls._auth_token_headers:
             tbl.add_header(hdr)
 

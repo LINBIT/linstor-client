@@ -70,6 +70,7 @@ class KeyValueStoreCommands(Commands):
             aliases=[Commands.Subcommands.List.SHORT],
             description='Lists all key-value store instances.')
         p_kv_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_kv_list)
         p_kv_list.set_defaults(func=self.list)
 
         p_kv_show = kv_subp.add_parser(
@@ -81,6 +82,7 @@ class KeyValueStoreCommands(Commands):
             type=str,
             help='Key-value store instance to operate on').completer = self.instance_completer
         p_kv_show.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output.')
+        Commands.add_truncate_args(p_kv_show)
         p_kv_show.set_defaults(func=self.show)
 
         p_kv_modify = kv_subp.add_parser(
@@ -124,7 +126,8 @@ class KeyValueStoreCommands(Commands):
 
     @staticmethod
     def table_list(args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
         for hdr in KeyValueStoreCommands._kv_list_headers:
             tbl.add_header(hdr)
 
@@ -135,7 +138,8 @@ class KeyValueStoreCommands(Commands):
 
     @staticmethod
     def table_show(args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
         for hdr in KeyValueStoreCommands._kv_show_headers:
             tbl.add_header(hdr)
 

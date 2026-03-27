@@ -57,6 +57,7 @@ class NodeConnectionCommands(Commands):
                         'By default, the list is printed as a human readable table.'
         )
         p_lnodeconn.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lnodeconn)
         p_lnodeconn.add_argument(
             '-g', '--groupby',
             nargs='+',
@@ -88,6 +89,7 @@ class NodeConnectionCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given node connection.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_sp)
         p_sp.add_argument(
             'node_name_a',
             help="Node name source of the connection.").completer = self.node_completer
@@ -210,6 +212,7 @@ class NodeConnectionCommands(Commands):
             description='List all existing node connection paths.'
         )
         path_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(path_list)
         path_list.add_argument(
             "node_a",
             type=str,
@@ -227,7 +230,7 @@ class NodeConnectionCommands(Commands):
 
     @classmethod
     def show(cls, args, lstmsg):
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
         tbl.add_headers(NodeConnectionCommands._headers)
         show_props = cls._append_show_props_hdr(tbl, args.show_props)
 

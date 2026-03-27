@@ -57,6 +57,7 @@ class ResourceConnectionCommands(Commands):
                         'By default, the list is printed as a human readable table.'
         )
         p_lresconn.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lresconn)
         p_lresconn.add_argument(
             '-g', '--groupby',
             nargs='+',
@@ -82,6 +83,7 @@ class ResourceConnectionCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given resource connection.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_sp)
         p_sp.add_argument(
             'node_name_a',
             help="Node name source of the connection.").completer = self.node_completer
@@ -227,6 +229,7 @@ class ResourceConnectionCommands(Commands):
             description='List all existing resource connection paths.'
         )
         path_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(path_list)
         path_list.add_argument(
             "node_a",
             type=str,
@@ -249,7 +252,7 @@ class ResourceConnectionCommands(Commands):
 
     @classmethod
     def show(cls, args, lstmsg):
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
         tbl.add_headers(ResourceConnectionCommands._headers)
         show_props = cls._append_show_props_hdr(tbl, args.show_props)
 

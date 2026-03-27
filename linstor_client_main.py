@@ -441,10 +441,17 @@ class LinStorCLI(object):
 
         return parser
 
+    # Per-command config keys that are read directly from the [global] section
+    # (e.g. by Commands.add_truncate_args) and must not be injected as global
+    # CLI flags here.
+    _PER_COMMAND_GLOBAL_KEYS = {'truncate'}
+
     @staticmethod
     def merge_config_arguments(pargs):
         global_entries = linstor.Config.get_section('global')
         for key, val in global_entries.items():
+            if key in LinStorCLI._PER_COMMAND_GLOBAL_KEYS:
+                continue
             pargs.insert(0, "--" + key)
             if val:
                 pargs.insert(1, val)

@@ -50,6 +50,7 @@ class FileCommands(Commands):
             aliases=[Commands.Subcommands.List.SHORT],
             description='Lists all files in the cluster.')
         p_file_list.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output.')
+        Commands.add_truncate_args(p_file_list)
         p_file_list.set_defaults(func=self.list)
 
         p_file_show = file_subp.add_parser(
@@ -154,7 +155,8 @@ class FileCommands(Commands):
         self.handle_replies(args, replies)
 
     def show_table(self, args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
         for hdr in FileCommands._file_headers:
             tbl.add_header(hdr)
 

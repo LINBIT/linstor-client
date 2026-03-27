@@ -44,6 +44,7 @@ class PhysicalStorageCommands(Commands):
             '  * Device must not have any file system or other `blkid` marker.\n'
             '  * Device must not be an existing DRBD device.')
         p_lphys.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lphys)
         p_lphys.set_defaults(func=self.list)
 
         p_create = phys_subp.add_parser(
@@ -91,7 +92,7 @@ class PhysicalStorageCommands(Commands):
         :param PhysicalStorageList physical_storage_list:
         :return:
         """
-        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable, truncate=args.truncate)
         for hdr in cls._phys_storage_headers:
             tbl.add_header(hdr)
 

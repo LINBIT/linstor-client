@@ -597,7 +597,8 @@ class Commands(object):
             print(Output.color_str("No property map found for this entry.", Color.YELLOW, args.no_color))
             return None
 
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
         tbl.add_column("Key")
         tbl.add_column("Value")
 
@@ -791,6 +792,25 @@ class Commands(object):
                     s_str=timestr),
                 ExitCode.ARGPARSE_ERROR
             )
+
+    _truncate_default = None
+
+    @staticmethod
+    def _get_truncate_default():
+        if Commands._truncate_default is None:
+            cfg = Config.get_section('global')
+            val = str(cfg.get('truncate', '')).strip().lower()
+            Commands._truncate_default = val in ('1', 'true', 'yes', 'on')
+        return Commands._truncate_default
+
+    @staticmethod
+    def add_truncate_args(parser):
+        default = Commands._get_truncate_default()
+        group = parser.add_mutually_exclusive_group()
+        group.add_argument('--truncate', dest='truncate', action='store_true', default=default,
+                           help='Truncate long values in table output to fit the terminal width.')
+        group.add_argument('--no-truncate', dest='truncate', action='store_false',
+                           help='Do not truncate long values in table output.')
 
     @staticmethod
     def show_group_completer(lst, where):
@@ -1088,7 +1108,8 @@ class Commands(object):
         return size
 
     def _show_query_max_volume(self, args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
         tbl.add_column("StoragePool")
         tbl.add_column("MaxVolumeSize", just_txt='>')
         tbl.add_column("Provisioning")

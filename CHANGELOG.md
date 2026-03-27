@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added "linstor controller export-db [EXPORT_NAME]"
 - Added commands and support for linstor-controller token authentication
 - Added ", Corrupt Crypt Key" Warning to "resource list" and "volume list" if needed
+- Added --truncate flag to shrink table columns proportionally and truncate cells with an ellipsis when output exceeds terminal width; can also be enabled via the [global] section of the client config
 
 ### Changed
 

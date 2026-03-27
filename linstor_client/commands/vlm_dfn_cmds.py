@@ -134,6 +134,7 @@ class VolumeDefinitionCommands(Commands):
             description=' Prints a list of all volume definitions known to LINSTOR. '
             'By default, the list is printed as a human readable table.')
         p_lvols.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_lvols)
         p_lvols.add_argument('-g', '--groupby', nargs='+',
                              choices=vlm_dfn_groupby,
                              type=str.lower).completer = vlm_dfn_group_completer
@@ -156,6 +157,7 @@ class VolumeDefinitionCommands(Commands):
             aliases=[Commands.Subcommands.ListProperties.SHORT],
             description="Prints all properties of the given volume definition.")
         p_sp.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+        Commands.add_truncate_args(p_sp)
         p_sp.add_argument(
             'resource_definition',
             help="Resource definition").completer = self.resource_dfn_completer
@@ -270,7 +272,8 @@ class VolumeDefinitionCommands(Commands):
 
     @classmethod
     def show(cls, args, lstmsg):
-        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color, pastable=args.pastable)
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
 
         vlm_dfn_hdrs = list(cls._vlm_dfn_headers)
         if args.external_name:
