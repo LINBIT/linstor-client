@@ -7,6 +7,10 @@ from linstor import consts as apiconsts
 
 
 class NodeConnectionCommands(Commands):
+    _command_name = Commands.NODE_CONN
+    _command_aliases = ["nc"]
+    _command_description = "Node connection subcommands"
+
     DRBD_OBJECT_NAME = 'rsc-conn'  # although this is a node-connection, for drbd-options we still want to use
     # resource-connections
 
@@ -33,10 +37,10 @@ class NodeConnectionCommands(Commands):
         ]
 
         node_conn_parser = parser.add_parser(
-            Commands.NODE_CONN,
-            aliases=["nc"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Node connection subcommands")
+            description=self._command_description)
         subp = node_conn_parser.add_subparsers(
             title="node connection commands",
             metavar="",

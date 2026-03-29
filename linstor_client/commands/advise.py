@@ -143,6 +143,10 @@ class _IssueNoTiebreaker(_Issue):
 
 
 class AdviceCommands(Commands):
+    _command_name = Commands.ADVISE
+    _command_aliases = ["adv"]
+    _command_description = "Advise subcommands"
+
     _issue_headers = [
         linstor_client.TableHeader("Resource"),
         linstor_client.TableHeader("Issue"),
@@ -164,10 +168,10 @@ class AdviceCommands(Commands):
         ]
 
         advise_parser = parser.add_parser(
-            Commands.ADVISE,
-            aliases=["adv"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Advise subcommands"
+            description=self._command_description
         )
 
         advise_subp = advise_parser.add_subparsers(

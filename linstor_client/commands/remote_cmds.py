@@ -6,6 +6,9 @@ from linstor_client import Table
 
 
 class RemoteCommands(Commands):
+    _command_name = Commands.REMOTE
+    _command_aliases = []
+    _command_description = "Remote subcommands"
 
     class SubCmdS3(object):
         LONG = "s3"
@@ -34,9 +37,10 @@ class RemoteCommands(Commands):
         ]
 
         rmo_parser = parser.add_parser(
-            Commands.REMOTE,
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Remote subcommands")
+            description=self._command_description)
         rmo_sub = rmo_parser.add_subparsers(
             title="remote commands",
             metavar="",

@@ -11,6 +11,10 @@ from linstor_client.utils import rangecheck
 
 
 class ResourceGroupCommands(Commands):
+    _command_name = Commands.RESOURCE_GRP
+    _command_aliases = ["rg"]
+    _command_description = "Resource group subcommands"
+
     OBJECT_NAME = 'resource-definition'  # resource-definition is used here for properties
 
     _rsc_grp_headers = [
@@ -40,10 +44,10 @@ class ResourceGroupCommands(Commands):
 
         # Resource group subcommands
         res_grp_parser = parser.add_parser(
-            Commands.RESOURCE_GRP,
-            aliases=["rg"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Resource group subcommands")
+            description=self._command_description)
 
         res_grp_subp = res_grp_parser.add_subparsers(
             title="resource group subcommands",

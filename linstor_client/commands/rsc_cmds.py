@@ -41,6 +41,10 @@ class RscRespWrapper(object):
 
 
 class ResourceCommands(Commands):
+    _command_name = Commands.RESOURCE
+    _command_aliases = ["r"]
+    _command_description = "Resource subcommands"
+
     CONN_OBJECT_NAME = 'rsc-conn'
 
     def __init__(self, state_service):
@@ -67,10 +71,10 @@ class ResourceCommands(Commands):
 
         # Resource subcommands
         res_parser = parser.add_parser(
-            Commands.RESOURCE,
-            aliases=["r"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Resouce subcommands")
+            description=self._command_description)
         res_subp = res_parser.add_subparsers(
             title="resource commands",
             metavar="",

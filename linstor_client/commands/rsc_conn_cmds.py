@@ -7,6 +7,10 @@ from linstor import consts as apiconsts
 
 
 class ResourceConnectionCommands(Commands):
+    _command_name = Commands.RESOURCE_CONN
+    _command_aliases = ["rc"]
+    _command_description = "Resource connection subcommands"
+
     OBJECT_NAME = 'rsc-conn'
 
     _headers = [
@@ -33,10 +37,10 @@ class ResourceConnectionCommands(Commands):
         ]
 
         res_conn_parser = parser.add_parser(
-            Commands.RESOURCE_CONN,
-            aliases=["rc"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Resource connection subcommands")
+            description=self._command_description)
         subp = res_conn_parser.add_subparsers(
             title="resource connection commands",
             metavar="",

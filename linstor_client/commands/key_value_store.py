@@ -4,6 +4,10 @@ from linstor_client.commands import Commands
 
 
 class KeyValueStoreCommands(Commands):
+    _command_name = Commands.KEY_VALUE_STORE
+    _command_aliases = ["kv"]
+    _command_description = "Key-value store subcommands"
+
     _kv_list_headers = [
         linstor_client.TableHeader("Name"),
     ]
@@ -51,10 +55,10 @@ class KeyValueStoreCommands(Commands):
         ]
 
         kv_parser = parser.add_parser(
-            Commands.KEY_VALUE_STORE,
-            aliases=["kv"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Key-value store subcommands")
+            description=self._command_description)
         kv_subp = kv_parser.add_subparsers(
             title="key-value store commands",
             metavar="",

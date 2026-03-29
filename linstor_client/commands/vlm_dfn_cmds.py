@@ -11,6 +11,10 @@ from linstor_client.utils import LinstorClientError
 
 
 class VolumeDefinitionCommands(Commands):
+    _command_name = Commands.VOLUME_DEF
+    _command_aliases = ["vd"]
+    _command_description = "Volume definition subcommands"
+
     OBJECT_NAME = 'volume-definition'
 
     _vlm_dfn_headers = [
@@ -49,10 +53,10 @@ class VolumeDefinitionCommands(Commands):
         ]
 
         vol_def_parser = parser.add_parser(
-            Commands.VOLUME_DEF,
-            aliases=["vd"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Volume definition subcommands")
+            description=self._command_description)
 
         vol_def_subp = vol_def_parser.add_subparsers(
             title="Volume definition commands",

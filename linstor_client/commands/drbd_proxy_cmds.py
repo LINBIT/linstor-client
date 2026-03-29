@@ -7,6 +7,10 @@ from linstor_client.utils import rangecheck
 
 
 class DrbdProxyCommands(Commands):
+    _command_name = Commands.DRBD_PROXY
+    _command_aliases = ["proxy"]
+    _command_description = "DRBD Proxy subcommands"
+
     OBJECT_NAME = 'drbd-proxy'
     OBJECT_NAME_LZMA = 'drbd-proxy-lzma'
     OBJECT_NAME_ZLIB = 'drbd-proxy-zlib'
@@ -60,10 +64,10 @@ class DrbdProxyCommands(Commands):
         ]
 
         res_conn_parser = parser.add_parser(
-            Commands.DRBD_PROXY,
-            aliases=["proxy"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="DRBD Proxy subcommands")
+            description=self._command_description)
         subp = res_conn_parser.add_subparsers(
             title="DRBD Proxy commands",
             metavar="",

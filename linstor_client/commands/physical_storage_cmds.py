@@ -5,6 +5,10 @@ from linstor_client import Table, TableHeader
 
 
 class PhysicalStorageCommands(Commands):
+    _command_name = Commands.PHYSICAL_STORAGE
+    _command_aliases = ["ps"]
+    _command_description = "Physical storage subcommands"
+
     _phys_storage_headers = [
         TableHeader("Size"),
         TableHeader("Rotational"),
@@ -18,10 +22,10 @@ class PhysicalStorageCommands(Commands):
         ]
 
         phys_parser = parser.add_parser(
-            Commands.PHYSICAL_STORAGE,
-            aliases=["ps"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Physical-storage subcommands"
+            description=self._command_description
         )
 
         phys_subp = phys_parser.add_subparsers(

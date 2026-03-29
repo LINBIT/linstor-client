@@ -12,6 +12,10 @@ from linstor_client.utils import rangecheck, Output
 
 
 class ResourceDefinitionCommands(Commands):
+    _command_name = Commands.RESOURCE_DEF
+    _command_aliases = ["rd"]
+    _command_description = "Resource definition subcommands"
+
     OBJECT_NAME = 'resource-definition'
 
     _rsc_dfn_headers = [
@@ -40,10 +44,10 @@ class ResourceDefinitionCommands(Commands):
 
         # Resource definition subcommands
         res_def_parser = parser.add_parser(
-            Commands.RESOURCE_DEF,
-            aliases=["rd"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Resource definition subcommands")
+            description=self._command_description)
 
         res_def_subp = res_def_parser.add_subparsers(
             title="resource definition subcommands",

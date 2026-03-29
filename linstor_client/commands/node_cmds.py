@@ -18,6 +18,10 @@ from datetime import datetime
 
 
 class NodeCommands(Commands):
+    _command_name = Commands.NODE
+    _command_aliases = ["n"]
+    _command_description = "Node subcommands"
+
     DISKLESS_STORAGE_POOL = 'DfltDisklessStorPool'
     DISKLESS_RESOURCE_NAME = 'diskless resource'
 
@@ -92,10 +96,10 @@ class NodeCommands(Commands):
         ]
 
         node_parser = parser.add_parser(
-            Commands.NODE,
-            aliases=["n"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Node subcommands"
+            description=self._command_description
         )
 
         node_subp = node_parser.add_subparsers(

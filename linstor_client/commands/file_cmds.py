@@ -12,6 +12,10 @@ from linstor_client.commands import Commands
 
 
 class FileCommands(Commands):
+    _command_name = Commands.FILE
+    _command_aliases = ["f"]
+    _command_description = "File subcommands"
+
     _file_headers = [
         linstor_client.TableHeader("Path"),
     ]
@@ -31,10 +35,10 @@ class FileCommands(Commands):
 
         # Resource subcommands
         file_parser = parser.add_parser(
-            Commands.FILE,
-            aliases=["f"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="File subcommands")
+            description=self._command_description)
         file_subp = file_parser.add_subparsers(
             title="file commands",
             metavar="",

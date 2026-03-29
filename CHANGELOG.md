@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed py2 support
 - Updated build system to use python build module
+- Reduced client startup overhead by lazily registering CLI subparsers
 
 ### Fixed
 

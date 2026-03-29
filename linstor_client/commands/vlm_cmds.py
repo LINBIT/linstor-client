@@ -15,6 +15,9 @@ from linstor_client.commands.utils.skip_disk_utils import print_skip_disk_info, 
 
 
 class VolumeCommands(Commands):
+    _command_name = Commands.VOLUME
+    _command_aliases = ['v']
+    _command_description = "Volume subcommands"
 
     def setup_commands(self, parser):
         """
@@ -29,10 +32,10 @@ class VolumeCommands(Commands):
         ]
 
         vlm_parser = parser.add_parser(
-            Commands.VOLUME,
-            aliases=['v'],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Volume subcommands")
+            description=self._command_description)
         vlm_sub = vlm_parser.add_subparsers(
             title="volume commands",
             metavar="",

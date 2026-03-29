@@ -113,6 +113,11 @@ class Commands(object):
         "STORAGEPOOL": "SP"
     }
 
+    # Subclasses should override these for lazy subparser registration.
+    _command_name = None
+    _command_aliases = []
+    _command_description = ""
+
     def __init__(self):
         self._linstor = None  # type: Optional[linstor.Linstor]
         # _linstor_completer is just here as a cache for completer calls

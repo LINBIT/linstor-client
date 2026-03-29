@@ -11,6 +11,10 @@ from linstor_client.commands.backup_cmds import BackupCommands
 
 
 class SnapshotCommands(Commands):
+    _command_name = Commands.SNAPSHOT
+    _command_aliases = ["s"]
+    _command_description = "Snapshot subcommands"
+
     class CreateMulti(object):
         LONG = "create-multiple"
         SHORT = "cm"
@@ -33,10 +37,10 @@ class SnapshotCommands(Commands):
 
         # Snapshot subcommands
         snapshot_parser = parser.add_parser(
-            Commands.SNAPSHOT,
-            aliases=["s"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Snapshot subcommands")
+            description=self._command_description)
         snapshot_subp = snapshot_parser.add_subparsers(
             title="shapshot commands",
             metavar="",

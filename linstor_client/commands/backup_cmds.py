@@ -12,6 +12,9 @@ from linstor_client.consts import Color
 
 
 class BackupCommands(Commands):
+    _command_name = Commands.BACKUP
+    _command_aliases = ['b']
+    _command_description = "Backup subcommands"
 
     class Info(object):
         LONG = "info"
@@ -77,10 +80,10 @@ class BackupCommands(Commands):
         ]
 
         bkp_parser = parser.add_parser(
-            Commands.BACKUP,
-            aliases=['b'],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Commands to manage Backups")
+            description=self._command_description)
         bkp_sub = bkp_parser.add_subparsers(
             title="Backup subcommands",
             metavar="",

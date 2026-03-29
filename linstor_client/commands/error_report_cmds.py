@@ -8,6 +8,10 @@ from datetime import datetime
 
 
 class ErrorReportCommands(Commands):
+    _command_name = Commands.ERROR_REPORTS
+    _command_aliases = ["err"]
+    _command_description = "Error report subcommands"
+
     def __init__(self):
         super(ErrorReportCommands, self).__init__()
 
@@ -19,10 +23,10 @@ class ErrorReportCommands(Commands):
             Commands.Subcommands.Delete
         ]
         error_parser = parser.add_parser(
-            Commands.ERROR_REPORTS,
-            aliases=["err"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Error report subcommands")
+            description=self._command_description)
 
         error_subp = error_parser.add_subparsers(
             title="Error report commands",

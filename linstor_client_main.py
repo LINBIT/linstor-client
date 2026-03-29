@@ -100,6 +100,77 @@ class StateService(object):
         return self._current_state[-1] if self._current_state else DefaultState()
 
 
+class _LazyParserMap(dict):
+    """Dict subclass that materializes lazy parsers on __getitem__ access.
+
+    Used as a drop-in replacement for argparse's _name_parser_map/choices dict.
+    Lazy entries are stored as callables (factory functions) and replaced with
+    real ArgumentParser instances when first accessed by name.
+    """
+
+    def __getitem__(self, key):
+        value = super(_LazyParserMap, self).__getitem__(key)
+        if callable(value):
+            value()
+            # factory called setup_commands() which called add_parser(),
+            # replacing the callable with the real parser
+            value = super(_LazyParserMap, self).__getitem__(key)
+        return value
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def values(self):
+        for key in list(super(_LazyParserMap, self).keys()):
+            value = super(_LazyParserMap, self).__getitem__(key)
+            if callable(value):
+                value()
+        return super(_LazyParserMap, self).values()
+
+    def items(self):
+        for key in list(super(_LazyParserMap, self).keys()):
+            value = super(_LazyParserMap, self).__getitem__(key)
+            if callable(value):
+                value()
+        return super(_LazyParserMap, self).items()
+
+
+class _LazySubParsersAction(argparse._SubParsersAction):
+    """SubParsersAction that supports lazy command registration."""
+
+    def __init__(self, *args, **kwargs):
+        super(_LazySubParsersAction, self).__init__(*args, **kwargs)
+        lazy_map = _LazyParserMap(self._name_parser_map)
+        self._name_parser_map = lazy_map
+        # choices is used by argparse for validation and help;
+        # it must be the same object as _name_parser_map
+        self.choices = lazy_map
+
+    def add_parser(self, name, **kwargs):
+        # Remove any lazy entry before registering the real parser,
+        # so argparse doesn't raise "conflicting subparser"
+        existing = dict.get(self._name_parser_map, name)
+        if callable(existing):
+            aliases = kwargs.get('aliases', ())
+            dict.__delitem__(self._name_parser_map, name)
+            for alias in aliases:
+                if dict.get(self._name_parser_map, alias) is existing:
+                    dict.__delitem__(self._name_parser_map, alias)
+        return super(_LazySubParsersAction, self).add_parser(name, **kwargs)
+
+    def add_lazy_command(self, name, aliases, description, factory):
+        self._name_parser_map[name] = factory
+        for alias in aliases:
+            self._name_parser_map[alias] = factory
+        # Register a pseudo-action so the command appears in --help output
+        self._choices_actions.append(
+            self._ChoicesPseudoAction(name, aliases, description)
+        )
+
+
 class LinStorCLI(object):
     """
     linstor command line client
@@ -167,8 +238,14 @@ class LinStorCLI(object):
 
         self._zsh_generator = None
         self._parser = self.setup_parser()
-        self._all_commands = self.parser_cmds(self._parser)
+        self._all_commands = None
         self._linstorapi = None  # type: Optional[linstor.Linstor]
+
+    @property
+    def all_commands(self):
+        if self._all_commands is None:
+            self._all_commands = self.parser_cmds(self._parser)
+        return self._all_commands
 
     def setup_parser(self):
         parser = argparse.ArgumentParser(prog="linstor")
@@ -221,6 +298,7 @@ class LinStorCLI(object):
 
         subp = parser.add_subparsers(title='subcommands',
                                      description='valid subcommands',
+                                     action=_LazySubParsersAction,
                                      help='Use the list command to print a '
                                      'nicer looking overview of all valid commands')
 
@@ -246,8 +324,16 @@ class LinStorCLI(object):
                                  description='Only useful in interactive mode')
         p_exit.set_defaults(func=self.cmd_exit, always_allowed=True)
 
+        # Register all lazy commands. setup_commands() is only called when the
+        # subcommand is actually invoked.
         for sub_cmd in self._command_list:
-            sub_cmd.setup_commands(subp)
+            if sub_cmd._command_name is not None:
+                subp.add_lazy_command(
+                    sub_cmd._command_name,
+                    sub_cmd._command_aliases,
+                    sub_cmd._command_description,
+                    lambda c=sub_cmd: c.setup_commands(subp)
+                )
 
         # dm-migrate
         c_dmmigrate = subp.add_parser(
@@ -551,7 +637,7 @@ class LinStorCLI(object):
         else:
             for cmd in sorted(Commands.MainList):
                 sys.stdout.write("- " + cmd)
-                aliases = LinStorCLI.get_command_aliases(self._all_commands, cmd)
+                aliases = LinStorCLI.get_command_aliases(self.all_commands, cmd)
                 if aliases:
                     sys.stdout.write(" (%s)" % (", ".join(aliases)))
                 sys.stdout.write("\n")
@@ -567,7 +653,7 @@ class LinStorCLI(object):
             self._state_service.enter_state(DefaultState(), verbose=args.verbose)
 
     def run_interactive(self, verbose):
-        all_cmds = [i for sl in self._all_commands for i in sl]
+        all_cmds = [i for sl in self.all_commands for i in sl]
 
         # helper function
         def unknown(cmd):

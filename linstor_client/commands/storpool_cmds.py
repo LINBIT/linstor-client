@@ -11,6 +11,10 @@ from linstor_client.utils import Output
 
 
 class StoragePoolCommands(Commands):
+    _command_name = Commands.STORAGE_POOL
+    _command_aliases = ["sp"]
+    _command_description = "Storage pool subcommands"
+
     class Lvm(object):
         LONG = "lvm"
         SHORT = "lvm"
@@ -107,10 +111,10 @@ class StoragePoolCommands(Commands):
         ]
 
         sp_parser = parser.add_parser(
-            Commands.STORAGE_POOL,
-            aliases=["sp"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Storage pool subcommands")
+            description=self._command_description)
         sp_subp = sp_parser.add_subparsers(
             title="Storage pool commands",
             metavar="",

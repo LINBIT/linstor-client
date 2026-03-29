@@ -10,6 +10,10 @@ from linstor.config import Config, ConfigFileLevel
 
 
 class ControllerCommands(Commands):
+    _command_name = Commands.CONTROLLER
+    _command_aliases = ["c"]
+    _command_description = "Controller subcommands"
+
     OBJECT_NAME = 'controller'
 
     _auth_token_headers = [
@@ -41,10 +45,10 @@ class ControllerCommands(Commands):
         ]
 
         con_parser = parser.add_parser(
-            Commands.CONTROLLER,
-            aliases=["c"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Controller subcommands")
+            description=self._command_description)
 
         con_subp = con_parser.add_subparsers(
             title="Controller commands",

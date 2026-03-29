@@ -6,6 +6,10 @@ from linstor_client.consts import Color
 
 
 class ScheduleCommands(Commands):
+    _command_name = Commands.Subcommands.Schedule.LONG
+    _command_aliases = [Commands.Subcommands.Schedule.SHORT]
+    _command_description = "Schedule subcommands"
+
     _schedule_headers = [
         linstor_client.TableHeader("Name"),
         linstor_client.TableHeader("Full"),
@@ -88,10 +92,10 @@ class ScheduleCommands(Commands):
         ]
 
         sched_parser = parser.add_parser(
-            Commands.Subcommands.Schedule.LONG,
-            aliases=[Commands.Subcommands.Schedule.SHORT],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Commands to manage schedules")
+            description=self._command_description)
         sched_sub = sched_parser.add_subparsers(
             title="Schedule subcommands",
             metavar="",

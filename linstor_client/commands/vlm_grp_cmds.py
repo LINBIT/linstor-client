@@ -6,6 +6,10 @@ from linstor_client.commands import Commands, DrbdOptions
 
 
 class VolumeGroupCommands(Commands):
+    _command_name = Commands.VOLUME_GRP
+    _command_aliases = ["vg"]
+    _command_description = "Volume group subcommands"
+
     OBJECT_NAME = 'volume-definition'
 
     _vlm_grp_headers = [
@@ -28,10 +32,10 @@ class VolumeGroupCommands(Commands):
 
         # volume group subcommands
         vlm_grp_parser = parser.add_parser(
-            Commands.VOLUME_GRP,
-            aliases=["vg"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Resource definition subcommands")
+            description=self._command_description)
 
         vlm_grp_subp = vlm_grp_parser.add_subparsers(
             title="resource definition subcommands",
