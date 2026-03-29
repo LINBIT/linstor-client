@@ -21,9 +21,14 @@
 
 import sys
 import os
+import io
+import shlex
+import signal
+import subprocess as sp
 import traceback
 import itertools
 import getpass
+from contextlib import contextmanager
 
 import linstor
 import argparse
@@ -72,6 +77,79 @@ from linstor_client.consts import (
     VERSION,
     ExitCode
 )
+
+
+def _get_pager_cmd():
+    """
+    Resolve the pager command from environment or fall back to 'less'.
+    Returns None if paging should be disabled (empty LINSTOR_PAGER).
+    """
+    cmd = os.environ.get('LINSTOR_PAGER')
+    if cmd is not None:
+        return cmd if cmd else None
+    cmd = os.environ.get('PAGER')
+    if cmd is not None:
+        return cmd if cmd else None
+    return 'less'
+
+
+@contextmanager
+def setup_pager():
+    """
+    Context manager that redirects stdout to a pager subprocess.
+    Sets LESS=-RFX if not already set so that colors are preserved,
+    short output is printed directly, and the screen is not cleared.
+    """
+    pager_cmd = _get_pager_cmd()
+    if pager_cmd is None or not sys.stdout.isatty():
+        yield
+        return
+
+    # Capture terminal size before stdout becomes a pipe, so that
+    # shutil.get_terminal_size() still returns the real width.
+    if 'COLUMNS' not in os.environ:
+        try:
+            columns = os.get_terminal_size(sys.stdout.fileno()).columns
+            os.environ['COLUMNS'] = str(columns)
+        except (ValueError, OSError):
+            pass
+
+    env = os.environ.copy()
+    if 'LESS' not in env:
+        env['LESS'] = '-RFX'
+
+    old_stdout = sys.stdout
+
+    try:
+        proc = sp.Popen(
+            shlex.split(pager_cmd),
+            stdin=sp.PIPE,
+            env=env
+        )
+    except FileNotFoundError:
+        # Pager binary not found — fall back to direct output
+        yield
+        return
+
+    # Restore default SIGPIPE handling so the process terminates
+    # silently when the user quits the pager, instead of raising
+    # BrokenPipeError exceptions.
+    old_sigpipe = signal.getsignal(signal.SIGPIPE)
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    sys.stdout = io.TextIOWrapper(proc.stdin, encoding=old_stdout.encoding or 'utf-8')
+    try:
+        yield
+    except BrokenPipeError:
+        pass
+    finally:
+        try:
+            sys.stdout.flush()
+            sys.stdout.close()
+        except BrokenPipeError:
+            pass
+        sys.stdout = old_stdout
+        signal.signal(signal.SIGPIPE, old_sigpipe)
+        proc.wait()
 
 
 class StateService(object):
@@ -260,6 +338,8 @@ class LinStorCLI(object):
                             version='%(prog)s-client ' + VERSION + '; ' + GITHASH)
         parser.add_argument('--no-color', action="store_true",
                             help='Do not use colors in output. Useful for old terminals/scripting.')
+        parser.add_argument('--no-pager', action="store_true",
+                            help='Do not pipe output into a pager.')
         parser.add_argument('--no-utf8', action="store_true", default=not sys.stdout.isatty(),
                             help='Do not use utf-8 characters in output (i.e., tables).')
         parser.add_argument('--warn-as-error', action="store_true",
@@ -473,7 +553,16 @@ class LinStorCLI(object):
                 allowed_states = vars(args).get('allowed_states', [DefaultState])
                 always_allowed = vars(args).get('always_allowed', False)
                 if always_allowed or current_state.__class__ in allowed_states:
-                    rc = args.func(args)
+                    use_pager = (
+                        not is_interactive
+                        and not args.machine_readable
+                        and not args.no_pager
+                    )
+                    if use_pager:
+                        with setup_pager():
+                            rc = args.func(args)
+                    else:
+                        rc = args.func(args)
                 else:
                     sys.stderr.write("Error: Command not allowed in state '{state.name}'\n".format(state=current_state))
                     rc = ExitCode.ILLEGAL_STATE
