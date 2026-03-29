@@ -1,4 +1,7 @@
-from .commands import DefaultState, Commands, MiscCommands, ArgumentError
+from .commands import (
+    DefaultState, Commands, EncryptionCommands, SosReportCommands,
+    SpaceReportingCommands, ArgumentError
+)
 from .drbd_setup_cmds import DrbdOptions
 from .controller_cmds import ControllerCommands
 from .node_cmds import NodeCommands

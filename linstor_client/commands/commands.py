@@ -1119,12 +1119,12 @@ class Commands(object):
         tbl.show()
 
 
-class MiscCommands(Commands):
-    def __init__(self):
-        super(MiscCommands, self).__init__()
+class EncryptionCommands(Commands):
+    _command_name = Commands.CRYPT
+    _command_aliases = ["e"]
+    _command_description = "Encryption subcommands"
 
     def setup_commands(self, parser):
-        # Enryption subcommands
         crypt_subcmds = [
             Commands.Subcommands.EnterPassphrase,
             Commands.Subcommands.CreatePassphrase,
@@ -1132,10 +1132,10 @@ class MiscCommands(Commands):
             Commands.Subcommands.Status,
         ]
         crypt_parser = parser.add_parser(
-            Commands.CRYPT,
-            aliases=["e"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Encryption subcommands")
+            description=self._command_description)
 
         crypt_subp = crypt_parser.add_subparsers(
             title="Encryption commands",
@@ -1187,15 +1187,82 @@ class MiscCommands(Commands):
 
         self.check_subcommands(crypt_subp, crypt_subcmds)
 
+    @staticmethod
+    def _summarize_api_call_responses(responses):
+        return "; ".join([response.message for response in responses])
+
+    def cmd_crypt_enter_passphrase(self, args):
+        if args.passphrase:
+            passphrase = args.passphrase
+        else:
+            passphrase = getpass.getpass("Passphrase: ")
+        replies = self._linstor.crypt_enter_passphrase(passphrase)
+        return self.handle_replies(args, replies)
+
+    def cmd_crypt_create_passphrase(self, args):
+        if args.passphrase:
+            passphrase = args.passphrase
+        else:
+            passphrase = getpass.getpass("Passphrase: ")
+            re_passphrase = getpass.getpass("Reenter passphrase: ")
+            if passphrase != re_passphrase:
+                raise LinstorClientError("Passphrase doesn't match.", ExitCode.ARGPARSE_ERROR)
+        replies = self._linstor.crypt_create_passphrase(passphrase)
+        return self.handle_replies(args, replies)
+
+    def cmd_crypt_modify_passphrase(self, args):
+        if args.old_passphrase:
+            old_passphrase = args.old_passphrase
+        else:
+            old_passphrase = getpass.getpass("Old passphrase: ")
+
+        if args.new_passphrase:
+            new_passphrase = args.new_passphrase
+        else:
+            new_passphrase = getpass.getpass("New passphrase: ")
+            passphrase2 = getpass.getpass("Retype new passphrase: ")
+            if new_passphrase != passphrase2:
+                raise LinstorClientError("Passphrase doesn't match.", ExitCode.ARGPARSE_ERROR)
+
+        replies = self._linstor.crypt_modify_passphrase(old_passphrase, new_passphrase)
+        return self.handle_replies(args, replies)
+
+    def cmd_crypt_status(self, args):
+        reply = self._linstor.crypt_status()
+        return self.output_list(args, reply, self._show_crypt_status)
+
+    def _show_crypt_status(self, args, crypt_status):
+        status = crypt_status.status
+        if status:
+            if status == "locked":
+                print("The controller is locked.")
+                print("To unlock please use the following command:")
+                print("   linstor encryption enter-passphrase")
+            if status == "unlocked":
+                print("The controller is unlocked.")
+            if status == "unset":
+                print("The controller's encryption has not been initialized yet.")
+                print("You can use the following command to initialize encryption:")
+                print("   linstor encryption create-passphrase")
+        else:
+            print("Could not determine the encryption status. Please check for errors")
+
+
+class SosReportCommands(Commands):
+    _command_name = Commands.SOS_REPORT
+    _command_aliases = ["sos"]
+    _command_description = "SOS report subcommands"
+
+    def setup_commands(self, parser):
         sos_subcommands = [
             Commands.Subcommands.Create,
             Commands.Subcommands.Download
         ]
         sos_parser = parser.add_parser(
-            Commands.SOS_REPORT,
-            aliases=["sos"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="SOS report subcommands")
+            description=self._command_description)
 
         sos_subp = sos_parser.add_subparsers(
             title="SOS report commands",
@@ -1276,14 +1343,50 @@ class MiscCommands(Commands):
         c_sos_download.set_defaults(func=self.cmd_sos_report_download)
         self.check_subcommands(sos_subp, sos_subcommands)
 
+    def cmd_sos_report_create(self, args):
+        since_dt = None
+        if args.since:
+            since_dt = self.parse_time_str(args.since)
+        replies = self.get_linstorapi().sos_report_create(
+            since=since_dt,
+            nodes=args.nodes,
+            rscs=args.resources,
+            exclude=args.exclude_nodes,
+            include_ctrl=not args.no_controller
+        )
+        return self.handle_replies(args, replies)
+
+    def cmd_sos_report_download(self, args):
+        since_dt = None
+        if args.since:
+            since_dt = self.parse_time_str(args.since)
+        return self.handle_replies(
+            args,
+            self.get_linstorapi().sos_report_download(
+                since=since_dt,
+                to_file=args.path,
+                nodes=args.nodes,
+                rscs=args.resources,
+                exclude=args.exclude_nodes,
+                include_ctrl=not args.no_controller
+            )
+        )
+
+
+class SpaceReportingCommands(Commands):
+    _command_name = Commands.SPACE_REPORTING
+    _command_aliases = ["spr"]
+    _command_description = "Space reporting subcommands"
+
+    def setup_commands(self, parser):
         space_reporting_subcmds = [
             Commands.Subcommands.Query
         ]
         spc_rep_parser = parser.add_parser(
-            Commands.SPACE_REPORTING,
-            aliases=["spr"],
+            self._command_name,
+            aliases=self._command_aliases,
             formatter_class=argparse.RawTextHelpFormatter,
-            description="Space reporting subcommands")
+            description=self._command_description)
 
         spc_rep_subp = spc_rep_parser.add_subparsers(
             title="Space reporting commands",
@@ -1304,99 +1407,6 @@ class MiscCommands(Commands):
         c_spc_report_query.set_defaults(func=self.cmd_spc_report_query)
 
         self.check_subcommands(spc_rep_subp, space_reporting_subcmds)
-
-    @staticmethod
-    def _summarize_api_call_responses(responses):
-        return "; ".join([response.message for response in responses])
-
-    def cmd_crypt_enter_passphrase(self, args):
-        if args.passphrase:
-            passphrase = args.passphrase
-        else:
-            # read from keyboard
-            passphrase = getpass.getpass("Passphrase: ")
-        replies = self._linstor.crypt_enter_passphrase(passphrase)
-        return self.handle_replies(args, replies)
-
-    def cmd_crypt_create_passphrase(self, args):
-        if args.passphrase:
-            passphrase = args.passphrase
-        else:
-            # read from keyboard
-            passphrase = getpass.getpass("Passphrase: ")
-            re_passphrase = getpass.getpass("Reenter passphrase: ")
-            if passphrase != re_passphrase:
-                raise LinstorClientError("Passphrase doesn't match.", ExitCode.ARGPARSE_ERROR)
-        replies = self._linstor.crypt_create_passphrase(passphrase)
-        return self.handle_replies(args, replies)
-
-    def cmd_crypt_modify_passphrase(self, args):
-        if args.old_passphrase:
-            old_passphrase = args.old_passphrase
-        else:
-            # read from keyboard
-            old_passphrase = getpass.getpass("Old passphrase: ")
-
-        if args.new_passphrase:
-            new_passphrase = args.new_passphrase
-        else:
-            # read from keyboard
-            new_passphrase = getpass.getpass("New passphrase: ")
-            passphrase2 = getpass.getpass("Retype new passphrase: ")
-            if new_passphrase != passphrase2:
-                raise LinstorClientError("Passphrase doesn't match.", ExitCode.ARGPARSE_ERROR)
-
-        replies = self._linstor.crypt_modify_passphrase(old_passphrase, new_passphrase)
-        return self.handle_replies(args, replies)
-
-    def cmd_crypt_status(self, args):
-        reply = self._linstor.crypt_status()
-        return self.output_list(args, reply, self._show_crypt_status)
-
-    def _show_crypt_status(self, args, crypt_status):
-        status = crypt_status.status
-        if status:
-            if status == "locked":
-                print("The controller is locked.")
-                print("To unlock please use the following command:")
-                print("   linstor encryption enter-passphrase")
-            if status == "unlocked":
-                print("The controller is unlocked.")
-            if status == "unset":
-                print("The controller's encryption has not been initialized yet.")
-                print("You can use the following command to initialize encryption:")
-                print("   linstor encryption create-passphrase")
-        else:
-            print("Could not determine the encryption status. Please check for errors")
-
-    def cmd_sos_report_create(self, args):
-        since_dt = None
-        if args.since:
-            since_dt = MiscCommands.parse_time_str(args.since)
-        replies = self.get_linstorapi().sos_report_create(
-            since=since_dt,
-            nodes=args.nodes,
-            rscs=args.resources,
-            exclude=args.exclude_nodes,
-            include_ctrl=not args.no_controller
-        )
-        return self.handle_replies(args, replies)
-
-    def cmd_sos_report_download(self, args):
-        since_dt = None
-        if args.since:
-            since_dt = MiscCommands.parse_time_str(args.since)
-        return self.handle_replies(
-            args,
-            self.get_linstorapi().sos_report_download(
-                since=since_dt,
-                to_file=args.path,
-                nodes=args.nodes,
-                rscs=args.resources,
-                exclude=args.exclude_nodes,
-                include_ctrl=not args.no_controller
-            )
-        )
 
     def show_space_report(self, args, space_report):
         """

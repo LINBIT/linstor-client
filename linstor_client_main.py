@@ -52,7 +52,9 @@ from linstor_client.commands import (
     ErrorReportCommands,
     AdviceCommands,
     ZshGenerator,
-    MiscCommands,
+    EncryptionCommands,
+    SosReportCommands,
+    SpaceReportingCommands,
     BackupCommands,
     RemoteCommands,
     FileCommands,
@@ -122,7 +124,9 @@ class LinStorCLI(object):
         self._volume_commands = VolumeCommands()
         self._snapshot_commands = SnapshotCommands()
         self._drbd_proxy_commands = DrbdProxyCommands()
-        self._misc_commands = MiscCommands()
+        self._encryption_commands = EncryptionCommands()
+        self._sos_report_commands = SosReportCommands()
+        self._space_reporting_commands = SpaceReportingCommands()
         self._physical_storage_commands = PhysicalStorageCommands()
         self._error_report_commands = ErrorReportCommands()
         self._advise_commands = AdviceCommands()
@@ -152,7 +156,9 @@ class LinStorCLI(object):
             self._backup_commands,
             self._remote_commands,
             self._file_commands,
-            self._misc_commands,
+            self._encryption_commands,
+            self._sos_report_commands,
+            self._space_reporting_commands,
             self._schedule_commands,
             self._key_value_store_commands
         ]
