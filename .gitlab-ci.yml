@@ -16,11 +16,11 @@ before_script:
   - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
   - mkdir -p ~/.ssh
   - chmod 700 ~/.ssh
-  - ssh-keyscan $GIT_HOST >> ~/.ssh/known_hosts
+  - ssh-keyscan $CI_SERVER_HOST >> ~/.ssh/known_hosts
   # now install python-linstor into venv
   - pushd /tmp
   - python -m venv venv
-  - git clone --recursive git@$GIT_HOST:$PYTHON_LINSTOR_PATH
+  - git clone --recursive git@$CI_SERVER_HOST:$PYTHON_LINSTOR_PATH
   - cd linstor-api-py
   - git checkout $CI_COMMIT_REF_NAME || true
   - git submodule update
