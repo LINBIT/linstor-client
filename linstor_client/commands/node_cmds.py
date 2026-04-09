@@ -354,8 +354,8 @@ class NodeCommands(Commands):
             '--communication-type',
             choices=(apiconsts.VAL_NETCOM_TYPE_PLAIN.lower(), apiconsts.VAL_NETCOM_TYPE_SSL.lower()),
             type=str.lower,
-            default=ctype_def,
-            help='Communication type (default: %s)' % ctype_def.lower()
+            default=None,
+            help='Communication type (unchanged if not specified)'
         )
         p_mod_netif.add_argument(
             '--active',
