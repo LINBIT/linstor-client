@@ -4,10 +4,93 @@ import linstor_client
 from linstor_client.commands import Commands
 from linstor_client.consts import Color
 from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
-from linstor.sharedconsts import FLAG_BACKUP, FLAG_SHIPPING, FLAG_BACKUP_TARGET, FLAG_BACKUP_SOURCE
 from linstor_client.utils import Output
 from linstor import SizeCalc
 from linstor_client.commands.backup_cmds import BackupCommands
+
+
+_SHIPPING_NAMESPC = "BackupShipping"
+_SHIPPING_TARGET_PREFIX = _SHIPPING_NAMESPC + "/Target/"
+_SHIPPING_SOURCE_PREFIX = _SHIPPING_NAMESPC + "/Source/"
+_SHIPPING_KEY_STATUS = "ShippingStatus"
+_SHIPPING_KEY_SRC_REMOTE = "BackupSrcRemote"
+# Statuses that should not be surfaced in the State column — the snapshot still
+# falls through to the existing "Successful" path. "Uploading Metadata" is an
+# internal intermediate state the server transitions through; we treat it as
+# success-equivalent for display purposes.
+_SHIPPING_HIDDEN_VALUES = frozenset(("Success", "Uploading Metadata"))
+_SHIPPING_RED_VALUES = frozenset(("Aborted", "Failed"))
+# Lower priority value = more attention-needing; unknown defaults to 0 (in-progress / yellow).
+_SHIPPING_PRIORITY = {
+    "Shipping": 0, "Prepare Shipping": 0, "Prepare Abort": 0, "Aborting": 0,
+    "Aborted": 1, "Failed": 1,
+}
+
+
+def _extract_shipping(props):
+    """Extract BackupShipping statuses from a snapDfn props dict.
+
+    Returns (sources, target) where:
+      sources is a list of (dest_remote_name, status) tuples (one per remote we
+        are shipping to)
+      target is (src_remote_name_or_None, status) or None (a single inbound
+        restore from another cluster, with the source remote name when known)
+    """
+    sources = []
+    target_status = None
+    target_src_remote = None
+    status_suffix = "/" + _SHIPPING_KEY_STATUS
+    target_status_key = _SHIPPING_TARGET_PREFIX + _SHIPPING_KEY_STATUS
+    target_src_remote_key = _SHIPPING_TARGET_PREFIX + _SHIPPING_KEY_SRC_REMOTE
+    for key, value in props.items():
+        if key.startswith(_SHIPPING_SOURCE_PREFIX) and key.endswith(status_suffix):
+            remote = key[len(_SHIPPING_SOURCE_PREFIX):-len(status_suffix)]
+            if remote and "/" not in remote:
+                sources.append((remote, value))
+        elif key == target_status_key:
+            target_status = value
+        elif key == target_src_remote_key:
+            target_src_remote = value
+    target = (target_src_remote, target_status) if target_status is not None else None
+    return sources, target
+
+
+def _shipping_color(status):
+    if status in _SHIPPING_RED_VALUES:
+        return Color.RED
+    return Color.YELLOW
+
+
+def _worst_shipping_status(statuses):
+    return min(statuses, key=lambda s: _SHIPPING_PRIORITY.get(s, 0))
+
+
+def _format_shipping_cell(sources, target):
+    """Render non-Success shipping entries as a multi-line cell.
+
+    Returns (text, color) or None if there is nothing non-Success to show.
+    Each in-progress / failed / aborted shipment becomes its own line; the
+    cell color reflects the worst status across visible lines (in-progress
+    wins over Aborted/Failed).
+    """
+    lines = []
+    statuses = []
+    for remote, status in sources:
+        if status in _SHIPPING_HIDDEN_VALUES:
+            continue
+        lines.append("Ship({}): {}".format(remote, status))
+        statuses.append(status)
+    if target is not None:
+        src_remote, status = target
+        if status not in _SHIPPING_HIDDEN_VALUES:
+            if src_remote:
+                lines.append("Restore({}): {}".format(src_remote, status))
+            else:
+                lines.append("Restore: {}".format(status))
+            statuses.append(status)
+    if not lines:
+        return None
+    return "\n".join(lines), _shipping_color(_worst_shipping_status(statuses))
 
 
 class SnapshotCommands(Commands):
@@ -342,18 +425,13 @@ class SnapshotCommands(Commands):
                 state_cell = tbl.color_cell("Failed", Color.RED)
             elif FLAG_FAILED_DISCONNECT in snapshot_dfn.flags:
                 state_cell = tbl.color_cell("Satellite disconnected", Color.RED)
-            elif FLAG_SUCCESSFUL in snapshot_dfn.flags:
-                in_backup_restore = False
-                in_backup_create = False
-                if FLAG_BACKUP in snapshot_dfn.flags and FLAG_SHIPPING in snapshot_dfn.flags:
-                    for snap in snapshot_dfn.snapshots:
-                        in_backup_create |= FLAG_BACKUP_SOURCE in snap.flags
-                        in_backup_restore |= FLAG_BACKUP_TARGET in snap.flags
-                if in_backup_create:
-                    state_cell = tbl.color_cell("Shipping", Color.YELLOW)
-                elif in_backup_restore:
-                    state_cell = tbl.color_cell("Restoring", Color.YELLOW)
-                else:
+            else:
+                sources, target = _extract_shipping(snapshot_dfn.properties)
+                shipping_cell = _format_shipping_cell(sources, target)
+                if shipping_cell is not None:
+                    text, color = shipping_cell
+                    state_cell = tbl.color_cell(text, color)
+                elif FLAG_SUCCESSFUL in snapshot_dfn.flags:
                     sub_state = ""
                     # take the first non empty and non "completed" state
                     for snapshot in snapshot_dfn.snapshots:
@@ -368,8 +446,8 @@ class SnapshotCommands(Commands):
                     if sub_state:
                         state_text += " (" + sub_state + ")"
                     state_cell = tbl.color_cell(state_text, Color.DARKGREEN)
-            else:
-                state_cell = tbl.color_cell("Incomplete", Color.DARKBLUE)
+                else:
+                    state_cell = tbl.color_cell("Incomplete", Color.DARKBLUE)
 
             snapshot_date = ""
             if snapshot_dfn.snapshots and snapshot_dfn.snapshots[0].create_datetime:

@@ -32,6 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - "State" column in "resource list" no longer shows "Tiebreaker" (only "Diskless" instead)
 - Columns for "resource list" can now be selected via "-o" option
 - resource-group list now shows also properties
+- snapshot list: surface non-successful backup shipments in the State column,
+  read from snapDfn properties (one line per remote in flight or failed).
+  Successful shipments still display as "Successful". Requires linstor-server 1.33.0+
 
 ### Fixed
 
