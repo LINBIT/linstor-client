@@ -47,6 +47,22 @@ class ResourceCommands(Commands):
 
     CONN_OBJECT_NAME = 'rsc-conn'
 
+    ALL_COLS_WITH_ALIASES = {
+        "rsc_name": (1, ["resource_name", "resource", "rsc"]),
+        "node": (2, ["node_name"]),
+        "layers": (3, ["layer"]),
+        "usage": (4, ["use"]),
+        "conns": (5, ["connections"]),
+        "drbd_ports": (-1, ["ports"]),
+        "state": (7, []),
+        "vote": (8, []),
+        "flags": (-1, []),
+        "created_on": (-1, ["created"])}
+    DFLT_CLMS = [
+        k for k, _ in sorted(
+            ((k, order) for k, (order, _) in ALL_COLS_WITH_ALIASES.items() if order > 0),
+            key=lambda kv: kv[1])]
+
     def __init__(self, state_service):
         super(ResourceCommands, self).__init__()
 
@@ -225,15 +241,17 @@ class ResourceCommands(Commands):
                               help='Name of the resource to delete').completer = self.resource_completer
         p_rm_res.set_defaults(func=self.delete)
 
-        resgroupby = [x.name.lower() for x in self._get_headers(False)]
+        resgroupby = [x.name.lower() for x in self._get_headers()]
         res_group_completer = Commands.show_group_completer(resgroupby, "groupby")
 
         # list resources
         p_lreses = res_subp.add_parser(
             Commands.Subcommands.List.LONG,
             aliases=[Commands.Subcommands.List.SHORT],
+            formatter_class=argparse.RawDescriptionHelpFormatter,
             description='Prints a list of all resource known to LINSTOR. By default, the list is printed as a human '
-            'readable table.')
+            'readable table.',
+            epilog=ResourceCommands._get_dynamic_epilog())
         p_lreses.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
         Commands.add_truncate_args(p_lreses)
         p_lreses.add_argument(
@@ -276,7 +294,12 @@ class ResourceCommands(Commands):
         p_lreses.add_argument(
             '--show-drbd-ports',
             action='store_true',
-            help="Show the 'DRBD Ports' column")
+            help="Deprecated. Please use '-o +drbd_ports' instead. Show the 'DRBD Ports' column")
+        p_lreses.add_argument(
+            '--output', '-o',
+            type=str,
+            default=ResourceCommands._get_default_headers_help(),
+            help="Comma separated list of columns to show. See 'Available columns' below.")
         p_lreses.set_defaults(func=self.list)
 
         # involved resources
@@ -546,20 +569,55 @@ class ResourceCommands(Commands):
         self.check_subcommands(transactional_create_subp, transactional_create_subcmds)
         self.check_subcommands(res_subp, subcmds)
 
-    def _get_headers(self, include_drbd_props=False):
-        ret = [
-            linstor_client.TableHeader("ResourceName"),
-            linstor_client.TableHeader("Node")
-        ]
-        if include_drbd_props:
-            ret.append(linstor_client.TableHeader("DRBD Ports"))
-        ret += [
-            linstor_client.TableHeader("Layers"),
-            linstor_client.TableHeader("Usage"),
-            linstor_client.TableHeader("Conns", Color.DARKGREEN),
-            linstor_client.TableHeader("State", Color.DARKGREEN, alignment_text=linstor_client.TableHeader.ALIGN_RIGHT),
-            linstor_client.TableHeader("CreatedOn")
-        ]
+    def _get_headers(self, user_input=None):
+        columns = [clm.lower() for clm in user_input.split(",")] if user_input else "all"
+        if "all" in columns or not columns:
+            columns = ResourceCommands.ALL_COLS_WITH_ALIASES
+        else:
+            if columns[0].startswith("+"):
+                columns[0] = columns[0][1:]
+                result = ResourceCommands.DFLT_CLMS
+            else:
+                result = []
+            alias_to_key = {
+                alias: key
+                for key, (_, aliases) in ResourceCommands.ALL_COLS_WITH_ALIASES.items()
+                for alias in (key, *aliases)
+            }
+            unknown = [s for s in columns if s not in alias_to_key]
+            if unknown:
+                raise ValueError(f"Unknown column(s): {unknown}")
+            seen = set(result)
+            for clm in columns:
+                key = alias_to_key[clm]
+                if key not in seen:
+                    seen.add(key)
+                    result.append(key)
+            columns = result
+
+        ret = []
+        for clm in columns:
+            if clm == "rsc_name":
+                ret.append(linstor_client.TableHeader("ResourceName"))
+            elif clm == "node":
+                ret.append(linstor_client.TableHeader("Node"))
+            elif clm == "layers":
+                ret.append(linstor_client.TableHeader("Layers"))
+            elif clm == "usage":
+                ret.append(linstor_client.TableHeader("Usage"))
+            elif clm == "conns":
+                ret.append(linstor_client.TableHeader("Conns", Color.DARKGREEN))
+            elif clm == "drbd_ports":
+                ret.append(linstor_client.TableHeader("DRBD Ports"))
+            elif clm == "state":
+                ret.append(linstor_client.TableHeader("State", Color.DARKGREEN,
+                                                      alignment_text=linstor_client.TableHeader.ALIGN_RIGHT))
+            elif clm == "vote":
+                ret.append(linstor_client.TableHeader("Vote"))
+            elif clm == "flags":
+                ret.append(linstor_client.TableHeader("Flags"))
+            elif clm == "created_on":
+                ret.append(linstor_client.TableHeader("CreatedOn"))
         return ret
 
     def create(self, args):
@@ -728,9 +786,14 @@ class ResourceCommands(Commands):
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
                                    pastable=args.pastable, truncate=args.truncate)
 
-        show_drbd_ports = args.show_drbd_ports
+        clms = args.output
+        if 'drbd_ports' not in clms and args.show_drbd_ports:
+            if clms:
+                clms += ',drbd_ports'
+            else:
+                clms = '+drbd_ports'
 
-        headers = self._get_headers(show_drbd_ports)
+        headers = self._get_headers(clms)
         for hdr in headers:
             tbl.add_header(hdr)
 
@@ -762,7 +825,7 @@ class ResourceCommands(Commands):
                     else:
                         rsc_usage = "Unused"
                 for vlm in rsc.volumes:
-                    rsc_state, rsc_state_color = VolumeCommands.volume_state_cell(vlm, rsc.flags)
+                    rsc_state, rsc_state_color = VolumeCommands.volume_state_cell(rsc, vlm)
                     if apiconsts.FLAG_EVACUATE in rsc.flags:
                         rsc_state += ", Evacuating"
                     if rsc_state_color is not None:
@@ -798,16 +861,43 @@ class ResourceCommands(Commands):
                 show_row = rsc_state_color is not None or not (conns_col == 'Ok' or conns_col == "")
 
             if show_row:
-                row = [rsc.name, rsc.node_name]
-                if show_drbd_ports:
-                    row.append(", ".join([str(port) for port in drbd_ports]) if drbd_ports else "")
-                row += [
-                    layer_data_col,
-                    tbl.color_cell(rsc_usage, rsc_usage_color) if rsc_usage_color else rsc_usage,
-                    conns_col,
-                    tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color),
-                    str(rsc.create_datetime)[:19] if rsc.create_datetime else ""
-                ]
+                drbd_flags = []
+                if rsc.layer_data and rsc.layer_data.drbd_resource and rsc.layer_data.drbd_resource.flags:
+                    drbd_flags = rsc.layer_data.drbd_resource.flags
+                row = []
+                for header in headers:
+                    clm = header.name
+                    if clm == "ResourceName":
+                        row.append(rsc.name)
+                    elif clm == "Node":
+                        row.append(rsc.node_name)
+                    elif clm == "Layers":
+                        row.append(layer_data_col)
+                    elif clm == "Usage":
+                        row.append(tbl.color_cell(rsc_usage, rsc_usage_color) if rsc_usage_color else rsc_usage)
+                    elif clm == "Conns":
+                        row.append(conns_col)
+                    elif clm == "DRBD Ports":
+                        row.append(", ".join([str(port) for port in drbd_ports]) if drbd_ports else "")
+                    elif clm == "State":
+                        row.append(tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color))
+                    elif clm == "Vote":
+                        has_vote = apiconsts.FLAG_DRBD_CLIENT not in drbd_flags
+                        row.append("Yes" if has_vote else "No")
+                    elif clm == "Flags":
+                        if apiconsts.FLAG_DRBD_CLIENT in drbd_flags:
+                            row.append("Client")
+                        elif apiconsts.FLAG_TIE_BREAKER in rsc.flags:
+                            row.append("Tiebreaker")
+                        elif apiconsts.FLAG_DRBD_DISKLESS in rsc.flags:
+                            row.append("Diskless")
+                        elif rsc_state == "Diskless":
+                            row.append(tbl.color_cell("(Failed Disk)", Color.RED))
+                        else:
+                            row.append("")  # no flag
+                    elif clm == "CreatedOn":
+                        row.append(str(rsc.create_datetime)[:19] if rsc.create_datetime else "")
+
                 for sprop in show_props:
                     row.append(rsc.properties.get(sprop, ''))
                 tbl.add_row(row)
@@ -902,7 +992,7 @@ class ResourceCommands(Commands):
             migrate_from=args.migrate_from,
             diskless=args.diskless,
             async_msg=async_flag,
-            drbd_diskless_client=args.drbd_diskless_client
+            drbd_client=args.drbd_diskless_client
         )
         return self.handle_replies(args, replies)
 
@@ -935,3 +1025,26 @@ class ResourceCommands(Commands):
             rsc_name=args.resource_name
         )
         return self.handle_replies(args, replies)
+
+    # Helper methods for dynamic help-text rendering
+
+    @staticmethod
+    def _get_default_headers_help():
+        return ",".join(ResourceCommands.DFLT_CLMS)
+
+    @staticmethod
+    def _get_dynamic_epilog():
+        ret = "Available columns for 'resource list -o ...':\n  Shown by default:\n    "
+        header_list = []
+        for header in ResourceCommands.DFLT_CLMS:
+            _, aliases = ResourceCommands.ALL_COLS_WITH_ALIASES[header]
+            header_list.append(f"{header:20s}" + (f"(Aliases: {','.join(aliases)})" if aliases else ""))
+        ret += '\n    '.join(header_list)
+        ret += "\n  Not shown by default:\n    "
+        header_list = []
+        for key, (_, aliases) in ResourceCommands.ALL_COLS_WITH_ALIASES.items():
+            if key not in ResourceCommands.DFLT_CLMS:
+                header_list.append(f"{key:20s}" + (f"(Aliases: {','.join(aliases)})" if aliases else ""))
+        ret += '\n    '.join(header_list)
+        ret += "\n  Use 'resource list -o all' to show all columns"
+        return ret

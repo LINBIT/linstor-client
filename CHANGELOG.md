@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - resource create
   - resource toggle-disk
   - resource modify        [new]
+- Added new column to "resource list": "Vote" that shows if a given resource has a DRBD-quorum vote
+- Added (hidden by default) new column to "resource list": "Flags" that distinguishes Diskless/Tiebreaker/Client
 
 ### Changed
 
@@ -26,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated build system to use python build module
 - Reduced client startup overhead by lazily registering CLI subparsers
 - Pipe output through a pager when the terminal is interactive
+- By default "resource list" no longer shows "CreatedOn" column
+- "State" column in "resource list" no longer shows "Tiebreaker" (only "Diskless" instead)
+- Columns for "resource list" can now be selected via "-o" option
 
 ### Fixed
 

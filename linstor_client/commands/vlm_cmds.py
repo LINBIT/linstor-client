@@ -165,12 +165,12 @@ class VolumeCommands(Commands):
         return vlm.luks_data and vlm.luks_data.corrupted_key
 
     @staticmethod
-    def volume_state_cell(vlm, rsc_flags):
+    def volume_state_cell(rsc, vlm):
         """
-        Determains the status of a drbd volume for table display.
+        Determines the status of a DRBD volume for table display.
 
-        :param vlm: vlm proto
-        :param rsc_flags: rsc flags
+        :param rsc: resource fo type (responses.) Resource
+        :param vlm: volume of type (responses.) Volume
         :return: A tuple (state_text, color)
         """
         tbl_color = None
@@ -185,12 +185,9 @@ class VolumeCommands(Commands):
                 state = state_prefix + "Unknown"
                 tbl_color = Color.YELLOW
             elif disk_state == 'Diskless':
-                if apiconsts.FLAG_DISKLESS not in rsc_flags:  # unintentional diskless
+                if apiconsts.FLAG_DISKLESS not in rsc.flags:  # unintentional diskless
                     state = state_prefix + disk_state
                     tbl_color = Color.RED
-                elif apiconsts.FLAG_TIE_BREAKER in rsc_flags:
-                    state = 'TieBreaker'
-                    tbl_color = None
                 else:
                     state = state_prefix + disk_state  # green text
             elif disk_state in ['Inconsistent', 'Failed', 'To: Creating', 'To: Attachable', 'To: Attaching']:
@@ -313,7 +310,7 @@ class VolumeCommands(Commands):
                     state_txt = apiconsts.FLAG_RSC_INACTIVE
                     color = Color.YELLOW
                 else:
-                    state_txt, color = cls.volume_state_cell(vlm, rsc.flags)
+                    state_txt, color = cls.volume_state_cell(rsc, vlm)
                 has_errors = any([x.is_error() for x in vlm.reports])
                 conn_failed = (rsc.layer_data.drbd_resource
                                and any(not v.connected for k, v in rsc.layer_data.drbd_resource.connections.items()))
