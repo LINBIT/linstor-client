@@ -55,6 +55,7 @@ class ResourceCommands(Commands):
     def setup_commands(self, parser):
         subcmds = [
             Commands.Subcommands.Create,
+            Commands.Subcommands.Modify,
             Commands.Subcommands.MakeAvailable,
             Commands.Subcommands.List,
             Commands.Subcommands.ListVolumes,
@@ -106,10 +107,16 @@ class ResourceCommands(Commands):
             action="store_true",
             help='Mark this resource as NVMe initiator'
         )
-        p_new_res.add_argument(
+        p_new_res_diskless_mut_excl = p_new_res.add_mutually_exclusive_group(required=False)
+        p_new_res_diskless_mut_excl.add_argument(
             '--drbd-diskless',
             action="store_true",
-            help='Mark this resource as DRBD diskless'
+            help='Mark this resource as DRBD diskless (with quorum vote)'
+        )
+        p_new_res_diskless_mut_excl.add_argument(
+            '--drbd-diskless-client', '--drbd-client', '--client',
+            action="store_true",
+            help='Mark this resource as DRBD diskless client (no quorum vote)'
         )
         p_new_res.add_argument(
             '--ebs-initiator',
@@ -136,6 +143,31 @@ class ResourceCommands(Commands):
             type=str,
             help='Name of the resource definition').completer = self.resource_dfn_completer
         p_new_res.set_defaults(func=self.create, allowed_states=[DefaultState, ResourceCreateTransactionState])
+
+        p_mod_rsc = res_subp.add_parser(
+            Commands.Subcommands.Modify.LONG,
+            aliases=[Commands.Subcommands.Modify.SHORT],
+            description='Modify an existing resource.')
+        p_mod_rsc.add_argument(
+            'node_name',
+            type=str,
+            help='Name of the node of the resource').completer = self.node_completer
+        p_mod_rsc.add_argument(
+            'resource_name',
+            type=str,
+            help='Name of the resource definition').completer = self.resource_dfn_completer
+        p_mod_rsc_diskless_mut_excl = p_mod_rsc.add_mutually_exclusive_group(required=False)
+        p_mod_rsc_diskless_mut_excl.add_argument(
+            '--drbd-diskless',
+            action="store_true",
+            help='Mark this resource as DRBD diskless (with quorum vote)'
+        )
+        p_mod_rsc_diskless_mut_excl.add_argument(
+            '--drbd-diskless-client', '--drbd-client', '--client',
+            action="store_true",
+            help='Mark this resource as DRBD diskless client (no quorum vote)'
+        )
+        p_mod_rsc.set_defaults(func=self.modify)
 
         # make available
         p_mkavial = res_subp.add_parser(
@@ -398,7 +430,12 @@ class ResourceCommands(Commands):
         p_toggle_disk_group_storage.add_argument(
             '--diskless', '-d', '--drbd-diskless',
             action='store_true',
-            help="Remove the disks from a resource (toggles --drbd-diskless)"
+            help="Remove the disks from a resource (toggles into --drbd-diskless, with quorum vote)"
+        )
+        p_toggle_disk_group_storage.add_argument(
+            '--drbd-diskless-client', '--client', '-c', '--drbd-client',
+            action='store_true',
+            help="Remove the disks from a resource (toggles into --drbd-client, no quorum vote)"
         )
         p_toggle_disk.add_argument(
             '--async',
@@ -578,7 +615,8 @@ class ResourceCommands(Commands):
                     args.nvme_initiator,
                     args.ebs_initiator,
                     not args.inactive,
-                    [args.drbd_tcp_port] if args.drbd_tcp_port else None
+                    [args.drbd_tcp_port] if args.drbd_tcp_port else None,
+                    args.drbd_diskless_client,
                 )
                 for node_name in args.node_name
             ]
@@ -590,6 +628,13 @@ class ResourceCommands(Commands):
             else:
                 replies = self._linstor.resource_create(rscs, async_flag)
                 return self.handle_replies(args, replies)
+
+    def modify(self, args):
+        replies = self.get_linstorapi().resource_modify(
+            args.node_name,
+            args.resource_name,
+            drbd_client=True if args.drbd_diskless_client else False if args.drbd_diskless else None)
+        return self.handle_replies(args, replies)
 
     def make_available(self, args):
         replies = self.get_linstorapi().resource_make_available(
@@ -856,7 +901,8 @@ class ResourceCommands(Commands):
             storage_pool=args.storage_pool,
             migrate_from=args.migrate_from,
             diskless=args.diskless,
-            async_msg=async_flag
+            async_msg=async_flag,
+            drbd_diskless_client=args.drbd_diskless_client
         )
         return self.handle_replies(args, replies)
 
