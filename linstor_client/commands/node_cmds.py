@@ -669,19 +669,21 @@ class NodeCommands(Commands):
             apiconsts.ConnectionStatus.ONLINE.name: ("Online", Color.GREEN),
             apiconsts.ConnectionStatus.VERSION_MISMATCH.name: ("OFFLINE(VERSION MISMATCH)", Color.RED),
             apiconsts.ConnectionStatus.FULL_SYNC_FAILED.name: ("OFFLINE(FULL SYNC FAILED)", Color.RED),
-            apiconsts.ConnectionStatus.MISSING_EXT_TOOLS.name: ("OFFLINE(MISSING EXTERNAL TOOLS)", Color.RED),
             apiconsts.ConnectionStatus.AUTHENTICATION_ERROR.name: ("OFFLINE(AUTHENTICATION ERROR)", Color.RED),
             apiconsts.ConnectionStatus.UNKNOWN.name: ("Unknown", Color.YELLOW),
             apiconsts.ConnectionStatus.HOSTNAME_MISMATCH.name: ("OFFLINE(HOSTNAME MISMATCH)", Color.RED),
             apiconsts.ConnectionStatus.OTHER_CONTROLLER.name: ("OFFLINE(OTHER_CONTROLLER)", Color.RED),
-            apiconsts.ConnectionStatus.NO_STLT_CONN.name: ("OFFLINE(NO CONNECTION TO SATELLITE)", Color.RED)
+            apiconsts.ConnectionStatus.AUTHENTICATED.name: ("AUTHENTICATED", Color.YELLOW),
+            apiconsts.ConnectionStatus.NO_STLT_CONN.name: ("OFFLINE(NO CONNECTION TO SATELLITE)", Color.RED),
+            apiconsts.ConnectionStatus.MISSING_EXT_TOOLS.name: ("OFFLINE(MISSING EXTERNAL TOOLS)", Color.RED),
+            apiconsts.ConnectionStatus.DUPLICATE_UNAME.name: ("DUPLICATE_UNAME", Color.RED),
         }
 
         tbl.set_groupby(args.groupby if args.groupby else [tbl.header_name(0)])
 
         show_eviction_info = False
         for node in lstmsg.nodes:
-            node_is_offline = conn_stat_dict.get(node.connection_status)[0] == apiconsts.ConnectionStatus.OFFLINE.name
+            node_is_offline = node.connection_status == apiconsts.ConnectionStatus.OFFLINE.name
             node_is_evicted = apiconsts.FLAG_EVICTED in node.flags
             if node.eviction_timestamp and node_is_offline and not node_is_evicted:
                 show_eviction_info = True
@@ -704,7 +706,9 @@ class NodeCommands(Commands):
             elif apiconsts.FLAG_EVACUATE in node.flags:
                 conn_stat = (apiconsts.FLAG_EVACUATE, Color.YELLOW)
             else:
-                conn_stat = conn_stat_dict.get(node.connection_status)
+                conn_stat = conn_stat_dict.get(
+                    node.connection_status,
+                    (f"{apiconsts.ConnectionStatus.UNKNOWN.name}({node.connection_status})", Color.RED))
 
             row = [node.name, node.type, active_ip]
             if args.show_aux_props:
@@ -713,7 +717,7 @@ class NodeCommands(Commands):
                 row.insert(1, node.platform)
 
             state_text = conn_stat[0]
-            node_is_offline = conn_stat_dict.get(node.connection_status)[0] == apiconsts.ConnectionStatus.OFFLINE.name
+            node_is_offline = node.connection_status == apiconsts.ConnectionStatus.OFFLINE.name
             node_is_evicted = apiconsts.FLAG_EVICTED in node.flags
             if show_eviction_info and node_is_offline and not node_is_evicted:
                 if node.eviction_timestamp:

@@ -25,10 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Table: groupby/sorting raised type error if sorting column only had numbers and natsort not installed
-
-### Fixed
-
 - Fixed node interface modify defaulting communication-type to plain when not specified
+- Fixed missing node connection status in node list and improve handling of unknown connection status
 
 ## [1.27.1] - 2025-12-11
 
