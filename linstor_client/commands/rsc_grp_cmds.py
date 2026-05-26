@@ -21,6 +21,7 @@ class ResourceGroupCommands(Commands):
         linstor_client.TableHeader("ResourceGroup"),
         linstor_client.TableHeader("SelectFilter"),
         linstor_client.TableHeader("VlmNrs"),
+        linstor_client.TableHeader("Properties"),
         linstor_client.TableHeader("Description")
     ]
 
@@ -342,10 +343,14 @@ class ResourceGroupCommands(Commands):
             vlm_grps = []
             if not args.from_file:
                 vlm_grps = self.get_linstorapi().volume_group_list_raise(rsc_grp.name).volume_groups
+            props_str = "\n".join(
+                "{k}={v}".format(k=k, v=rsc_grp.properties[k]) for k in sorted(rsc_grp.properties.keys())
+            )
             row = [
                 rsc_grp.name,
                 str(rsc_grp.select_filter),
                 ",".join([str(x.number) for x in vlm_grps]),
+                props_str,
                 rsc_grp.description
             ]
             for sprop in show_props:

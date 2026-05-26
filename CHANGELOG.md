@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added --drbd-client (with aliases "--drbd-diskless-client", "-c", "--client") to
   - resource create
   - resource toggle-disk
-  - resource modify        [new]
+  - resource modify
 - Added new column to "resource list": "Vote" that shows if a given resource has a DRBD-quorum vote
 - Added (hidden by default) new column to "resource list": "Flags" that distinguishes Diskless/Tiebreaker/Client
 
@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - By default "resource list" no longer shows "CreatedOn" column
 - "State" column in "resource list" no longer shows "Tiebreaker" (only "Diskless" instead)
 - Columns for "resource list" can now be selected via "-o" option
+- resource-group list now shows also properties
 
 ### Fixed
 
