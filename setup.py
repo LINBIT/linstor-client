@@ -53,14 +53,17 @@ class BuildManCommand(Command):
         name = "linstor"
         mansection = '8'
         client = LinStorCLI()
-        descriptions = client.parser_cmds_description(client._all_commands)
+        # use the public property; _all_commands is lazily populated since
+        # lazy subparser registration (commit a4ccfbf) was introduced.
+        all_commands = client.all_commands
+        descriptions = client.parser_cmds_description(all_commands)
 
         if not os.path.isfile(os.path.join(outdir, "linstor.8.gz")):
             h = open(os.path.join(outdir, "linstor_header.xml"))
             t = open(os.path.join(outdir, "linstor_trailer.xml"))
             linstorxml = open(os.path.join(outdir, "linstor.xml"), 'w')
             linstorxml.write(h.read())
-            for cmd in [cmds[0] for cmds in client._all_commands]:
+            for cmd in [cmds[0] for cmds in all_commands]:
                 linstorxml.write("""
                 <varlistentry>
                   <term>
@@ -107,7 +110,7 @@ class BuildManCommand(Command):
 
         replace = ("linstor_client_main.py", "linstor")
 
-        for cmd in client._all_commands:
+        for cmd in all_commands:
             toplevel = cmd[0]
             # aliases = cmd[1:]
             # we could use the aliases to symlink them to the toplevel cmd
