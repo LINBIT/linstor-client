@@ -4,11 +4,12 @@ import json
 import re
 import sys
 from datetime import datetime, timedelta
+from typing import Dict, List
 
 import linstor
 import linstor.sharedconsts as apiconsts
 from linstor.properties import properties
-from linstor import SizeCalc, Config
+from linstor import SizeCalc, Config, responses
 import linstor_client
 from linstor_client.utils import LinstorClientError, Output
 from linstor_client.consts import ExitCode, Color
@@ -613,7 +614,7 @@ class Commands(object):
             print(Output.color_str("Unexpected additional property data, ignoring.", Color.YELLOW, args.no_color))
 
     @classmethod
-    def get_inuse_lookup(cls, rsc_states):
+    def get_inuse_lookup(cls, rsc_states: List[responses.ResourceState]) -> Dict[str, int]:
         """
         Creates a lookup dictionary where key is the resource name and the value the count of primary/inUse.
         :param List[ResourceState] rsc_states:

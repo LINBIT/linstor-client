@@ -1,10 +1,12 @@
 import json
 
 import argparse
+from typing import Dict
 
 import linstor
 import linstor_client
 import linstor.sharedconsts as apiconsts
+from linstor import responses
 from linstor_client.commands import DefaultState, Commands, DrbdOptions, ArgumentError
 from linstor_client.commands.vlm_cmds import VolumeCommands
 from linstor_client.consts import Color, ExitCode
@@ -276,7 +278,8 @@ class ResourceCommands(Commands):
         p_lreses.add_argument(
             '--faulty',
             action="store_true",
-            help='Only show faulty resource.')
+            help='Only show faulty resources. Combined with --all, show all resources '
+                 'that share a name with a faulty one.')
         p_lreses.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
         p_lreses.add_argument(
             '-s',
@@ -774,14 +777,90 @@ class ResourceCommands(Commands):
         seen = set()
         return [x for x in seq if x not in seen and not seen.add(x)]
 
+    def _compute_rsc_display(
+            self,
+            rsc: responses.Resource,
+            rsc_state_lkup: Dict[str, responses.ResourceState],
+            rsc_inuse_lkup: Dict[str, int]):
+        """
+        Computes the display state of a single resource.
+
+        :return: dict with the computed display values and a 'faulty' flag.
+        """
+        layer_stack = rsc.layer_data.layer_stack
+        layer_data_col = ",".join(self.ordered_unique(layer_stack))
+        marked_delete = apiconsts.FLAG_DELETE in rsc.flags or apiconsts.FLAG_DRBD_DELETE in rsc.flags
+        rsc_state_obj = rsc_state_lkup.get(rsc.node_name + rsc.name)
+        rsc_state_color = Color.YELLOW
+        rsc_state = "Unknown"
+        rsc_usage = ""
+        rsc_usage_color = None
+        if marked_delete:
+            rsc_state_color = Color.RED
+            rsc_state = "DELETING"
+        elif apiconsts.FLAG_RSC_INACTIVE in rsc.flags:
+            rsc_state = apiconsts.FLAG_RSC_INACTIVE
+        elif rsc_state_obj:
+            if rsc_state_obj.in_use is not None:
+                if rsc_state_obj.in_use:
+                    # use yellow if there are 2 primaries (could be a problem or ok(livemigrate))
+                    rsc_usage_color = Color.YELLOW if rsc_inuse_lkup[rsc.name] > 1 else Color.GREEN
+                    rsc_usage = "InUse"
+                else:
+                    rsc_usage = "Unused"
+            for vlm in rsc.volumes:
+                rsc_state, rsc_state_color = VolumeCommands.volume_state_cell(rsc, vlm)
+                if apiconsts.FLAG_EVACUATE in rsc.flags:
+                    rsc_state += ", Evacuating"
+                if rsc_state_color is not None:
+                    break
+
+        skip_disk = False
+        skip_disk_state_str = get_skip_disk_state_str(rsc)
+        if skip_disk_state_str:
+            rsc_state += skip_disk_state_str
+            skip_disk = True
+
+            if not rsc_state_color or rsc_state_color == Color.GREEN:
+                rsc_state_color = Color.YELLOW
+
+        # check if connections failed
+        conns_col_entries = None
+        drbd_ports = []
+        if rsc_state != "Unknown" and not self.get_linstorapi().api_version_smaller("1.0.15"):
+            failed_conns = {}
+            if rsc.layer_data.drbd_resource is not None:
+                drbd_ports = rsc.layer_data.drbd_resource.tcp_ports
+                connections = rsc.layer_data.drbd_resource.connections
+                for k, v in connections.items():
+                    if not v.connected:
+                        if v.message not in failed_conns:
+                            failed_conns[v.message] = []
+                        failed_conns[v.message].append(k)
+            conns_col_entries = ["{s}({n})".format(s=k, n=",".join(v)) for k, v in failed_conns.items()]
+
+        faulty = rsc_state_color is not None or bool(conns_col_entries)
+
+        return {
+            "layer_data_col": layer_data_col,
+            "rsc_state": rsc_state,
+            "rsc_state_color": rsc_state_color,
+            "rsc_usage": rsc_usage,
+            "rsc_usage_color": rsc_usage_color,
+            "conns_col_entries": conns_col_entries,
+            "drbd_ports": drbd_ports,
+            "skip_disk": skip_disk,
+            "faulty": faulty,
+        }
+
     def show(self, args, lstmsg):
         """
         :param args:
         :param RscRespWrapper lstmsg:
         :return:
         """
-        rsc_state_lkup = {x.node_name + x.name: x for x in lstmsg.resource_states}
-        rsc_inuse_lkup = self.get_inuse_lookup(lstmsg.resource_states)
+        rsc_state_lkup: Dict[str, responses.ResourceState] = {x.node_name + x.name: x for x in lstmsg.resource_states}
+        rsc_inuse_lkup: Dict[str, int] = self.get_inuse_lookup(lstmsg.resource_states)
 
         tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
                                    pastable=args.pastable, truncate=args.truncate)
@@ -802,105 +881,80 @@ class ResourceCommands(Commands):
 
         tbl.set_groupby(args.groupby if args.groupby else [headers[0].name])
 
-        for rsc in lstmsg.resources:
-            layer_stack = rsc.layer_data.layer_stack
-            layer_data_col = ",".join(self.ordered_unique(layer_stack))
-            marked_delete = apiconsts.FLAG_DELETE in rsc.flags or apiconsts.FLAG_DRBD_DELETE in rsc.flags
-            rsc_state_obj = rsc_state_lkup.get(rsc.node_name + rsc.name)
-            rsc_state_color = Color.YELLOW
-            rsc_state = "Unknown"
-            rsc_usage = ""
-            rsc_usage_color = None
-            if marked_delete:
-                rsc_state_color = Color.RED
-                rsc_state = "DELETING"
-            elif apiconsts.FLAG_RSC_INACTIVE in rsc.flags:
-                rsc_state = apiconsts.FLAG_RSC_INACTIVE
-            elif rsc_state_obj:
-                if rsc_state_obj.in_use is not None:
-                    if rsc_state_obj.in_use:
-                        # use yellow if there are 2 primaries (could be a problem or ok(livemigrate))
-                        rsc_usage_color = Color.YELLOW if rsc_inuse_lkup[rsc.name] > 1 else Color.GREEN
-                        rsc_usage = "InUse"
-                    else:
-                        rsc_usage = "Unused"
-                for vlm in rsc.volumes:
-                    rsc_state, rsc_state_color = VolumeCommands.volume_state_cell(rsc, vlm)
-                    if apiconsts.FLAG_EVACUATE in rsc.flags:
-                        rsc_state += ", Evacuating"
-                    if rsc_state_color is not None:
-                        break
+        # first pass: compute the display state for every resource so we know which are faulty
+        computed = [(rsc, self._compute_rsc_display(rsc, rsc_state_lkup, rsc_inuse_lkup))
+                    for rsc in lstmsg.resources]
 
-            skip_disk_state_str = get_skip_disk_state_str(rsc)
-            if skip_disk_state_str:
-                rsc_state += skip_disk_state_str
+        # when --faulty is combined with --all, show every resource that shares a name with a faulty one
+        faulty_names = {rsc.name for rsc, disp in computed if disp["faulty"]}
+
+        for rsc, disp in computed:
+            if args.faulty:
+                show_row = rsc.name in faulty_names if args.all else disp["faulty"]
+            else:
+                show_row = True
+
+            if not show_row:
+                continue
+
+            if disp["skip_disk"]:
                 show_skip_disk_info = True
 
-                if not rsc_state_color or rsc_state_color == Color.GREEN:
-                    rsc_state_color = Color.YELLOW
+            layer_data_col = disp["layer_data_col"]
+            rsc_state = disp["rsc_state"]
+            rsc_state_color = disp["rsc_state_color"]
+            rsc_usage = disp["rsc_usage"]
+            rsc_usage_color = disp["rsc_usage_color"]
+            conns_col_entries = disp["conns_col_entries"]
+            drbd_ports = disp["drbd_ports"]
 
-            # check if connections failed
-            conns_col = ""
-            conns_col_entries = None
-            drbd_ports = []
-            if rsc_state != "Unknown" and not self.get_linstorapi().api_version_smaller("1.0.15"):
-                failed_conns = {}
-                if rsc.layer_data.drbd_resource is not None:
-                    drbd_ports = rsc.layer_data.drbd_resource.tcp_ports
-                    connections = rsc.layer_data.drbd_resource.connections
-                    for k, v in connections.items():
-                        if not v.connected:
-                            if v.message not in failed_conns:
-                                failed_conns[v.message] = []
-                            failed_conns[v.message].append(k)
-                conns_col_entries = ["{s}({n})".format(s=k, n=",".join(v)) for k, v in failed_conns.items()]
-                conns_col = tbl.color_cell(",".join(conns_col_entries), Color.RED) if conns_col_entries else "Ok"
+            if conns_col_entries is None:
+                conns_col = ""
+            elif conns_col_entries:
+                conns_col = tbl.color_cell(",".join(conns_col_entries), Color.RED)
+            else:
+                conns_col = "Ok"
 
-            show_row = True
-            if args.faulty:
-                show_row = rsc_state_color is not None or not (conns_col == 'Ok' or conns_col == "")
+            drbd_flags = []
+            if rsc.layer_data and rsc.layer_data.drbd_resource and rsc.layer_data.drbd_resource.flags:
+                drbd_flags = rsc.layer_data.drbd_resource.flags
+            row = []
+            for header in headers:
+                clm = header.name
+                if clm == "ResourceName":
+                    row.append(rsc.name)
+                elif clm == "Node":
+                    row.append(rsc.node_name)
+                elif clm == "Layers":
+                    row.append(layer_data_col)
+                elif clm == "Usage":
+                    row.append(tbl.color_cell(rsc_usage, rsc_usage_color) if rsc_usage_color else rsc_usage)
+                elif clm == "Conns":
+                    row.append(conns_col)
+                elif clm == "DRBD Ports":
+                    row.append(", ".join([str(port) for port in drbd_ports]) if drbd_ports else "")
+                elif clm == "State":
+                    row.append(tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color))
+                elif clm == "Vote":
+                    has_vote = apiconsts.FLAG_DRBD_CLIENT not in drbd_flags
+                    row.append("Yes" if has_vote else "No")
+                elif clm == "Flags":
+                    if apiconsts.FLAG_DRBD_CLIENT in drbd_flags:
+                        row.append("Client")
+                    elif apiconsts.FLAG_TIE_BREAKER in rsc.flags:
+                        row.append("Tiebreaker")
+                    elif apiconsts.FLAG_DRBD_DISKLESS in rsc.flags:
+                        row.append("Diskless")
+                    elif rsc_state == "Diskless":
+                        row.append(tbl.color_cell("(Failed Disk)", Color.RED))
+                    else:
+                        row.append("")  # no flag
+                elif clm == "CreatedOn":
+                    row.append(str(rsc.create_datetime)[:19] if rsc.create_datetime else "")
 
-            if show_row:
-                drbd_flags = []
-                if rsc.layer_data and rsc.layer_data.drbd_resource and rsc.layer_data.drbd_resource.flags:
-                    drbd_flags = rsc.layer_data.drbd_resource.flags
-                row = []
-                for header in headers:
-                    clm = header.name
-                    if clm == "ResourceName":
-                        row.append(rsc.name)
-                    elif clm == "Node":
-                        row.append(rsc.node_name)
-                    elif clm == "Layers":
-                        row.append(layer_data_col)
-                    elif clm == "Usage":
-                        row.append(tbl.color_cell(rsc_usage, rsc_usage_color) if rsc_usage_color else rsc_usage)
-                    elif clm == "Conns":
-                        row.append(conns_col)
-                    elif clm == "DRBD Ports":
-                        row.append(", ".join([str(port) for port in drbd_ports]) if drbd_ports else "")
-                    elif clm == "State":
-                        row.append(tbl.color_cell(rsc_state, Color.RED if conns_col_entries else rsc_state_color))
-                    elif clm == "Vote":
-                        has_vote = apiconsts.FLAG_DRBD_CLIENT not in drbd_flags
-                        row.append("Yes" if has_vote else "No")
-                    elif clm == "Flags":
-                        if apiconsts.FLAG_DRBD_CLIENT in drbd_flags:
-                            row.append("Client")
-                        elif apiconsts.FLAG_TIE_BREAKER in rsc.flags:
-                            row.append("Tiebreaker")
-                        elif apiconsts.FLAG_DRBD_DISKLESS in rsc.flags:
-                            row.append("Diskless")
-                        elif rsc_state == "Diskless":
-                            row.append(tbl.color_cell("(Failed Disk)", Color.RED))
-                        else:
-                            row.append("")  # no flag
-                    elif clm == "CreatedOn":
-                        row.append(str(rsc.create_datetime)[:19] if rsc.create_datetime else "")
-
-                for sprop in show_props:
-                    row.append(rsc.properties.get(sprop, ''))
-                tbl.add_row(row)
+            for sprop in show_props:
+                row.append(rsc.properties.get(sprop, ''))
+            tbl.add_row(row)
         tbl.show()
 
         if show_skip_disk_info:

@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - snapshot list: surface non-successful backup shipments in the State column,
   read from snapDfn properties (one line per remote in flight or failed).
   Successful shipments still display as "Successful". Requires linstor-server 1.33.0+
+- r l --faulty and --all will now show all resources that include a faulty one
 
 ### Fixed
 
