@@ -1,3 +1,47 @@
+linstor-client (1.28.0-1) experimental; urgency=medium
+
+  [ Rene Peinthor ]
+  * setup.py: fix missing comma
+  * lbbuild: stop building for bionic and rhel7
+  * remove python2 support and use python build module
+  * remove custom argparse and argcomplete modules
+  * do not install custom completion script
+  * fix ugly exception if no sub command was given
+  * table: fix non natsort with only number values
+  * auth-token: add controller commands and support for auth token
+  * gitlab: use built in CI_SERVER_HOST var
+  * node_cmd: fix missing con states and improve handling
+  * rsc_grp_cmds: show properties for resource-groups
+  * snapshot-list: show backup shipping status from snapDfn props
+  * resource list: --faulty --all shows all replicas of faulty resources
+  * setup.py: use public all_commands property in build_man
+
+  [ Lars Ellenberg ]
+  * catch BrokenPipeError in main
+
+  [ Gabor Hernadi ]
+  * Added c export-db
+  * Rsc,List: Show corrupted key warning
+  * Drbd,client: Add --drbd-client to various sub commands
+  * Drbd,client: Reworked "resource list"
+
+  [ Johannes Khoshnazar-Thoma ]
+  * Make argcomplete optional.
+  * node-list: add platform column to node list output
+  * CHANGELOG.md update
+
+  [ Christoph Böhmwalder ]
+  * commands: split MiscCommands into separate command classes
+  * cli: lazy argparse subparser registration for faster startup
+  * pager: pipe output through a pager for interactive terminals
+  * changelog: add entry for pager
+  * table: add column truncation with proportional shrinking
+
+  [ Ryan Ronnander ]
+  * node-interface-modify: default communication-type to None instead of plain
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 28 May 2026 08:07:32 +0000
+
 linstor-client (1.27.1-1) experimental; urgency=medium
 
   [ Rene Peinthor ]

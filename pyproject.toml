@@ -34,7 +34,7 @@ classifiers = [
     "Topic :: System :: Systems Administration",
 ]
 dependencies = [
-    "python-linstor>=1.27.1",
+    "python-linstor>=1.28.0",
     "argcomplete>=1.8.1",
 ]
 
