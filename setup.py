@@ -149,7 +149,7 @@ setup(
            + ", Rene Peinthor <rene.peinthor@linbit.com>",
     author_email="roland.kammerer@linbit.com",
     maintainer="LINBIT HA-Solutions GmbH",
-    maintainer_email="drbd-user@lists.linbit.com",
+    maintainer_email="drbd-dev@lists.linux.dev",
     url="https://www.linbit.com",
     license="GPLv3",
     python_requires=">=3.6",
