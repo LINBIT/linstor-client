@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
     linstor - management of distributed DRBD9 resources
-    Copyright (C) 2013 - 2017  LINBIT HA-Solutions GmbH
+    Copyright (C) 2013 - 2026  LINBIT HA-Solutions GmbH
     Author: Robert Altnoeder, Philipp Reisner
 
     This program is free software: you can redistribute it and/or modify

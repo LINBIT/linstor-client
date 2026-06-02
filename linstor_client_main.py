@@ -2,7 +2,7 @@
 # PYTHON_ARGCOMPLETE_OK
 """
     LINSTOR - management of distributed storage/DRBD9 resources
-    Copyright (C) 2013 - 2018  LINBIT HA-Solutions GmbH
+    Copyright (C) 2013 - 2026  LINBIT HA-Solutions GmbH
     Author: Robert Altnoeder, Roland Kammerer, Rene Peinthor
 
     This program is free software: you can redistribute it and/or modify

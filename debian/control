@@ -1,6 +1,6 @@
 Source: linstor-client
 Maintainer: LINBIT HA Solutions GmbH <drbd-dev@lists.linux.dev>
-Uploaders: Roland Kammerer <roland.kammerer@linbit.com>
+Uploaders: Rene Peinthor <rene.peinthor@linbit.com>
 Section: python
 Priority: optional
 Build-Depends: bash-completion,

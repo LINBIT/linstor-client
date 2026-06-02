@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
     LINSTOR - management of distributed storage/DRBD9 resources
-    Copyright (C) 2013 - 2017  LINBIT HA-Solutions GmbH
+    Copyright (C) 2013 - 2026  LINBIT HA-Solutions GmbH
     Author: Robert. Altnoeder, Roland Kammerer
 
     You can use this file under the terms of the GNU Lesser General
