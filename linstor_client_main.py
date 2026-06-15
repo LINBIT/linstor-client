@@ -895,6 +895,18 @@ class LinStorCLI(object):
         return fn_rc
 
 
+# This enables colors in legacy windows terminals (cmd/powershell
+# pre server 2025):
+
+if platform.system() == "Windows":
+    try:
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+    except BaseException:
+        pass
+
+
 def main():
     try:
         LinStorCLI().run()
