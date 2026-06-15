@@ -21,6 +21,7 @@
 
 import sys
 import os
+import platform
 import io
 import shlex
 import signal
@@ -134,8 +135,12 @@ def setup_pager():
     # Restore default SIGPIPE handling so the process terminates
     # silently when the user quits the pager, instead of raising
     # BrokenPipeError exceptions.
-    old_sigpipe = signal.getsignal(signal.SIGPIPE)
-    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    #
+    # No SIGPIPE on Windows:
+    if platform.system() != "Windows":
+        old_sigpipe = signal.getsignal(signal.SIGPIPE)
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
     sys.stdout = io.TextIOWrapper(proc.stdin, encoding=old_stdout.encoding or 'utf-8')
     try:
         yield
@@ -148,7 +153,8 @@ def setup_pager():
         except BrokenPipeError:
             pass
         sys.stdout = old_stdout
-        signal.signal(signal.SIGPIPE, old_sigpipe)
+        if platform.system() != "Windows":
+            signal.signal(signal.SIGPIPE, old_sigpipe)
         proc.wait()
 
 
