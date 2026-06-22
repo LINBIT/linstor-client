@@ -540,7 +540,7 @@ class Commands(object):
     def add_parser_keyvalue(cls, parser, property_object=None):
         parser.add_argument('--aux', action="store_true", help="Property is an auxiliary user property.")
         if property_object:
-            props = Commands.get_allowed_props(property_object)
+            props = sorted(Commands.get_allowed_props(property_object), key=lambda p: p['key'])
             help_list = []
             for prop in props:
                 prop_help = "'" + prop['key'] + "': " + prop.get('info', '-').replace("%", "%%")

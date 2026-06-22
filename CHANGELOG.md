@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Property keys in command help output are now sorted alphabetically
+
 ## [1.28.0] - 2026-05-28
 
 ### Added
