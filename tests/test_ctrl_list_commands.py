@@ -48,6 +48,13 @@ class TestListCommands(LinstorTestCase):
         text_out = self.execute_with_text_output(["volume-definition", "list"])
         self.assertIn("ResourceName", text_out)
 
+    def test_auth_token_list_text(self):
+        text_out = self.execute_with_text_output(["controller", "auth", "list"])
+        self.assertIn("ID", text_out)
+        self.execute_with_text_output(["controller", "auth", "create", "test-token"])
+        text_out = self.execute_with_text_output(["controller", "auth", "list"])
+        self.assertIn("ID", text_out)
+
 
 if __name__ == '__main__':
     unittest.main()
