@@ -11,6 +11,7 @@ from linstor_client.commands import DefaultState, Commands, DrbdOptions, Argumen
 from linstor_client.commands.vlm_cmds import VolumeCommands
 from linstor_client.consts import Color, ExitCode
 from linstor_client.commands.utils.skip_disk_utils import print_skip_disk_info, get_skip_disk_state_str
+from linstor_client.commands.utils.toggle_disk_utils import get_toggle_disk_state_str
 from linstor_client.utils import rangecheck
 
 
@@ -821,6 +822,12 @@ class ResourceCommands(Commands):
             rsc_state += skip_disk_state_str
             skip_disk = True
 
+            if not rsc_state_color or rsc_state_color == Color.GREEN:
+                rsc_state_color = Color.YELLOW
+
+        toggle_disk_state_str = get_toggle_disk_state_str(rsc)
+        if toggle_disk_state_str:
+            rsc_state += toggle_disk_state_str
             if not rsc_state_color or rsc_state_color == Color.GREEN:
                 rsc_state_color = Color.YELLOW
 

@@ -12,6 +12,7 @@ from linstor_client.commands import Commands
 from linstor_client.utils import Output
 from linstor_client.consts import Color
 from linstor_client.commands.utils.skip_disk_utils import print_skip_disk_info, get_skip_disk_state_str
+from linstor_client.commands.utils.toggle_disk_utils import get_toggle_disk_state_str
 
 
 class VolumeCommands(Commands):
@@ -304,6 +305,7 @@ class VolumeCommands(Commands):
                     rsc_usage = "Unused"
 
             skip_disk_state_str = get_skip_disk_state_str(rsc)
+            toggle_disk_state_str = get_toggle_disk_state_str(rsc)
 
             for vlm in rsc.volumes:
                 if apiconsts.FLAG_RSC_INACTIVE in rsc.flags:
@@ -324,6 +326,11 @@ class VolumeCommands(Commands):
                         color = Color.YELLOW
                     state_txt += skip_disk_state_str
                     show_skip_disk_info = True
+
+                if toggle_disk_state_str:
+                    if not color or color == Color.GREEN:
+                        color = Color.YELLOW
+                    state_txt += toggle_disk_state_str
 
                 state = tbl.color_cell(state_txt, color) if color else state_txt
                 if has_errors:
