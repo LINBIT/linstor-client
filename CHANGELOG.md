@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Property keys in command help output are now sorted alphabetically
+- UTF-8 characters in output are now the default regardless of whether stdout is a TTY. Added --utf8 flag to explicitly set this behavior.
 
 ### Fixed
 
