@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Property keys in command help output are now sorted alphabetically
 
+### Fixed
+
+- "file modify" now reads back the edited content even with editors that save by replacing the file via rename
+
 ## [1.28.0] - 2026-05-28
 
 ### Added
