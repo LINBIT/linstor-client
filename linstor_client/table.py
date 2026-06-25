@@ -383,15 +383,17 @@ class Table(object):
         # build format string
         ctbl = {
             'utf8': {
-                'tl': u'╭',   # top left
-                'tr': u'╮',   # top right
-                'bl': u'╰',   # bottom left
-                'br': u'╯',   # bottom right
-                'mr': u'╡',   # middle right
-                'ml': u'╞',   # middle left
-                'mdc': u'┄',  # middle dotted connector
-                'msc': u'─',  # middle straight connector
-                'pipe': u'┊',
+                'tl': u'╭',    # top left
+                'tr': u'╮',    # top right
+                'bl': u'╰',    # bottom left
+                'br': u'╯',    # bottom right
+                'mr': u'╡',    # middle right
+                'ml': u'╞',    # middle left
+                'mrsl': u'┤',  # middle right single line
+                'mlsl': u'├',  # middle left single line
+                'mdc': u'╌',   # middle dotted connector
+                'msc': u'─',   # middle straight connector
+                'pipe': u'│',
                 'hr': u'═'
             },
             'ascii': {
@@ -401,6 +403,8 @@ class Table(object):
                 'br': u'+',
                 'mr': u'|',
                 'ml': u'|',
+                'mrsl': u'|',
+                'mlsl': u'|',
                 'mdc': u'-',
                 'msc': u'-',
                 'pipe': u'|',
@@ -428,7 +432,7 @@ class Table(object):
                     elif ridx == 2:
                         l, m, r = ctbl[enc]['ml'], ctbl[enc]['hr'], ctbl[enc]['mr']
                     else:  # mid separators
-                        l, m, r = ctbl[enc]['ml'], ctbl[enc]['mdc'], ctbl[enc]['mr']
+                        l, m, r = ctbl[enc]['mlsl'], ctbl[enc]['mdc'], ctbl[enc]['mrsl']
                     row_sep = l + m * (sum(columnmax) + (3 * header_size) - 1) + r
 
                     if self.r_just and len(row_sep) < maxwidth:
@@ -468,8 +472,8 @@ class Table(object):
                     # if multiline rows and not disabled draw row separators between real rows
                     if 2 < ridx < table_size - 2:
                         if multi_line_row and row_separator:
-                            row_sep = ctbl[enc]['ml'] + ctbl[enc]['mdc']\
-                                * (sum(columnmax) + (3 * header_size) - 1) + ctbl[enc]['mr']
+                            row_sep = ctbl[enc]['mlsl'] + ctbl[enc]['mdc']\
+                                * (sum(columnmax) + (3 * header_size) - 1) + ctbl[enc]['mrsl']
                             output_table_str += self._str_print(row_sep)
             return output_table_str
         except IOError as e:
