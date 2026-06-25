@@ -131,12 +131,19 @@ class FileCommands(Commands):
                 # file does not exist yet
                 initial_content = ""
 
-            with tempfile.NamedTemporaryFile(suffix=".tmp") as tf:
+            tf = tempfile.NamedTemporaryFile(suffix=".tmp", delete=False)
+            try:
                 tf.write(initial_content.encode())
-                tf.flush()
+                tf.close()
                 call([editor, tf.name])
-                tf.seek(0)
-                input_str = tf.read()
+                # Re-open the file by name after the editor exited. Many editors
+                # save by renaming the original to a backup and writing a new
+                # file under the original name, so the original file handle would
+                # point to the stale backup and miss the changes.
+                with open(tf.name, "rb") as edited:
+                    input_str = edited.read()
+            finally:
+                os.unlink(tf.name)
         else:
             input_str = sys.stdin.read().encode()
         replies = self._linstor.file_modify(args.file_name, input_str)
