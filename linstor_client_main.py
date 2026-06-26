@@ -27,7 +27,6 @@ import shlex
 import signal
 import subprocess as sp
 import traceback
-import itertools
 import getpass
 from contextlib import contextmanager
 
@@ -494,6 +493,36 @@ class LinStorCLI(object):
         for err in le.all_errors():
             sys.stderr.write(' ' * 2 + err.message + '\n')
 
+    def _command_path(self, pargs):
+        """
+        Recover the chain of (sub)command tokens from pargs, skipping any
+        leading global options (and their values). Used to show the matching
+        sub-help when a command is invoked without its required subcommand.
+        Global options (e.g. --controllers from the config file) are prepended
+        to pargs, so a plain "leading non-option tokens" scan would yield
+        nothing and fall back to the top-level help listing all commands.
+        """
+        value_opts = set()
+        for action in self._parser._actions:
+            if action.nargs != 0:
+                value_opts.update(action.option_strings)
+        path = []
+        i = 0
+        while i < len(pargs):
+            tok = pargs[i]
+            if tok.startswith('-'):
+                # skip the option, and its value too unless given as --opt=value
+                if '=' not in tok and tok in value_opts:
+                    i += 1
+                i += 1
+                continue
+            # first positional token starts the command path: take the run of them
+            while i < len(pargs) and not pargs[i].startswith('-'):
+                path.append(pargs[i])
+                i += 1
+            break
+        return path
+
     def parse_and_execute(self, pargs, is_interactive=False):
         rc = ExitCode.OK
         try:
@@ -584,7 +613,7 @@ class LinStorCLI(object):
                     rc = ExitCode.ILLEGAL_STATE
         except (ArgumentError, argparse.ArgumentTypeError, linstor.LinstorArgumentError) as ae:
             try:
-                self.parse(list(itertools.takewhile(lambda x: not x.startswith('-'), pargs)) + ['-h'])
+                self.parse(self._command_path(pargs) + ['-h'])
             except SystemExit:
                 pass
             sys.stderr.write(ae.message + '\n')
