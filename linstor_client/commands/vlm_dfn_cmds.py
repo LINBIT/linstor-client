@@ -206,8 +206,8 @@ class VolumeDefinitionCommands(Commands):
             Commands.Subcommands.SetSize.LONG,
             aliases=[Commands.Subcommands.SetSize.SHORT],
             description='Change the size of a volume. '
-            'Decreasing the size is only supported when the specified resource definition does not have any resources. '
             'Increasing the size is supported even when the associated resource definition has resources. '
+            'Decreasing the size will not work for all LAYER combinations. '
             'File systems present on the volumes will not be resized.')
         p_set_size.add_argument('resource_name', type=str,
                                 help='Name of an existing resource').completer = self.resource_dfn_completer
