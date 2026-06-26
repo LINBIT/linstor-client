@@ -1,3 +1,32 @@
+linstor-client (1.28.1-1) experimental; urgency=medium
+
+  [ Joel Colledge ]
+  * update mailing list address
+
+  [ Rene Peinthor ]
+  * update copyrights
+  * set-property help: sort property keys alphabetically
+  * tests: add auth token list output test
+  * resource/volume list: show toggle-disk status
+  * controller auth init: fix KeyError when no client token is returned
+  * vlm-dfn/set-size: fix description
+  * Show subcommand help when a command is given without a subcommand
+
+  [ Philipp Reisner ]
+  * file modify: re-open temp file after editor exits
+  * changelog: add entry for file modify editor backup fix
+
+  [ Michael Troutman ]
+  * linstor_client_main: default to UTF-8 output unconditionally
+  * add changelog entry for UTF-8 output default behavior addition
+  * table: replace low-coverage UTF-8 box-drawing glyphs
+
+  [ Johannes Khoshnazar-Thoma ]
+  * No SIGPIPE on Windows.
+  * Enable colors in legacy Windows terminals
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Fri, 26 Jun 2026 07:56:51 +0000
+
 linstor-client (1.28.0-1) experimental; urgency=medium
 
   [ Rene Peinthor ]

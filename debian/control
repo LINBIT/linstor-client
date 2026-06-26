@@ -20,7 +20,7 @@ Depends: ${misc:Depends},
          python3-natsort,
          python3-setuptools,
          python3-argcomplete,
-         python-linstor (>=1.28.0),
+         python-linstor (>=1.28.2),
          ${python3:Depends}
 Description: Linstor client command line tool
  This is a command client that communicates with the Linstor controller
