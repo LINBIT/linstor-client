@@ -425,8 +425,10 @@ class ControllerCommands(Commands):
             no_https=args.no_https
         )
         if not args.do_not_save_token and replies[0].is_success():
-            Config.set_value("global", "auth-token", replies[0].object_refs["token"])
-            print("Token saved to config file: " + ConfigFileLevel.USER.to_config_path())
+            token = replies[0].object_refs.get("token")
+            if token:
+                Config.set_value("global", "auth-token", token)
+                print("Token saved to config file: " + ConfigFileLevel.USER.to_config_path())
         return self.handle_replies(args, replies)
 
     def create_auth_token(self, args):
@@ -436,8 +438,10 @@ class ControllerCommands(Commands):
             expires_at=args.expires_at
         )
         if args.save_token and replies[0].is_success():
-            Config.set_value("global", "auth-token", replies[0].object_refs["token"])
-            print("Token saved to config file: " + ConfigFileLevel.USER.to_config_path())
+            token = replies[0].object_refs.get("token")
+            if token:
+                Config.set_value("global", "auth-token", token)
+                print("Token saved to config file: " + ConfigFileLevel.USER.to_config_path())
         return self.handle_replies(args, replies)
 
     def list_auth_tokens(self, args):

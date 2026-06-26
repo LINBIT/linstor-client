@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - "file modify" now reads back the edited content even with editors that save by replacing the file via rename
 - Table: replaced low-coverage UTF-8 box-drawing glyphs with universally-supported equivalents so borders render correctly in more fonts
+- "controller auth init --only-satellites" no longer crashes with KeyError when no client token is returned
 
 ## [1.28.0] - 2026-05-28
 
