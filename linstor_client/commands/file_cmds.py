@@ -1,5 +1,6 @@
 import base64
 import os
+import shlex
 import sys
 import tempfile
 from subprocess import call
@@ -9,6 +10,44 @@ import linstor
 import linstor_client
 import argparse
 from linstor_client.commands import Commands
+from linstor_client.consts import ExitCode
+from linstor_client.utils import LinstorClientError
+
+
+def _editor_commands():
+    """
+    Editor resolution strategy copied from systemd: honor $EDITOR, if unset
+    honor $VISUAL, if unset try editor, nano, vim and vi in that order.
+
+    Returns a tuple of the environment variable that provided the editor (or
+    None for the built-in fallbacks) and the list of command argument vectors
+    to try in order.
+    """
+    for envvar in ('EDITOR', 'VISUAL'):
+        editor = os.environ.get(envvar)
+        if editor:
+            return envvar, [shlex.split(editor)]
+    return None, [[name] for name in ('editor', 'nano', 'vim', 'vi')]
+
+
+def _run_editor(filename):
+    envvar, commands = _editor_commands()
+    for command in commands:
+        try:
+            call(command + [filename])
+            return
+        except OSError as e:
+            if envvar:
+                raise LinstorClientError(
+                    "Could not run editor '{cmd}' from ${var}: {reason}".format(
+                        cmd=command[0], var=envvar, reason=e.strerror),
+                    ExitCode.UNKNOWN_ERROR)
+            # built-in fallback not found, try the next one
+            continue
+    raise LinstorClientError(
+        "No editor found. Set the EDITOR or VISUAL environment variable, "
+        "or install one of: editor, nano, vim, vi.",
+        ExitCode.UNKNOWN_ERROR)
 
 
 class FileCommands(Commands):
@@ -123,7 +162,6 @@ class FileCommands(Commands):
 
     def modify(self, args):
         if sys.stdin.isatty():
-            editor = os.environ.get('EDITOR', 'nano')
             try:
                 showmsg = self._linstor.file_show(args.file_name)
                 initial_content = base64.b64decode(showmsg.files.content).decode()
@@ -135,7 +173,7 @@ class FileCommands(Commands):
             try:
                 tf.write(initial_content.encode())
                 tf.close()
-                call([editor, tf.name])
+                _run_editor(tf.name)
                 # Re-open the file by name after the editor exited. Many editors
                 # save by renaming the original to a backup and writing a new
                 # file under the original name, so the original file handle would

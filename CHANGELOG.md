@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- "file modify" now resolves the editor like systemd: honor $EDITOR, then $VISUAL, then fall back to editor, nano, vim and vi in that order
+
 ## [1.28.1] - 2026-06-26
 
 ### Changed
