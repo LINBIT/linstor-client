@@ -180,6 +180,10 @@ class Commands(object):
             LONG = "make-available"
             SHORT = "mkavail"
 
+        class UnmakeAvailable(object):
+            LONG = "unmake-available"
+            SHORT = "unmkavail"
+
         class AutoPlace(object):
             LONG = "auto-place"
             SHORT = "ap"

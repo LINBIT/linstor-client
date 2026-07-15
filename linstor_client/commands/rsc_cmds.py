@@ -76,6 +76,7 @@ class ResourceCommands(Commands):
             Commands.Subcommands.Create,
             Commands.Subcommands.Modify,
             Commands.Subcommands.MakeAvailable,
+            Commands.Subcommands.UnmakeAvailable,
             Commands.Subcommands.List,
             Commands.Subcommands.ListVolumes,
             Commands.Subcommands.Delete,
@@ -209,6 +210,17 @@ class ResourceCommands(Commands):
             type=rangecheck(1, 65535),
             help='Set the TCP port for DRBD to use')
         p_mkavial.add_argument(
+            '--auto-manage-dual-primary',
+            action="store_true",
+            help='Prepare the resource for a live migration to this node: for DRBD resources '
+                 'allow-two-primaries (and protocol C if needed) is set between the migration source '
+                 '(the node the resource is in use on) and this node; for resources in a shared storage '
+                 'pool the resource is activated on both nodes. '
+                 'If the resource is not in use on any node, it is simply made available without any '
+                 'dual-primary preparation, so the option can always be set by clients that cannot '
+                 'distinguish a live-migration attach from a plain attach. '
+                 'Revert with unmake-available on the migration source node.')
+        p_mkavial.add_argument(
             'node_name',
             type=str,
             help='Name of the node to deploy the resource').completer = self.node_completer
@@ -217,6 +229,27 @@ class ResourceCommands(Commands):
             type=str,
             help='Name of the resource definition').completer = self.resource_dfn_completer
         p_mkavial.set_defaults(func=self.make_available)
+
+        # unmake available
+        p_unmkavail = res_subp.add_parser(
+            Commands.Subcommands.UnmakeAvailable.LONG,
+            aliases=[Commands.Subcommands.UnmakeAvailable.SHORT],
+            description='Reverts a make-available, especially one issued with --auto-manage-dual-primary '
+                        'for a live migration. Removes the resource from the node if that is possible '
+                        'without losing data: the resource is deleted if it is diskless or a redundant '
+                        'copy in a shared storage pool, tiebreaker and diskful resources are kept. '
+                        'DRBD net options set by make-available (allow-two-primaries, protocol) are '
+                        'reverted. Does nothing if the resource does not exist on the node.')
+        p_unmkavail.add_argument(
+            'node_name',
+            type=str,
+            help='Name of the node to remove the resource from (the migration source)'
+        ).completer = self.node_completer
+        p_unmkavail.add_argument(
+            'resource_name',
+            type=str,
+            help='Name of the resource definition').completer = self.resource_dfn_completer
+        p_unmkavail.set_defaults(func=self.unmake_available)
 
         # remove-resource
         p_rm_res = res_subp.add_parser(
@@ -706,7 +739,14 @@ class ResourceCommands(Commands):
             args.resource_name,
             args.diskful,
             args.layer_list,
-            [args.drbd_tcp_port] if args.drbd_tcp_port else None)
+            [args.drbd_tcp_port] if args.drbd_tcp_port else None,
+            auto_manage_dual_primary=args.auto_manage_dual_primary)
+        return self.handle_replies(args, replies)
+
+    def unmake_available(self, args):
+        replies = self.get_linstorapi().resource_unmake_available(
+            args.node_name,
+            args.resource_name)
         return self.handle_replies(args, replies)
 
     def delete(self, args):

@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - "resource-definition truncate" deletes all resources of a resource definition without deleting the resource definition itself or its snapshots; with --delete-empty-resource-definition the resource definition is deleted as well if it has no snapshots
 - "snapshot delete" gained --delete-empty-resource-definition to also delete the resource definition when it has neither resources nor snapshots left after the deletion
+- resource make-available: new option --auto-manage-dual-primary preparing a resource for a live migration to the given node
+- New command "resource unmake-available" reverting a make-available on the migration source node after a live migration
 
 ### Changed
 
