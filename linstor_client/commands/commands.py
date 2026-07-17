@@ -208,6 +208,10 @@ class Commands(object):
             LONG = "delete"
             SHORT = "d"
 
+        class Truncate(object):
+            LONG = "truncate"
+            SHORT = "t"
+
         class Lost(object):
             LONG = "lost"
             SHORT = "lo"

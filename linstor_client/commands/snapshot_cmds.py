@@ -201,6 +201,11 @@ class SnapshotCommands(Commands):
             type=str,
             nargs='+',
             help='Only delete the snapshot from the given nodes. Default: Delete given snapshot from all nodes')
+        p_delete_snapshot.add_argument(
+            '--delete-empty-resource-definition',
+            action='store_true',
+            help='Also delete the resource definition if it has neither resources nor snapshots left '
+                 'after deleting this snapshot')
         p_delete_snapshot.set_defaults(func=self.delete)
 
         # roll back to snapshot
@@ -398,7 +403,11 @@ class SnapshotCommands(Commands):
         return self.handle_replies(args, replies)
 
     def delete(self, args):
-        replies = self._linstor.snapshot_delete(args.resource_definition_name, args.snapshot_name, args.nodes)
+        replies = self._linstor.snapshot_delete(
+            args.resource_definition_name,
+            args.snapshot_name,
+            args.nodes,
+            delete_empty_resource_definition=args.delete_empty_resource_definition)
         return self.handle_replies(args, replies)
 
     def rollback(self, args):

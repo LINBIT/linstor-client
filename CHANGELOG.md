@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- "resource-definition truncate" deletes all resources of a resource definition without deleting the resource definition itself or its snapshots; with --delete-empty-resource-definition the resource definition is deleted as well if it has no snapshots
+- "snapshot delete" gained --delete-empty-resource-definition to also delete the resource definition when it has neither resources nor snapshots left after the deletion
+
 ### Changed
 
 - "file modify" now resolves the editor like systemd: honor $EDITOR, then $VISUAL, then fall back to editor, nano, vim and vi in that order

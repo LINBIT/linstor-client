@@ -35,6 +35,7 @@ class ResourceDefinitionCommands(Commands):
             Commands.Subcommands.Modify,
             Commands.Subcommands.List,
             Commands.Subcommands.Delete,
+            Commands.Subcommands.Truncate,
             Commands.Subcommands.SetProperty,
             Commands.Subcommands.ListProperties,
             Commands.Subcommands.DrbdOptions,
@@ -134,6 +135,24 @@ class ResourceDefinitionCommands(Commands):
             nargs="+",
             help='Name of the resource to delete').completer = self.resource_dfn_completer
         p_rm_res_dfn.set_defaults(func=self.delete)
+
+        # truncate resource definition (delete all resources, keep the definition and snapshots)
+        p_truncate_res_dfn = res_def_subp.add_parser(
+            Commands.Subcommands.Truncate.LONG,
+            aliases=[Commands.Subcommands.Truncate.SHORT],
+            description="Deletes all resources of a resource definition without deleting the "
+            "resource definition itself or any of its snapshots. With "
+            "--delete-empty-resource-definition the resource definition is deleted as well if it "
+            "has no snapshots. The snapshot check and the deletion are performed atomically.")
+        p_truncate_res_dfn.add_argument(
+            '--delete-empty-resource-definition',
+            action='store_true',
+            help='Also delete the resource definition if it has no snapshots')
+        p_truncate_res_dfn.add_argument(
+            'name',
+            nargs="+",
+            help='Name of the resource definition to truncate').completer = self.resource_dfn_completer
+        p_truncate_res_dfn.set_defaults(func=self.truncate)
 
         rsc_dfn_groupby = [x.name.lower() for x in self._rsc_dfn_headers]
         rsc_dfn_group_completer = Commands.show_group_completer(rsc_dfn_groupby, "groupby")
@@ -365,6 +384,14 @@ class ResourceDefinitionCommands(Commands):
 
         # execute delete rscdfns and flatten result list
         replies = [x for subx in args.name for x in self._linstor.resource_dfn_delete(subx, async_flag)]
+        return self.handle_replies(args, replies)
+
+    def truncate(self, args):
+        # execute truncate rscdfns and flatten result list
+        replies = [
+            x for subx in args.name
+            for x in self._linstor.resource_dfn_truncate(subx, args.delete_empty_resource_definition)
+        ]
         return self.handle_replies(args, replies)
 
     @classmethod
