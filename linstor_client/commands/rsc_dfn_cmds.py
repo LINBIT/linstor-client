@@ -203,7 +203,9 @@ class ResourceDefinitionCommands(Commands):
         p_lrscdfs.add_argument('-r', '--resource-definitions', nargs='+', type=str,
                                help='Filter by list of resource definitions').completer = self.resource_dfn_completer
         p_lrscdfs.add_argument('-e', '--external-name', action="store_true", help='Show user specified name.')
-        p_lrscdfs.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
+        p_lrscdfs.add_argument(
+            '--props', nargs='+', type=str, action=Commands.ExtendAction,
+            help='Filter list by object properties. Can be given multiple times; all filters must match (AND).')
         p_lrscdfs.add_argument(
             '-s',
             '--show-props',

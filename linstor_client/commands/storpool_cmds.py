@@ -344,7 +344,9 @@ class StoragePoolCommands(Commands):
                                  help='Filter by list of storage pools').completer = self.storage_pool_completer
         p_lstorpool.add_argument('-n', '--nodes', nargs='+', type=str,
                                  help='Filter by list of nodes').completer = self.node_completer
-        p_lstorpool.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
+        p_lstorpool.add_argument(
+            '--props', nargs='+', type=str, action=Commands.ExtendAction,
+            help='Filter list by object properties. Can be given multiple times; all filters must match (AND).')
         p_lstorpool.add_argument(
             '--show-props',
             nargs='+',

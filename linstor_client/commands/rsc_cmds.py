@@ -281,7 +281,9 @@ class ResourceCommands(Commands):
             action="store_true",
             help='Only show faulty resources. Combined with --all, show all resources '
                  'that share a name with a faulty one.')
-        p_lreses.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
+        p_lreses.add_argument(
+            '--props', nargs='+', type=str, action=Commands.ExtendAction,
+            help='Filter list by object properties. Can be given multiple times; all filters must match (AND).')
         p_lreses.add_argument(
             '-s',
             '--show-props',

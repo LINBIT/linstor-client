@@ -400,7 +400,9 @@ class NodeCommands(Commands):
         p_lnodes.add_argument('-n', '--nodes', nargs='+', type=str,
                               help='Filter by list of nodes').completer = self.node_completer
         p_lnodes.add_argument('--show-aux-props', action="store_true", help='Show aux properties for nodes')
-        p_lnodes.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
+        p_lnodes.add_argument(
+            '--props', nargs='+', type=str, action=Commands.ExtendAction,
+            help='Filter list by object properties. Can be given multiple times; all filters must match (AND).')
         p_lnodes.add_argument(
             '-s',
             '--show-props',

@@ -123,7 +123,9 @@ class ResourceGroupCommands(Commands):
                                 type=str.lower).completer = rsc_grp_group_completer
         p_lrscgrps.add_argument('-r', '--resource-groups', nargs='+', type=str,
                                 help='Filter by list of resource groups').completer = self.resource_grp_completer
-        p_lrscgrps.add_argument('--props', nargs='+', type=str, help='Filter list by object properties')
+        p_lrscgrps.add_argument(
+            '--props', nargs='+', type=str, action=Commands.ExtendAction,
+            help='Filter list by object properties. Can be given multiple times; all filters must match (AND).')
         p_lrscgrps.add_argument(
             '-s',
             '--show-props',

@@ -124,6 +124,28 @@ class Commands(object):
         # _linstor_completer is just here as a cache for completer calls
         self._linstor_completer = None  # type: Optional[linstor.Linstor]
 
+    class ExtendAction(argparse.Action):
+        """
+        Accumulates the values of an option that is given more than once into a
+        single flat list, instead of letting the last occurrence overwrite the
+        earlier ones (the default behaviour of nargs='+' without an action).
+
+        For example '--props A=1 --props B=2' results in ['A=1', 'B=2'] rather
+        than just ['B=2']. Filter options rely on this so that multiple filters
+        are all sent to the controller (which combines them with AND).
+
+        argparse ships a built-in 'extend' action, but only since Python 3.8,
+        while this project still supports Python >= 3.6.
+        """
+        def __call__(self, parser, namespace, values, option_string=None):
+            items = getattr(namespace, self.dest, None)
+            items = list(items) if items else []
+            if isinstance(values, (list, tuple)):
+                items.extend(values)
+            else:
+                items.append(values)
+            setattr(namespace, self.dest, items)
+
     class Subcommands(object):
 
         class Auth(object):
