@@ -1,3 +1,17 @@
+linstor-client (1.29.0-1) experimental; urgency=medium
+
+  [ Moritz Tanner ]
+  * file modify: resolve editor like systemd
+  * Add truncate command and snapshot delete-empty flag
+
+  [ Gabor Hernadi ]
+  * client: Fix GH 520 - accumulate repeated --props filters
+
+  [ Rene Peinthor ]
+  * Add resource unmake-available and --auto-manage-dual-primary
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 13 Aug 2026 08:44:43 +0000
+
 linstor-client (1.28.1-1) experimental; urgency=medium
 
   [ Joel Colledge ]

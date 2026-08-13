@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.29.0] - 2026-08-13
+
 ### Added
 
 - "resource-definition truncate" deletes all resources of a resource definition without deleting the resource definition itself or its snapshots; with --delete-empty-resource-definition the resource definition is deleted as well if it has no snapshots
