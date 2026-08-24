@@ -175,6 +175,11 @@ class ResourceDefinitionCommands(Commands):
             '--volume-passphrase', nargs='*', help="User provided volume passphrases"
         )
         p_clone_rscdfn.add_argument(
+            '--volume-size', nargs='*',
+            help="Sizes (e.g. 1G) to grow the cloned volumes to as part of the clone, "
+                 "one per volume, 0 keeps the source size of a volume"
+        )
+        p_clone_rscdfn.add_argument(
             '-l', '--layer-list',
             type=self.layer_data_check,
             help="Comma separated layer list, order is from right to left. "
@@ -334,7 +339,8 @@ class ResourceDefinitionCommands(Commands):
             use_zfs_clone=args.use_zfs_clone,
             volume_passphrases=args.volume_passphrase,
             layer_list=args.layer_list,
-            resource_group=args.resource_group
+            resource_group=args.resource_group,
+            volume_sizes=args.volume_size
         )
 
         if not args.curl:
