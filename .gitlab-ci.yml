@@ -79,7 +79,7 @@ deploy_client:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: $CI_COMMIT_BRANCH == 'master'
   before_script:
-    - curl -sSL $LINBIT_REGISTRY_URL/repository/lbbuild/lbbuildctl-latest -o /usr/local/bin/lbbuildctl
+    - curl -sSfL https://pulp.at.linbit.com/pulp/content/file/lbbuild/lbbuildctl-latest -o /usr/local/bin/lbbuildctl
     - chmod +x /usr/local/bin/lbbuildctl
   script:
     - |
@@ -90,7 +90,7 @@ deploy_client:
     - LINSTOR_CLIENT_VERSION=1.99.0$VERSION_SUFFIX
     - PYTHON_LINSTOR_VERSION=1.99.0
     - |
-      if curl --head -f $LINBIT_REGISTRY_URL/repository/lbbuild-upstream/python-linstor-$PYTHON_LINSTOR_VERSION$VERSION_SUFFIX.tar.gz ; then
+      if curl --head -sf https://pulp.at.linbit.com/pulp/content/rpm/rhel8/Packages/p/python-linstor-$PYTHON_LINSTOR_VERSION$VERSION_SUFFIX-1.noarch.rpm ; then
         PYTHON_LINSTOR_VERSION=$LINSTOR_CLIENT_VERSION
         echo "USING PYTHON_LINSTOR: $PYTHON_LINSTOR_VERSION"
       fi
@@ -102,13 +102,18 @@ deploy_client:
     - sed -i "s/\"python-linstor>=[0-9.]*\"/\"python-linstor>=$LINSTOR_CLIENT_VERSION\"/g" setup.py pyproject.toml
     - sed -i "s/VERSION = \"[0-9.]*\"/VERSION = \"$LINSTOR_CLIENT_VERSION\"/g" linstor_client/consts.py
     - NO_DOC="-no-doc" make debrelease
-    - curl -isSf -u $LINBIT_REGISTRY_USER:$LINBIT_REGISTRY_PASSWORD --upload-file dist/linstor-client-$LINSTOR_CLIENT_VERSION.tar.gz $LINBIT_REGISTRY_URL/repository/lbbuild-upstream/
-    - curl -X DELETE -u $LINBIT_REGISTRY_USER:$LINBIT_REGISTRY_PASSWORD $LINBIT_REGISTRY_URL/repository/rhel8/x86_64/linstor-client-$LINSTOR_CLIENT_VERSION-1.noarch.rpm
+    - . gitlab-utils.sh
+    - ci_prepare_tools
+    - pulp file content upload --repository lbbuild-upstream --file dist/linstor-client-$LINSTOR_CLIENT_VERSION.tar.gz --relative-path linstor-client-$LINSTOR_CLIENT_VERSION.tar.gz
     - lbbuildctl build linstor-client --arch amd64 --ci -v "$LINSTOR_CLIENT_VERSION" -p "$PYTHON_LINSTOR_VERSION"
         -e LINBIT_REGISTRY_USER=$LINBIT_REGISTRY_USER
         -e LINBIT_REGISTRY_PASSWORD=$LINBIT_REGISTRY_PASSWORD
         -e LINBIT_REGISTRY_URL=$LINBIT_REGISTRY_URL
         -d ubuntu-jammy,ubuntu-noble,debian-bookworm,rhel8.0
+    - |
+      for sha in $(pulp file repository content list --repository lbbuild-upstream | jq -r ".[] | select(.relative_path==\"linstor-client-$LINSTOR_CLIENT_VERSION.tar.gz\") | .sha256"); do
+        pulp file repository content remove --repository lbbuild-upstream --relative-path linstor-client-$LINSTOR_CLIENT_VERSION.tar.gz --sha256 $sha
+      done
 
 staging:
   stage: deploy_tests
