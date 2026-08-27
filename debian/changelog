@@ -1,3 +1,10 @@
+linstor-client (1.29.1-1) experimental; urgency=medium
+
+  * gitlab-ci: move from nexus to pulp
+  * rd clone: add --volume-size option
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Thu, 27 Aug 2026 11:34:50 +0000
+
 linstor-client (1.29.0-1) experimental; urgency=medium
 
   [ Moritz Tanner ]
