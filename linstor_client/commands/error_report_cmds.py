@@ -55,6 +55,21 @@ class ErrorReportCommands(Commands):
             help="Restrict to id's that begin with the given ones."
         )
         c_list_error_reports.add_argument('-f', '--full', action="store_true", help='Show all error info fields')
+        c_list_error_reports.add_argument(
+            '--sort-by',
+            choices=[
+                'error_time', 'node_name', 'module', 'exception', 'exception_message',
+                'origin_file', 'filename', 'version', 'peer'
+            ],
+            help='Sort the error reports by the given field, default: error_time'
+        )
+        c_list_error_reports.add_argument(
+            '--sort-order',
+            choices=['asc', 'desc'],
+            help='Sort order, default: desc'
+        )
+        c_list_error_reports.add_argument('--limit', type=int, help='Maximum number of error reports to show')
+        c_list_error_reports.add_argument('--offset', type=int, help='Number of error reports to skip')
         c_list_error_reports.set_defaults(func=self.cmd_list_error_reports)
 
         c_error_report = error_subp.add_parser(
@@ -114,6 +129,23 @@ class ErrorReportCommands(Commands):
             tbl.add_row(row)
         tbl.show()
 
+    @classmethod
+    def show_error_report_page(cls, args, page):
+        """
+
+        :param args:
+        :param linstor.responses.ErrorReportPage page:
+        :return:
+        """
+        cls.show_error_report_list(args, page.error_reports)
+        shown = len(page.error_reports)
+        offset = page.offset if page.offset else 0
+        if shown:
+            print("Showing {f}-{l} of {t} error reports".format(
+                f=offset + 1, l=offset + shown, t=page.total))
+        else:
+            print("Showing 0 of {t} error reports (offset {o})".format(t=page.total, o=offset))
+
     def cmd_list_error_reports(self, args):
         since = args.since
         since_dt = None
@@ -124,6 +156,23 @@ class ErrorReportCommands(Commands):
         if args.to:
             to_dt = datetime.strptime(args.to, '%Y-%m-%d')
             to_dt = to_dt.replace(hour=23, minute=59, second=59)
+
+        if any(x is not None for x in [args.sort_by, args.sort_order, args.limit, args.offset]):
+            if args.report_id:
+                raise LinstorClientError(
+                    "--report-id cannot be combined with --sort-by/--sort-order/--limit/--offset",
+                    exit_code=2)
+            lstmsg = self._linstor.error_report_list_paged(
+                nodes=args.nodes,
+                since=since_dt,
+                to=to_dt,
+                limit=args.limit,
+                offset=args.offset,
+                sort_by=args.sort_by,
+                sort_order=args.sort_order
+            )
+            return self.output_list(
+                args, lstmsg, self.show_error_report_page, single_item=True, machine_readable_raw=True)
 
         lstmsg = self._linstor.error_report_list(nodes=args.nodes, since=since_dt, to=to_dt, ids=args.report_id)
         return self.output_list(args, lstmsg, self.show_error_report_list, single_item=False)

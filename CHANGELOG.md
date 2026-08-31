@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- error-reports list: new `--sort-by`, `--sort-order`, `--limit` and `--offset` options using the
+  paged error report API (needs server REST API 1.30.0)
+
 ## [1.29.1] - 2026-08-27
 
 ### Added
