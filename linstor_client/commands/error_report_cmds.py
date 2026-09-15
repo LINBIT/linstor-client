@@ -3,11 +3,15 @@ import argparse
 from linstor_client.table import Table, TableHeader
 from linstor_client.utils import Output, LinstorClientError
 from linstor_client.commands import Commands
+from linstor_client.consts import ExitCode
 
 from datetime import datetime
 
 
 class ErrorReportCommands(Commands):
+    SORT_BY_DEFAULT = 'error_time'
+    SORT_ORDER_DEFAULT = 'desc'
+
     _command_name = Commands.ERROR_REPORTS
     _command_aliases = ["err"]
     _command_description = "Error report subcommands"
@@ -61,14 +65,17 @@ class ErrorReportCommands(Commands):
                 'error_time', 'node_name', 'module', 'exception', 'exception_message',
                 'origin_file', 'filename', 'version', 'peer'
             ],
-            help='Sort the error reports by the given field, default: error_time'
+            default=self.SORT_BY_DEFAULT,
+            help='Sort the error reports by the given field (default: %(default)s)'
         )
         c_list_error_reports.add_argument(
             '--sort-order',
             choices=['asc', 'desc'],
-            help='Sort order, default: desc'
+            default=self.SORT_ORDER_DEFAULT,
+            help='Sort order (default: %(default)s)'
         )
-        c_list_error_reports.add_argument('--limit', type=int, help='Maximum number of error reports to show')
+        c_list_error_reports.add_argument(
+            '--limit', type=int, help='Maximum number of error reports to show (default: 1000)')
         c_list_error_reports.add_argument('--offset', type=int, help='Number of error reports to skip')
         c_list_error_reports.set_defaults(func=self.cmd_list_error_reports)
 
@@ -157,11 +164,18 @@ class ErrorReportCommands(Commands):
             to_dt = datetime.strptime(args.to, '%Y-%m-%d')
             to_dt = to_dt.replace(hour=23, minute=59, second=59)
 
-        if any(x is not None for x in [args.sort_by, args.sort_order, args.limit, args.offset]):
-            if args.report_id:
-                raise LinstorClientError(
-                    "--report-id cannot be combined with --sort-by/--sort-order/--limit/--offset",
-                    exit_code=2)
+        paged = args.limit is not None or args.offset is not None
+        sorted_ = args.sort_by != self.SORT_BY_DEFAULT or args.sort_order != self.SORT_ORDER_DEFAULT
+        if args.report_id and (paged or sorted_):
+            raise LinstorClientError(
+                "--report-id cannot be combined with --sort-by/--sort-order/--limit/--offset",
+                exit_code=ExitCode.ARGPARSE_ERROR)
+
+        # The paged endpoint (REST-API 1.30.0) sorts the reports of all nodes globally and is used whenever
+        # the controller supports it. Report ids are only filtered by the old endpoint. An older controller
+        # keeps using the old endpoint, unless sorting or paging was requested explicitly, which it cannot do.
+        use_paged = not args.report_id and (paged or sorted_ or not self._linstor.api_version_smaller("1.30.0"))
+        if use_paged:
             lstmsg = self._linstor.error_report_list_paged(
                 nodes=args.nodes,
                 since=since_dt,
@@ -171,10 +185,14 @@ class ErrorReportCommands(Commands):
                 sort_by=args.sort_by,
                 sort_order=args.sort_order
             )
-            return self.output_list(
-                args, lstmsg, self.show_error_report_page, single_item=True, machine_readable_raw=True)
-
-        lstmsg = self._linstor.error_report_list(nodes=args.nodes, since=since_dt, to=to_dt, ids=args.report_id)
+            if paged:
+                return self.output_list(
+                    args, lstmsg, self.show_error_report_page, single_item=True, machine_readable_raw=True)
+            if not self.check_for_api_replies(lstmsg):
+                # without an explicit page the output stays the plain list of reports
+                lstmsg = lstmsg[0].error_reports
+        else:
+            lstmsg = self._linstor.error_report_list(nodes=args.nodes, since=since_dt, to=to_dt, ids=args.report_id)
         return self.output_list(args, lstmsg, self.show_error_report_list, single_item=False)
 
     def show_error_report(self, args, lstmsg):
