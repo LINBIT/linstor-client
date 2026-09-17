@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- If no linstor-client.conf sets `controllers`, the controller address a local satellite published in
+  `/run/linstor/linstor-client.conf` is used instead of defaulting to localhost
 - error-reports list: new `--sort-by`, `--sort-order`, `--limit` and `--offset` options using the
   paged error report API (needs server REST API 1.30.0)
 

@@ -28,6 +28,7 @@ import signal
 import subprocess as sp
 import traceback
 import getpass
+from configparser import Error as ConfigParserError
 from contextlib import contextmanager
 
 import linstor
@@ -454,9 +455,31 @@ class LinStorCLI(object):
     # CLI flags here.
     _PER_COMMAND_GLOBAL_KEYS = {'truncate'}
 
+    # A satellite publishes the address of the controller it is connected to here, which
+    # spares nodes running a satellite the one-off manual linstor-client.conf.
+    RUNTIME_CONF_PATH = os.path.join(os.sep, 'run', 'linstor', 'linstor-client.conf')
+
+    @staticmethod
+    def runtime_controllers():
+        """
+        Controller address published by a satellite running on this node, or None if it did
+        not publish one.
+
+        :rtype: Optional[str]
+        """
+        try:
+            runtime_conf = linstor.Config.read_config(LinStorCLI.RUNTIME_CONF_PATH)
+        except (ConfigParserError, OSError):
+            return None
+        return dict(runtime_conf.get('global', [])).get('controllers')
+
     @staticmethod
     def merge_config_arguments(pargs):
         global_entries = linstor.Config.get_section('global')
+        if 'controllers' not in global_entries:
+            runtime_controllers = LinStorCLI.runtime_controllers()
+            if runtime_controllers:
+                global_entries['controllers'] = runtime_controllers
         for key, val in global_entries.items():
             if key in LinStorCLI._PER_COMMAND_GLOBAL_KEYS:
                 continue
