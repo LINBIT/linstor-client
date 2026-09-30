@@ -844,13 +844,7 @@ class ResourceCommands(Commands):
         elif apiconsts.FLAG_RSC_INACTIVE in rsc.flags:
             rsc_state = apiconsts.FLAG_RSC_INACTIVE
         elif rsc_state_obj:
-            if rsc_state_obj.in_use is not None:
-                if rsc_state_obj.in_use:
-                    # use yellow if there are 2 primaries (could be a problem or ok(livemigrate))
-                    rsc_usage_color = Color.YELLOW if rsc_inuse_lkup[rsc.name] > 1 else Color.GREEN
-                    rsc_usage = "InUse"
-                else:
-                    rsc_usage = "Unused"
+            rsc_usage, rsc_usage_color = self.get_usage(rsc_state_obj, rsc_inuse_lkup.get(rsc.name, 0))
             for vlm in rsc.volumes:
                 rsc_state, rsc_state_color = VolumeCommands.volume_state_cell(rsc, vlm)
                 if apiconsts.FLAG_EVACUATE in rsc.flags:

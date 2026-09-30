@@ -295,14 +295,9 @@ class VolumeCommands(Commands):
                 continue  # do not show non existing volumes for inactive resources
 
             rsc_state = rsc_state_lkup.get(rsc.node_name + rsc.name)
-            rsc_usage = ""
-            if rsc_state and rsc_state.in_use is not None:
-                if rsc_state.in_use:
-                    # use yellow if there are 2 primaries (could be a problem or ok(livemigrate))
-                    rsc_usage_color = Color.YELLOW if rsc_inuse_lkup[rsc.name] > 1 else Color.GREEN
-                    rsc_usage = tbl.color_cell("InUse", rsc_usage_color)
-                else:
-                    rsc_usage = "Unused"
+            rsc_usage, rsc_usage_color = cls.get_usage(rsc_state, rsc_inuse_lkup.get(rsc.name, 0))
+            if rsc_usage_color:
+                rsc_usage = tbl.color_cell(rsc_usage, rsc_usage_color)
 
             skip_disk_state_str = get_skip_disk_state_str(rsc)
             toggle_disk_state_str = get_toggle_disk_state_str(rsc)

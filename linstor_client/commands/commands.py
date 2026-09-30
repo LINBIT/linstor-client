@@ -644,6 +644,25 @@ class Commands(object):
             print(Output.color_str("Unexpected additional property data, ignoring.", Color.YELLOW, args.no_color))
 
     @classmethod
+    def get_usage(cls, rsc_state, primary_count):
+        """
+        Returns the text and color of the usage of a resource: InUse if Primary, Open if its DRBD device is open
+        while Secondary (e.g. read-only), Unused otherwise.
+        :param responses.ResourceState rsc_state: the state of the resource, may be None
+        :param int primary_count: how many resources of the same resource definition are in use
+        :return: (text, color), ("", None) if unknown
+        """
+        if rsc_state is None or rsc_state.in_use is None:
+            return "", None
+        if rsc_state.in_use:
+            # use yellow if there are 2 primaries (could be a problem or ok(livemigrate))
+            return "InUse", Color.YELLOW if primary_count > 1 else Color.GREEN
+        # python-linstor < 1.30.0 has no ResourceState.open
+        if getattr(rsc_state, "open", None):
+            return "Open", Color.YELLOW
+        return "Unused", None
+
+    @classmethod
     def get_inuse_lookup(cls, rsc_states: List[responses.ResourceState]) -> Dict[str, int]:
         """
         Creates a lookup dictionary where key is the resource name and the value the count of primary/inUse.

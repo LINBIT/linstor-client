@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `/run/linstor/linstor-client.conf` is used instead of defaulting to localhost
 - error-reports list: new `--sort-by`, `--sort-order`, `--limit` and `--offset` options using the
   paged error report API (needs server REST API 1.30.0)
+- resource list / volume list: the usage shows `Open` if the DRBD device is open while Secondary (e.g. read-only),
+  such a resource cannot be deleted (needs server REST API 1.30.0)
 
 ## [1.29.1] - 2026-08-27
 
