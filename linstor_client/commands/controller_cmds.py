@@ -163,7 +163,7 @@ class ControllerCommands(Commands):
 
         p_which_controller = con_subp.add_parser(
             Commands.Subcommands.Which.LONG,
-            description='Shows controller currently used.')
+            description='Shows controller currently used and the host it runs on.')
         p_which_controller.set_defaults(func=self.which_controller)
 
         p_backup_db = con_subp.add_parser(
@@ -384,7 +384,11 @@ class ControllerCommands(Commands):
             if args.machine_readable:
                 print(json.dumps(self.get_linstorapi().controller_version().data(args.output_version)))
             else:
-                print("linstor controller " + version_info[2] + "; GIT-hash: " + version_info[3])
+                version_line = "linstor controller " + version_info[2] + "; GIT-hash: " + version_info[3]
+                host_name = self._controller_host_name()
+                if host_name:
+                    version_line += "; host: " + host_name
+                print(version_line)
 
     def query_max_volume_size(self, args):
         replies = self.get_linstorapi().storage_pool_dfn_max_vlm_sizes(
@@ -403,12 +407,20 @@ class ControllerCommands(Commands):
 
         return self.output_list(args, replies, self._show_query_max_volume)
 
+    def _controller_host_name(self):
+        # python-linstor < 1.30.0 has no ControllerVersion.host_name, older controllers do not report it
+        return getattr(self.get_linstorapi().controller_version(), "host_name", None)
+
     def which_controller(self, args):
         ctrl_uri = self.get_linstorapi().controller_host()
+        host_name = self._controller_host_name()
         if args.machine_readable:
-            print(json.dumps({"controller_uri": ctrl_uri}))
+            data = {"controller_uri": ctrl_uri}
+            if host_name:
+                data["host_name"] = host_name
+            print(json.dumps(data))
         else:
-            print(ctrl_uri)
+            print(ctrl_uri + "; host: " + host_name if host_name else ctrl_uri)
 
     def backup_controller_db(self, args):
         replies = self.get_linstorapi().controller_backupdb(args.backup_name)
