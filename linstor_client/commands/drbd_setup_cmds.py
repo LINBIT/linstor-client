@@ -154,7 +154,12 @@ class DrbdOptions(object):
                         unit = SizeCalc.UNIT_KiB
                     elif option.get('unit_prefix') == 's':
                         unit = SizeCalc.UNIT_S
-                    value = SizeCalc.auto_convert(value, unit)
+                    if str(value).strip().isdigit():
+                        # no unit given: the value is already in the option's default unit,
+                        # the same as with set-property (SizeCalc would assume bytes)
+                        value = int(value)
+                    else:
+                        value = SizeCalc.auto_convert(value, unit)
                     if option['min'] <= value <= option['max']:
                         value = str(value)
                     else:

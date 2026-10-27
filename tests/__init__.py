@@ -13,7 +13,8 @@ _controller_tests = [
 
 _std_tests = [
     "tests.test_client_commands",
-    "tests.test_tables"
+    "tests.test_tables",
+    "tests.test_drbd_option_units"
 ]
 
 
