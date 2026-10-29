@@ -2,7 +2,7 @@ import argparse
 
 import linstor_client
 from linstor_client.commands import Commands
-from linstor_client.consts import Color
+from linstor_client.consts import Color, ExitCode
 from linstor.sharedconsts import FLAG_DELETE, FLAG_SUCCESSFUL, FLAG_FAILED_DEPLOYMENT, FLAG_FAILED_DISCONNECT
 from linstor_client.utils import Output
 from linstor import SizeCalc
@@ -102,6 +102,19 @@ class SnapshotCommands(Commands):
         LONG = "create-multiple"
         SHORT = "cm"
 
+    class CbtSession(object):
+        LONG = "cbt-session"
+        SHORT = "cbt"
+
+    class CbtStart(object):
+        LONG = "start"
+
+    class CbtExtents(object):
+        LONG = "extents"
+
+    class CbtFinish(object):
+        LONG = "finish"
+
     def __init__(self):
         super(SnapshotCommands, self).__init__()
 
@@ -116,6 +129,7 @@ class SnapshotCommands(Commands):
             Commands.Subcommands.Rollback,
             Commands.Subcommands.Resource,
             Commands.Subcommands.VolumeDefinition,
+            SnapshotCommands.CbtSession,
         ]
 
         # Snapshot subcommands
@@ -139,6 +153,12 @@ class SnapshotCommands(Commands):
             '--async',
             action='store_true',
             help='Deprecated, kept for compatibility'
+        )
+        p_new_snapshot.add_argument(
+            '--cbt',
+            action='store_true',
+            help='Start a new changed block tracking interval with this snapshot. The snapshot property Cbt/Id '
+                 'holds its bookmark id. Requires DRBD with changed block tracking support.'
         )
         p_new_snapshot.add_argument(
             'node_name',
@@ -177,6 +197,12 @@ class SnapshotCommands(Commands):
             required=True,
             nargs='+',
             help='Name of the resource definitions').completer = self.resource_dfn_completer
+        p_new_multi_snapshot.add_argument(
+            '--cbt',
+            action='store_true',
+            help='Start a new changed block tracking interval with these snapshots. Each snapshot property Cbt/Id '
+                 'holds its bookmark id. Requires DRBD with changed block tracking support.'
+        )
         p_new_multi_snapshot.add_argument(
             'snapshot_name',
             type=str,
@@ -379,17 +405,198 @@ class SnapshotCommands(Commands):
             action=BackupCommands._KeyValue)
         p_restore_snapshot.set_defaults(func=self.restore)
 
+        self._setup_cbt_session_commands(snapshot_subp)
+
         self.check_subcommands(snapshot_subp, subcmds)
+
+    def _setup_cbt_session_commands(self, snapshot_subp):
+        cbt_subcmds = [
+            SnapshotCommands.CbtStart,
+            Commands.Subcommands.Show,
+            SnapshotCommands.CbtExtents,
+            SnapshotCommands.CbtFinish,
+        ]
+        p_cbt = snapshot_subp.add_parser(
+            SnapshotCommands.CbtSession.LONG,
+            aliases=[SnapshotCommands.CbtSession.SHORT],
+            formatter_class=argparse.RawTextHelpFormatter,
+            description="CBT sessions read a CBT snapshot (created with 'snapshot create --cbt') for a backup: "
+                        "the snapshot restored into a temporary read-only resource on a node, and the extents "
+                        "changed since the previous CBT snapshot.")
+        cbt_subp = p_cbt.add_subparsers(
+            title="%s subcommands" % SnapshotCommands.CbtSession.LONG,
+            metavar="",
+            description=Commands.Subcommands.generate_desc(cbt_subcmds)
+        )
+
+        def add_snapshot_args(parser):
+            parser.add_argument(
+                'resource_definition_name',
+                type=str,
+                help='Name of the resource definition').completer = self.resource_dfn_completer
+            parser.add_argument('snapshot_name', type=str, help='Name of the CBT snapshot')
+
+        def add_table_args(parser):
+            parser.add_argument('-p', '--pastable', action="store_true", help='Generate pastable output')
+            Commands.add_truncate_args(parser)
+
+        p_start = cbt_subp.add_parser(
+            SnapshotCommands.CbtStart.LONG,
+            description='Starts a CBT session: restores the snapshot into a temporary resource that is readable '
+                        '(read-only) on the given node. Finish the session after the backup.')
+        add_snapshot_args(p_start)
+        p_start.add_argument(
+            'node_name',
+            type=str,
+            help="Node where the snapshot's data has to be readable").completer = self.node_completer
+        add_table_args(p_start)
+        p_start.set_defaults(func=self.cbt_session_start)
+
+        p_show = cbt_subp.add_parser(
+            Commands.Subcommands.Show.LONG,
+            aliases=[Commands.Subcommands.Show.SHORT],
+            description='Shows the CBT session of a snapshot.')
+        add_snapshot_args(p_show)
+        add_table_args(p_show)
+        p_show.set_defaults(func=self.cbt_session_show)
+
+        p_extents = cbt_subp.add_parser(
+            SnapshotCommands.CbtExtents.LONG,
+            description='Lists the extents of a CBT snapshot volume, they cover the volume without gaps: dirty ones '
+                        'changed between the previous CBT snapshot (the base) and this one, zero ones were never '
+                        'written. Without --all one page is listed; continue at its next offset.')
+        add_snapshot_args(p_extents)
+        p_extents.add_argument('--volume', type=int, default=0, help='Volume number (default: 0)')
+        p_extents.add_argument(
+            '--start-offset',
+            type=int,
+            default=0,
+            help='Byte offset to start at (default: 0)')
+        p_extents.add_argument(
+            '--max-extents',
+            type=int,
+            help='Maximum number of extents per page (default: the controller\'s default)')
+        p_extents.add_argument(
+            '--all',
+            action='store_true',
+            help='Fetch all pages up to the end of the volume')
+        p_extents.add_argument(
+            '--mode',
+            choices=['dirty', 'zero'],
+            help='dirty: the dirty and zero flags, for incremental backups (default). zero: the zero flag only, also '
+                 'without changed block tracking (e.g. the first CBT snapshot), for full backups')
+        add_table_args(p_extents)
+        p_extents.set_defaults(func=self.cbt_extents)
+
+        p_finish = cbt_subp.add_parser(
+            SnapshotCommands.CbtFinish.LONG,
+            description='Finishes the CBT session of a snapshot: deletes its temporary resource.')
+        add_snapshot_args(p_finish)
+        p_finish.set_defaults(func=self.cbt_session_finish)
+
+        self.check_subcommands(cbt_subp, cbt_subcmds)
+
+    @classmethod
+    def show_cbt_session(cls, args, session):
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
+        tbl.add_column("TemporaryResource")
+        tbl.add_column("Node")
+        tbl.add_column("CbtId")
+        tbl.add_column("Volume")
+        tbl.add_column("Device")
+        tbl.add_column("Size")
+        for vlm in session.volumes:
+            tbl.add_row([
+                session.resource_name,
+                session.node_name,
+                session.cbt_id,
+                str(vlm.volume_number),
+                vlm.device_path,
+                SizeCalc.approximate_size_string(vlm.volume_size // 1024)
+            ])
+        tbl.show()
+
+    def cbt_session_start(self, args):
+        replies = self._linstor.snapshot_cbt_session_start(
+            args.resource_definition_name, args.snapshot_name, args.node_name)
+        return self.output_list(args, replies, self.show_cbt_session)
+
+    def cbt_session_show(self, args):
+        replies = self._linstor.snapshot_cbt_session_show(args.resource_definition_name, args.snapshot_name)
+        return self.output_list(args, replies, self.show_cbt_session)
+
+    def cbt_session_finish(self, args):
+        replies = self._linstor.snapshot_cbt_session_finish(args.resource_definition_name, args.snapshot_name)
+        return self.handle_replies(args, replies)
+
+    def cbt_extents(self, args):
+        pages = []
+        start_offset = args.start_offset
+        while True:
+            replies = self._linstor.snapshot_cbt_extents(
+                args.resource_definition_name,
+                args.snapshot_name,
+                args.volume,
+                start_offset,
+                args.max_extents,
+                args.mode
+            )
+            if args.curl or not replies or self.check_for_api_replies(replies):
+                return self.output_list(args, replies, self.show_cbt_extents)
+            page = replies[0]
+            pages.append(page)
+            if not args.all or page.next_offset is None:
+                break
+            start_offset = page.next_offset
+
+        if args.machine_readable:
+            # all pages as one: the last page's next offset tells where the listing ends
+            merged = dict(pages[-1].data(args.output_version))
+            merged["extents"] = [ext for page in pages for ext in page.data(args.output_version).get("extents", [])]
+            # a list, as for all other single objects
+            print(self._to_json([merged]))
+        else:
+            self.show_cbt_extents(args, pages)
+        return ExitCode.OK
+
+    @classmethod
+    def show_cbt_extents(cls, args, pages):
+        if not isinstance(pages, list):
+            pages = [pages]
+        tbl = linstor_client.Table(utf8=not args.no_utf8, colors=not args.no_color,
+                                   pastable=args.pastable, truncate=args.truncate)
+        tbl.add_column("Start", just_txt='>')
+        tbl.add_column("Length", just_txt='>')
+        tbl.add_column("Flags")
+        extents = [extent for page in pages for extent in page.extents]
+        for extent in extents:
+            flags = [name for name, value in [("dirty", extent.dirty), ("zero", extent.zero)] if value]
+            tbl.add_row([str(extent.start), str(extent.length), ", ".join(flags)])
+        tbl.show()
+        last = pages[-1]
+        dirty = sum(extent.length for extent in extents if extent.dirty)
+        zero = sum(extent.length for extent in extents if extent.zero)
+        summary = "{c} extents; ".format(c=len(extents))
+        if last.base_cbt_id is not None:
+            summary += "{d} changed since CBT snapshot {b}; ".format(
+                d=SizeCalc.approximate_size_string(dirty // 1024),
+                b=last.base_cbt_id)
+        print(summary + "{z} never written; volume size {v} bytes".format(
+            z=SizeCalc.approximate_size_string(zero // 1024),
+            v=last.volume_size))
+        if last.next_offset is not None:
+            print("More extents follow, next page: --start-offset {o}".format(o=last.next_offset))
 
     def create(self, args):
         async_flag = vars(args)["async"]
         replies = self._linstor.snapshot_create(
-            args.node_name, args.resource_definition_name, args.snapshot_name, async_flag)
+            args.node_name, args.resource_definition_name, args.snapshot_name, async_flag, cbt=args.cbt)
         return self.handle_replies(args, replies)
 
     def create_multi(self, args):
         replies = self._linstor.snapshot_create_multi(
-            args.node_names, args.resource_names, args.snapshot_name)
+            args.node_names, args.resource_names, args.snapshot_name, cbt=args.cbt)
         return self.handle_replies(args, replies)
 
     def restore_volume_definition(self, args):
