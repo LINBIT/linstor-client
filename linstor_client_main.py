@@ -623,6 +623,7 @@ class LinStorCLI(object):
                 if always_allowed or current_state.__class__ in allowed_states:
                     use_pager = (
                         not is_interactive
+                        and args.func != self.cmd_interactive
                         and not args.machine_readable
                         and not args.no_pager
                     )
