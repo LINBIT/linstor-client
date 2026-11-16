@@ -1,3 +1,22 @@
+linstor-client (1.30.0-1) experimental; urgency=medium
+
+  [ Liang Li ]
+  * err list: add --sort-by, --sort-order, --limit and --offset
+  * err list: always use the paged API on controllers that support it
+  * Show Open as usage of resources whose DRBD device is open while Secondary
+  * Show the controller's host in controller version and controller which
+
+  [ Moritz Tanner ]
+  * Fall back to the controller address a satellite published
+
+  [ Rene Peinthor ]
+  * Add changed block tracking (CBT) snapshots and CBT sessions
+
+  [ Phsm Qwerty ]
+  * Do not use pager in interactive mode
+
+ -- Rene Peinthor <rene.peinthor@linbit.com>  Mon, 16 Nov 2026 08:10:56 +0000
+
 linstor-client (1.29.1-1) experimental; urgency=medium
 
   * gitlab-ci: move from nexus to pulp

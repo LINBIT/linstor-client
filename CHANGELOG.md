@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.30.0] - 2026-11-16
+
 ### Added
 
 - If no linstor-client.conf sets `controllers`, the controller address a local satellite published in
